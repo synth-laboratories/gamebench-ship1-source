@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """Extract crafter-rl-compute-uplift blog chart JSON from crafter-rl run directories.
 
-Usage:
+Usage (multi-seed: repeat a method to aggregate N seed runs into one row with
+across-seed mean + CI):
   python3 scripts/extract_blog_compute_uplift.py \\
     --output growth/.../chart_data/crafter_rl_compute_uplift.json \\
-    ppo=reports/rl_rust/blog_ppo_2step_heldout_4x32 \\
-    cispo=reports/rl_rust/blog_cispo_10step_heldout_4x32
+    ppo=reports/rl_rust/blog_ppo_20step_heldout_4x32_s1 \\
+    ppo=reports/rl_rust/blog_ppo_20step_heldout_4x32_s2 \\
+    ppo=reports/rl_rust/blog_ppo_20step_heldout_4x32_s3 \\
+    cispo=reports/rl_rust/blog_cispo_20step_heldout_4x32_s1 \\
+    cispo=reports/rl_rust/blog_cispo_20step_heldout_4x32_s2
 
 Optional GELO row (optimizer-side cost via optimizer_cost_extract.py):
   gelo_rlvr_opsd=optimizers-beta/.out/crafter_rust_runs/<run_id>
@@ -245,6 +249,106 @@ def extract_crafter_rl_row(
     return row
 
 
+# Two-sided 95% t-multipliers by degrees of freedom (n-1), for small-N seed CIs.
+_T95 = {1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571, 6: 2.447,
+        7: 2.365, 8: 2.306, 9: 2.262, 10: 2.228}
+
+
+def _t_ci(values: list[float | None]) -> tuple[float | None, float | None, float | None, float, int]:
+    """(mean, ci_low, ci_high, std, n) for a small sample using the t-distribution.
+    n<2 returns no interval (std=0)."""
+    vals = [float(v) for v in values if v is not None]
+    n = len(vals)
+    if n == 0:
+        return None, None, None, 0.0, 0
+    mean = sum(vals) / n
+    if n == 1:
+        return mean, None, None, 0.0, 1
+    var = sum((v - mean) ** 2 for v in vals) / (n - 1)
+    std = var ** 0.5
+    sem = std / (n ** 0.5)
+    t = _T95.get(n - 1, 1.96)
+    return mean, mean - t * sem, mean + t * sem, std, n
+
+
+def _mean(values: list[float | None]) -> float | None:
+    vals = [float(v) for v in values if v is not None]
+    return sum(vals) / len(vals) if vals else None
+
+
+def aggregate_seed_rows(method: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """Collapse N per-seed rows for one method into a single comparison row.
+
+    CI on delta comes from ACROSS-seed spread when N>1 (the multi-seed CI the
+    blog reports); for N==1 it falls back to the within-run bootstrap CI so the
+    field is never silently empty. Per-seed detail is retained under `seed_runs`.
+    """
+    meta = METHOD_META.get(method, METHOD_META["cispo"])
+    seed_run_ids = [r["run_id"] for r in rows]
+    n_seeds = len(rows)
+
+    delta_mean, delta_lo, delta_hi, delta_std, _ = _t_ci([r.get("delta") for r in rows])
+    final_mean, final_lo, final_hi, _, _ = _t_ci([r.get("final_value") for r in rows])
+    cost_mean, _, _, cost_std, _ = _t_ci([r.get("cost_usd_total") for r in rows])
+    rollouts_mean = _mean([r.get("rollouts_total") for r in rows])
+
+    if n_seeds == 1:
+        ci_source = "within_run_bootstrap"
+        delta_lo, delta_hi = rows[0].get("ci_95_low"), rows[0].get("ci_95_high")
+    else:
+        ci_source = "across_seed"
+
+    eval_ns = {r.get("eval_n") for r in rows if r.get("eval_n")}
+    eval_n = min(eval_ns) if eval_ns else None
+    limitations = rows[0].get("limitations", "")
+    if len(eval_ns) > 1:
+        limitations = (limitations + " | seed runs had mismatched eval_n; reported min.").strip(" |")
+
+    delta_per_dollar = (delta_mean / cost_mean) if (delta_mean is not None and cost_mean) else None
+    delta_per_1k = (delta_mean / (rollouts_mean / 1000)) if (delta_mean is not None and rollouts_mean) else None
+
+    seedset_hash = hashlib.sha256("|".join(sorted(seed_run_ids)).encode()).hexdigest()[:12]
+    agg = {
+        "row_id": f"{method}.seedset_{seedset_hash}",
+        "method": method,
+        "stack_depth": meta["stack_depth"],
+        "primary_metric": meta["primary_metric"],
+        "reward_mode": meta["reward_mode"],
+        "heldout_label": "frozen_4x32",
+        "eval_n": eval_n,
+        "n_seeds": n_seeds,
+        "seed_run_ids": seed_run_ids,
+        "ci_source": ci_source,
+        "bootstrap_value": _mean([r.get("bootstrap_value") for r in rows]),
+        "final_value": final_mean,
+        "final_value_ci_95_low": final_lo,
+        "final_value_ci_95_high": final_hi,
+        "delta": delta_mean,
+        "delta_std": round(delta_std, 6),
+        "ci_95_low": delta_lo,
+        "ci_95_high": delta_hi,
+        "cost_usd_total": round(cost_mean, 6) if cost_mean is not None else None,
+        "cost_usd_total_std": round(cost_std, 6),
+        "cost_input_tokens": int(_mean([r.get("cost_input_tokens") for r in rows]) or 0),
+        "cost_output_tokens": int(_mean([r.get("cost_output_tokens") for r in rows]) or 0),
+        "rollouts_total": int(rollouts_mean) if rollouts_mean is not None else None,
+        "delta_per_1k_rollouts": round(delta_per_1k, 6) if delta_per_1k is not None else None,
+        "delta_per_dollar": round(delta_per_dollar, 6) if delta_per_dollar is not None else None,
+        "train_updates": rows[0].get("train_updates"),
+        "config_ref": rows[0].get("config_ref"),
+        "accepted": all(r.get("accepted", True) for r in rows),
+        "limitations": limitations,
+        "seed_runs": [
+            {k: r.get(k) for k in ("run_id", "delta", "final_value", "cost_usd_total",
+                                   "ci_95_low", "ci_95_high", "config_ref", "artifact_refs")}
+            for r in rows
+        ],
+        "missing_public_packet": False,
+    }
+    agg["source_ref"] = _canonical_source_ref(agg)
+    return agg
+
+
 def _load_null_scaffold(path: Path | None) -> list[dict[str, Any]]:
     if path is None or not path.exists():
         return []
@@ -291,12 +395,15 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    comparison_rows: list[dict[str, Any]] = []
+    # Group runs by method so N seed-runs collapse into one aggregated row.
+    per_seed_by_method: dict[str, list[dict[str, Any]]] = {}
+    method_order: list[str] = []
     instability_by_method: dict[str, list[dict[str, Any]]] = {}
+    pareto_seed_points: list[dict[str, Any]] = []
 
     for method, run_dir, explicit_run_id in args.runs:
         run_dir = run_dir.resolve()
-        row = extract_crafter_rl_row(
+        seed_row = extract_crafter_rl_row(
             method,
             run_dir,
             run_id=explicit_run_id,
@@ -304,17 +411,34 @@ def main(argv: list[str] | None = None) -> int:
             if method == "ppo"
             else "",
         )
-        comparison_rows.append(row)
-        evals = _read_jsonl(run_dir / "evals.jsonl")
-        updates = _read_jsonl(run_dir / "updates.jsonl")
-        instability_by_method[method] = _instability_series(updates, evals)
+        per_seed_by_method.setdefault(method, []).append(seed_row)
+        if method not in method_order:
+            method_order.append(method)
+        # Instability series from the first seed run per method (representative).
+        if method not in instability_by_method:
+            evals = _read_jsonl(run_dir / "evals.jsonl")
+            updates = _read_jsonl(run_dir / "updates.jsonl")
+            instability_by_method[method] = _instability_series(updates, evals)
+        if seed_row.get("delta") is not None and seed_row.get("cost_usd_total"):
+            pareto_seed_points.append({
+                "method": method,
+                "run_id": seed_row["run_id"],
+                "x_cost_usd": seed_row["cost_usd_total"],
+                "y_delta": seed_row["delta"],
+                "seed": True,
+            })
 
+    comparison_rows = [aggregate_seed_rows(m, per_seed_by_method[m]) for m in method_order]
+
+    # Aggregated frontier (one point per method); pareto_seed_points carries the spread.
     pareto_points = [
         {
             "method": r["method"],
-            "run_id": r["run_id"],
+            "n_seeds": r["n_seeds"],
             "x_cost_usd": r["cost_usd_total"],
             "y_delta": r["delta"],
+            "y_ci_95_low": r["ci_95_low"],
+            "y_ci_95_high": r["ci_95_high"],
             "accepted": r["accepted"],
         }
         for r in comparison_rows
@@ -341,6 +465,7 @@ def main(argv: list[str] | None = None) -> int:
         "comparison_rows": comparison_rows,
         "honest_null_rows": honest_null_rows,
         "pareto_points": pareto_points,
+        "pareto_seed_points": pareto_seed_points,
         "instability_window": instability_by_method,
     }
 
@@ -349,7 +474,8 @@ def main(argv: list[str] | None = None) -> int:
         json.dump(packet, handle, indent=2, sort_keys=True)
         handle.write("\n")
 
-    print(f"wrote {args.output} ({len(comparison_rows)} rows)")
+    seed_summary = ", ".join(f"{r['method']}:{r['n_seeds']}seed" for r in comparison_rows)
+    print(f"wrote {args.output} ({len(comparison_rows)} method rows — {seed_summary}; status={packet['status']})")
     return 0
 
 
