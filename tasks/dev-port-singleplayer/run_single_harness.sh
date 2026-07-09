@@ -10,6 +10,7 @@ set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_TASK="${SOURCE_TASK:-sokoban-singleplayer}"
 MODEL="${MODEL:-gpt-5.5}"
+EFFORT="${EFFORT:-}"
 TRAIN="${TRAIN:-4}"
 TIMEOUT="${TIMEOUT:-600}"
 ATTEMPT="${ATTEMPT:-sh1}"
@@ -46,6 +47,10 @@ PROXY_PID=""
 PROXY_LOG=""
 PROXY_CODEX_HOME=""
 CODEX_ARGS=(-m "$MODEL")
+if [ -n "$EFFORT" ]; then
+  [[ "$MODEL" == gpt* ]] || { echo "EFFORT is only supported for native GPT routes" >&2; exit 2; }
+  CODEX_ARGS+=(-c "model_reasoning_effort=\"$EFFORT\"")
+fi
 if [[ "$MODEL" == */* ]]; then
   PROXY_LOG="$WS/.proxy.log"
   CARGO_TARGET_DIR="$JESTERKY_PROXY_TARGET_DIR" cargo run -q \
@@ -98,15 +103,18 @@ m = re.findall(r"tokens used[:\s]+([\d,]+)", txt)
 print(m[-1].replace(",", "") if m else "")
 PY
 )
-python3 - "$SCORE" "$META" "$((T1-T0))" "$TOKENS" "$MODEL" "$SOURCE_TASK" "$RC" <<'PY'
+RUNNER_REVISION="$(git -C "$HERE/../.." rev-parse --short HEAD)"
+python3 - "$SCORE" "$META" "$((T1-T0))" "$TOKENS" "$MODEL" "$EFFORT" "$SOURCE_TASK" "$RC" "$RUNNER_REVISION" <<'PY'
 import json, sys
-score_path, meta_path, secs, tokens, model, task, rc = sys.argv[1:8]
+score_path, meta_path, secs, tokens, model, effort, task, rc, runner_revision = sys.argv[1:10]
 try:
     s = json.load(open(score_path))
 except Exception:
     s = {}
 json.dump({
     "arm": "single_harness", "model": model, "source_task": task,
+    "reasoning_effort": effort or None,
+    "runner_revision": runner_revision,
     "wall_seconds": int(secs), "tokens": int(tokens) if tokens else None,
     "capped": int(rc) >= 128,
     "passed": s.get("passed"), "total": s.get("total"),

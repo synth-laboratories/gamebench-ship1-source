@@ -17,11 +17,13 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SPEC="${SPEC:-$HERE/dev_port_to_rust.sandboxed.json}"
 SOURCE_TASK="${SOURCE_TASK:-tictactoe-singleplayer}"
 MODEL="${MODEL:-gpt-5.5}"
+EFFORT="${EFFORT:-}"
 TRAIN="${TRAIN:-4}"
 # Wall-clock cap per run (seconds). Slow proxy models (DeepSeek) get killed at the
 # cap and scored on whatever crate they built so far — no run blocks indefinitely.
 TIMEOUT="${TIMEOUT:-600}"
 WS_BASE="$HOME/.cache/jesterky/workspaces"
+JESTERKY_BIN="${JESTERKY_BIN:-jesterky}"
 
 echo "== bundling $SOURCE_TASK → sandbox workspace job (train=$TRAIN) =="
 JOB="$HERE/job.sandbox.$SOURCE_TASK.json"
@@ -33,13 +35,18 @@ ATTEMPT="${ATTEMPT:-}"
 SUFFIX="${ATTEMPT:+.r$ATTEMPT}"
 MANIFEST="$HERE/port.sandbox.$MSLUG.$SOURCE_TASK$SUFFIX.json"
 SCORE="$HERE/score.sandbox.$MSLUG.$SOURCE_TASK$SUFFIX.json"
+META="$HERE/meta.sandbox.$MSLUG.$SOURCE_TASK$SUFFIX.json"
+JESTERKY_ARGS=(run "$SPEC" --actor codex --model "$MODEL" --args-file "$JOB" --out "$MANIFEST" --run-id "dev-port-sbx-$SOURCE_TASK$SUFFIX")
+if [ -n "$EFFORT" ]; then
+  JESTERKY_ARGS+=(--effort "$EFFORT")
+fi
 echo "== porting in a workspace-write sandbox ($MODEL runs the env, ${TIMEOUT}s cap) =="
 # Run in its own session so a timeout only reaches this workflow and its Codex
 # child processes; this shared host may have unrelated Codex sessions running.
 perl -MPOSIX=setsid -e 'setsid() or die "setsid: $!"; exec @ARGV or die "exec: $!";' \
-  jesterky run "$SPEC" --actor codex --model "$MODEL" \
-  --args-file "$JOB" --out "$MANIFEST" --run-id "dev-port-sbx-$SOURCE_TASK$SUFFIX" &
+  "$JESTERKY_BIN" "${JESTERKY_ARGS[@]}" &
 JPID=$!
+T0=$(date +%s)
 (
   sleep "$TIMEOUT"
   kill -0 "$JPID" 2>/dev/null || exit 0
@@ -49,6 +56,7 @@ JPID=$!
 ) &
 WDOG=$!
 wait "$JPID"; RC=$?
+T1=$(date +%s)
 kill "$WDOG" 2>/dev/null; wait "$WDOG" 2>/dev/null
 [ "$RC" -ge 128 ] && echo "!! run capped at ${TIMEOUT}s (rc=$RC) — scoring partial workspace crate"
 
@@ -64,3 +72,9 @@ else
   echo "scoring partial workspace crate: $WS"
   python3 "$HERE/score_port.py" --candidate "$WS" --source-task "$SOURCE_TASK" --out "$SCORE" || true
 fi
+RUNNER_REVISION="$(git -C "$HERE/../.." rev-parse --short HEAD)"
+python3 "$HERE/write_workflow_receipt.py" \
+  --out "$META" --model "$MODEL" --effort "$EFFORT" --source-task "$SOURCE_TASK" \
+  --wall-seconds "$((T1-T0))" --cap-seconds "$TIMEOUT" --exit-code "$RC" \
+  --runner-revision "$RUNNER_REVISION" --jesterky-bin "$JESTERKY_BIN" \
+  --manifest "$MANIFEST" --score "$SCORE"
