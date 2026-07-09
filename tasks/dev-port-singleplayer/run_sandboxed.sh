@@ -14,7 +14,7 @@
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SPEC="$HERE/dev_port_to_rust.sandboxed.json"
+SPEC="${SPEC:-$HERE/dev_port_to_rust.sandboxed.json}"
 SOURCE_TASK="${SOURCE_TASK:-tictactoe-singleplayer}"
 MODEL="${MODEL:-gpt-5.5}"
 TRAIN="${TRAIN:-4}"
@@ -28,11 +28,14 @@ JOB="$HERE/job.sandbox.$SOURCE_TASK.json"
 python3 "$HERE/bundle_sandbox_job.py" --source-task "$SOURCE_TASK" --train "$TRAIN" --out "$JOB"
 
 MSLUG="$(echo "$MODEL" | tr '/' '_')"
-MANIFEST="$HERE/port.sandbox.$MSLUG.$SOURCE_TASK.json"
-SCORE="$HERE/score.sandbox.$MSLUG.$SOURCE_TASK.json"
+# Multi-seed sweeps set ATTEMPT=2,3,… — attempt-suffixed artifacts, never overwrite.
+ATTEMPT="${ATTEMPT:-}"
+SUFFIX="${ATTEMPT:+.r$ATTEMPT}"
+MANIFEST="$HERE/port.sandbox.$MSLUG.$SOURCE_TASK$SUFFIX.json"
+SCORE="$HERE/score.sandbox.$MSLUG.$SOURCE_TASK$SUFFIX.json"
 echo "== porting in a workspace-write sandbox ($MODEL runs the env, ${TIMEOUT}s cap) =="
 jesterky run "$SPEC" --actor codex --model "$MODEL" \
-  --args-file "$JOB" --out "$MANIFEST" --run-id "dev-port-sbx-$SOURCE_TASK" &
+  --args-file "$JOB" --out "$MANIFEST" --run-id "dev-port-sbx-$SOURCE_TASK$SUFFIX" &
 JPID=$!
 ( sleep "$TIMEOUT"; kill -9 "$JPID" 2>/dev/null; pkill -9 -f "codex exec -m $MODEL" 2>/dev/null ) &
 WDOG=$!
