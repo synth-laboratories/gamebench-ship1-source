@@ -5,5 +5,9 @@ __pycache__/
 venv/
 target/
 *.rs.bk
+tasks/craftax-singleplayer/candidates/
+tasks/craftax-singleplayer/reports/
+tasks/craftax-singleplayer/configs/reports/
+tasks/craftax-singleplayer/.out/
 .idea/
 .vscode/
