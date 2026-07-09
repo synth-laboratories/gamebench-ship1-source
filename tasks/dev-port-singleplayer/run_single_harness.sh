@@ -13,11 +13,15 @@ MODEL="${MODEL:-gpt-5.5}"
 TRAIN="${TRAIN:-4}"
 TIMEOUT="${TIMEOUT:-600}"
 ATTEMPT="${ATTEMPT:-sh1}"
+JESTERKY_ROOT="${JESTERKY_ROOT:-$HOME/Documents/GitHub/jesterky}"
+JESTERKY_PROXY_TARGET_DIR="${JESTERKY_PROXY_TARGET_DIR:-$HOME/.cache/jesterky/proxy-target}"
+PROXY_STARTUP_TIMEOUT="${PROXY_STARTUP_TIMEOUT:-180}"
 
 MSLUG="$(echo "$MODEL" | tr '/' '_')"
 JOB="$HERE/job.single.$MSLUG.$SOURCE_TASK.json"
 SCORE="$HERE/score.single.$MSLUG.$SOURCE_TASK.r$ATTEMPT.json"
 META="$HERE/meta.single.$MSLUG.$SOURCE_TASK.r$ATTEMPT.json"
+FAILURE="$HERE/failure.single.$MSLUG.$SOURCE_TASK.r$ATTEMPT.json"
 WS="$(mktemp -d "${TMPDIR:-/tmp}/devport-single-$MSLUG-XXXXXX")"
 
 echo "== bundling $SOURCE_TASK (train=$TRAIN) and seeding $WS =="
@@ -35,20 +39,39 @@ PY
 
 PROMPT="$(cat "$HERE/single_harness_prompt.txt")"
 
-# Proxy models route through the same jesterky proxy the workflow uses, so the
-# harness is identical across models; only the orchestration layer differs.
+# Proxy models must use the same sandboxed CODEX_HOME that jesterky creates.
+# Passing provider settings through `codex -c` skips that configuration and is
+# not equivalent to the workflow arm.
 PROXY_PID=""
+PROXY_LOG=""
+PROXY_CODEX_HOME=""
 CODEX_ARGS=(-m "$MODEL")
 if [[ "$MODEL" == */* ]]; then
-  PORT=$((49500 + RANDOM % 1000))
-  jesterky-proxy --listen "127.0.0.1:$PORT" >/dev/null 2>&1 &
+  PROXY_LOG="$WS/.proxy.log"
+  CARGO_TARGET_DIR="$JESTERKY_PROXY_TARGET_DIR" cargo run -q \
+    --manifest-path "$JESTERKY_ROOT/Cargo.toml" -p jesterky-proxy \
+    --example proxy_daemon -- "$MODEL" >"$PROXY_LOG" 2>&1 &
   PROXY_PID=$!
-  sleep 1
-  CODEX_ARGS=(-m "$MODEL" -c "model_providers.jesterky.base_url=http://127.0.0.1:$PORT/v1" -c "model_providers.jesterky.name=jesterky" -c "model_providers.jesterky.wire_api=responses" -c "model_provider=jesterky")
+  for ((i = 0; i < PROXY_STARTUP_TIMEOUT; i++)); do
+    PROXY_CODEX_HOME="$(awk -F= '/^CODEX_HOME=/{print $2; exit}' "$PROXY_LOG")"
+    [ -n "$PROXY_CODEX_HOME" ] && break
+    kill -0 "$PROXY_PID" 2>/dev/null || break
+    sleep 1
+  done
+  if [ -z "$PROXY_CODEX_HOME" ]; then
+    echo "proxy sidecar failed to produce CODEX_HOME" >&2
+    sed -n '1,80p' "$PROXY_LOG" >&2
+    kill "$PROXY_PID" 2>/dev/null || true
+    wait "$PROXY_PID" 2>/dev/null || true
+    exit 1
+  fi
 fi
 
 echo "== single-harness port ($MODEL, ${TIMEOUT}s cap) =="
 T0=$(date +%s)
+if [ -n "$PROXY_CODEX_HOME" ]; then
+  export CODEX_HOME="$PROXY_CODEX_HOME"
+fi
 codex exec "${CODEX_ARGS[@]}" --sandbox workspace-write --skip-git-repo-check \
   -C "$WS" -o "$WS/.final_msg.txt" "$PROMPT" >"$WS/.codex_out.log" 2>&1 &
 CPID=$!
@@ -57,6 +80,11 @@ wait "$CPID"; RC=$?
 kill "$WDOG" 2>/dev/null; wait "$WDOG" 2>/dev/null
 T1=$(date +%s)
 [ -n "$PROXY_PID" ] && kill "$PROXY_PID" 2>/dev/null
+[ -n "$PROXY_PID" ] && wait "$PROXY_PID" 2>/dev/null || true
+[ "$RC" -ne 0 ] && [ "$RC" -lt 128 ] && python3 "$HERE/write_single_harness_failure.py" \
+  --out "$FAILURE" --model "$MODEL" --source-task "$SOURCE_TASK" \
+  --wall-seconds "$((T1-T0))" --exit-code "$RC" --log "$WS/.codex_out.log"
+[ "$RC" -ne 0 ] && [ "$RC" -lt 128 ] && exit "$RC"
 [ "$RC" -ge 128 ] && echo "!! capped at ${TIMEOUT}s — scoring partial crate"
 
 echo "== scoring =="

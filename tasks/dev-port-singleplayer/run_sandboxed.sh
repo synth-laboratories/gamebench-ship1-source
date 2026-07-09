@@ -34,10 +34,19 @@ SUFFIX="${ATTEMPT:+.r$ATTEMPT}"
 MANIFEST="$HERE/port.sandbox.$MSLUG.$SOURCE_TASK$SUFFIX.json"
 SCORE="$HERE/score.sandbox.$MSLUG.$SOURCE_TASK$SUFFIX.json"
 echo "== porting in a workspace-write sandbox ($MODEL runs the env, ${TIMEOUT}s cap) =="
-jesterky run "$SPEC" --actor codex --model "$MODEL" \
+# Run in its own session so a timeout only reaches this workflow and its Codex
+# child processes; this shared host may have unrelated Codex sessions running.
+perl -MPOSIX=setsid -e 'setsid() or die "setsid: $!"; exec @ARGV or die "exec: $!";' \
+  jesterky run "$SPEC" --actor codex --model "$MODEL" \
   --args-file "$JOB" --out "$MANIFEST" --run-id "dev-port-sbx-$SOURCE_TASK$SUFFIX" &
 JPID=$!
-( sleep "$TIMEOUT"; kill -9 "$JPID" 2>/dev/null; pkill -9 -f "codex exec -m $MODEL" 2>/dev/null ) &
+(
+  sleep "$TIMEOUT"
+  kill -0 "$JPID" 2>/dev/null || exit 0
+  kill -TERM "-$JPID" 2>/dev/null
+  sleep 5
+  kill -KILL "-$JPID" 2>/dev/null
+) &
 WDOG=$!
 wait "$JPID"; RC=$?
 kill "$WDOG" 2>/dev/null; wait "$WDOG" 2>/dev/null

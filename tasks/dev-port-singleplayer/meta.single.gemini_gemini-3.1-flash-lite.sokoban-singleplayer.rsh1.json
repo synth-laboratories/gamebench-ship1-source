@@ -1,0 +1,10 @@
+{
+  "arm": "single_harness",
+  "model": "gemini/gemini-3.1-flash-lite",
+  "source_task": "sokoban-singleplayer",
+  "wall_seconds": 348,
+  "tokens": 7056155,
+  "capped": false,
+  "passed": 0,
+  "total": 15
+}
