@@ -1,0 +1,92 @@
+{
+  "schema": "gamebench.dev_port.score.v1",
+  "source_task": "sokoban-singleplayer",
+  "build_ok": true,
+  "build_detail": "ok",
+  "passed": 4,
+  "total": 15,
+  "score": 0.2667,
+  "per_scenario": [
+    {
+      "scenario_id": "inline_01_corner_solve",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "inline_02_corridor_solve",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "inline_03_t_walk_push",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "inline_04_walls_block",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "inline_05_double_progress",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(lvl-05-double,sha256:0f5e8ee51f2065a55328014469c74c2332b140cdc4dfe87aa48f09ab9ac76b40)",
+        "actual": "TaskResolved(lvl-05-double,sha256:)"
+      }
+    },
+    {
+      "scenario_id": "curriculum_seed_101",
+      "ok": false,
+      "reason": "scenario bin exited 101: nwrap();let sid=x[\"scenario_id\"].as_str().unwrap_or(\"manual\");let map=&x[\"map\"];let grid=map[\"grid\"].as_array().un...\n  |                                    ^^^ help: if this is intentional, prefix it with an underscore: `_sid`\n  |\n  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\n\nthread 'main' (19411760) panicked at src/bin/scenario.rs:4:229:\ncalled `Option::unwrap()` on a `None` value\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_102",
+      "ok": false,
+      "reason": "scenario bin exited 101: nwrap();let sid=x[\"scenario_id\"].as_str().unwrap_or(\"manual\");let map=&x[\"map\"];let grid=map[\"grid\"].as_array().un...\n  |                                    ^^^ help: if this is intentional, prefix it with an underscore: `_sid`\n  |\n  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\n\nthread 'main' (19411889) panicked at src/bin/scenario.rs:4:229:\ncalled `Option::unwrap()` on a `None` value\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_103",
+      "ok": false,
+      "reason": "scenario bin exited 101: nwrap();let sid=x[\"scenario_id\"].as_str().unwrap_or(\"manual\");let map=&x[\"map\"];let grid=map[\"grid\"].as_array().un...\n  |                                    ^^^ help: if this is intentional, prefix it with an underscore: `_sid`\n  |\n  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\n\nthread 'main' (19411938) panicked at src/bin/scenario.rs:4:229:\ncalled `Option::unwrap()` on a `None` value\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_104",
+      "ok": false,
+      "reason": "scenario bin exited 101: nwrap();let sid=x[\"scenario_id\"].as_str().unwrap_or(\"manual\");let map=&x[\"map\"];let grid=map[\"grid\"].as_array().un...\n  |                                    ^^^ help: if this is intentional, prefix it with an underscore: `_sid`\n  |\n  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\n\nthread 'main' (19411997) panicked at src/bin/scenario.rs:4:229:\ncalled `Option::unwrap()` on a `None` value\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_105",
+      "ok": false,
+      "reason": "scenario bin exited 101: nwrap();let sid=x[\"scenario_id\"].as_str().unwrap_or(\"manual\");let map=&x[\"map\"];let grid=map[\"grid\"].as_array().un...\n  |                                    ^^^ help: if this is intentional, prefix it with an underscore: `_sid`\n  |\n  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\n\nthread 'main' (19412044) panicked at src/bin/scenario.rs:4:229:\ncalled `Option::unwrap()` on a `None` value\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_106",
+      "ok": false,
+      "reason": "scenario bin exited 101: nwrap();let sid=x[\"scenario_id\"].as_str().unwrap_or(\"manual\");let map=&x[\"map\"];let grid=map[\"grid\"].as_array().un...\n  |                                    ^^^ help: if this is intentional, prefix it with an underscore: `_sid`\n  |\n  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\n\nthread 'main' (19412098) panicked at src/bin/scenario.rs:4:229:\ncalled `Option::unwrap()` on a `None` value\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_107",
+      "ok": false,
+      "reason": "scenario bin exited 101: nwrap();let sid=x[\"scenario_id\"].as_str().unwrap_or(\"manual\");let map=&x[\"map\"];let grid=map[\"grid\"].as_array().un...\n  |                                    ^^^ help: if this is intentional, prefix it with an underscore: `_sid`\n  |\n  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\n\nthread 'main' (19412146) panicked at src/bin/scenario.rs:4:229:\ncalled `Option::unwrap()` on a `None` value\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_108",
+      "ok": false,
+      "reason": "scenario bin exited 101: nwrap();let sid=x[\"scenario_id\"].as_str().unwrap_or(\"manual\");let map=&x[\"map\"];let grid=map[\"grid\"].as_array().un...\n  |                                    ^^^ help: if this is intentional, prefix it with an underscore: `_sid`\n  |\n  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\n\nthread 'main' (19412196) panicked at src/bin/scenario.rs:4:229:\ncalled `Option::unwrap()` on a `None` value\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_109",
+      "ok": false,
+      "reason": "scenario bin exited 101: nwrap();let sid=x[\"scenario_id\"].as_str().unwrap_or(\"manual\");let map=&x[\"map\"];let grid=map[\"grid\"].as_array().un...\n  |                                    ^^^ help: if this is intentional, prefix it with an underscore: `_sid`\n  |\n  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\n\nthread 'main' (19412244) panicked at src/bin/scenario.rs:4:229:\ncalled `Option::unwrap()` on a `None` value\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_110",
+      "ok": false,
+      "reason": "scenario bin exited 101: nwrap();let sid=x[\"scenario_id\"].as_str().unwrap_or(\"manual\");let map=&x[\"map\"];let grid=map[\"grid\"].as_array().un...\n  |                                    ^^^ help: if this is intentional, prefix it with an underscore: `_sid`\n  |\n  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\n\nthread 'main' (19412294) panicked at src/bin/scenario.rs:4:229:\ncalled `Option::unwrap()` on a `None` value\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    }
+  ],
+  "crate_files": 3
+}

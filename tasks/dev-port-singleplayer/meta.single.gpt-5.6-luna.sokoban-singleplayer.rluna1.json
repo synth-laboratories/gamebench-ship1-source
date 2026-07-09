@@ -1,0 +1,12 @@
+{
+  "arm": "single_harness",
+  "model": "gpt-5.6-luna",
+  "source_task": "sokoban-singleplayer",
+  "reasoning_effort": "low",
+  "runner_revision": "7e421e1",
+  "wall_seconds": 229,
+  "tokens": 59630,
+  "capped": false,
+  "passed": 2,
+  "total": 15
+}
