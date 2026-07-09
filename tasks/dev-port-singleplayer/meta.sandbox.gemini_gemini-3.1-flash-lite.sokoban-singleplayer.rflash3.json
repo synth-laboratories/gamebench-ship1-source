@@ -1,0 +1,25 @@
+{
+  "arm": "workflow",
+  "model": "gemini/gemini-3.1-flash-lite",
+  "reasoning_effort": null,
+  "source_task": "sokoban-singleplayer",
+  "wall_seconds": 56,
+  "cap_seconds": 600,
+  "capped": false,
+  "jesterky_exit_code": 0,
+  "runner_revision": "f530feb",
+  "jesterky_bin": "/Users/joshpurtell/Documents/GitHub/jesterky/target/debug/jesterky",
+  "manifest_sha256": "e83d9fbe357c6a4030d96c311c98d231bf233716f02e264cf739c9dcaca53811",
+  "score_sha256": "38a5d8056df6cdf300d914cba5634829391aa283dac3c02390c553ce9c38a609",
+  "usage_log_sha256": "4b8d76731f4efac792bb9a310ed7e043d0726b0db8b1fdc20ce11866472b9f2d",
+  "usage": {
+    "time": "0:56",
+    "tokens": "303k",
+    "input": "294k",
+    "output": "8.8k",
+    "tps": "5.4k",
+    "cost": "$0.087"
+  },
+  "passed": 4,
+  "total": 15
+}

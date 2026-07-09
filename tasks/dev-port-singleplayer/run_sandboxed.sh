@@ -18,6 +18,8 @@ SPEC="${SPEC:-$HERE/dev_port_to_rust.sandboxed.json}"
 SOURCE_TASK="${SOURCE_TASK:-tictactoe-singleplayer}"
 MODEL="${MODEL:-gpt-5.5}"
 EFFORT="${EFFORT:-}"
+FOLLOW="${FOLLOW:-0}"
+USAGE_LOG="${USAGE_LOG:-}"
 TRAIN="${TRAIN:-4}"
 # Wall-clock cap per run (seconds). Slow proxy models (DeepSeek) get killed at the
 # cap and scored on whatever crate they built so far — no run blocks indefinitely.
@@ -39,6 +41,9 @@ META="$HERE/meta.sandbox.$MSLUG.$SOURCE_TASK$SUFFIX.json"
 JESTERKY_ARGS=(run "$SPEC" --actor codex --model "$MODEL" --args-file "$JOB" --out "$MANIFEST" --run-id "dev-port-sbx-$SOURCE_TASK$SUFFIX")
 if [ -n "$EFFORT" ]; then
   JESTERKY_ARGS+=(--effort "$EFFORT")
+fi
+if [ "$FOLLOW" = "1" ]; then
+  JESTERKY_ARGS+=(--follow)
 fi
 echo "== porting in a workspace-write sandbox ($MODEL runs the env, ${TIMEOUT}s cap) =="
 # Run in its own session so a timeout only reaches this workflow and its Codex
@@ -73,8 +78,14 @@ else
   python3 "$HERE/score_port.py" --candidate "$WS" --source-task "$SOURCE_TASK" --out "$SCORE" || true
 fi
 RUNNER_REVISION="$(git -C "$HERE/../.." rev-parse --short HEAD)"
-python3 "$HERE/write_workflow_receipt.py" \
-  --out "$META" --model "$MODEL" --effort "$EFFORT" --source-task "$SOURCE_TASK" \
-  --wall-seconds "$((T1-T0))" --cap-seconds "$TIMEOUT" --exit-code "$RC" \
-  --runner-revision "$RUNNER_REVISION" --jesterky-bin "$JESTERKY_BIN" \
+RECEIPT_ARGS=(
+  --out "$META" --model "$MODEL" --effort "$EFFORT" --source-task "$SOURCE_TASK"
+  --wall-seconds "$((T1-T0))" --cap-seconds "$TIMEOUT" --exit-code "$RC"
+  --runner-revision "$RUNNER_REVISION" --jesterky-bin "$JESTERKY_BIN"
   --manifest "$MANIFEST" --score "$SCORE"
+)
+if [ -n "$USAGE_LOG" ]; then
+  RECEIPT_ARGS+=(--usage-log "$USAGE_LOG")
+fi
+python3 "$HERE/write_workflow_receipt.py" \
+  "${RECEIPT_ARGS[@]}"

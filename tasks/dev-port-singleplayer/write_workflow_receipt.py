@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import re
 
 
 def file_sha256(path: Path) -> str | None:
@@ -24,6 +25,22 @@ def read_score(path: Path) -> dict[str, object]:
         return {}
 
 
+def read_usage(path: Path | None) -> dict[str, str] | None:
+    if path is None or not path.is_file():
+        return None
+    pattern = re.compile(
+        r"^usage time=(?P<time>\S+) tokens=(?P<tokens>\S+) "
+        r"input=(?P<input>\S+) output=(?P<output>\S+) tps=(?P<tps>\S+)"
+        r"(?: cost_est=(?P<cost>\$\S+))?$",
+        re.MULTILINE,
+    )
+    matches = list(pattern.finditer(path.read_text(errors="replace")))
+    if not matches:
+        return None
+    usage = matches[-1].groupdict()
+    return {key: value for key, value in usage.items() if value is not None}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", type=Path, required=True)
@@ -37,6 +54,7 @@ def main() -> None:
     parser.add_argument("--jesterky-bin", required=True)
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--score", type=Path, required=True)
+    parser.add_argument("--usage-log", type=Path)
     args = parser.parse_args()
 
     score = read_score(args.score)
@@ -53,6 +71,8 @@ def main() -> None:
         "jesterky_bin": args.jesterky_bin,
         "manifest_sha256": file_sha256(args.manifest),
         "score_sha256": file_sha256(args.score),
+        "usage_log_sha256": file_sha256(args.usage_log) if args.usage_log else None,
+        "usage": read_usage(args.usage_log),
         "passed": score.get("passed"),
         "total": score.get("total"),
     }
