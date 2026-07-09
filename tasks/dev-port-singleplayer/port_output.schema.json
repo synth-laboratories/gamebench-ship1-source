@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["files", "porting_notes"],
+  "properties": {
+    "files": {
+      "type": "array",
+      "description": "The complete Rust crate: every file needed to `cargo build --bin scenario`. Include Cargo.toml, src/lib.rs, and src/bin/scenario.rs at minimum.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "content"],
+        "properties": {
+          "path": { "type": "string", "description": "crate-relative path, e.g. \"Cargo.toml\" or \"src/bin/scenario.rs\"" },
+          "content": { "type": "string", "description": "full file contents" }
+        }
+      }
+    },
+    "porting_notes": {
+      "type": "string",
+      "description": "The type/lifetime mapping and staging decisions (the bun PORTING.md analog)."
+    }
+  }
+}

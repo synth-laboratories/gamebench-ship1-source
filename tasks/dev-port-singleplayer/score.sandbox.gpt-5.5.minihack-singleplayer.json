@@ -1,0 +1,262 @@
+{
+  "schema": "gamebench.dev_port.score.v1",
+  "source_task": "minihack-singleplayer",
+  "build_ok": true,
+  "build_detail": "ok",
+  "passed": 4,
+  "total": 27,
+  "score": 0.1481,
+  "per_scenario": [
+    {
+      "scenario_id": "corridor_straight_smoke",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "corridor_turn_left_smoke",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "corridor_turn_right_smoke",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "corridor_profile_turn_left",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "navigation_wall_blocked",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(navigation_wall_blocked,e479bac4591312b7)",
+        "actual": "TaskResolved(navigation_wall_blocked,edc044d92f44dc98)"
+      }
+    },
+    {
+      "scenario_id": "navigation_wait_smoke",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(navigation_wait_smoke,ba4dfa121fd6bd8f)",
+        "actual": "TaskResolved(navigation_wait_smoke,9e26c43b2c85c750)"
+      }
+    },
+    {
+      "scenario_id": "corridor_battle_smoke",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(corridor_battle_smoke,ae23f0bee59aff71)",
+        "actual": "TaskResolved(corridor_battle_smoke,0006e6071c454aeb)"
+      }
+    },
+    {
+      "scenario_id": "corridor_battle_two_monsters",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(corridor_battle_two_monsters,1d1ffc45c59834c9)",
+        "actual": "TaskResolved(corridor_battle_two_monsters,5b8ea70952fc8e93)"
+      }
+    },
+    {
+      "scenario_id": "corridor_battle_blocked_attack",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(corridor_battle_blocked_attack,8d14adf064dd1e78)",
+        "actual": "TaskResolved(corridor_battle_blocked_attack,0ca727f2a8fc5ee2)"
+      }
+    },
+    {
+      "scenario_id": "quest_easy_levitation",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(quest_easy_levitation,c6898cd92f3e6077)",
+        "actual": "TaskResolved(quest_easy_levitation,d56860402c8d9a59)"
+      }
+    },
+    {
+      "scenario_id": "quest_medium_freeze_and_fight",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(quest_medium_freeze_and_fight,9dbdcf8e101475da)",
+        "actual": "TaskResolved(quest_medium_freeze_and_fight,1c70f03d5ae4e830)"
+      }
+    },
+    {
+      "scenario_id": "quest_easy_missing_pickup",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(quest_easy_missing_pickup,e6f9e81b11a41d57)",
+        "actual": "TaskResolved(quest_easy_missing_pickup,95ed59f3e3b4a0f3)"
+      }
+    },
+    {
+      "scenario_id": "boxoban_single_push",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(boxoban_single_push,d432799c26257346)",
+        "actual": "TaskResolved(boxoban_single_push,ab8952541e6d07b2)"
+      }
+    },
+    {
+      "scenario_id": "boxoban_push_blocked",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(boxoban_push_blocked,2a363cb8f4666db4)",
+        "actual": "TaskResolved(boxoban_push_blocked,957f17e37c841686)"
+      }
+    },
+    {
+      "scenario_id": "boxoban_two_box_complete",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(boxoban_two_box_complete,a2c25e20b94c5020)",
+        "actual": "TaskResolved(boxoban_two_box_complete,6e7c1f4b8267f53a)"
+      }
+    },
+    {
+      "scenario_id": "boxoban_partial_one_on_target",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(boxoban_partial_one_on_target,c9b3f15ca0f82ae0)",
+        "actual": "TaskResolved(boxoban_partial_one_on_target,f92a377028c62e6b)"
+      }
+    },
+    {
+      "scenario_id": "boxoban_two_box_seed_alt",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(boxoban_two_box_seed_alt,be16d1a8cfc5ae22)",
+        "actual": "TaskResolved(boxoban_two_box_seed_alt,3beccc65191aed01)"
+      }
+    },
+    {
+      "scenario_id": "boxoban_hard_four_fountains",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(boxoban_hard_four_fountains,f185a6768ed61da1)",
+        "actual": "TaskResolved(boxoban_hard_four_fountains,dea8849840874183)"
+      }
+    },
+    {
+      "scenario_id": "maze_9x9_seed_101",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(maze_9x9_seed_101,d87ffbb479619201)",
+        "actual": "TaskResolved(maze_9x9_seed_101,f7d2b0301ebb5885)"
+      }
+    },
+    {
+      "scenario_id": "maze_9x9_seed_202",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(maze_9x9_seed_202,01fc16c742c835a6)",
+        "actual": "TaskResolved(maze_9x9_seed_202,e7b670e9dec769a5)"
+      }
+    },
+    {
+      "scenario_id": "maze_9x9_seed_303",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(maze_9x9_seed_303,b4ebf3abc637c722)",
+        "actual": "TaskResolved(maze_9x9_seed_303,124c38c28f86d865)"
+      }
+    },
+    {
+      "scenario_id": "maze_9x9_partial_truncated",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(maze_9x9_partial_truncated,016c19003b4d2270)",
+        "actual": "TaskResolved(maze_9x9_partial_truncated,bf32cdf99596cf36)"
+      }
+    },
+    {
+      "scenario_id": "maze_15x15_seed_401",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(maze_15x15_seed_401,7e6d7e2320ff581d)",
+        "actual": "TaskResolved(maze_15x15_seed_401,a7e2ffad041868d4)"
+      }
+    },
+    {
+      "scenario_id": "maze_15x15_seed_502",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(maze_15x15_seed_502,0f0a1f1e261e0fee)",
+        "actual": "TaskResolved(maze_15x15_seed_502,a780193ea5ca6344)"
+      }
+    },
+    {
+      "scenario_id": "maze_15x15_seed_603",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(maze_15x15_seed_603,6a25c14ba9f18d4c)",
+        "actual": "TaskResolved(maze_15x15_seed_603,5d4aee6a122cb854)"
+      }
+    },
+    {
+      "scenario_id": "maze_15x15_partial_truncated",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(maze_15x15_partial_truncated,00f776d1c87802a0)",
+        "actual": "TaskResolved(maze_15x15_partial_truncated,0a2460faa044a24a)"
+      }
+    },
+    {
+      "scenario_id": "diagonal_move_smoke",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(diagonal_move_smoke,f64fe01c24ccd420)",
+        "actual": "TaskResolved(diagonal_move_smoke,c13035b1758cf360)"
+      }
+    }
+  ],
+  "crate_files": 3
+}

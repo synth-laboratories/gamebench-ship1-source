@@ -1,0 +1,71 @@
+{
+  "name": "dev_port_to_rust",
+  "entrypoint": [
+    "port"
+  ],
+  "nodes": {
+    "port": {
+      "kind": "actor",
+      "actor": "rust_porter",
+      "inputs": {
+        "job": "ledger.job"
+      },
+      "outputs": {
+        "files": "ledger.port_files",
+        "porting_notes": "ledger.port_notes"
+      }
+    }
+  },
+  "runplan": {
+    "limits": {},
+    "map_concurrency": 1,
+    "budgets": {
+      "caps": [],
+      "warning_percent": 80.0,
+      "fail_on_hard_exhaust": true,
+      "eta": {
+        "enabled": true,
+        "mode": "all",
+        "min_wall_secs": 1.0,
+        "sample_interval_secs": 0.45
+      },
+      "viz": {
+        "enabled": true,
+        "show_progress": true,
+        "show_eta": true,
+        "show_nearest_tag": true,
+        "short_labels": true
+      }
+    },
+    "goals": {
+      "goals": [],
+      "terminate_on_met": true,
+      "fail_on_unmet": true,
+      "cancel_in_flight": false,
+      "viz": {
+        "enabled": true,
+        "show_progress": true,
+        "short_labels": true
+      }
+    },
+    "verbosity": "standard"
+  },
+  "host": {
+    "roles": {
+      "rust_porter": {
+        "prompt": "You are a systems engineer porting a WORKING Python codebase to Rust. You receive `job` with: `source_task`, `files` (the full Python gold source as {path, content}), `contract` (the required Rust bin interface), and `sample_scenarios` (a few scenario entries with their expected NEV `events`). Produce a COMPLETE Rust crate that reproduces the Python engine's behavior. Acceptance is behavioral parity ONLY (bun-in-rust model): your crate must expose a `scenario` binary that reads one scenario entry as JSON on stdin and writes {\"events\": [...]} on stdout, and those events must match the Python gold's exactly for every scenario — same strings, same order. Port mechanically (reproduce control flow and data model), do not redesign, do not weaken any scenario. Return ONE JSON object: `files` (every file needed to `cargo build --bin scenario`: Cargo.toml, src/lib.rs, src/bin/scenario.rs, …) and `porting_notes` (your type/lifetime mapping). No prose outside the JSON.",
+        "prompt_file": null
+      }
+    },
+    "output_schemas": {
+      "rust_porter": "port_output.schema.json"
+    },
+    "viz": {
+      "item_labels_op": null,
+      "item_jobs_field": null,
+      "item_label_field": "source_task",
+      "map_node": null,
+      "matrix_report_field": null
+    }
+  }
+}

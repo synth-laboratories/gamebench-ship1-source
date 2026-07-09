@@ -1,0 +1,126 @@
+{
+  "schema": "gamebench.earthborne_rangers.scenarios.v1",
+  "scenarios": [
+    {
+      "scenario_id": "fatigue_management_v1",
+      "seed": 101,
+      "default_archetype": "naturalist",
+      "max_steps": 18,
+      "objectives": [
+        {"objective_id": "map_the_bend", "target": 3, "location_id": "riverbend"},
+        {"objective_id": "secure_camp", "target": 2, "location_id": "trailhead"}
+      ],
+      "actions": [
+        "draw",
+        "draw",
+        "play:risk_push",
+        "travel:riverbend",
+        "rest",
+        "interact:map_the_bend"
+      ]
+    },
+    {
+      "scenario_id": "objective_pursuit_v1",
+      "seed": 202,
+      "default_archetype": "pathfinder",
+      "max_steps": 18,
+      "objectives": [
+        {"objective_id": "scan_ridge", "target": 2, "location_id": "ridge"},
+        {"objective_id": "secure_camp", "target": 2, "location_id": "trailhead"}
+      ],
+      "checkpoint_after": 4,
+      "restore_then_actions": ["end_day"],
+      "actions": [
+        "draw",
+        "play:survey_kit",
+        "travel:ridge",
+        "interact:scan_ridge",
+        "end_day"
+      ]
+    },
+    {
+      "scenario_id": "deck_reflexion_v1",
+      "seed": 303,
+      "default_archetype": "warden",
+      "max_steps": 20,
+      "reflexion": {
+        "enabled": true,
+        "exposures": [
+          {"kind": "last_attempt", "text": "Synthetic note: recover before long travel."}
+        ]
+      },
+      "objectives": [
+        {"objective_id": "secure_camp", "target": 2, "location_id": "trailhead"},
+        {"objective_id": "map_the_bend", "target": 3, "location_id": "riverbend"}
+      ],
+      "actions": [
+        "write_note:Prefer recovery before river travel.",
+        "draw",
+        "play:camp_routine",
+        "draw",
+        "play:trail_snack",
+        "travel:riverbend",
+        "test:map_the_bend"
+      ]
+    },
+    {
+      "scenario_id": "full_complexity_surface_v1",
+      "seed": 404,
+      "default_archetype": "pathfinder",
+      "max_steps": 64,
+      "reflexion": {
+        "enabled": true,
+        "exposures": [
+          {"kind": "strategy_guide", "text": "Synthetic guide: stage travel, fatigue, tests, effects, and reflection receipts."}
+        ]
+      },
+      "objectives": [
+        {"objective_id": "surface_probe", "target": 9, "location_id": "trailhead"},
+        {"objective_id": "range_probe", "target": 9, "location_id": "riverbend"}
+      ],
+      "actions": [
+        {"type": "start_day", "day": 1, "session": "surface_probe"},
+        {"type": "expose_reflection", "kind": "manual_prompt", "text": "Synthetic reflection exposed during the run."},
+        {"type": "choose_ranger", "ranger_id": "synthetic_ranger_a"},
+        {"type": "choose_role", "role": "synthetic_role_a", "aspect_card": "synthetic_aspect_a"},
+        {"type": "record_campaign_entry", "entry_id": "mission_intro", "mission_id": "mission_surface", "state": "active"},
+        {"type": "spend_energy", "aspect": "focus", "amount": 1},
+        {"type": "draw"},
+        {"type": "commit_card", "card_id": "survey_kit", "test_id": "trail_test"},
+        {"type": "resolve_challenge", "card_id": "challenge_probe", "modifier": -1, "effects": [{"kind": "fatigue", "amount": 1}]},
+        {"type": "resolve_test", "test_id": "trail_test", "result": "success", "difficulty": 2},
+        {"type": "build_path_deck", "cards": ["path_obstacle", "path_guide"], "terrain_sets": ["forest", "river"]},
+        {"type": "draw_path_card"},
+        {"type": "place_path_card", "card_id": "path_obstacle", "zone": "within_reach", "kind": "obstacle"},
+        {"type": "check_range", "card_id": "path_obstacle", "reachable": false, "blocked_by_obstacle": true},
+        {"type": "add_progress", "card_id": "path_obstacle", "amount": 2},
+        {"type": "add_harm", "card_id": "path_obstacle", "amount": 1},
+        {"type": "change_presence", "card_id": "path_guide", "amount": 1},
+        {"type": "attach_card", "card_id": "synthetic_attachment", "target_id": "path_obstacle"},
+        {"type": "exhaust", "card_id": "survey_kit"},
+        {"type": "ready", "card_id": "survey_kit"},
+        {"type": "fatigue", "amount": 5},
+        {"type": "soothe", "amount": 1},
+        {"type": "play_card", "card_id": "trail_snack"},
+        {"type": "take_injury", "injury_id": "synthetic_injury"},
+        {"type": "add_malady", "malady_id": "synthetic_malady"},
+        {"type": "rest", "ranger_id": "synthetic_ranger_a"},
+        {"type": "end_round"},
+        {"type": "refresh"},
+        {"type": "choose_travel", "location_id": "riverbend", "progress": 3},
+        {"type": "resolve_trigger", "trigger_id": "on_arrival", "source": "riverbend"},
+        {"type": "choose_option", "choice_id": "fork", "option_id": "left_bank"},
+        {"type": "apply_effect", "effect_id": "keyword_scan", "bucket": "persistent_effects", "payload": {"keyword": "trail"}},
+        {"type": "apply_effect", "effect_id": "replacement_probe", "bucket": "replacement_effects", "payload": {"replacement": "prevent_harm"}},
+        {"type": "apply_effect", "effect_id": "gain_reward", "bucket": "persistent_effects", "payload": {"reward_id": "synthetic_reward"}},
+        {"type": "set_active_ranger", "ranger_id": "synthetic_ranger_a"},
+        {"type": "assist_test", "ranger_id": "synthetic_ranger_a", "card_id": "steady_stride"},
+        {"type": "move_ranger_area", "ranger_id": "synthetic_ranger_a", "area": "nearby"},
+        {"type": "discard", "card_id": "survey_kit"},
+        {"type": "clear_card", "card_id": "path_obstacle"},
+        {"type": "write_note", "text": "Full-surface probe note."},
+        {"type": "complete_attempt", "attempt_index": 1}
+      ]
+    }
+  ]
+}

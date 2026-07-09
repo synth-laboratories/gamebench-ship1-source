@@ -1,0 +1,182 @@
+{
+  "schema": "gamebench.dev_port.score.v1",
+  "source_task": "crafter-singleplayer",
+  "build_ok": false,
+  "build_detail": "cargo build failed:\nerror: failed to parse manifest at `/Users/joshpurtell/.cache/jesterky/workspaces/sbx-2362-0/Cargo.toml`\n\nCaused by:\n  no targets specified in the manifest\n  either src/lib.rs, src/main.rs, a [lib] section, or [[bin]] section must be present\n",
+  "passed": 0,
+  "total": 34,
+  "score": 0.0,
+  "per_scenario": [
+    {
+      "scenario_id": "smoke_reset",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "short_walk_101",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "rule_violation_unknown_action",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "checkpoint_mid_episode",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "truncated_tiny_horizon",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "initial_state_collect_tree",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "initial_state_place_table",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "initial_state_make_wood_pickaxe",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "initial_state_collect_stone",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "initial_state_collect_drink",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "initial_state_eat_cow",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "initial_state_defeat_zombie",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "initial_state_defeat_skeleton",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "initial_state_seeded_achievement",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "craftax_collect_sapphire",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "craftax_collect_ruby",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "craftax_make_diamond_pickaxe",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "craftax_make_bow",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "craftax_make_arrow",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "craftax_drink_potion_red",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "craftax_defeat_orc_soldier",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "craftax_defeat_orc_mage",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "craftax_defeat_knight",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "craftax_defeat_knight_archer",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "craftax_defeat_troll",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "craftax_open_chest_125",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "craftax_open_chest_126",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "craftax_open_chest_127",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "monty_collect_wood_shaped",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "monty_unknown_action_penalty",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "rule_reward_step_shaping",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "rule_reward_scaled_achievement",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "rule_reward_invalid_action_penalty",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "rule_reward_death_penalty",
+      "ok": false,
+      "reason": "build_failed"
+    }
+  ],
+  "crate_files": 31
+}

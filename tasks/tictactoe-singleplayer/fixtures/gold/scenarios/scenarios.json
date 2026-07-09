@@ -1,0 +1,295 @@
+{
+  "schema_version": "gamebench.scenarios.v1",
+  "scenarios": [
+    {
+      "scenario_id": "ttt_001_empty_win_vs_block",
+      "schema_version": "gamebench.scenario.v1",
+      "opening_moves": [],
+      "agent_0_policy_id": "win_block_center_v1",
+      "agent_1_policy_id": "block_win_center_v1",
+      "max_plies": 9,
+      "seed": 101
+    },
+    {
+      "scenario_id": "ttt_002_empty_block_vs_win",
+      "schema_version": "gamebench.scenario.v1",
+      "opening_moves": [],
+      "agent_0_policy_id": "block_win_center_v1",
+      "agent_1_policy_id": "win_block_center_v1",
+      "max_plies": 9,
+      "seed": 102
+    },
+    {
+      "scenario_id": "ttt_003_center_vs_corner",
+      "schema_version": "gamebench.scenario.v1",
+      "opening_moves": [],
+      "agent_0_policy_id": "center_first_v1",
+      "agent_1_policy_id": "corner_first_v1",
+      "max_plies": 9,
+      "seed": 103
+    },
+    {
+      "scenario_id": "ttt_004_corner_vs_center",
+      "schema_version": "gamebench.scenario.v1",
+      "opening_moves": [],
+      "agent_0_policy_id": "corner_first_v1",
+      "agent_1_policy_id": "center_first_v1",
+      "max_plies": 9,
+      "seed": 104
+    },
+    {
+      "scenario_id": "ttt_005_first_vs_last",
+      "schema_version": "gamebench.scenario.v1",
+      "opening_moves": [],
+      "agent_0_policy_id": "first_legal_v1",
+      "agent_1_policy_id": "last_legal_v1",
+      "max_plies": 9,
+      "seed": 105
+    },
+    {
+      "scenario_id": "ttt_006_last_vs_first",
+      "schema_version": "gamebench.scenario.v1",
+      "opening_moves": [],
+      "agent_0_policy_id": "last_legal_v1",
+      "agent_1_policy_id": "first_legal_v1",
+      "max_plies": 9,
+      "seed": 106
+    },
+    {
+      "scenario_id": "ttt_007_edge_vs_corner",
+      "schema_version": "gamebench.scenario.v1",
+      "opening_moves": [],
+      "agent_0_policy_id": "edge_first_v1",
+      "agent_1_policy_id": "corner_first_v1",
+      "max_plies": 9,
+      "seed": 107
+    },
+    {
+      "scenario_id": "ttt_008_mirror_vs_center",
+      "schema_version": "gamebench.scenario.v1",
+      "opening_moves": [],
+      "agent_0_policy_id": "mirror_preferred_v1",
+      "agent_1_policy_id": "center_first_v1",
+      "max_plies": 9,
+      "seed": 108
+    },
+    {
+      "scenario_id": "ttt_009_seeded_vs_center",
+      "schema_version": "gamebench.scenario.v1",
+      "opening_moves": [],
+      "agent_0_policy_id": "seeded_legal_v1",
+      "agent_1_policy_id": "center_first_v1",
+      "max_plies": 9,
+      "seed": 109
+    },
+    {
+      "scenario_id": "ttt_010_seeded_win_block",
+      "schema_version": "gamebench.scenario.v1",
+      "opening_moves": [],
+      "agent_0_policy_id": "seeded_win_block_v1",
+      "agent_1_policy_id": "seeded_legal_v1",
+      "max_plies": 9,
+      "seed": 110
+    },
+    {
+      "scenario_id": "ttt_011_x_center_open",
+      "schema_version": "gamebench.scenario.v1",
+      "opening_moves": [
+        {
+          "player": "X",
+          "position": 4
+        }
+      ],
+      "agent_0_policy_id": "win_block_center_v1",
+      "agent_1_policy_id": "corner_first_v1",
+      "max_plies": 9,
+      "seed": 111
+    },
+    {
+      "scenario_id": "ttt_012_x_corner_open",
+      "schema_version": "gamebench.scenario.v1",
+      "opening_moves": [
+        {
+          "player": "X",
+          "position": 0
+        }
+      ],
+      "agent_0_policy_id": "win_block_center_v1",
+      "agent_1_policy_id": "center_first_v1",
+      "max_plies": 9,
+      "seed": 112
+    },
+    {
+      "scenario_id": "ttt_013_x_edge_open",
+      "schema_version": "gamebench.scenario.v1",
+      "opening_moves": [
+        {
+          "player": "X",
+          "position": 1
+        }
+      ],
+      "agent_0_policy_id": "block_win_center_v1",
+      "agent_1_policy_id": "mirror_preferred_v1",
+      "max_plies": 9,
+      "seed": 113
+    },
+    {
+      "scenario_id": "ttt_014_two_ply_diagonal",
+      "schema_version": "gamebench.scenario.v1",
+      "opening_moves": [
+        {
+          "player": "X",
+          "position": 0
+        },
+        {
+          "player": "O",
+          "position": 4
+        }
+      ],
+      "agent_0_policy_id": "win_block_center_v1",
+      "agent_1_policy_id": "last_legal_v1",
+      "max_plies": 9,
+      "seed": 114
+    },
+    {
+      "scenario_id": "ttt_015_two_ply_edge_center",
+      "schema_version": "gamebench.scenario.v1",
+      "opening_moves": [
+        {
+          "player": "X",
+          "position": 1
+        },
+        {
+          "player": "O",
+          "position": 4
+        }
+      ],
+      "agent_0_policy_id": "corner_first_v1",
+      "agent_1_policy_id": "win_block_center_v1",
+      "max_plies": 9,
+      "seed": 115
+    },
+    {
+      "scenario_id": "ttt_016_two_ply_corner_edge",
+      "schema_version": "gamebench.scenario.v1",
+      "opening_moves": [
+        {
+          "player": "X",
+          "position": 2
+        },
+        {
+          "player": "O",
+          "position": 3
+        }
+      ],
+      "agent_0_policy_id": "block_win_center_v1",
+      "agent_1_policy_id": "edge_first_v1",
+      "max_plies": 9,
+      "seed": 116
+    },
+    {
+      "scenario_id": "ttt_017_three_ply_x_threat",
+      "schema_version": "gamebench.scenario.v1",
+      "opening_moves": [
+        {
+          "player": "X",
+          "position": 0
+        },
+        {
+          "player": "O",
+          "position": 4
+        },
+        {
+          "player": "X",
+          "position": 1
+        }
+      ],
+      "agent_0_policy_id": "win_block_center_v1",
+      "agent_1_policy_id": "block_win_center_v1",
+      "max_plies": 9,
+      "seed": 117
+    },
+    {
+      "scenario_id": "ttt_018_three_ply_o_threat",
+      "schema_version": "gamebench.scenario.v1",
+      "opening_moves": [
+        {
+          "player": "X",
+          "position": 8
+        },
+        {
+          "player": "O",
+          "position": 0
+        },
+        {
+          "player": "X",
+          "position": 4
+        }
+      ],
+      "agent_0_policy_id": "corner_first_v1",
+      "agent_1_policy_id": "win_block_center_v1",
+      "max_plies": 9,
+      "seed": 118
+    },
+    {
+      "scenario_id": "ttt_019_midgame_o_column",
+      "schema_version": "gamebench.scenario.v1",
+      "opening_moves": [
+        {
+          "player": "X",
+          "position": 4
+        },
+        {
+          "player": "O",
+          "position": 0
+        },
+        {
+          "player": "X",
+          "position": 8
+        },
+        {
+          "player": "O",
+          "position": 3
+        }
+      ],
+      "agent_0_policy_id": "win_block_center_v1",
+      "agent_1_policy_id": "win_block_center_v1",
+      "max_plies": 9,
+      "seed": 119
+    },
+    {
+      "scenario_id": "ttt_020_near_terminal_draw",
+      "schema_version": "gamebench.scenario.v1",
+      "opening_moves": [
+        {
+          "player": "X",
+          "position": 0
+        },
+        {
+          "player": "O",
+          "position": 1
+        },
+        {
+          "player": "X",
+          "position": 2
+        },
+        {
+          "player": "O",
+          "position": 4
+        },
+        {
+          "player": "X",
+          "position": 3
+        },
+        {
+          "player": "O",
+          "position": 5
+        }
+      ],
+      "agent_0_policy_id": "edge_first_v1",
+      "agent_1_policy_id": "first_legal_v1",
+      "max_plies": 9,
+      "seed": 120
+    }
+  ]
+}

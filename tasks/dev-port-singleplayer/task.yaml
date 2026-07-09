@@ -1,0 +1,48 @@
+id: dev-port-singleplayer
+name: Dev Port — Python → Rust
+schema: gamebench.task.dev_port.v1
+kind: gamebench_dev_port
+visibility: private
+description: >
+  A GameBench DEV variant: the agent is handed a WORKING Python codebase (a gold
+  reference engine) and must port it to Rust. Unlike the game-playing tasks, the
+  "environment" is a codebase and the "policy" is an engineer. Grading is pure
+  behavioral parity against a language-independent oracle (the frozen NEV
+  eventlogs the Python gold emits) — the bun-in-rust acceptance model
+  (https://bun.com/blog/bun-in-rust): identical test-oracle execution is the bar,
+  not code aesthetics.
+
+# The port source + oracle come from an existing dual-lane gold task. Any task
+# with gold_python/ + fixtures/gold/{scenarios,eventlogs}/ works; the default is
+# the smallest (frogs, ~966 LOC).
+source:
+  default_task: frogs-singleplayer
+  supported_tasks: [frogs-singleplayer, sokoban-singleplayer, tictactoe-singleplayer]
+  python_root: tasks/<source_task>/gold_python/
+  reference_solution: tasks/<source_task>/gold_rust/   # a KNOWN-good port; scores 1.0
+
+oracle:
+  type: canonical_nev_log
+  scenarios: tasks/<source_task>/fixtures/gold/scenarios/scenarios.json
+  eventlogs: tasks/<source_task>/fixtures/gold/eventlogs/eventlogs.json
+  # The candidate Rust crate MUST expose a `scenario` bin: stdin = one scenario
+  # entry (JSON), stdout = {"events": [...]}. Parity = emitted events identical to
+  # the oracle for every scenario.
+  contract: "cargo run --bin scenario  (stdin: entry JSON  →  stdout: {\"events\": [...]})"
+
+scoring:
+  scorer: tasks/dev-port-singleplayer/score_port.py
+  metric: parity_pass_rate            # fraction of scenarios with byte-identical NEV events
+  target: 1.0                         # a full, faithful port
+  gate: build_ok AND every scenario matches
+
+workflow:
+  spec: tasks/dev-port-singleplayer/dev_port_to_rust.json     # jesterky workflow
+  runner: tasks/dev-port-singleplayer/run.sh                  # bundle → jesterky codex → score
+  brief: tasks/dev-port-singleplayer/PORTING.md
+
+status:
+  implementation: dev_port_v0
+  verification:
+    scorer_validated_on_reference: true    # gold_rust → score 1.0
+    scorer_detects_broken_port: true       # empty/non-building → score 0.0

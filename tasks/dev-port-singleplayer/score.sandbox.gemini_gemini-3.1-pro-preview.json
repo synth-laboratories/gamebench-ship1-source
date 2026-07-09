@@ -1,0 +1,32 @@
+{
+  "schema": "gamebench.dev_port.score.v1",
+  "source_task": "earthborne-rangers-singleplayer",
+  "build_ok": true,
+  "build_detail": "ok",
+  "passed": 4,
+  "total": 4,
+  "score": 1.0,
+  "per_scenario": [
+    {
+      "scenario_id": "fatigue_management_v1",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "objective_pursuit_v1",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "deck_reflexion_v1",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "full_complexity_surface_v1",
+      "ok": true,
+      "reason": "match"
+    }
+  ],
+  "crate_files": 32
+}

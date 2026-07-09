@@ -1,0 +1,407 @@
+{
+  "schema_version": "game-engine.eventlogs.v1",
+  "games": [
+    {
+      "scenario_id": "ttt_001_empty_win_vs_block",
+      "events": [
+        "GameStarted(ttt_001_empty_win_vs_block)",
+        "MoveApplied(X,4)",
+        "TurnStarted(O)",
+        "MoveApplied(O,0)",
+        "TurnStarted(X)",
+        "MoveApplied(X,2)",
+        "TurnStarted(O)",
+        "MoveApplied(O,6)",
+        "TurnStarted(X)",
+        "MoveApplied(X,3)",
+        "TurnStarted(O)",
+        "MoveApplied(O,5)",
+        "TurnStarted(X)",
+        "MoveApplied(X,8)",
+        "TurnStarted(O)",
+        "MoveApplied(O,1)",
+        "TurnStarted(X)",
+        "MoveApplied(X,7)",
+        "GameEnded(draw,draw)"
+      ]
+    },
+    {
+      "scenario_id": "ttt_002_empty_block_vs_win",
+      "events": [
+        "GameStarted(ttt_002_empty_block_vs_win)",
+        "MoveApplied(X,4)",
+        "TurnStarted(O)",
+        "MoveApplied(O,0)",
+        "TurnStarted(X)",
+        "MoveApplied(X,2)",
+        "TurnStarted(O)",
+        "MoveApplied(O,6)",
+        "TurnStarted(X)",
+        "MoveApplied(X,3)",
+        "TurnStarted(O)",
+        "MoveApplied(O,5)",
+        "TurnStarted(X)",
+        "MoveApplied(X,8)",
+        "TurnStarted(O)",
+        "MoveApplied(O,1)",
+        "TurnStarted(X)",
+        "MoveApplied(X,7)",
+        "GameEnded(draw,draw)"
+      ]
+    },
+    {
+      "scenario_id": "ttt_003_center_vs_corner",
+      "events": [
+        "GameStarted(ttt_003_center_vs_corner)",
+        "MoveApplied(X,4)",
+        "TurnStarted(O)",
+        "MoveApplied(O,0)",
+        "TurnStarted(X)",
+        "MoveApplied(X,1)",
+        "TurnStarted(O)",
+        "MoveApplied(O,2)",
+        "TurnStarted(X)",
+        "MoveApplied(X,3)",
+        "TurnStarted(O)",
+        "MoveApplied(O,6)",
+        "TurnStarted(X)",
+        "MoveApplied(X,5)",
+        "GameEnded(X,win)"
+      ]
+    },
+    {
+      "scenario_id": "ttt_004_corner_vs_center",
+      "events": [
+        "GameStarted(ttt_004_corner_vs_center)",
+        "MoveApplied(X,0)",
+        "TurnStarted(O)",
+        "MoveApplied(O,4)",
+        "TurnStarted(X)",
+        "MoveApplied(X,2)",
+        "TurnStarted(O)",
+        "MoveApplied(O,1)",
+        "TurnStarted(X)",
+        "MoveApplied(X,6)",
+        "TurnStarted(O)",
+        "MoveApplied(O,3)",
+        "TurnStarted(X)",
+        "MoveApplied(X,8)",
+        "TurnStarted(O)",
+        "MoveApplied(O,5)",
+        "GameEnded(O,win)"
+      ]
+    },
+    {
+      "scenario_id": "ttt_005_first_vs_last",
+      "events": [
+        "GameStarted(ttt_005_first_vs_last)",
+        "MoveApplied(X,0)",
+        "TurnStarted(O)",
+        "MoveApplied(O,8)",
+        "TurnStarted(X)",
+        "MoveApplied(X,1)",
+        "TurnStarted(O)",
+        "MoveApplied(O,7)",
+        "TurnStarted(X)",
+        "MoveApplied(X,2)",
+        "GameEnded(X,win)"
+      ]
+    },
+    {
+      "scenario_id": "ttt_006_last_vs_first",
+      "events": [
+        "GameStarted(ttt_006_last_vs_first)",
+        "MoveApplied(X,8)",
+        "TurnStarted(O)",
+        "MoveApplied(O,0)",
+        "TurnStarted(X)",
+        "MoveApplied(X,7)",
+        "TurnStarted(O)",
+        "MoveApplied(O,1)",
+        "TurnStarted(X)",
+        "MoveApplied(X,6)",
+        "GameEnded(X,win)"
+      ]
+    },
+    {
+      "scenario_id": "ttt_007_edge_vs_corner",
+      "events": [
+        "GameStarted(ttt_007_edge_vs_corner)",
+        "MoveApplied(X,1)",
+        "TurnStarted(O)",
+        "MoveApplied(O,0)",
+        "TurnStarted(X)",
+        "MoveApplied(X,3)",
+        "TurnStarted(O)",
+        "MoveApplied(O,2)",
+        "TurnStarted(X)",
+        "MoveApplied(X,5)",
+        "TurnStarted(O)",
+        "MoveApplied(O,6)",
+        "TurnStarted(X)",
+        "MoveApplied(X,7)",
+        "TurnStarted(O)",
+        "MoveApplied(O,8)",
+        "TurnStarted(X)",
+        "MoveApplied(X,4)",
+        "GameEnded(X,win)"
+      ]
+    },
+    {
+      "scenario_id": "ttt_008_mirror_vs_center",
+      "events": [
+        "GameStarted(ttt_008_mirror_vs_center)",
+        "MoveApplied(X,8)",
+        "TurnStarted(O)",
+        "MoveApplied(O,4)",
+        "TurnStarted(X)",
+        "MoveApplied(X,6)",
+        "TurnStarted(O)",
+        "MoveApplied(O,0)",
+        "TurnStarted(X)",
+        "MoveApplied(X,2)",
+        "TurnStarted(O)",
+        "MoveApplied(O,1)",
+        "TurnStarted(X)",
+        "MoveApplied(X,7)",
+        "GameEnded(X,win)"
+      ]
+    },
+    {
+      "scenario_id": "ttt_009_seeded_vs_center",
+      "events": [
+        "GameStarted(ttt_009_seeded_vs_center)",
+        "MoveApplied(X,0)",
+        "TurnStarted(O)",
+        "MoveApplied(O,4)",
+        "TurnStarted(X)",
+        "MoveApplied(X,5)",
+        "TurnStarted(O)",
+        "MoveApplied(O,1)",
+        "TurnStarted(X)",
+        "MoveApplied(X,3)",
+        "TurnStarted(O)",
+        "MoveApplied(O,2)",
+        "TurnStarted(X)",
+        "MoveApplied(X,6)",
+        "GameEnded(X,win)"
+      ]
+    },
+    {
+      "scenario_id": "ttt_010_seeded_win_block",
+      "events": [
+        "GameStarted(ttt_010_seeded_win_block)",
+        "MoveApplied(X,4)",
+        "TurnStarted(O)",
+        "MoveApplied(O,3)",
+        "TurnStarted(X)",
+        "MoveApplied(X,2)",
+        "TurnStarted(O)",
+        "MoveApplied(O,8)",
+        "TurnStarted(X)",
+        "MoveApplied(X,6)",
+        "GameEnded(X,win)"
+      ]
+    },
+    {
+      "scenario_id": "ttt_011_x_center_open",
+      "events": [
+        "GameStarted(ttt_011_x_center_open)",
+        "MoveApplied(X,4)",
+        "TurnStarted(O)",
+        "MoveApplied(O,0)",
+        "TurnStarted(X)",
+        "MoveApplied(X,2)",
+        "TurnStarted(O)",
+        "MoveApplied(O,6)",
+        "TurnStarted(X)",
+        "MoveApplied(X,3)",
+        "TurnStarted(O)",
+        "MoveApplied(O,8)",
+        "TurnStarted(X)",
+        "MoveApplied(X,5)",
+        "GameEnded(X,win)"
+      ]
+    },
+    {
+      "scenario_id": "ttt_012_x_corner_open",
+      "events": [
+        "GameStarted(ttt_012_x_corner_open)",
+        "MoveApplied(X,0)",
+        "TurnStarted(O)",
+        "MoveApplied(O,4)",
+        "TurnStarted(X)",
+        "MoveApplied(X,2)",
+        "TurnStarted(O)",
+        "MoveApplied(O,1)",
+        "TurnStarted(X)",
+        "MoveApplied(X,7)",
+        "TurnStarted(O)",
+        "MoveApplied(O,3)",
+        "TurnStarted(X)",
+        "MoveApplied(X,5)",
+        "TurnStarted(O)",
+        "MoveApplied(O,6)",
+        "TurnStarted(X)",
+        "MoveApplied(X,8)",
+        "GameEnded(X,win)"
+      ]
+    },
+    {
+      "scenario_id": "ttt_013_x_edge_open",
+      "events": [
+        "GameStarted(ttt_013_x_edge_open)",
+        "MoveApplied(X,1)",
+        "TurnStarted(O)",
+        "MoveApplied(O,8)",
+        "TurnStarted(X)",
+        "MoveApplied(X,4)",
+        "TurnStarted(O)",
+        "MoveApplied(O,6)",
+        "TurnStarted(X)",
+        "MoveApplied(X,7)",
+        "GameEnded(X,win)"
+      ]
+    },
+    {
+      "scenario_id": "ttt_014_two_ply_diagonal",
+      "events": [
+        "GameStarted(ttt_014_two_ply_diagonal)",
+        "MoveApplied(X,0)",
+        "TurnStarted(O)",
+        "MoveApplied(O,4)",
+        "TurnStarted(X)",
+        "MoveApplied(X,2)",
+        "TurnStarted(O)",
+        "MoveApplied(O,8)",
+        "TurnStarted(X)",
+        "MoveApplied(X,1)",
+        "GameEnded(X,win)"
+      ]
+    },
+    {
+      "scenario_id": "ttt_015_two_ply_edge_center",
+      "events": [
+        "GameStarted(ttt_015_two_ply_edge_center)",
+        "MoveApplied(X,1)",
+        "TurnStarted(O)",
+        "MoveApplied(O,4)",
+        "TurnStarted(X)",
+        "MoveApplied(X,0)",
+        "TurnStarted(O)",
+        "MoveApplied(O,2)",
+        "TurnStarted(X)",
+        "MoveApplied(X,6)",
+        "TurnStarted(O)",
+        "MoveApplied(O,3)",
+        "TurnStarted(X)",
+        "MoveApplied(X,8)",
+        "TurnStarted(O)",
+        "MoveApplied(O,5)",
+        "GameEnded(O,win)"
+      ]
+    },
+    {
+      "scenario_id": "ttt_016_two_ply_corner_edge",
+      "events": [
+        "GameStarted(ttt_016_two_ply_corner_edge)",
+        "MoveApplied(X,2)",
+        "TurnStarted(O)",
+        "MoveApplied(O,3)",
+        "TurnStarted(X)",
+        "MoveApplied(X,4)",
+        "TurnStarted(O)",
+        "MoveApplied(O,1)",
+        "TurnStarted(X)",
+        "MoveApplied(X,6)",
+        "GameEnded(X,win)"
+      ]
+    },
+    {
+      "scenario_id": "ttt_017_three_ply_x_threat",
+      "events": [
+        "GameStarted(ttt_017_three_ply_x_threat)",
+        "MoveApplied(X,0)",
+        "TurnStarted(O)",
+        "MoveApplied(O,4)",
+        "TurnStarted(X)",
+        "MoveApplied(X,1)",
+        "TurnStarted(O)",
+        "MoveApplied(O,2)",
+        "TurnStarted(X)",
+        "MoveApplied(X,6)",
+        "TurnStarted(O)",
+        "MoveApplied(O,3)",
+        "TurnStarted(X)",
+        "MoveApplied(X,5)",
+        "TurnStarted(O)",
+        "MoveApplied(O,8)",
+        "TurnStarted(X)",
+        "MoveApplied(X,7)",
+        "GameEnded(draw,draw)"
+      ]
+    },
+    {
+      "scenario_id": "ttt_018_three_ply_o_threat",
+      "events": [
+        "GameStarted(ttt_018_three_ply_o_threat)",
+        "MoveApplied(X,8)",
+        "TurnStarted(O)",
+        "MoveApplied(O,0)",
+        "TurnStarted(X)",
+        "MoveApplied(X,4)",
+        "TurnStarted(O)",
+        "MoveApplied(O,2)",
+        "TurnStarted(X)",
+        "MoveApplied(X,6)",
+        "TurnStarted(O)",
+        "MoveApplied(O,1)",
+        "GameEnded(O,win)"
+      ]
+    },
+    {
+      "scenario_id": "ttt_019_midgame_o_column",
+      "events": [
+        "GameStarted(ttt_019_midgame_o_column)",
+        "MoveApplied(X,4)",
+        "TurnStarted(O)",
+        "MoveApplied(O,0)",
+        "TurnStarted(X)",
+        "MoveApplied(X,8)",
+        "TurnStarted(O)",
+        "MoveApplied(O,3)",
+        "TurnStarted(X)",
+        "MoveApplied(X,6)",
+        "TurnStarted(O)",
+        "MoveApplied(O,7)",
+        "TurnStarted(X)",
+        "MoveApplied(X,2)",
+        "GameEnded(X,win)"
+      ]
+    },
+    {
+      "scenario_id": "ttt_020_near_terminal_draw",
+      "events": [
+        "GameStarted(ttt_020_near_terminal_draw)",
+        "MoveApplied(X,0)",
+        "TurnStarted(O)",
+        "MoveApplied(O,1)",
+        "TurnStarted(X)",
+        "MoveApplied(X,2)",
+        "TurnStarted(O)",
+        "MoveApplied(O,4)",
+        "TurnStarted(X)",
+        "MoveApplied(X,3)",
+        "TurnStarted(O)",
+        "MoveApplied(O,5)",
+        "TurnStarted(X)",
+        "MoveApplied(X,7)",
+        "TurnStarted(O)",
+        "MoveApplied(O,6)",
+        "TurnStarted(X)",
+        "MoveApplied(X,8)",
+        "GameEnded(draw,draw)"
+      ]
+    }
+  ]
+}
