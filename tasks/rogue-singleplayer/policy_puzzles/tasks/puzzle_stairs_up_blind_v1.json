@@ -1,0 +1,26 @@
+{
+  "expected_flaw_id": "upstairs_escape_blind",
+  "gamebench_task": "rogue-singleplayer",
+  "gold_summary": "The hidden policy fails to use upstairs stairs when surrounded and escape is available.",
+  "hidden_policy_id": "upstairs_escape_blind",
+  "keywords": [
+    "stairs",
+    "up",
+    "escape",
+    "surrounded"
+  ],
+  "prompt": "Diagnose the hidden Rogue policy flaw from the provided state-action traces.",
+  "puzzle_id": "puzzle_stairs_up_blind_v1",
+  "rollout": {
+    "expected_outcome": "failure",
+    "max_steps": 300,
+    "min_failure_seeds": 2,
+    "seeds": [
+      101,
+      102,
+      103
+    ],
+    "task_path": "tasks/policy_dev_template.json"
+  },
+  "schema_version": "gamebench.policy_puzzle.task.v1"
+}

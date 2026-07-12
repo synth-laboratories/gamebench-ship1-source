@@ -1,0 +1,66 @@
+{
+  "schema": "gamebench.rogue.gold_scenarios.v1",
+  "upstream_reference": "https://github.com/Davidslv/rogue/tree/modern-rogue",
+  "scenarios": [
+    {
+      "scenario_id": "core_01_descend",
+      "seed": 1,
+      "grid": [
+        "                    ",
+        "  ------------      ",
+        "  |@...*....%|      ",
+        "  |....:.....|      ",
+        "  ------------      ",
+        "                    "
+      ],
+      "rules": {"base": "modern_rogue_core", "overrides": {"max_steps": 40}},
+      "objective": "descend",
+      "actions": ["l", "l", "l", "l", "l", "l", "l", "l", "l", ">"]
+    },
+    {
+      "scenario_id": "core_02_wall_bump",
+      "seed": 2,
+      "grid": [
+        "                    ",
+        "  ------------      ",
+        "  |@...*....%|      ",
+        "  |....:.....|      ",
+        "  ------------      ",
+        "                    "
+      ],
+      "rules": {"base": "modern_rogue_core", "overrides": {"max_steps": 20}},
+      "objective": "descend",
+      "actions": ["h", "k", "l", ","]
+    },
+    {
+      "scenario_id": "core_03_food_pickup",
+      "seed": 3,
+      "grid": [
+        "                    ",
+        "  ------------      ",
+        "  |@...*....%|      ",
+        "  |....:.....|      ",
+        "  ------------      ",
+        "                    "
+      ],
+      "rules": {"base": "modern_rogue_core", "overrides": {"max_steps": 20}},
+      "objective": "collect_gold",
+      "actions": ["l", "l", "l", "l", "l"]
+    },
+    {
+      "scenario_id": "core_04_rest_search",
+      "seed": 4,
+      "grid": [
+        "                    ",
+        "  ------------      ",
+        "  |@...*....%|      ",
+        "  |....:.....|      ",
+        "  ------------      ",
+        "                    "
+      ],
+      "rules": {"base": "modern_rogue_core", "overrides": {"max_steps": 20}},
+      "objective": "descend",
+      "actions": [".", "s", "l", "l"]
+    }
+  ]
+}

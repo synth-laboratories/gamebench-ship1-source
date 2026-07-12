@@ -1,0 +1,26 @@
+{
+  "expected_flaw_id": "door_blind_scout",
+  "gamebench_task": "rogue-singleplayer",
+  "gold_summary": "The hidden policy misses visible doors and keeps wall-following instead of entering newly reachable rooms.",
+  "hidden_policy_id": "door_blind_scout",
+  "keywords": [
+    "door",
+    "room",
+    "visible",
+    "wall"
+  ],
+  "prompt": "Diagnose the hidden Rogue policy flaw from the provided state-action traces.",
+  "puzzle_id": "puzzle_door_blind_v1",
+  "rollout": {
+    "expected_outcome": "failure",
+    "max_steps": 300,
+    "min_failure_seeds": 2,
+    "seeds": [
+      101,
+      102,
+      103
+    ],
+    "task_path": "tasks/policy_dev_template.json"
+  },
+  "schema_version": "gamebench.policy_puzzle.task.v1"
+}

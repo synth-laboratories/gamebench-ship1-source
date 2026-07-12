@@ -1,0 +1,36 @@
+{
+  "algorithm_id": "synth_go_ex.v1",
+  "candidate_count": 1,
+  "holdout": {
+    "configured_in_run_measurement_rollouts_per_candidate": 2,
+    "configured_in_run_seeds": [
+      11,
+      12
+    ],
+    "isolated_from_search": true,
+    "measurement_rollouts_per_candidate": 2,
+    "observed_candidate_count": 1,
+    "observed_rollout_count": 4,
+    "seed_count": 2,
+    "seeds": [
+      11,
+      12
+    ]
+  },
+  "outcome": "succeeded",
+  "performance_invalid_reasons": [],
+  "phase": "succeeded",
+  "profile": "rogue_singleplayer_agent",
+  "result_artifact_path": "artifacts/result_manifest.json",
+  "result_valid_for_performance": true,
+  "rollouts": {
+    "heldout_measurement": 4,
+    "search": 8,
+    "total": 12
+  },
+  "run_id": "rogue_gamebench_rust_gelo_20260626T1918Z",
+  "schema_version": "goex_run_status.v1",
+  "theme_count": 0,
+  "training_checkpoint_count": 108,
+  "training_rollout_count": 8
+}

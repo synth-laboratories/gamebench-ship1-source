@@ -1,0 +1,102 @@
+{
+  "schema_version": "goex_tick_state.v1",
+  "run_id": "rogue_smoke_20260617_183643",
+  "mode": "persisted_tick_loop",
+  "tick_index": 1,
+  "current_phase": "bootstrap_completed",
+  "resumed_from_existing": false,
+  "best_base": {
+    "candidate_id": "goex_prompt_e65cc22f57db",
+    "consolidation_failed_themesets": [],
+    "fresh_reward_mean": null,
+    "last_promotion_decision": {
+      "reason": "seed candidate is the initial consolidated/global base",
+      "status": "initialized"
+    },
+    "promotion_evidence_refs": [],
+    "promotion_history": [],
+    "promotion_reason": "seed_base",
+    "run_id": "rogue_smoke_20260617_183643",
+    "schema_version": "goex_best_base_state.v1",
+    "updated_at": "2026-06-17T22:36:48.588569Z"
+  },
+  "frontier": {
+    "checkpoint_count": 0,
+    "checkpoints": []
+  },
+  "candidate_frontier": {
+    "by_theme": {},
+    "candidate_count": 1,
+    "global": [],
+    "partial": true,
+    "schema_version": "goex_candidate_frontier_projection.v1",
+    "scored_count": 0
+  },
+  "themes": [],
+  "theme_jobs": [],
+  "consolidation_jobs": [],
+  "pending_verifier_queue": [],
+  "partial_rollouts": [],
+  "current_rendered": {
+    "node": "verifier",
+    "command": "run_pending_verifiers",
+    "outcome": "skipped_no_pending_evidence",
+    "reason": "no pending verifier evidence is visible in rendered state",
+    "wait_reason": null,
+    "cause": {
+      "kind": "verifier",
+      "summary": "no pending verifier evidence is visible in rendered state",
+      "owner": "goex_state_machine",
+      "priority": 21
+    }
+  },
+  "next_rendered": {
+    "node": "core_planning",
+    "command": "core_proposer_plan",
+    "outcome": "cold_start_round0",
+    "reason": "core proposer live turn skipped because cold_start_round0",
+    "wait_reason": null,
+    "cause": {
+      "kind": "core_planning",
+      "summary": "core proposer live turn skipped because cold_start_round0",
+      "owner": "goex_state_machine",
+      "priority": 5
+    }
+  },
+  "next_action": "core_proposer_plan",
+  "transitions": [
+    {
+      "tick_index": 1,
+      "from_phase": "created",
+      "to_phase": "bootstrap_completed",
+      "reason": "bootstrap rollouts imported into archive/frontier",
+      "at": "2026-06-17T22:37:11.12104Z"
+    }
+  ],
+  "action_decisions": [
+    {
+      "tick_index": 1,
+      "phase": "bootstrap_completed",
+      "action": "core_proposer_plan",
+      "outcome": "selected",
+      "reason": "bootstrap completed; controller will import or request the core proposer plan",
+      "rendered": {
+        "node": "core_planning",
+        "command": "core_proposer_plan",
+        "outcome": "cold_start_round0",
+        "reason": "core proposer live turn skipped because cold_start_round0",
+        "wait_reason": null,
+        "cause": {
+          "kind": "core_planning",
+          "summary": "core proposer live turn skipped because cold_start_round0",
+          "owner": "goex_state_machine",
+          "priority": 5
+        }
+      },
+      "at": "2026-06-17T22:37:11.121072Z"
+    }
+  ],
+  "stop_reason": null,
+  "termination": null,
+  "updated_at": "2026-06-17T22:37:11.121072Z"
+}

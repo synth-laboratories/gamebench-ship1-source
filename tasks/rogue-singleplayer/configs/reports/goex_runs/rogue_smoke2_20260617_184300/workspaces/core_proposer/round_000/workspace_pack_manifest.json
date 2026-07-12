@@ -1,0 +1,35 @@
+{
+  "file_count": 7,
+  "files": [
+    {
+      "bytes": 1465,
+      "path": "detail_candidates.json"
+    },
+    {
+      "bytes": 2244,
+      "path": "detail_checkpoint_frontier.json"
+    },
+    {
+      "bytes": 2893,
+      "path": "detail_rollout_evidence.json"
+    },
+    {
+      "bytes": 19,
+      "path": "detail_themes.json"
+    },
+    {
+      "bytes": 36803,
+      "path": "input.json"
+    },
+    {
+      "bytes": 340,
+      "path": "proposal_manifest.json"
+    },
+    {
+      "bytes": 340,
+      "path": "proposal_manifest_template.json"
+    }
+  ],
+  "materializer_schema_version": "goex_workspace_materializer.v1",
+  "schema_version": "goex_workspace_pack_manifest.v1"
+}

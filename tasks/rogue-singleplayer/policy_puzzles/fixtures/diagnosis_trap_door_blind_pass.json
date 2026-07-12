@@ -1,0 +1,6 @@
+{
+  "distinguishing_experiment": "Present a state where trap is salient and compare against a policy that handles it correctly.",
+  "evidence": "Trace actions show: {'action': 'h', 'invalid_parse': True, 'repaired': True, 'error': 'no_action_found'} (trap door blind); {'action': 'h', 'invalid_parse': True, 'repaired': True, 'error': 'no_action_found'} (trap door blind); {'action': 'h', 'invalid_parse': True, 'repaired': True, 'error': 'no_action_found'} (trap door blind); {'action': 'h', 'invalid_parse': True, 'repaired': True, 'error': 'no_action_found'} (trap door blind); {'action': 'h', 'invalid_parse': True, 'repaired': True, 'error': 'no_action_found'} (trap door blind); {'action': 'h', 'invalid_parse': True, 'repaired': True, 'error': 'no_action_found'} (trap door blind); {'action': 'h', 'invalid_parse': True, 'repaired': True, 'error': 'no_action_found'} (trap door blind); {'action': 'h', 'invalid_parse': True, 'repaired': True, 'error': 'no_action_found'} (trap door blind).",
+  "flaw_id": "trap_door_blind",
+  "summary": "The hidden policy walks onto known trap doors without searching or avoiding them."
+}

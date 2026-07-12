@@ -1,0 +1,61 @@
+{
+  "flaws": [
+    {
+      "flaw_id": "door_blind_scout",
+      "keywords": [
+        "door",
+        "room",
+        "visible",
+        "wall"
+      ],
+      "summary": "The hidden policy misses visible doors and keeps wall-following instead of entering newly reachable rooms.",
+      "title": "Rogue door blind"
+    },
+    {
+      "flaw_id": "food_blind_scavenger",
+      "keywords": [
+        "food",
+        "hp",
+        "hunger",
+        "heal"
+      ],
+      "summary": "The hidden policy ignores nearby food when hit points are low and keeps exploring.",
+      "title": "Food blind scavenger"
+    },
+    {
+      "flaw_id": "trap_door_blind",
+      "keywords": [
+        "trap",
+        "door",
+        "avoid",
+        "search"
+      ],
+      "summary": "The hidden policy walks onto known trap doors without searching or avoiding them.",
+      "title": "Trap door blind"
+    },
+    {
+      "flaw_id": "gold_treasure_chaser",
+      "keywords": [
+        "gold",
+        "treasure",
+        "chase",
+        "safe"
+      ],
+      "summary": "The hidden policy chases distant gold rooms and ignores safer nearby exploration paths.",
+      "title": "Gold treasure chaser"
+    },
+    {
+      "flaw_id": "upstairs_escape_blind",
+      "keywords": [
+        "stairs",
+        "up",
+        "escape",
+        "surrounded"
+      ],
+      "summary": "The hidden policy fails to use upstairs stairs when surrounded and escape is available.",
+      "title": "Upstairs escape blind"
+    }
+  ],
+  "gamebench_task": "rogue-singleplayer",
+  "schema_version": "gamebench.policy_puzzles.flaws.v1"
+}

@@ -1,0 +1,1308 @@
+{
+  "request_count": 10,
+  "requests": [
+    {
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "checkpoint_id": null,
+      "dispatch_kind": "fresh_rollout",
+      "queue_item_id": "goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1",
+      "request": {
+        "allow_resume_fallback_to_fresh": false,
+        "arms": [
+          {
+            "arm_id": "goex_prompt_e65cc22f57db",
+            "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+          }
+        ],
+        "candidate": {
+          "candidate_id": "goex_prompt_e65cc22f57db",
+          "candidate_kind": "prompt",
+          "lever_bundle": {
+            "bundle_id": "goex_prompt_e65cc22f57db",
+            "metadata": {
+              "candidate_kind": "prompt",
+              "primary_lever_id": "react_system_prompt"
+            },
+            "mutated_lever_ids": [
+              "react_system_prompt"
+            ],
+            "parent_ids": [],
+            "schema_version": "lever_bundle.v1",
+            "values": {
+              "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+            }
+          },
+          "plugin_id": "goex.prompt_plugin.v1",
+          "primary_artifact_id": "goex_artifact_prompt_85d16fd0f76817df",
+          "primary_treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+          "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+        },
+        "checkpoint_id": null,
+        "dispatch_kind": "fresh_rollout",
+        "env": {
+          "config": {
+            "max_steps": 40,
+            "reward_mode": "goal_binary",
+            "segment_steps": 40,
+            "task_path": "tasks/policy_dev_template.json"
+          },
+          "seed": 1
+        },
+        "metadata": {
+          "algorithm_id": "synth_go_ex.v1",
+          "allow_resume_fallback_to_fresh": false,
+          "goex_terminator_contract": {
+            "active_mode": "agent",
+            "configured_mode": "agent",
+            "fallback_reasons": [
+              "agent_terminated",
+              "cutoff",
+              "stall"
+            ],
+            "goal_reached_only": true,
+            "metadata": {
+              "algorithm_id": "synth_go_ex.v1",
+              "contract_owner": "synth_go_ex_optimizer"
+            },
+            "objective": {
+              "kind": "run_default"
+            },
+            "poll_seconds": 0.5,
+            "primary_reason": "goal_reached",
+            "python_source": null,
+            "schema_version": "goex.terminator_contract.v1",
+            "stall_timeout_seconds": 240.0,
+            "terminator_criteria": null,
+            "theme_id": null,
+            "verifier_rubric": null
+          },
+          "preserve_search_measurement_split": true,
+          "queue_item_id": "goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1",
+          "trace_correlation_id": "rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1",
+          "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+        },
+        "policy": {
+          "config": {
+            "api_family": "chat_completions",
+            "api_key_env": "DEEPSEEK_API_KEY",
+            "credential_mode": "byok",
+            "disable_reasoning": "auto",
+            "inference_url": "https://api.deepseek.com/chat/completions",
+            "max_actions_per_turn": 1,
+            "max_completion_tokens": 512,
+            "max_llm_turns": 20,
+            "max_policy_llm_calls": 20,
+            "max_tokens": 512,
+            "model": "deepseek-v4-flash",
+            "plugin_id": "goex.prompt_plugin.v1",
+            "policy_artifact_id": "goex_artifact_policy_2fcfad471f682812",
+            "policy_id": "react_deepseek_v1",
+            "policy_kind": "react_prompt",
+            "policy_runtime": "llm_react",
+            "provider": "deepseek",
+            "proxy_mode": "proxy_only",
+            "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+            "request_timeout_seconds": 180.0,
+            "system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+            "temperature": 0.0,
+            "tool_call_contract": "openai_tool_call",
+            "tool_call_style": "none",
+            "treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+            "use_lm": true
+          }
+        },
+        "resume_from_checkpoint_id": null,
+        "rollout_id": "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1",
+        "rollout_stall_timeout_seconds": 240.0,
+        "rollout_state_poll_seconds": 0.5,
+        "rollout_terminator_poll_seconds": 0.5,
+        "run_id": "rogue_gamebench_rust_gelo_20260626T1918Z",
+        "schema_version": "goex_rollout_request.v1",
+        "seed": 1,
+        "segment_steps": 40,
+        "split": "train",
+        "submission_mode": "async",
+        "theme_id": null,
+        "trace_correlation_id": "rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1"
+      },
+      "split": "train",
+      "status": "completed",
+      "theme_id": null
+    },
+    {
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "checkpoint_id": null,
+      "dispatch_kind": "fresh_rollout",
+      "queue_item_id": "goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+      "request": {
+        "allow_resume_fallback_to_fresh": false,
+        "arms": [
+          {
+            "arm_id": "goex_prompt_e65cc22f57db",
+            "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+          }
+        ],
+        "candidate": {
+          "candidate_id": "goex_prompt_e65cc22f57db",
+          "candidate_kind": "prompt",
+          "lever_bundle": {
+            "bundle_id": "goex_prompt_e65cc22f57db",
+            "metadata": {
+              "candidate_kind": "prompt",
+              "primary_lever_id": "react_system_prompt"
+            },
+            "mutated_lever_ids": [
+              "react_system_prompt"
+            ],
+            "parent_ids": [],
+            "schema_version": "lever_bundle.v1",
+            "values": {
+              "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+            }
+          },
+          "plugin_id": "goex.prompt_plugin.v1",
+          "primary_artifact_id": "goex_artifact_prompt_85d16fd0f76817df",
+          "primary_treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+          "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+        },
+        "checkpoint_id": null,
+        "dispatch_kind": "fresh_rollout",
+        "env": {
+          "config": {
+            "max_steps": 40,
+            "reward_mode": "goal_binary",
+            "segment_steps": 40,
+            "task_path": "tasks/policy_dev_template.json"
+          },
+          "seed": 2
+        },
+        "metadata": {
+          "algorithm_id": "synth_go_ex.v1",
+          "allow_resume_fallback_to_fresh": false,
+          "goex_terminator_contract": {
+            "active_mode": "agent",
+            "configured_mode": "agent",
+            "fallback_reasons": [
+              "agent_terminated",
+              "cutoff",
+              "stall"
+            ],
+            "goal_reached_only": true,
+            "metadata": {
+              "algorithm_id": "synth_go_ex.v1",
+              "contract_owner": "synth_go_ex_optimizer"
+            },
+            "objective": {
+              "kind": "run_default"
+            },
+            "poll_seconds": 0.5,
+            "primary_reason": "goal_reached",
+            "python_source": null,
+            "schema_version": "goex.terminator_contract.v1",
+            "stall_timeout_seconds": 240.0,
+            "terminator_criteria": null,
+            "theme_id": null,
+            "verifier_rubric": null
+          },
+          "preserve_search_measurement_split": true,
+          "queue_item_id": "goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+          "trace_correlation_id": "rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+          "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+        },
+        "policy": {
+          "config": {
+            "api_family": "chat_completions",
+            "api_key_env": "DEEPSEEK_API_KEY",
+            "credential_mode": "byok",
+            "disable_reasoning": "auto",
+            "inference_url": "https://api.deepseek.com/chat/completions",
+            "max_actions_per_turn": 1,
+            "max_completion_tokens": 512,
+            "max_llm_turns": 20,
+            "max_policy_llm_calls": 20,
+            "max_tokens": 512,
+            "model": "deepseek-v4-flash",
+            "plugin_id": "goex.prompt_plugin.v1",
+            "policy_artifact_id": "goex_artifact_policy_2fcfad471f682812",
+            "policy_id": "react_deepseek_v1",
+            "policy_kind": "react_prompt",
+            "policy_runtime": "llm_react",
+            "provider": "deepseek",
+            "proxy_mode": "proxy_only",
+            "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+            "request_timeout_seconds": 180.0,
+            "system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+            "temperature": 0.0,
+            "tool_call_contract": "openai_tool_call",
+            "tool_call_style": "none",
+            "treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+            "use_lm": true
+          }
+        },
+        "resume_from_checkpoint_id": null,
+        "rollout_id": "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+        "rollout_stall_timeout_seconds": 240.0,
+        "rollout_state_poll_seconds": 0.5,
+        "rollout_terminator_poll_seconds": 0.5,
+        "run_id": "rogue_gamebench_rust_gelo_20260626T1918Z",
+        "schema_version": "goex_rollout_request.v1",
+        "seed": 2,
+        "segment_steps": 40,
+        "split": "train",
+        "submission_mode": "async",
+        "theme_id": null,
+        "trace_correlation_id": "rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2"
+      },
+      "split": "train",
+      "status": "completed",
+      "theme_id": null
+    },
+    {
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "checkpoint_id": "goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_fresh_rollout__7797aefe1e5d278a",
+      "dispatch_kind": "resume_rollout",
+      "queue_item_id": "goex_queue_core_candidate_full_resume_goex_prompt_e65cc22f57db_goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_goex_rollout_rogu_e94d7effeb7bdcb2",
+      "request": {
+        "allow_resume_fallback_to_fresh": false,
+        "arms": [
+          {
+            "arm_id": "goex_prompt_e65cc22f57db",
+            "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+          }
+        ],
+        "candidate": {
+          "candidate_id": "goex_prompt_e65cc22f57db",
+          "candidate_kind": "prompt",
+          "lever_bundle": {
+            "bundle_id": "goex_prompt_e65cc22f57db",
+            "metadata": {
+              "candidate_kind": "prompt",
+              "primary_lever_id": "react_system_prompt"
+            },
+            "mutated_lever_ids": [
+              "react_system_prompt"
+            ],
+            "parent_ids": [],
+            "schema_version": "lever_bundle.v1",
+            "values": {
+              "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+            }
+          },
+          "plugin_id": "goex.prompt_plugin.v1",
+          "primary_artifact_id": "goex_artifact_prompt_85d16fd0f76817df",
+          "primary_treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+          "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+        },
+        "checkpoint_id": "goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_fresh_rollout__7797aefe1e5d278a",
+        "checkpoint_schedule": null,
+        "dispatch_kind": "resume_rollout",
+        "env": {
+          "config": {
+            "max_steps": 24,
+            "reward_mode": "goal_binary",
+            "segment_steps": 24,
+            "task_path": "tasks/policy_dev_template.json"
+          },
+          "seed": 2
+        },
+        "metadata": {
+          "algorithm_id": "synth_go_ex.v1",
+          "allow_resume_fallback_to_fresh": false,
+          "goex_terminator_contract": {
+            "active_mode": "agent",
+            "configured_mode": "agent",
+            "fallback_reasons": [
+              "agent_terminated",
+              "cutoff",
+              "stall"
+            ],
+            "goal_reached_only": true,
+            "metadata": {
+              "algorithm_id": "synth_go_ex.v1",
+              "contract_owner": "synth_go_ex_optimizer"
+            },
+            "objective": {
+              "kind": "run_default"
+            },
+            "poll_seconds": 0.5,
+            "primary_reason": "goal_reached",
+            "python_source": null,
+            "schema_version": "goex.terminator_contract.v1",
+            "stall_timeout_seconds": 240.0,
+            "terminator_criteria": null,
+            "theme_id": null,
+            "verifier_rubric": null
+          },
+          "preserve_search_measurement_split": true,
+          "queue_item_id": "goex_queue_core_candidate_full_resume_goex_prompt_e65cc22f57db_goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_goex_rollout_rogu_e94d7effeb7bdcb2",
+          "trace_correlation_id": "rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_resume_goex_prompt_e65cc22f57db_goex_ckpt_goex_q_c4daba4c919c3b97",
+          "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+        },
+        "policy": {
+          "config": {
+            "api_family": "chat_completions",
+            "api_key_env": "DEEPSEEK_API_KEY",
+            "credential_mode": "byok",
+            "disable_reasoning": "auto",
+            "inference_url": "https://api.deepseek.com/chat/completions",
+            "max_actions_per_turn": 1,
+            "max_completion_tokens": 512,
+            "max_llm_turns": 20,
+            "max_policy_llm_calls": 20,
+            "max_tokens": 512,
+            "model": "deepseek-v4-flash",
+            "plugin_id": "goex.prompt_plugin.v1",
+            "policy_artifact_id": "goex_artifact_policy_2fcfad471f682812",
+            "policy_id": "react_deepseek_v1",
+            "policy_kind": "react_prompt",
+            "policy_runtime": "llm_react",
+            "provider": "deepseek",
+            "proxy_mode": "proxy_only",
+            "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+            "request_timeout_seconds": 180.0,
+            "system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+            "temperature": 0.0,
+            "tool_call_contract": "openai_tool_call",
+            "tool_call_style": "none",
+            "treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+            "use_lm": true
+          }
+        },
+        "resume_from_checkpoint_id": "goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_fresh_rollout__7797aefe1e5d278a",
+        "rollout_id": "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_resume_goex_prompt_e65cc22f57db_goex_ckpt_goex_q_c4daba4c919c3b97",
+        "rollout_stall_timeout_seconds": 240.0,
+        "rollout_state_poll_seconds": 0.5,
+        "rollout_terminator_poll_seconds": 0.5,
+        "run_id": "rogue_gamebench_rust_gelo_20260626T1918Z",
+        "schema_version": "goex_rollout_request.v1",
+        "seed": 2,
+        "segment_steps": 24,
+        "split": "train",
+        "submission_mode": "async",
+        "theme_id": null,
+        "trace_correlation_id": "rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_resume_goex_prompt_e65cc22f57db_goex_ckpt_goex_q_c4daba4c919c3b97"
+      },
+      "split": "train",
+      "status": "completed",
+      "theme_id": null
+    },
+    {
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "checkpoint_id": null,
+      "dispatch_kind": "fresh_rollout",
+      "queue_item_id": "goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+      "request": {
+        "allow_resume_fallback_to_fresh": false,
+        "arms": [
+          {
+            "arm_id": "goex_prompt_e65cc22f57db",
+            "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+          }
+        ],
+        "candidate": {
+          "candidate_id": "goex_prompt_e65cc22f57db",
+          "candidate_kind": "prompt",
+          "lever_bundle": {
+            "bundle_id": "goex_prompt_e65cc22f57db",
+            "metadata": {
+              "candidate_kind": "prompt",
+              "primary_lever_id": "react_system_prompt"
+            },
+            "mutated_lever_ids": [
+              "react_system_prompt"
+            ],
+            "parent_ids": [],
+            "schema_version": "lever_bundle.v1",
+            "values": {
+              "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+            }
+          },
+          "plugin_id": "goex.prompt_plugin.v1",
+          "primary_artifact_id": "goex_artifact_prompt_85d16fd0f76817df",
+          "primary_treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+          "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+        },
+        "checkpoint_id": null,
+        "checkpoint_schedule": {
+          "checkpoint_id_prefix": "goex_midcp_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+          "mode": "per_llm_call"
+        },
+        "dispatch_kind": "fresh_rollout",
+        "env": {
+          "config": {
+            "max_steps": 40,
+            "reward_mode": "goal_binary",
+            "segment_steps": 40,
+            "task_path": "tasks/policy_dev_template.json"
+          },
+          "seed": 1
+        },
+        "metadata": {
+          "algorithm_id": "synth_go_ex.v1",
+          "allow_resume_fallback_to_fresh": false,
+          "goex_terminator_contract": {
+            "active_mode": "agent",
+            "configured_mode": "agent",
+            "fallback_reasons": [
+              "agent_terminated",
+              "cutoff",
+              "stall"
+            ],
+            "goal_reached_only": true,
+            "metadata": {
+              "algorithm_id": "synth_go_ex.v1",
+              "contract_owner": "synth_go_ex_optimizer"
+            },
+            "objective": {
+              "kind": "run_default"
+            },
+            "poll_seconds": 0.5,
+            "primary_reason": "goal_reached",
+            "python_source": null,
+            "schema_version": "goex.terminator_contract.v1",
+            "stall_timeout_seconds": 240.0,
+            "terminator_criteria": null,
+            "theme_id": null,
+            "verifier_rubric": null
+          },
+          "preserve_search_measurement_split": true,
+          "queue_item_id": "goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+          "trace_correlation_id": "rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+          "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+        },
+        "policy": {
+          "config": {
+            "api_family": "chat_completions",
+            "api_key_env": "DEEPSEEK_API_KEY",
+            "credential_mode": "byok",
+            "disable_reasoning": "auto",
+            "inference_url": "https://api.deepseek.com/chat/completions",
+            "max_actions_per_turn": 1,
+            "max_completion_tokens": 512,
+            "max_llm_turns": 20,
+            "max_policy_llm_calls": 20,
+            "max_tokens": 512,
+            "model": "deepseek-v4-flash",
+            "plugin_id": "goex.prompt_plugin.v1",
+            "policy_artifact_id": "goex_artifact_policy_2fcfad471f682812",
+            "policy_id": "react_deepseek_v1",
+            "policy_kind": "react_prompt",
+            "policy_runtime": "llm_react",
+            "provider": "deepseek",
+            "proxy_mode": "proxy_only",
+            "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+            "request_timeout_seconds": 180.0,
+            "system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+            "temperature": 0.0,
+            "tool_call_contract": "openai_tool_call",
+            "tool_call_style": "none",
+            "treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+            "use_lm": true
+          }
+        },
+        "resume_from_checkpoint_id": null,
+        "rollout_id": "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "rollout_stall_timeout_seconds": 240.0,
+        "rollout_state_poll_seconds": 0.5,
+        "rollout_terminator_poll_seconds": 0.5,
+        "run_id": "rogue_gamebench_rust_gelo_20260626T1918Z",
+        "schema_version": "goex_rollout_request.v1",
+        "seed": 1,
+        "segment_steps": 40,
+        "split": "train",
+        "submission_mode": "async",
+        "theme_id": null,
+        "trace_correlation_id": "rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1"
+      },
+      "split": "train",
+      "status": "completed",
+      "theme_id": null
+    },
+    {
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "checkpoint_id": null,
+      "dispatch_kind": "fresh_rollout",
+      "queue_item_id": "goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+      "request": {
+        "allow_resume_fallback_to_fresh": false,
+        "arms": [
+          {
+            "arm_id": "goex_prompt_e65cc22f57db",
+            "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+          }
+        ],
+        "candidate": {
+          "candidate_id": "goex_prompt_e65cc22f57db",
+          "candidate_kind": "prompt",
+          "lever_bundle": {
+            "bundle_id": "goex_prompt_e65cc22f57db",
+            "metadata": {
+              "candidate_kind": "prompt",
+              "primary_lever_id": "react_system_prompt"
+            },
+            "mutated_lever_ids": [
+              "react_system_prompt"
+            ],
+            "parent_ids": [],
+            "schema_version": "lever_bundle.v1",
+            "values": {
+              "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+            }
+          },
+          "plugin_id": "goex.prompt_plugin.v1",
+          "primary_artifact_id": "goex_artifact_prompt_85d16fd0f76817df",
+          "primary_treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+          "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+        },
+        "checkpoint_id": null,
+        "checkpoint_schedule": {
+          "checkpoint_id_prefix": "goex_midcp_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+          "mode": "per_llm_call"
+        },
+        "dispatch_kind": "fresh_rollout",
+        "env": {
+          "config": {
+            "max_steps": 40,
+            "reward_mode": "goal_binary",
+            "segment_steps": 40,
+            "task_path": "tasks/policy_dev_template.json"
+          },
+          "seed": 2
+        },
+        "metadata": {
+          "algorithm_id": "synth_go_ex.v1",
+          "allow_resume_fallback_to_fresh": false,
+          "goex_terminator_contract": {
+            "active_mode": "agent",
+            "configured_mode": "agent",
+            "fallback_reasons": [
+              "agent_terminated",
+              "cutoff",
+              "stall"
+            ],
+            "goal_reached_only": true,
+            "metadata": {
+              "algorithm_id": "synth_go_ex.v1",
+              "contract_owner": "synth_go_ex_optimizer"
+            },
+            "objective": {
+              "kind": "run_default"
+            },
+            "poll_seconds": 0.5,
+            "primary_reason": "goal_reached",
+            "python_source": null,
+            "schema_version": "goex.terminator_contract.v1",
+            "stall_timeout_seconds": 240.0,
+            "terminator_criteria": null,
+            "theme_id": null,
+            "verifier_rubric": null
+          },
+          "preserve_search_measurement_split": true,
+          "queue_item_id": "goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+          "trace_correlation_id": "rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+          "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+        },
+        "policy": {
+          "config": {
+            "api_family": "chat_completions",
+            "api_key_env": "DEEPSEEK_API_KEY",
+            "credential_mode": "byok",
+            "disable_reasoning": "auto",
+            "inference_url": "https://api.deepseek.com/chat/completions",
+            "max_actions_per_turn": 1,
+            "max_completion_tokens": 512,
+            "max_llm_turns": 20,
+            "max_policy_llm_calls": 20,
+            "max_tokens": 512,
+            "model": "deepseek-v4-flash",
+            "plugin_id": "goex.prompt_plugin.v1",
+            "policy_artifact_id": "goex_artifact_policy_2fcfad471f682812",
+            "policy_id": "react_deepseek_v1",
+            "policy_kind": "react_prompt",
+            "policy_runtime": "llm_react",
+            "provider": "deepseek",
+            "proxy_mode": "proxy_only",
+            "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+            "request_timeout_seconds": 180.0,
+            "system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+            "temperature": 0.0,
+            "tool_call_contract": "openai_tool_call",
+            "tool_call_style": "none",
+            "treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+            "use_lm": true
+          }
+        },
+        "resume_from_checkpoint_id": null,
+        "rollout_id": "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "rollout_stall_timeout_seconds": 240.0,
+        "rollout_state_poll_seconds": 0.5,
+        "rollout_terminator_poll_seconds": 0.5,
+        "run_id": "rogue_gamebench_rust_gelo_20260626T1918Z",
+        "schema_version": "goex_rollout_request.v1",
+        "seed": 2,
+        "segment_steps": 40,
+        "split": "train",
+        "submission_mode": "async",
+        "theme_id": null,
+        "trace_correlation_id": "rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2"
+      },
+      "split": "train",
+      "status": "completed",
+      "theme_id": null
+    },
+    {
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "checkpoint_id": null,
+      "dispatch_kind": "fresh_rollout",
+      "queue_item_id": "goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+      "request": {
+        "allow_resume_fallback_to_fresh": false,
+        "arms": [
+          {
+            "arm_id": "goex_prompt_e65cc22f57db",
+            "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+          }
+        ],
+        "candidate": {
+          "candidate_id": "goex_prompt_e65cc22f57db",
+          "candidate_kind": "prompt",
+          "lever_bundle": {
+            "bundle_id": "goex_prompt_e65cc22f57db",
+            "metadata": {
+              "candidate_kind": "prompt",
+              "primary_lever_id": "react_system_prompt"
+            },
+            "mutated_lever_ids": [
+              "react_system_prompt"
+            ],
+            "parent_ids": [],
+            "schema_version": "lever_bundle.v1",
+            "values": {
+              "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+            }
+          },
+          "plugin_id": "goex.prompt_plugin.v1",
+          "primary_artifact_id": "goex_artifact_prompt_85d16fd0f76817df",
+          "primary_treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+          "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+        },
+        "checkpoint_id": null,
+        "checkpoint_schedule": {
+          "checkpoint_id_prefix": "goex_midcp_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+          "mode": "per_llm_call"
+        },
+        "dispatch_kind": "fresh_rollout",
+        "env": {
+          "config": {
+            "max_steps": 40,
+            "reward_mode": "goal_binary",
+            "segment_steps": 40,
+            "task_path": "tasks/policy_dev_template.json"
+          },
+          "seed": 3
+        },
+        "metadata": {
+          "algorithm_id": "synth_go_ex.v1",
+          "allow_resume_fallback_to_fresh": false,
+          "goex_terminator_contract": {
+            "active_mode": "agent",
+            "configured_mode": "agent",
+            "fallback_reasons": [
+              "agent_terminated",
+              "cutoff",
+              "stall"
+            ],
+            "goal_reached_only": true,
+            "metadata": {
+              "algorithm_id": "synth_go_ex.v1",
+              "contract_owner": "synth_go_ex_optimizer"
+            },
+            "objective": {
+              "kind": "run_default"
+            },
+            "poll_seconds": 0.5,
+            "primary_reason": "goal_reached",
+            "python_source": null,
+            "schema_version": "goex.terminator_contract.v1",
+            "stall_timeout_seconds": 240.0,
+            "terminator_criteria": null,
+            "theme_id": null,
+            "verifier_rubric": null
+          },
+          "preserve_search_measurement_split": true,
+          "queue_item_id": "goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+          "trace_correlation_id": "rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+          "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+        },
+        "policy": {
+          "config": {
+            "api_family": "chat_completions",
+            "api_key_env": "DEEPSEEK_API_KEY",
+            "credential_mode": "byok",
+            "disable_reasoning": "auto",
+            "inference_url": "https://api.deepseek.com/chat/completions",
+            "max_actions_per_turn": 1,
+            "max_completion_tokens": 512,
+            "max_llm_turns": 20,
+            "max_policy_llm_calls": 20,
+            "max_tokens": 512,
+            "model": "deepseek-v4-flash",
+            "plugin_id": "goex.prompt_plugin.v1",
+            "policy_artifact_id": "goex_artifact_policy_2fcfad471f682812",
+            "policy_id": "react_deepseek_v1",
+            "policy_kind": "react_prompt",
+            "policy_runtime": "llm_react",
+            "provider": "deepseek",
+            "proxy_mode": "proxy_only",
+            "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+            "request_timeout_seconds": 180.0,
+            "system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+            "temperature": 0.0,
+            "tool_call_contract": "openai_tool_call",
+            "tool_call_style": "none",
+            "treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+            "use_lm": true
+          }
+        },
+        "resume_from_checkpoint_id": null,
+        "rollout_id": "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "rollout_stall_timeout_seconds": 240.0,
+        "rollout_state_poll_seconds": 0.5,
+        "rollout_terminator_poll_seconds": 0.5,
+        "run_id": "rogue_gamebench_rust_gelo_20260626T1918Z",
+        "schema_version": "goex_rollout_request.v1",
+        "seed": 3,
+        "segment_steps": 40,
+        "split": "train",
+        "submission_mode": "async",
+        "theme_id": null,
+        "trace_correlation_id": "rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3"
+      },
+      "split": "train",
+      "status": "completed",
+      "theme_id": null
+    },
+    {
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "checkpoint_id": null,
+      "dispatch_kind": "fresh_rollout",
+      "queue_item_id": "goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+      "request": {
+        "allow_resume_fallback_to_fresh": false,
+        "arms": [
+          {
+            "arm_id": "goex_prompt_e65cc22f57db",
+            "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+          }
+        ],
+        "candidate": {
+          "candidate_id": "goex_prompt_e65cc22f57db",
+          "candidate_kind": "prompt",
+          "lever_bundle": {
+            "bundle_id": "goex_prompt_e65cc22f57db",
+            "metadata": {
+              "candidate_kind": "prompt",
+              "primary_lever_id": "react_system_prompt"
+            },
+            "mutated_lever_ids": [
+              "react_system_prompt"
+            ],
+            "parent_ids": [],
+            "schema_version": "lever_bundle.v1",
+            "values": {
+              "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+            }
+          },
+          "plugin_id": "goex.prompt_plugin.v1",
+          "primary_artifact_id": "goex_artifact_prompt_85d16fd0f76817df",
+          "primary_treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+          "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+        },
+        "checkpoint_id": null,
+        "checkpoint_schedule": {
+          "checkpoint_id_prefix": "goex_midcp_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+          "mode": "per_llm_call"
+        },
+        "dispatch_kind": "fresh_rollout",
+        "env": {
+          "config": {
+            "max_steps": 40,
+            "reward_mode": "goal_binary",
+            "segment_steps": 40,
+            "task_path": "tasks/policy_dev_template.json"
+          },
+          "seed": 4
+        },
+        "metadata": {
+          "algorithm_id": "synth_go_ex.v1",
+          "allow_resume_fallback_to_fresh": false,
+          "goex_terminator_contract": {
+            "active_mode": "agent",
+            "configured_mode": "agent",
+            "fallback_reasons": [
+              "agent_terminated",
+              "cutoff",
+              "stall"
+            ],
+            "goal_reached_only": true,
+            "metadata": {
+              "algorithm_id": "synth_go_ex.v1",
+              "contract_owner": "synth_go_ex_optimizer"
+            },
+            "objective": {
+              "kind": "run_default"
+            },
+            "poll_seconds": 0.5,
+            "primary_reason": "goal_reached",
+            "python_source": null,
+            "schema_version": "goex.terminator_contract.v1",
+            "stall_timeout_seconds": 240.0,
+            "terminator_criteria": null,
+            "theme_id": null,
+            "verifier_rubric": null
+          },
+          "preserve_search_measurement_split": true,
+          "queue_item_id": "goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+          "trace_correlation_id": "rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+          "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+        },
+        "policy": {
+          "config": {
+            "api_family": "chat_completions",
+            "api_key_env": "DEEPSEEK_API_KEY",
+            "credential_mode": "byok",
+            "disable_reasoning": "auto",
+            "inference_url": "https://api.deepseek.com/chat/completions",
+            "max_actions_per_turn": 1,
+            "max_completion_tokens": 512,
+            "max_llm_turns": 20,
+            "max_policy_llm_calls": 20,
+            "max_tokens": 512,
+            "model": "deepseek-v4-flash",
+            "plugin_id": "goex.prompt_plugin.v1",
+            "policy_artifact_id": "goex_artifact_policy_2fcfad471f682812",
+            "policy_id": "react_deepseek_v1",
+            "policy_kind": "react_prompt",
+            "policy_runtime": "llm_react",
+            "provider": "deepseek",
+            "proxy_mode": "proxy_only",
+            "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+            "request_timeout_seconds": 180.0,
+            "system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+            "temperature": 0.0,
+            "tool_call_contract": "openai_tool_call",
+            "tool_call_style": "none",
+            "treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+            "use_lm": true
+          }
+        },
+        "resume_from_checkpoint_id": null,
+        "rollout_id": "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "rollout_stall_timeout_seconds": 240.0,
+        "rollout_state_poll_seconds": 0.5,
+        "rollout_terminator_poll_seconds": 0.5,
+        "run_id": "rogue_gamebench_rust_gelo_20260626T1918Z",
+        "schema_version": "goex_rollout_request.v1",
+        "seed": 4,
+        "segment_steps": 40,
+        "split": "train",
+        "submission_mode": "async",
+        "theme_id": null,
+        "trace_correlation_id": "rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4"
+      },
+      "split": "train",
+      "status": "completed",
+      "theme_id": null
+    },
+    {
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "checkpoint_id": null,
+      "dispatch_kind": "fresh_rollout",
+      "queue_item_id": "goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+      "request": {
+        "allow_resume_fallback_to_fresh": false,
+        "arms": [
+          {
+            "arm_id": "goex_prompt_e65cc22f57db",
+            "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+          }
+        ],
+        "candidate": {
+          "candidate_id": "goex_prompt_e65cc22f57db",
+          "candidate_kind": "prompt",
+          "lever_bundle": {
+            "bundle_id": "goex_prompt_e65cc22f57db",
+            "metadata": {
+              "candidate_kind": "prompt",
+              "primary_lever_id": "react_system_prompt"
+            },
+            "mutated_lever_ids": [
+              "react_system_prompt"
+            ],
+            "parent_ids": [],
+            "schema_version": "lever_bundle.v1",
+            "values": {
+              "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+            }
+          },
+          "plugin_id": "goex.prompt_plugin.v1",
+          "primary_artifact_id": "goex_artifact_prompt_85d16fd0f76817df",
+          "primary_treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+          "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+        },
+        "checkpoint_id": null,
+        "checkpoint_schedule": {
+          "checkpoint_id_prefix": "goex_midcp_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+          "mode": "per_llm_call"
+        },
+        "dispatch_kind": "fresh_rollout",
+        "env": {
+          "config": {
+            "max_steps": 40,
+            "reward_mode": "goal_binary",
+            "segment_steps": 40,
+            "task_path": "tasks/policy_dev_template.json"
+          },
+          "seed": 1
+        },
+        "metadata": {
+          "algorithm_id": "synth_go_ex.v1",
+          "allow_resume_fallback_to_fresh": false,
+          "goex_terminator_contract": {
+            "active_mode": "agent",
+            "configured_mode": "agent",
+            "fallback_reasons": [
+              "agent_terminated",
+              "cutoff",
+              "stall"
+            ],
+            "goal_reached_only": true,
+            "metadata": {
+              "algorithm_id": "synth_go_ex.v1",
+              "contract_owner": "synth_go_ex_optimizer"
+            },
+            "objective": {
+              "kind": "run_default"
+            },
+            "poll_seconds": 0.5,
+            "primary_reason": "goal_reached",
+            "python_source": null,
+            "schema_version": "goex.terminator_contract.v1",
+            "stall_timeout_seconds": 240.0,
+            "terminator_criteria": null,
+            "theme_id": null,
+            "verifier_rubric": null
+          },
+          "preserve_search_measurement_split": true,
+          "queue_item_id": "goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+          "trace_correlation_id": "rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+          "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+        },
+        "policy": {
+          "config": {
+            "api_family": "chat_completions",
+            "api_key_env": "DEEPSEEK_API_KEY",
+            "credential_mode": "byok",
+            "disable_reasoning": "auto",
+            "inference_url": "https://api.deepseek.com/chat/completions",
+            "max_actions_per_turn": 1,
+            "max_completion_tokens": 512,
+            "max_llm_turns": 20,
+            "max_policy_llm_calls": 20,
+            "max_tokens": 512,
+            "model": "deepseek-v4-flash",
+            "plugin_id": "goex.prompt_plugin.v1",
+            "policy_artifact_id": "goex_artifact_policy_2fcfad471f682812",
+            "policy_id": "react_deepseek_v1",
+            "policy_kind": "react_prompt",
+            "policy_runtime": "llm_react",
+            "provider": "deepseek",
+            "proxy_mode": "proxy_only",
+            "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+            "request_timeout_seconds": 180.0,
+            "system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+            "temperature": 0.0,
+            "tool_call_contract": "openai_tool_call",
+            "tool_call_style": "none",
+            "treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+            "use_lm": true
+          }
+        },
+        "resume_from_checkpoint_id": null,
+        "rollout_id": "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "rollout_stall_timeout_seconds": 240.0,
+        "rollout_state_poll_seconds": 0.5,
+        "rollout_terminator_poll_seconds": 0.5,
+        "run_id": "rogue_gamebench_rust_gelo_20260626T1918Z",
+        "schema_version": "goex_rollout_request.v1",
+        "seed": 1,
+        "segment_steps": 40,
+        "split": "train",
+        "submission_mode": "async",
+        "theme_id": null,
+        "trace_correlation_id": "rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1"
+      },
+      "split": "train",
+      "status": "completed",
+      "theme_id": null
+    },
+    {
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "checkpoint_id": null,
+      "dispatch_kind": "heldout_measurement",
+      "queue_item_id": "goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_11",
+      "request": {
+        "allow_resume_fallback_to_fresh": false,
+        "arms": [
+          {
+            "arm_id": "goex_prompt_e65cc22f57db",
+            "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+          }
+        ],
+        "candidate": {
+          "candidate_id": "goex_prompt_e65cc22f57db",
+          "candidate_kind": "prompt",
+          "lever_bundle": {
+            "bundle_id": "goex_prompt_e65cc22f57db",
+            "metadata": {
+              "candidate_kind": "prompt",
+              "primary_lever_id": "react_system_prompt"
+            },
+            "mutated_lever_ids": [
+              "react_system_prompt"
+            ],
+            "parent_ids": [],
+            "schema_version": "lever_bundle.v1",
+            "values": {
+              "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+            }
+          },
+          "plugin_id": "goex.prompt_plugin.v1",
+          "primary_artifact_id": "goex_artifact_prompt_85d16fd0f76817df",
+          "primary_treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+          "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+        },
+        "checkpoint_id": null,
+        "dispatch_kind": "heldout_measurement",
+        "env": {
+          "config": {
+            "max_steps": 40,
+            "reward_mode": "goal_binary",
+            "segment_steps": 40,
+            "task_path": "tasks/policy_dev_template.json"
+          },
+          "seed": 11
+        },
+        "metadata": {
+          "algorithm_id": "synth_go_ex.v1",
+          "allow_resume_fallback_to_fresh": false,
+          "goex_terminator_contract": {
+            "active_mode": "agent",
+            "configured_mode": "agent",
+            "fallback_reasons": [
+              "agent_terminated",
+              "cutoff",
+              "stall"
+            ],
+            "goal_reached_only": true,
+            "metadata": {
+              "algorithm_id": "synth_go_ex.v1",
+              "contract_owner": "synth_go_ex_optimizer"
+            },
+            "objective": {
+              "kind": "run_default"
+            },
+            "poll_seconds": 0.5,
+            "primary_reason": "goal_reached",
+            "python_source": null,
+            "schema_version": "goex.terminator_contract.v1",
+            "stall_timeout_seconds": 240.0,
+            "terminator_criteria": null,
+            "theme_id": null,
+            "verifier_rubric": null
+          },
+          "preserve_search_measurement_split": true,
+          "queue_item_id": "goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_11",
+          "trace_correlation_id": "rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_11",
+          "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+        },
+        "policy": {
+          "config": {
+            "api_family": "chat_completions",
+            "api_key_env": "DEEPSEEK_API_KEY",
+            "credential_mode": "byok",
+            "disable_reasoning": "auto",
+            "inference_url": "https://api.deepseek.com/chat/completions",
+            "max_actions_per_turn": 1,
+            "max_completion_tokens": 512,
+            "max_llm_turns": 20,
+            "max_policy_llm_calls": 20,
+            "max_tokens": 512,
+            "model": "deepseek-v4-flash",
+            "plugin_id": "goex.prompt_plugin.v1",
+            "policy_artifact_id": "goex_artifact_policy_2fcfad471f682812",
+            "policy_id": "react_deepseek_v1",
+            "policy_kind": "react_prompt",
+            "policy_runtime": "llm_react",
+            "provider": "deepseek",
+            "proxy_mode": "proxy_only",
+            "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+            "request_timeout_seconds": 180.0,
+            "system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+            "temperature": 0.0,
+            "tool_call_contract": "openai_tool_call",
+            "tool_call_style": "none",
+            "treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+            "use_lm": true
+          }
+        },
+        "resume_from_checkpoint_id": null,
+        "rollout_id": "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_11",
+        "rollout_stall_timeout_seconds": 240.0,
+        "rollout_state_poll_seconds": 0.5,
+        "rollout_terminator_poll_seconds": 0.5,
+        "run_id": "rogue_gamebench_rust_gelo_20260626T1918Z",
+        "schema_version": "goex_rollout_request.v1",
+        "seed": 11,
+        "segment_steps": 40,
+        "split": "heldout",
+        "submission_mode": "async",
+        "theme_id": null,
+        "trace_correlation_id": "rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_11"
+      },
+      "split": "heldout",
+      "status": "completed",
+      "theme_id": null
+    },
+    {
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "checkpoint_id": null,
+      "dispatch_kind": "heldout_measurement",
+      "queue_item_id": "goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_12",
+      "request": {
+        "allow_resume_fallback_to_fresh": false,
+        "arms": [
+          {
+            "arm_id": "goex_prompt_e65cc22f57db",
+            "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+          }
+        ],
+        "candidate": {
+          "candidate_id": "goex_prompt_e65cc22f57db",
+          "candidate_kind": "prompt",
+          "lever_bundle": {
+            "bundle_id": "goex_prompt_e65cc22f57db",
+            "metadata": {
+              "candidate_kind": "prompt",
+              "primary_lever_id": "react_system_prompt"
+            },
+            "mutated_lever_ids": [
+              "react_system_prompt"
+            ],
+            "parent_ids": [],
+            "schema_version": "lever_bundle.v1",
+            "values": {
+              "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+            }
+          },
+          "plugin_id": "goex.prompt_plugin.v1",
+          "primary_artifact_id": "goex_artifact_prompt_85d16fd0f76817df",
+          "primary_treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+          "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+        },
+        "checkpoint_id": null,
+        "dispatch_kind": "heldout_measurement",
+        "env": {
+          "config": {
+            "max_steps": 40,
+            "reward_mode": "goal_binary",
+            "segment_steps": 40,
+            "task_path": "tasks/policy_dev_template.json"
+          },
+          "seed": 12
+        },
+        "metadata": {
+          "algorithm_id": "synth_go_ex.v1",
+          "allow_resume_fallback_to_fresh": false,
+          "goex_terminator_contract": {
+            "active_mode": "agent",
+            "configured_mode": "agent",
+            "fallback_reasons": [
+              "agent_terminated",
+              "cutoff",
+              "stall"
+            ],
+            "goal_reached_only": true,
+            "metadata": {
+              "algorithm_id": "synth_go_ex.v1",
+              "contract_owner": "synth_go_ex_optimizer"
+            },
+            "objective": {
+              "kind": "run_default"
+            },
+            "poll_seconds": 0.5,
+            "primary_reason": "goal_reached",
+            "python_source": null,
+            "schema_version": "goex.terminator_contract.v1",
+            "stall_timeout_seconds": 240.0,
+            "terminator_criteria": null,
+            "theme_id": null,
+            "verifier_rubric": null
+          },
+          "preserve_search_measurement_split": true,
+          "queue_item_id": "goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_12",
+          "trace_correlation_id": "rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_12",
+          "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+        },
+        "policy": {
+          "config": {
+            "api_family": "chat_completions",
+            "api_key_env": "DEEPSEEK_API_KEY",
+            "credential_mode": "byok",
+            "disable_reasoning": "auto",
+            "inference_url": "https://api.deepseek.com/chat/completions",
+            "max_actions_per_turn": 1,
+            "max_completion_tokens": 512,
+            "max_llm_turns": 20,
+            "max_policy_llm_calls": 20,
+            "max_tokens": 512,
+            "model": "deepseek-v4-flash",
+            "plugin_id": "goex.prompt_plugin.v1",
+            "policy_artifact_id": "goex_artifact_policy_2fcfad471f682812",
+            "policy_id": "react_deepseek_v1",
+            "policy_kind": "react_prompt",
+            "policy_runtime": "llm_react",
+            "provider": "deepseek",
+            "proxy_mode": "proxy_only",
+            "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+            "request_timeout_seconds": 180.0,
+            "system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+            "temperature": 0.0,
+            "tool_call_contract": "openai_tool_call",
+            "tool_call_style": "none",
+            "treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+            "use_lm": true
+          }
+        },
+        "resume_from_checkpoint_id": null,
+        "rollout_id": "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_12",
+        "rollout_stall_timeout_seconds": 240.0,
+        "rollout_state_poll_seconds": 0.5,
+        "rollout_terminator_poll_seconds": 0.5,
+        "run_id": "rogue_gamebench_rust_gelo_20260626T1918Z",
+        "schema_version": "goex_rollout_request.v1",
+        "seed": 12,
+        "segment_steps": 40,
+        "split": "heldout",
+        "submission_mode": "async",
+        "theme_id": null,
+        "trace_correlation_id": "rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_12"
+      },
+      "split": "heldout",
+      "status": "completed",
+      "theme_id": null
+    }
+  ],
+  "run_id": "rogue_gamebench_rust_gelo_20260626T1918Z",
+  "schema_version": "goex_rollout_request_preview.v1"
+}

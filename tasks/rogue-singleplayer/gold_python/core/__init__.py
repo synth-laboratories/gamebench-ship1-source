@@ -1,0 +1,1 @@
+"""Core Rogue gold helpers."""

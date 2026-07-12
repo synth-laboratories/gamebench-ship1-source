@@ -1,0 +1,6 @@
+{
+  "distinguishing_experiment": "Present a state where stairs is salient and compare against a policy that handles it correctly.",
+  "evidence": "Trace actions show: {'action': 'l', 'invalid_parse': False, 'repaired': False, 'error': None} (upstairs escape blind wander); {'action': 'l', 'invalid_parse': False, 'repaired': False, 'error': None} (upstairs escape blind wander); {'action': 'l', 'invalid_parse': False, 'repaired': False, 'error': None} (upstairs escape blind wander); {'action': 'l', 'invalid_parse': False, 'repaired': False, 'error': None} (upstairs escape blind wander); {'action': 'l', 'invalid_parse': False, 'repaired': False, 'error': None} (upstairs escape blind wander); {'action': 'l', 'invalid_parse': False, 'repaired': False, 'error': None} (upstairs escape blind wander); {'action': 'l', 'invalid_parse': False, 'repaired': False, 'error': None} (upstairs escape blind wander); {'action': 'l', 'invalid_parse': False, 'repaired': False, 'error': None} (upstairs escape blind wander).",
+  "flaw_id": "upstairs_escape_blind",
+  "summary": "The hidden policy fails to use upstairs stairs when surrounded and escape is available."
+}

@@ -1,0 +1,19 @@
+{
+  "action_summary": [
+    "{'action': 'l', 'invalid_parse': False, 'repaired': False, 'error': None} (gold treasure chaser)",
+    "{'action': 'l', 'invalid_parse': False, 'repaired': False, 'error': None} (gold treasure chaser)",
+    "{'action': 'l', 'invalid_parse': False, 'repaired': False, 'error': None} (gold treasure chaser)",
+    "{'action': 'l', 'invalid_parse': False, 'repaired': False, 'error': None} (gold treasure chaser)",
+    "{'action': 'h', 'invalid_parse': True, 'repaired': True, 'error': 'no_action_found'} (gold treasure chaser)",
+    "{'action': 'h', 'invalid_parse': True, 'repaired': True, 'error': 'no_action_found'} (gold treasure chaser)",
+    "{'action': 'h', 'invalid_parse': True, 'repaired': True, 'error': 'no_action_found'} (gold treasure chaser)",
+    "{'action': 'h', 'invalid_parse': True, 'repaired': True, 'error': 'no_action_found'} (gold treasure chaser)"
+  ],
+  "episode_outcome": "failure_reproduced",
+  "failure_signal": "gold",
+  "gamebench_task": "rogue-singleplayer",
+  "observation_summary": "rogue-singleplayer seed 102 black-box rollout (policy hidden)",
+  "puzzle_id": "puzzle_gold_hallucination_v1",
+  "schema_version": "gamebench.policy_puzzle.trace.v1",
+  "seed": 102
+}

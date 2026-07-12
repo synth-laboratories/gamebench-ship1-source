@@ -1,0 +1,39 @@
+{
+  "candidates": [
+    {
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "candidate_kind": "prompt",
+      "lever_bundle": {
+        "bundle_id": "goex_prompt_e65cc22f57db",
+        "metadata": {
+          "candidate_kind": "prompt",
+          "primary_lever_id": "react_system_prompt"
+        },
+        "mutated_lever_ids": [
+          "react_system_prompt"
+        ],
+        "parent_ids": [],
+        "schema_version": "lever_bundle.v1",
+        "values": {
+          "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+        }
+      },
+      "metadata": {
+        "candidate_kind": "prompt",
+        "plugin_id": "goex.prompt_plugin.v1",
+        "primary_artifact_id": "goex_artifact_prompt_85d16fd0f76817df",
+        "primary_treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      },
+      "parent_id": null,
+      "plugin_id": "goex.prompt_plugin.v1",
+      "primary_artifact_id": "goex_artifact_prompt_85d16fd0f76817df",
+      "primary_treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+      "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+      "source": "seed",
+      "status": "proposed"
+    }
+  ],
+  "champion_candidate_id": "goex_prompt_e65cc22f57db",
+  "plugin_id": "goex.prompt_plugin.v1",
+  "schema_version": "goex_candidate_registry.v1"
+}

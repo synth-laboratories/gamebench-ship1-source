@@ -1,0 +1,25 @@
+{
+  "schema_version": "goex_integrity_report.v1",
+  "run_id": "rogue_gamebench_rust_gelo_20260626T1918Z",
+  "status": "passed",
+  "fatal_violation_count": 0,
+  "warning_count": 0,
+  "checks": {
+    "active_or_paused_theme_count": 0,
+    "baseline_heldout_scored_count": 4,
+    "candidate_with_heldout_count": 1,
+    "champion_heldout_scored_count": 4,
+    "configured_heldout_measurement_rollouts_per_candidate": 2,
+    "consolidated_candidate_count": 0,
+    "deliverable_candidate_id": "goex_prompt_e65cc22f57db",
+    "deliverable_heldout_scored_count": 4,
+    "heldout_measurement_rollouts": 4,
+    "observed_heldout_measurement_calls": 4,
+    "observed_heldout_measurement_count": 4,
+    "partial_rollout_count": 0,
+    "theme_count": 0,
+    "verifier_imported_count": 0,
+    "verifier_required_count": 0
+  },
+  "violations": []
+}
