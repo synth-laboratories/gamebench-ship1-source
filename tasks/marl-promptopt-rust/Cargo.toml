@@ -1,0 +1,19 @@
+[package]
+name = "gamebench-marl-promptopt-rust"
+version = "0.1.0"
+edition = "2021"
+description = "Pure-Rust GEPA prompt-to-protocol eval service for GameBench MARL authorities"
+license = "MIT"
+
+[dependencies]
+axum = "0.8"
+clap = { version = "4.5", features = ["derive"] }
+craftax-coop-gamebench = { path = "../craftax-multiplayer/gold_rust" }
+dungeongrid_gold = { path = "../dungeongrid-multiplayer/gold_rust" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "signal"] }
+uuid = { version = "1", features = ["v4"] }
+
+[workspace]
