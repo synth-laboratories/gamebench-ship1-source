@@ -75,11 +75,13 @@ def _linux_sandbox_command(*, root: Path, executable: Path) -> tuple[list[str], 
             "/proc",
             "--dev",
             "/dev",
-            "--tmpfs",
+            "--ro-bind",
+            str(root / "empty"),
             "/tmp",
             "--dir",
             "/home",
-            "--dir",
+            "--ro-bind",
+            str(root / "empty"),
             "/home/candidate",
             "--ro-bind",
             str(root),
@@ -120,7 +122,6 @@ def _darwin_sandbox_command(
             "(deny file-read* (subpath "
             + json.dumps(str(protected_source_parent))
             + ") (subpath \"/Users\"))",
-            "(allow file-write* (subpath " + json.dumps(str(home)) + ") (subpath " + json.dumps(str(tmp)) + "))",
             "(allow mach-lookup)",
             "(allow sysctl-read)",
             "(deny network*)",
@@ -307,6 +308,9 @@ class IsolatedPolicyProcess:
         sandbox_root.chmod(0o755)
         policy_copy = sandbox_root / "policy.py"
         server_copy = sandbox_root / "policy_subprocess.py"
+        empty = sandbox_root / "empty"
+        empty.mkdir()
+        empty.chmod(0o555)
         policy_copy.write_bytes(source_path.read_bytes())
         server_copy.write_bytes(Path(__file__).resolve().read_bytes())
         policy_copy.chmod(0o444)
