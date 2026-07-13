@@ -17,6 +17,7 @@ class Player:
     food: int = 9
     drink: int = 9
     energy: int = 9
+    mana: int = 9
     alive: bool = True
     facing: str = "down"
     inventory: dict[str, int] = field(default_factory=lambda: {r: 0 for r in RESOURCES})
@@ -24,8 +25,52 @@ class Player:
     sword: int = 0
     armour: int = 0
     arrows: int = 0
+    torches: int = 0
+    books: int = 0
+    saplings: int = 0
+    potions: dict[str, int] = field(default_factory=lambda: {colour: 0 for colour in ("red", "green", "blue", "pink", "cyan", "yellow")})
+    dexterity: int = 0
+    strength: int = 0
+    intelligence: int = 0
+    xp: int = 0
+    level_points: int = 0
+    sword_enchantment: str | None = None
+    armour_enchantment: str | None = None
+    bow_enchantment: str | None = None
+    sleeping: bool = False
     request_type: str | None = None
     request_duration: int = 0
+
+
+@dataclass
+class Monster:
+    id: str
+    kind: str
+    level: int
+    x: int
+    y: int
+    health: int
+    damage: int
+
+
+@dataclass
+class Projectile:
+    owner: str
+    level: int
+    x: int
+    y: int
+    dx: int
+    dy: int
+    damage: int
+    ttl: int
+
+
+@dataclass
+class Plant:
+    level: int
+    x: int
+    y: int
+    age: int
 
 
 @dataclass
@@ -35,9 +80,13 @@ class WorldState:
     max_timesteps: int
     players: list[Player]
     maps: list[list[list[str]]]
-    monsters: list[dict[str, Any]]
+    monsters: list[Monster]
+    projectiles: list[Projectile] = field(default_factory=list)
+    plants: list[Plant] = field(default_factory=list)
     boss_health: int = 24
     boss_progress: int = 0
+    boss_wave_timer: int = 0
+    light_level: float = 1.0
     achievements: dict[str, bool] = field(default_factory=lambda: {a: False for a in ACHIEVEMENTS})
     trade_count: int = 0
     terminated: bool = False
@@ -53,4 +102,11 @@ class WorldState:
     def from_dict(cls, raw: dict[str, Any]) -> "WorldState":
         data = dict(raw)
         data["players"] = [Player(**p) for p in data["players"]]
+        data["monsters"] = [Monster(**monster) for monster in data["monsters"]]
+        data["projectiles"] = [Projectile(**projectile) for projectile in data["projectiles"]]
+        data["plants"] = [Plant(**plant) for plant in data["plants"]]
+        if any(player.role not in ("warrior", "forager", "miner") for player in data["players"]):
+            raise ValueError("invalid player role in checkpoint")
+        if any(player.facing not in ("left", "right", "up", "down") for player in data["players"]):
+            raise ValueError("invalid player facing in checkpoint")
         return cls(**data)

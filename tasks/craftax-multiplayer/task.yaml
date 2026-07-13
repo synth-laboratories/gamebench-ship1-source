@@ -9,4 +9,6 @@ reward: shared
 python_entrypoint: gold_python.engine:CraftaxCoopEnv
 rust_crate: gold_rust
 service_entrypoint: scripts/run_service.py
+rust_service_entrypoint: gold_rust/src/bin/service.rs
 policy_runner: scripts/run_policy.py
+parity_verifier: scripts/verify_python_rust_parity.py
