@@ -1,6 +1,40 @@
-id: craftax-multiplayer
-name: Craftax Shared-World Multi-Agent
-schema: gamebench.task.craftax-marl.v1
-gold_lane: rust
-step_api: active_agent_action
-description: Shared-world Craftax MARL lane with one deterministic world, separate survivor state, and round-robin model-controlled actions.
+schema_version: gamebench.task_family.v1
+id: craftax-coop
+name: Craftax-Coop Multiplayer
+kind: gamebench_gold_reference
+game: craftax
+visibility: private
+task_id: craftax-coop
+env_family: craftax-multiplayer
+agent_count: 3
+agents: [agent_0, agent_1, agent_2]
+roles:
+  agent_0: warrior
+  agent_1: forager
+  agent_2: miner
+map_size: [48, 48]
+levels: 9
+joint_action: simultaneous
+reward: shared
+step_api: joint_action_dict
+scenario_dir: defaults/scenarios
+fixture_dir: fixtures/gold
+python_entrypoint: gold_python.engine:CraftaxCoopEnv
+rust_crate: gold_rust
+service_entrypoint: scripts/run_service.py
+rust_service_entrypoint: gold_rust/src/bin/service.rs
+policy_runner: scripts/run_policy.py
+parity_verifier: scripts/verify_python_rust_parity.py
+fixture_generator: scripts/generate_gold_fixtures.py
+fixture_verifier: scripts/verify_gold_fixtures.py
+oracle:
+  type: canonical_joint_nev_and_state
+  eventlogs: fixtures/gold/eventlogs/eventlogs.json
+  nev_formats: [structured, legacy]
+  state_projections: fixtures/gold/states/states.json
+status:
+  reference_engine_python: tasks/craftax-multiplayer/gold_python/
+  reference_engine_rust: tasks/craftax-multiplayer/gold_rust/
+  implementation: dual_lane_author_semantics
+  marl_contract: spec/marl_env_standards.md
+  deterministic_scenarios: 5
