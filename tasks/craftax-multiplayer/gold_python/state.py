@@ -43,15 +43,46 @@ class Player:
 
 
 @dataclass
+class Monster:
+    id: str
+    kind: str
+    level: int
+    x: int
+    y: int
+    health: int
+    damage: int
+
+
+@dataclass
+class Projectile:
+    owner: str
+    level: int
+    x: int
+    y: int
+    dx: int
+    dy: int
+    damage: int
+    ttl: int
+
+
+@dataclass
+class Plant:
+    level: int
+    x: int
+    y: int
+    age: int
+
+
+@dataclass
 class WorldState:
     seed: int
     timestep: int
     max_timesteps: int
     players: list[Player]
     maps: list[list[list[str]]]
-    monsters: list[dict[str, Any]]
-    projectiles: list[dict[str, Any]] = field(default_factory=list)
-    plants: list[dict[str, Any]] = field(default_factory=list)
+    monsters: list[Monster]
+    projectiles: list[Projectile] = field(default_factory=list)
+    plants: list[Plant] = field(default_factory=list)
     boss_health: int = 24
     boss_progress: int = 0
     boss_wave_timer: int = 0
@@ -71,4 +102,7 @@ class WorldState:
     def from_dict(cls, raw: dict[str, Any]) -> "WorldState":
         data = dict(raw)
         data["players"] = [Player(**p) for p in data["players"]]
+        data["monsters"] = [Monster(**monster) for monster in data["monsters"]]
+        data["projectiles"] = [Projectile(**projectile) for projectile in data.get("projectiles", [])]
+        data["plants"] = [Plant(**plant) for plant in data.get("plants", [])]
         return cls(**data)

@@ -25,13 +25,14 @@ def _completion(api_key: str, model: str, observation: dict[str, Any]) -> dict[s
     with urllib.request.urlopen(request, timeout=120) as response:
         raw = json.loads(response.read())
     text = raw["choices"][0]["message"]["content"]
-    try:
-        parsed = json.loads(text)
-    except json.JSONDecodeError:
-        parsed = {}
-    action = str(parsed.get("action", "noop"))
+    parsed = json.loads(text)
+    if not isinstance(parsed, dict) or not isinstance(parsed.get("action"), str):
+        raise ValueError("Gemini response must be a JSON object with a string action")
+    action = parsed["action"]
     legal = observation["legal_actions"]
-    return {"kind": action if action in legal else "noop", "assistant_text": text, "usage": raw.get("usage", {}), "request_id": raw.get("id")}
+    if action not in legal:
+        raise ValueError(f"Gemini returned illegal action: {action}")
+    return {"kind": action, "assistant_text": text, "usage": raw.get("usage", {}), "request_id": raw.get("id")}
 
 
 async def rollout(seed: int, max_steps: int, model: str, api_key: str) -> dict[str, Any]:
@@ -48,8 +49,8 @@ async def rollout(seed: int, max_steps: int, model: str, api_key: str) -> dict[s
 
 def main() -> None:
     parser=argparse.ArgumentParser(); parser.add_argument("--seed",type=int,default=101); parser.add_argument("--steps",type=int,default=30); parser.add_argument("--model",default="gemini-3.1-flash-lite"); parser.add_argument("--output",type=Path); args=parser.parse_args()
-    key=os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-    if not key: raise SystemExit("missing GEMINI_API_KEY or GOOGLE_API_KEY")
+    key=os.getenv("GEMINI_API_KEY")
+    if not key: raise SystemExit("missing GEMINI_API_KEY")
     result=asyncio.run(rollout(args.seed,args.steps,args.model,key)); encoded=json.dumps(result,indent=2,sort_keys=True)
     if args.output: args.output.parent.mkdir(parents=True,exist_ok=True); args.output.write_text(encoded+"\n")
     print(encoded)

@@ -6,7 +6,7 @@ from copy import deepcopy
 from typing import Any
 
 from .constants import BASE_ACTIONS, BOSS_HEALTH, DAY_LENGTH, GLYPHS, MAP_SIZE, MAX_TIMESTEPS, MOB_STATS, NUM_LEVELS, POTION_COLOURS, REQUEST_ACTIONS, REQUEST_DURATION, RESOURCES, ROLES
-from .state import Player, WorldState
+from .state import Monster, Player, Projectile, WorldState
 
 
 class CraftaxCoopEnv:
@@ -54,7 +54,7 @@ class CraftaxCoopEnv:
         return self.observations(), {"seed": seed, "state_hash": self.state_hash()}
 
     @staticmethod
-    def _spawn_initial_monsters(seed: int, maps: list[list[list[str]]]) -> list[dict[str, Any]]:
+    def _spawn_initial_monsters(seed: int, maps: list[list[list[str]]]) -> list[Monster]:
         monsters = []
         kinds = tuple(MOB_STATS)
         for level in range(NUM_LEVELS - 1):
@@ -64,7 +64,7 @@ class CraftaxCoopEnv:
                 if maps[level][y][x] in ("grass", "path", "sand", "gravel"):
                     kind = kinds[min(len(kinds) - 1, level + index % 2)]
                     health, damage = MOB_STATS[kind]
-                    monsters.append({"id": f"mob_{level}_{index}", "kind": kind, "level": level, "x": x, "y": y, "health": health, "damage": damage})
+                    monsters.append(Monster(f"mob_{level}_{index}", kind, level, x, y, health, damage))
         return monsters
 
     def _event(self, kind: str, **payload: Any) -> None:
@@ -202,14 +202,14 @@ class CraftaxCoopEnv:
             if p.role == "miner": p.inventory[("coal", "iron", "diamond")[min(2, p.level // 3)]] += 2
             state.achievements["open_chest"] = True; self._event("chest_opened", agent_id=p.agent_id)
         else:
-            mob = next((m for m in state.monsters if m["level"] == p.level and m["x"] == x and m["y"] == y), None)
+            mob = next((m for m in state.monsters if m.level == p.level and m.x == x and m.y == y), None)
             if mob:
                 damage = 1 + p.strength + p.sword * 2
                 if p.role == "warrior": damage *= 2
-                mob["health"] -= damage; self._event("mob_damaged", agent_id=p.agent_id, mob_id=mob["id"], damage=damage)
-                if mob["health"] <= 0:
+                mob.health -= damage; self._event("mob_damaged", agent_id=p.agent_id, mob_id=mob.id, damage=damage)
+                if mob.health <= 0:
                     state.monsters.remove(mob); p.xp += 1; p.level_points += int(p.xp in (3, 7, 12, 18))
-                    state.achievements["defeat_monster"] = True; self._event("mob_defeated", agent_id=p.agent_id, mob_id=mob["id"])
+                    state.achievements["defeat_monster"] = True; self._event("mob_defeated", agent_id=p.agent_id, mob_id=mob.id)
         if tile == "boss" and p.level == NUM_LEVELS - 1:
             damage = 2 * (2 if p.role == "warrior" else 1) + p.sword
             state.boss_health -= damage; state.achievements["damage_boss"] = True
@@ -258,7 +258,7 @@ class CraftaxCoopEnv:
     def _shoot_arrow(self,p:Player)->None:
         if p.arrows<=0:return
         p.arrows-=1; dx,dy={"left":(-1,0),"right":(1,0),"up":(0,-1),"down":(0,1)}[p.facing]
-        self._require_state().projectiles.append({"owner":p.agent_id,"level":p.level,"x":p.x,"y":p.y,"dx":dx,"dy":dy,"damage":2+p.dexterity+(2 if p.role=="warrior" else 0),"ttl":8})
+        self._require_state().projectiles.append(Projectile(p.agent_id, p.level, p.x, p.y, dx, dy, 2+p.dexterity+(2 if p.role=="warrior" else 0), 8))
         self._require_state().achievements["shoot_arrow"]=True;self._event("arrow_shot",agent_id=p.agent_id)
 
     def _drink_potion(self,p:Player,colour:str)->None:
@@ -304,12 +304,12 @@ class CraftaxCoopEnv:
     def _update_projectiles(self) -> None:
         state=self._require_state();remaining=[]
         for projectile in state.projectiles:
-            projectile["x"]+=projectile["dx"];projectile["y"]+=projectile["dy"];projectile["ttl"]-=1
-            if projectile["ttl"]<=0 or state.maps[projectile["level"]][projectile["y"]][projectile["x"]] in ("stone","wall","water"):continue
-            mob=next((m for m in state.monsters if m["level"]==projectile["level"] and m["x"]==projectile["x"] and m["y"]==projectile["y"]),None)
+            projectile.x+=projectile.dx;projectile.y+=projectile.dy;projectile.ttl-=1
+            if projectile.ttl<=0 or state.maps[projectile.level][projectile.y][projectile.x] in ("stone","wall","water"):continue
+            mob=next((m for m in state.monsters if m.level==projectile.level and m.x==projectile.x and m.y==projectile.y),None)
             if mob:
-                mob["health"]-=projectile["damage"]
-                if mob["health"]<=0:state.monsters.remove(mob);state.achievements["defeat_monster"]=True
+                mob.health-=projectile.damage
+                if mob.health<=0:state.monsters.remove(mob);state.achievements["defeat_monster"]=True
                 continue
             remaining.append(projectile)
         state.projectiles=remaining
@@ -317,18 +317,18 @@ class CraftaxCoopEnv:
     def _update_monsters(self) -> None:
         state=self._require_state()
         for mob in list(state.monsters):
-            targets=[p for p in state.players if p.alive and p.level==mob["level"]]
+            targets=[p for p in state.players if p.alive and p.level==mob.level]
             if not targets:continue
-            target=min(targets,key=lambda p:abs(p.x-mob["x"])+abs(p.y-mob["y"]));distance=abs(target.x-mob["x"])+abs(target.y-mob["y"])
+            target=min(targets,key=lambda p:abs(p.x-mob.x)+abs(p.y-mob.y));distance=abs(target.x-mob.x)+abs(target.y-mob.y)
             if distance<=1:
-                damage=max(0,mob["damage"]-(target.armour+target.strength//2));target.health-=damage
-                if damage:self._event("player_damaged",agent_id=target.agent_id,mob_id=mob["id"],damage=damage)
+                damage=max(0,mob.damage-(target.armour+target.strength//2));target.health-=damage
+                if damage:self._event("player_damaged",agent_id=target.agent_id,mob_id=mob.id,damage=damage)
             elif distance<=8:
-                dx=0 if target.x==mob["x"] else (1 if target.x>mob["x"] else -1);dy=0 if target.y==mob["y"] else (1 if target.y>mob["y"] else -1)
-                if abs(target.x-mob["x"])>=abs(target.y-mob["y"]):dy=0
+                dx=0 if target.x==mob.x else (1 if target.x>mob.x else -1);dy=0 if target.y==mob.y else (1 if target.y>mob.y else -1)
+                if abs(target.x-mob.x)>=abs(target.y-mob.y):dy=0
                 else:dx=0
-                nx,ny=mob["x"]+dx,mob["y"]+dy
-                if state.maps[mob["level"]][ny][nx] not in ("stone","wall","water","lava") and not any(p.level==mob["level"] and p.x==nx and p.y==ny for p in state.players):mob["x"],mob["y"]=nx,ny
+                nx,ny=mob.x+dx,mob.y+dy
+                if state.maps[mob.level][ny][nx] not in ("stone","wall","water","lava") and not any(p.level==mob.level and p.x==nx and p.y==ny for p in state.players):mob.x,mob.y=nx,ny
 
     def _update_plants(self) -> None:
         state=self._require_state()
@@ -344,7 +344,7 @@ class CraftaxCoopEnv:
 
     def observations(self) -> dict[str, dict[str, Any]]:
         state = self._require_state(); dashboard = [self._player_summary(p) for p in state.players]
-        return {p.agent_id: {"agent_id":p.agent_id,"agent_index":i,"role":p.role,"legal_agent_ids":list(self.agent_ids),"legal_actions":self.legal_actions(p.agent_id),"self":self._player_summary(p),"teammate_dashboard":deepcopy(dashboard),"level":p.level,"map_size":[MAP_SIZE,MAP_SIZE],"num_levels":NUM_LEVELS,"local_view":self._local_view(p),"ascii":self.render_ascii(p.agent_id),"visible_monsters":[deepcopy(m) for m in state.monsters if m["level"]==p.level and abs(m["x"]-p.x)<=self.view_radius and abs(m["y"]-p.y)<=self.view_radius],"shared":{"timestep":state.timestep,"light_level":state.light_level,"boss_health":state.boss_health,"boss_progress":state.boss_progress,"trade_count":state.trade_count,"achievements":deepcopy(state.achievements)},"last_joint_event":deepcopy(state.last_joint_event)} for i,p in enumerate(state.players)}
+        return {p.agent_id: {"agent_id":p.agent_id,"agent_index":i,"role":p.role,"legal_agent_ids":list(self.agent_ids),"legal_actions":self.legal_actions(p.agent_id),"self":self._player_summary(p),"teammate_dashboard":deepcopy(dashboard),"level":p.level,"map_size":[MAP_SIZE,MAP_SIZE],"num_levels":NUM_LEVELS,"local_view":self._local_view(p),"ascii":self.render_ascii(p.agent_id),"visible_monsters":[deepcopy(m.__dict__) for m in state.monsters if m.level==p.level and abs(m.x-p.x)<=self.view_radius and abs(m.y-p.y)<=self.view_radius],"shared":{"timestep":state.timestep,"light_level":state.light_level,"boss_health":state.boss_health,"boss_progress":state.boss_progress,"trade_count":state.trade_count,"achievements":deepcopy(state.achievements)},"last_joint_event":deepcopy(state.last_joint_event)} for i,p in enumerate(state.players)}
 
     @staticmethod
     def _player_summary(p: Player) -> dict[str, Any]:
@@ -357,7 +357,7 @@ class CraftaxCoopEnv:
             for x in range(p.x-self.view_radius,p.x+self.view_radius+1):
                 terrain = "out_of_bounds" if not (0<=x<MAP_SIZE and 0<=y<MAP_SIZE) else state.maps[p.level][y][x]
                 agents=[q.agent_id for q in state.players if q.alive and q.level==p.level and q.x==x and q.y==y]
-                mobs=[m["id"] for m in state.monsters if m["level"]==p.level and m["x"]==x and m["y"]==y]
+                mobs=[m.id for m in state.monsters if m.level==p.level and m.x==x and m.y==y]
                 row.append({"x":x,"y":y,"terrain":terrain,"agents":agents,"mobs":mobs})
             out.append(row)
         return out

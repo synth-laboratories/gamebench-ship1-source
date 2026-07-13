@@ -4,10 +4,12 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from dataclasses import asdict
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT))
 from gold_python.engine import CraftaxCoopEnv
+from gold_python.state import Monster
 
 def projection(env:CraftaxCoopEnv)->dict:
     state=env._require_state()
@@ -31,12 +33,12 @@ def main()->None:
     print(json.dumps({"status":"pass","projection":python,"scenarios":scenarios},sort_keys=True))
 
 def python_scenarios()->dict:
-    out={};env=CraftaxCoopEnv(max_timesteps=100);env.reset(17);out["reset"]={"maps":[env.state.maps[0][10][10],env.state.maps[6][10][10],env.state.maps[8][24][24]],"monsters":env.state.monsters[:5]}
+    out={};env=CraftaxCoopEnv(max_timesteps=100);env.reset(17);out["reset"]={"maps":[env.state.maps[0][10][10],env.state.maps[6][10][10],env.state.maps[8][24][24]],"monsters":[asdict(monster) for monster in env.state.monsters[:5]]}
     env.step({a:("request_ruby" if a=="agent_0" else "noop") for a in env.agent_ids})
     for _ in range(10):env.step({a:"noop" for a in env.agent_ids})
     out["request_expiry"]=[env.state.players[0].request_type,env.state.players[0].request_duration]
     env=CraftaxCoopEnv(max_timesteps=100);env.reset(17);env.state.monsters=[];p=env.state.players[2];env.state.maps[p.level][p.y+1][p.x]="iron";_,rewards,_,_=env.step({"agent_0":"noop","agent_1":"noop","agent_2":"do"});out["collect"]={"iron":env.state.players[2].inventory["iron"],"tile":env.state.maps[0][4][5],"reward":rewards["agent_0"],"achievements":sorted(k for k,v in env.state.achievements.items() if v)}
-    env=CraftaxCoopEnv(max_timesteps=100);env.reset(17);env.state.monsters=[{"id":"fixture","kind":"zombie","level":0,"x":3,"y":4,"health":4,"damage":2}];env.step({"agent_0":"do","agent_1":"noop","agent_2":"noop"});env.step({"agent_0":"do","agent_1":"noop","agent_2":"noop"});out["combat"]={"monsters":env.state.monsters,"xp":env.state.players[0].xp,"achievements":sorted(k for k,v in env.state.achievements.items() if v)}
+    env=CraftaxCoopEnv(max_timesteps=100);env.reset(17);env.state.monsters=[Monster("fixture","zombie",0,3,4,4,2)];env.step({"agent_0":"do","agent_1":"noop","agent_2":"noop"});env.step({"agent_0":"do","agent_1":"noop","agent_2":"noop"});out["combat"]={"monsters":[asdict(monster) for monster in env.state.monsters],"xp":env.state.players[0].xp,"achievements":sorted(k for k,v in env.state.achievements.items() if v)}
     env=CraftaxCoopEnv(max_timesteps=100);env.reset(17);env.state.monsters=[]
     for p in env.state.players:p.level=8;p.x=24;p.y=23;p.facing="down"
     for _ in range(3):

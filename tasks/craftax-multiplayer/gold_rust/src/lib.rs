@@ -104,6 +104,12 @@ pub struct StepResult {
     pub events: Vec<Event>,
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct Checkpoint {
+    schema_version: String,
+    state: State,
+}
+
 #[derive(Clone, Debug)]
 pub struct CraftaxCoopEnv {
     pub state: State,
@@ -991,15 +997,21 @@ impl CraftaxCoopEnv {
         ));
     }
     pub fn checkpoint_json(&self) -> String {
-        serde_json::to_string(
-            &json!({"schema_version":"craftax-coop.checkpoint.v1","state":self.state}),
-        )
+        serde_json::to_string(&Checkpoint {
+            schema_version: "craftax-coop.checkpoint.v1".into(),
+            state: self.state.clone(),
+        })
         .expect("state serializes")
     }
     pub fn restore_json(raw: &str) -> Result<Self, serde_json::Error> {
-        let value: Value = serde_json::from_str(raw)?;
+        let checkpoint: Checkpoint = serde_json::from_str(raw)?;
+        if checkpoint.schema_version != "craftax-coop.checkpoint.v1" {
+            return Err(<serde_json::Error as serde::de::Error>::custom(
+                "unsupported checkpoint schema",
+            ));
+        }
         Ok(Self {
-            state: serde_json::from_value(value.get("state").cloned().unwrap_or(value))?,
+            state: checkpoint.state,
         })
     }
 

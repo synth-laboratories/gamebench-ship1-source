@@ -54,11 +54,35 @@ fn handle(stream: &mut TcpStream, env: &mut CraftaxCoopEnv) {
     let Some(header_end) = raw.find("\r\n\r\n") else {
         return;
     };
-    let request_line = raw.lines().next().unwrap_or("");
+    let Some(request_line) = raw.lines().next() else {
+        response(stream, 400, json!({"error":"missing request line"}));
+        return;
+    };
     let mut parts = request_line.split_whitespace();
-    let method = parts.next().unwrap_or("");
-    let path = parts.next().unwrap_or("");
-    let body = serde_json::from_str::<Value>(&raw[header_end + 4..]).unwrap_or_else(|_| json!({}));
+    let Some(method) = parts.next() else {
+        response(stream, 400, json!({"error":"missing HTTP method"}));
+        return;
+    };
+    let Some(path) = parts.next() else {
+        response(stream, 400, json!({"error":"missing HTTP path"}));
+        return;
+    };
+    let body_text = &raw[header_end + 4..];
+    let body = if body_text.is_empty() {
+        json!({})
+    } else {
+        match serde_json::from_str::<Value>(body_text) {
+            Ok(value) => value,
+            Err(error) => {
+                response(
+                    stream,
+                    400,
+                    json!({"error":"invalid_json","message":error.to_string()}),
+                );
+                return;
+            }
+        }
+    };
     let result: Result<Value, String> = match (method, path) {
         ("GET", "/health") => {
             Ok(json!({"ok":true,"env_family":"craftax-multiplayer","runtime":"rust"}))
@@ -70,7 +94,20 @@ fn handle(stream: &mut TcpStream, env: &mut CraftaxCoopEnv) {
             .map(|p| p.agent_id.clone())
             .collect::<Vec<_>>())),
         ("POST", "/reset") => {
-            let seed = body.get("seed").and_then(Value::as_u64).unwrap_or(0);
+            let seed = match body.get("seed") {
+                None => 0,
+                Some(value) => match value.as_u64() {
+                    Some(seed) => seed,
+                    None => {
+                        response(
+                            stream,
+                            400,
+                            json!({"error":"seed must be an unsigned integer"}),
+                        );
+                        return;
+                    }
+                },
+            };
             *env = CraftaxCoopEnv::reset(seed, 3, 100_000);
             Ok(json!({"observations":env.observations(5),"info":{"seed":seed}}))
         }

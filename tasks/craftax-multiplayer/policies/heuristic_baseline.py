@@ -1,5 +1,7 @@
 """Deterministic role-aware Craftax-Coop code policy."""
 
+from __future__ import annotations
+
 WALKABLE={"grass","path","sand","gravel","fire_grass","ice_grass","stairs_down","stairs_up","crafting_table","furnace","enchantment_table_fire","enchantment_table_ice"}
 DELTAS={"left":(-1,0),"right":(1,0),"up":(0,-1),"down":(0,1)}
 
