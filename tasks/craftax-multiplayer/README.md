@@ -32,6 +32,15 @@ Python and Rust emit the same structured and legacy NEV contracts, but internal 
 
 `python scripts/verify_python_rust_parity.py`
 
+Canonical multiplayer fixture verification (five deterministic task bundles with
+structured NEV, legacy NEV, projected observations/state, request expiry,
+resource giving, checkpoint restore, and timestep termination):
+
+`python scripts/verify_gold_fixtures.py`
+
+Regenerate those checked-in artifacts after an intentional runtime contract
+change with `python scripts/generate_gold_fixtures.py`.
+
 Shared HTTP policy runner (works against either service):
 
 `python scripts/run_http_policy.py --base-url http://127.0.0.1:8080 --runtime python --seed 404 --steps 300 --output reports/http_e2e/python_seed404.json`

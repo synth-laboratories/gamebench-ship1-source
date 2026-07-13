@@ -1,0 +1,2110 @@
+{
+  "games": [
+    {
+      "legacy": [
+        "GameStarted(303,craftax-multiplayer)",
+        "JointAction(down,agent_0)",
+        "JointAction(down,agent_1)",
+        "JointAction(down,agent_2)",
+        "MoveApplied(agent_0,0,3,4)",
+        "MoveApplied(agent_1,0,4,4)",
+        "MoveApplied(agent_2,0,5,4)",
+        "JointAction(request_ruby,agent_0)",
+        "JointAction(request_sapphire,agent_1)",
+        "JointAction(request_coal,agent_2)",
+        "RequestMade(agent_0,10,ruby)",
+        "RequestMade(agent_1,10,sapphire)",
+        "RequestMade(agent_2,10,coal)",
+        "JointAction(left,agent_0)",
+        "JointAction(noop,agent_1)",
+        "JointAction(right,agent_2)",
+        "MoveApplied(agent_0,0,2,4)",
+        "MoveApplied(agent_2,0,6,4)",
+        "JointAction(noop,agent_0)",
+        "JointAction(noop,agent_1)",
+        "JointAction(noop,agent_2)"
+      ],
+      "scenario_id": "checkpoint_resume",
+      "steps": [
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "down",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "action": "down",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "action": "down",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "agent_id": "agent_0",
+              "kind": "move_applied",
+              "level": 0,
+              "timestep": 0,
+              "x": 3,
+              "y": 4
+            },
+            {
+              "agent_id": "agent_1",
+              "kind": "move_applied",
+              "level": 0,
+              "timestep": 0,
+              "x": 4,
+              "y": 4
+            },
+            {
+              "agent_id": "agent_2",
+              "kind": "move_applied",
+              "level": 0,
+              "timestep": 0,
+              "x": 5,
+              "y": 4
+            }
+          ],
+          "index": 0,
+          "joint_action": {
+            "agent_0": "down",
+            "agent_1": "down",
+            "agent_2": "down"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "40afa653f5a54c9b26dfec014cb637c38671ab55df90285d8b0e1ae049e7e193"
+        },
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "request_ruby",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 1
+            },
+            {
+              "action": "request_sapphire",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 1
+            },
+            {
+              "action": "request_coal",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 1
+            },
+            {
+              "agent_id": "agent_0",
+              "duration": 10,
+              "kind": "request_made",
+              "resource": "ruby",
+              "timestep": 1
+            },
+            {
+              "agent_id": "agent_1",
+              "duration": 10,
+              "kind": "request_made",
+              "resource": "sapphire",
+              "timestep": 1
+            },
+            {
+              "agent_id": "agent_2",
+              "duration": 10,
+              "kind": "request_made",
+              "resource": "coal",
+              "timestep": 1
+            }
+          ],
+          "index": 1,
+          "joint_action": {
+            "agent_0": "request_ruby",
+            "agent_1": "request_sapphire",
+            "agent_2": "request_coal"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "4221221f743476c5406f0a5b90fecc618a4fb640f5cbcdff834e21eb0cef3d77"
+        },
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "left",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 2
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 2
+            },
+            {
+              "action": "right",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 2
+            },
+            {
+              "agent_id": "agent_0",
+              "kind": "move_applied",
+              "level": 0,
+              "timestep": 2,
+              "x": 2,
+              "y": 4
+            },
+            {
+              "agent_id": "agent_2",
+              "kind": "move_applied",
+              "level": 0,
+              "timestep": 2,
+              "x": 6,
+              "y": 4
+            }
+          ],
+          "index": 2,
+          "joint_action": {
+            "agent_0": "left",
+            "agent_1": "noop",
+            "agent_2": "right"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "a1ece682bb3e2055cb21309bb9ef1245fc90e7c6bfc5bfbdcbe7da2967f92db3"
+        },
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "noop",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 3
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 3
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 3
+            }
+          ],
+          "index": 3,
+          "joint_action": {
+            "agent_0": "noop",
+            "agent_1": "noop",
+            "agent_2": "noop"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "c8458bc824d463fde63e2ef50f449af427448a51e9625937ef40c4008c097733"
+        }
+      ],
+      "structured": [
+        {
+          "kind": "game_started",
+          "seed": 303,
+          "task_id": "craftax-multiplayer",
+          "timestep": 0
+        },
+        {
+          "action": "down",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 0
+        },
+        {
+          "action": "down",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 0
+        },
+        {
+          "action": "down",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 0
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 0,
+          "x": 3,
+          "y": 4
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 0,
+          "x": 4,
+          "y": 4
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 0,
+          "x": 5,
+          "y": 4
+        },
+        {
+          "action": "request_ruby",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 1
+        },
+        {
+          "action": "request_sapphire",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 1
+        },
+        {
+          "action": "request_coal",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 1
+        },
+        {
+          "agent_id": "agent_0",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "ruby",
+          "timestep": 1
+        },
+        {
+          "agent_id": "agent_1",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "sapphire",
+          "timestep": 1
+        },
+        {
+          "agent_id": "agent_2",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "coal",
+          "timestep": 1
+        },
+        {
+          "action": "left",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 2
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 2
+        },
+        {
+          "action": "right",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 2
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 2,
+          "x": 2,
+          "y": 4
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 2,
+          "x": 6,
+          "y": 4
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 3
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 3
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 3
+        }
+      ]
+    },
+    {
+      "legacy": [
+        "GameStarted(101,craftax-multiplayer)",
+        "JointAction(down,agent_0)",
+        "JointAction(down,agent_1)",
+        "JointAction(down,agent_2)",
+        "MoveApplied(agent_0,0,3,4)",
+        "MoveApplied(agent_1,0,4,4)",
+        "MoveApplied(agent_2,0,5,4)",
+        "JointAction(right,agent_0)",
+        "JointAction(noop,agent_1)",
+        "JointAction(left,agent_2)",
+        "JointAction(request_stone,agent_0)",
+        "JointAction(request_food,agent_1)",
+        "JointAction(request_wood,agent_2)",
+        "RequestMade(agent_0,10,stone)",
+        "RequestMade(agent_1,10,food)",
+        "RequestMade(agent_2,10,wood)",
+        "JointAction(noop,agent_0)",
+        "JointAction(noop,agent_1)",
+        "JointAction(noop,agent_2)"
+      ],
+      "scenario_id": "coordination_smoke",
+      "steps": [
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "down",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "action": "down",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "action": "down",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "agent_id": "agent_0",
+              "kind": "move_applied",
+              "level": 0,
+              "timestep": 0,
+              "x": 3,
+              "y": 4
+            },
+            {
+              "agent_id": "agent_1",
+              "kind": "move_applied",
+              "level": 0,
+              "timestep": 0,
+              "x": 4,
+              "y": 4
+            },
+            {
+              "agent_id": "agent_2",
+              "kind": "move_applied",
+              "level": 0,
+              "timestep": 0,
+              "x": 5,
+              "y": 4
+            }
+          ],
+          "index": 0,
+          "joint_action": {
+            "agent_0": "down",
+            "agent_1": "down",
+            "agent_2": "down"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "f75fef5e169f0166f08f0f119a9d50bc9ac647a8b84f6d1cc69998368c5683a2"
+        },
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "right",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 1
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 1
+            },
+            {
+              "action": "left",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 1
+            }
+          ],
+          "index": 1,
+          "joint_action": {
+            "agent_0": "right",
+            "agent_1": "noop",
+            "agent_2": "left"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "471cbf716bec5bbfac1144476517603fc095b584ba45524e7d841efc81ea61d0"
+        },
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "request_stone",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 2
+            },
+            {
+              "action": "request_food",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 2
+            },
+            {
+              "action": "request_wood",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 2
+            },
+            {
+              "agent_id": "agent_0",
+              "duration": 10,
+              "kind": "request_made",
+              "resource": "stone",
+              "timestep": 2
+            },
+            {
+              "agent_id": "agent_1",
+              "duration": 10,
+              "kind": "request_made",
+              "resource": "food",
+              "timestep": 2
+            },
+            {
+              "agent_id": "agent_2",
+              "duration": 10,
+              "kind": "request_made",
+              "resource": "wood",
+              "timestep": 2
+            }
+          ],
+          "index": 2,
+          "joint_action": {
+            "agent_0": "request_stone",
+            "agent_1": "request_food",
+            "agent_2": "request_wood"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "d07bba76afd9d5f2b2cea82a3f786026e491385c1ef6fd27e70304fa4a3f936a"
+        },
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "noop",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 3
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 3
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 3
+            }
+          ],
+          "index": 3,
+          "joint_action": {
+            "agent_0": "noop",
+            "agent_1": "noop",
+            "agent_2": "noop"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "993aeb702446cd821e28e768c9379293c4c7d28cb987fef1106742688be6b7da"
+        }
+      ],
+      "structured": [
+        {
+          "kind": "game_started",
+          "seed": 101,
+          "task_id": "craftax-multiplayer",
+          "timestep": 0
+        },
+        {
+          "action": "down",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 0
+        },
+        {
+          "action": "down",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 0
+        },
+        {
+          "action": "down",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 0
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 0,
+          "x": 3,
+          "y": 4
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 0,
+          "x": 4,
+          "y": 4
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 0,
+          "x": 5,
+          "y": 4
+        },
+        {
+          "action": "right",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 1
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 1
+        },
+        {
+          "action": "left",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 1
+        },
+        {
+          "action": "request_stone",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 2
+        },
+        {
+          "action": "request_food",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 2
+        },
+        {
+          "action": "request_wood",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 2
+        },
+        {
+          "agent_id": "agent_0",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "stone",
+          "timestep": 2
+        },
+        {
+          "agent_id": "agent_1",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "food",
+          "timestep": 2
+        },
+        {
+          "agent_id": "agent_2",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "wood",
+          "timestep": 2
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 3
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 3
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 3
+        }
+      ]
+    },
+    {
+      "legacy": [
+        "GameStarted(202,craftax-multiplayer)",
+        "JointAction(request_diamond,agent_0)",
+        "JointAction(request_drink,agent_1)",
+        "JointAction(request_iron,agent_2)",
+        "RequestMade(agent_0,10,diamond)",
+        "RequestMade(agent_1,10,drink)",
+        "RequestMade(agent_2,10,iron)",
+        "JointAction(noop,agent_0)",
+        "JointAction(noop,agent_1)",
+        "JointAction(noop,agent_2)",
+        "JointAction(noop,agent_0)",
+        "JointAction(noop,agent_1)",
+        "JointAction(noop,agent_2)",
+        "JointAction(noop,agent_0)",
+        "JointAction(noop,agent_1)",
+        "JointAction(noop,agent_2)",
+        "JointAction(noop,agent_0)",
+        "JointAction(noop,agent_1)",
+        "JointAction(noop,agent_2)",
+        "JointAction(noop,agent_0)",
+        "JointAction(noop,agent_1)",
+        "JointAction(noop,agent_2)",
+        "JointAction(noop,agent_0)",
+        "JointAction(noop,agent_1)",
+        "JointAction(noop,agent_2)",
+        "JointAction(noop,agent_0)",
+        "JointAction(noop,agent_1)",
+        "JointAction(noop,agent_2)",
+        "JointAction(noop,agent_0)",
+        "JointAction(noop,agent_1)",
+        "JointAction(noop,agent_2)",
+        "JointAction(noop,agent_0)",
+        "JointAction(noop,agent_1)",
+        "JointAction(noop,agent_2)",
+        "JointAction(noop,agent_0)",
+        "JointAction(noop,agent_1)",
+        "JointAction(noop,agent_2)"
+      ],
+      "scenario_id": "request_expiry",
+      "steps": [
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "request_diamond",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "action": "request_drink",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "action": "request_iron",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "agent_id": "agent_0",
+              "duration": 10,
+              "kind": "request_made",
+              "resource": "diamond",
+              "timestep": 0
+            },
+            {
+              "agent_id": "agent_1",
+              "duration": 10,
+              "kind": "request_made",
+              "resource": "drink",
+              "timestep": 0
+            },
+            {
+              "agent_id": "agent_2",
+              "duration": 10,
+              "kind": "request_made",
+              "resource": "iron",
+              "timestep": 0
+            }
+          ],
+          "index": 0,
+          "joint_action": {
+            "agent_0": "request_diamond",
+            "agent_1": "request_drink",
+            "agent_2": "request_iron"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "db4fd5306ecd6202c7957a4e78248644af5003bcb9806e3ac0a1b11ca7f8889d"
+        },
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "noop",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 1
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 1
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 1
+            }
+          ],
+          "index": 1,
+          "joint_action": {
+            "agent_0": "noop",
+            "agent_1": "noop",
+            "agent_2": "noop"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "de14f6e280069363f83d62fc59389d910f94150befe679d8852da5bd84b70414"
+        },
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "noop",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 2
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 2
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 2
+            }
+          ],
+          "index": 2,
+          "joint_action": {
+            "agent_0": "noop",
+            "agent_1": "noop",
+            "agent_2": "noop"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "9c5db8b5a001eb6a3c97e932c3733cba2e378177e8a4b2f45fb489b3b6b3e1cd"
+        },
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "noop",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 3
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 3
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 3
+            }
+          ],
+          "index": 3,
+          "joint_action": {
+            "agent_0": "noop",
+            "agent_1": "noop",
+            "agent_2": "noop"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "638b367cb70be4e6e22b70a070687df76b2962692c09670f9101b835cec2c5de"
+        },
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "noop",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 4
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 4
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 4
+            }
+          ],
+          "index": 4,
+          "joint_action": {
+            "agent_0": "noop",
+            "agent_1": "noop",
+            "agent_2": "noop"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "3766b1a18092c1ba43ab482e1ad9594cb7b772e45222a9612abb2ab8c11b54d6"
+        },
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "noop",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 5
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 5
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 5
+            }
+          ],
+          "index": 5,
+          "joint_action": {
+            "agent_0": "noop",
+            "agent_1": "noop",
+            "agent_2": "noop"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "fb7926938378cb5c5119ce31107ffa1d544a520c63c299bf70d186847788989e"
+        },
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "noop",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 6
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 6
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 6
+            }
+          ],
+          "index": 6,
+          "joint_action": {
+            "agent_0": "noop",
+            "agent_1": "noop",
+            "agent_2": "noop"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "342d796a75c3bc38292ad7d9311bfdc93e5f4954d52f19abd35e48672201f5c6"
+        },
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "noop",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 7
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 7
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 7
+            }
+          ],
+          "index": 7,
+          "joint_action": {
+            "agent_0": "noop",
+            "agent_1": "noop",
+            "agent_2": "noop"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "bc4bb14796b723848bd1f0c6467fb0e9a84040334d3b1473fa2f917ff5e3dd6c"
+        },
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "noop",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 8
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 8
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 8
+            }
+          ],
+          "index": 8,
+          "joint_action": {
+            "agent_0": "noop",
+            "agent_1": "noop",
+            "agent_2": "noop"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "08fb09d4fd1198cd299dcb4fd53170c31914c09ce57cc73b700e72e605e1848a"
+        },
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "noop",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 9
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 9
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 9
+            }
+          ],
+          "index": 9,
+          "joint_action": {
+            "agent_0": "noop",
+            "agent_1": "noop",
+            "agent_2": "noop"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "78e284c933c3ab561842cfcb56725c9eb84a1cada9a5564169478287d9c789b3"
+        },
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "noop",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 10
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 10
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 10
+            }
+          ],
+          "index": 10,
+          "joint_action": {
+            "agent_0": "noop",
+            "agent_1": "noop",
+            "agent_2": "noop"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "17594181ecd1833f007db780793017e371f38c003306b48c8a825326c82bf7e2"
+        }
+      ],
+      "structured": [
+        {
+          "kind": "game_started",
+          "seed": 202,
+          "task_id": "craftax-multiplayer",
+          "timestep": 0
+        },
+        {
+          "action": "request_diamond",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 0
+        },
+        {
+          "action": "request_drink",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 0
+        },
+        {
+          "action": "request_iron",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 0
+        },
+        {
+          "agent_id": "agent_0",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "diamond",
+          "timestep": 0
+        },
+        {
+          "agent_id": "agent_1",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "drink",
+          "timestep": 0
+        },
+        {
+          "agent_id": "agent_2",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "iron",
+          "timestep": 0
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 1
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 1
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 1
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 2
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 2
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 2
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 3
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 3
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 3
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 4
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 4
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 4
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 5
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 5
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 5
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 6
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 6
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 6
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 7
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 7
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 7
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 8
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 8
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 8
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 9
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 9
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 9
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 10
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 10
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 10
+        }
+      ]
+    },
+    {
+      "legacy": [
+        "GameStarted(101,craftax-multiplayer)",
+        "JointAction(noop,agent_0)",
+        "JointAction(noop,agent_1)",
+        "JointAction(down,agent_2)",
+        "MoveApplied(agent_2,0,5,4)",
+        "JointAction(noop,agent_0)",
+        "JointAction(noop,agent_1)",
+        "JointAction(left,agent_2)",
+        "MoveApplied(agent_2,0,4,4)",
+        "JointAction(noop,agent_0)",
+        "JointAction(noop,agent_1)",
+        "JointAction(left,agent_2)",
+        "MoveApplied(agent_2,0,3,4)",
+        "JointAction(noop,agent_0)",
+        "JointAction(noop,agent_1)",
+        "JointAction(do,agent_2)",
+        "ResourceCollected(agent_2,1,wood)",
+        "JointAction(request_wood,agent_0)",
+        "JointAction(noop,agent_1)",
+        "JointAction(noop,agent_2)",
+        "RequestMade(agent_0,10,wood)",
+        "JointAction(noop,agent_0)",
+        "JointAction(noop,agent_1)",
+        "JointAction(give_wood_to_agent_0,agent_2)",
+        "TradeApplied(agent_2,agent_0,wood)"
+      ],
+      "scenario_id": "resource_request_trade",
+      "steps": [
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "noop",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "action": "down",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "agent_id": "agent_2",
+              "kind": "move_applied",
+              "level": 0,
+              "timestep": 0,
+              "x": 5,
+              "y": 4
+            }
+          ],
+          "index": 0,
+          "joint_action": {
+            "agent_0": "noop",
+            "agent_1": "noop",
+            "agent_2": "down"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "2d2c5d335f6160325097a56c5a9dccac199c3e55543112c05ea5e522a2cbc5dc"
+        },
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "noop",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 1
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 1
+            },
+            {
+              "action": "left",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 1
+            },
+            {
+              "agent_id": "agent_2",
+              "kind": "move_applied",
+              "level": 0,
+              "timestep": 1,
+              "x": 4,
+              "y": 4
+            }
+          ],
+          "index": 1,
+          "joint_action": {
+            "agent_0": "noop",
+            "agent_1": "noop",
+            "agent_2": "left"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "fdb969efcbe9322228620da4d0cac8be8756fa5e2aed725e635dbd50099a761e"
+        },
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "noop",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 2
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 2
+            },
+            {
+              "action": "left",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 2
+            },
+            {
+              "agent_id": "agent_2",
+              "kind": "move_applied",
+              "level": 0,
+              "timestep": 2,
+              "x": 3,
+              "y": 4
+            }
+          ],
+          "index": 2,
+          "joint_action": {
+            "agent_0": "noop",
+            "agent_1": "noop",
+            "agent_2": "left"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "1a9a2a56928bc884d347ab21ab9a27c21e3e92370f7329fdcab7a79375857409"
+        },
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "noop",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 3
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 3
+            },
+            {
+              "action": "do",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 3
+            },
+            {
+              "agent_id": "agent_2",
+              "amount": 1,
+              "kind": "resource_collected",
+              "resource": "wood",
+              "timestep": 3
+            }
+          ],
+          "index": 3,
+          "joint_action": {
+            "agent_0": "noop",
+            "agent_1": "noop",
+            "agent_2": "do"
+          },
+          "rewards": {
+            "agent_0": 1.0,
+            "agent_1": 1.0,
+            "agent_2": 1.0
+          },
+          "state_hash": "05bfb69ec9126ce292d386525c7d5b4d50e1761e7183a6487e2a86b375aac3c2"
+        },
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "request_wood",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 4
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 4
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 4
+            },
+            {
+              "agent_id": "agent_0",
+              "duration": 10,
+              "kind": "request_made",
+              "resource": "wood",
+              "timestep": 4
+            }
+          ],
+          "index": 4,
+          "joint_action": {
+            "agent_0": "request_wood",
+            "agent_1": "noop",
+            "agent_2": "noop"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "c6d1ad08a01ad2fac116a565e72db717a3db8b2605e781484a609f3b17338bd9"
+        },
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "noop",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 5
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 5
+            },
+            {
+              "action": "give_wood_to_agent_0",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 5
+            },
+            {
+              "giver": "agent_2",
+              "kind": "trade_applied",
+              "receiver": "agent_0",
+              "resource": "wood",
+              "timestep": 5
+            }
+          ],
+          "index": 5,
+          "joint_action": {
+            "agent_0": "noop",
+            "agent_1": "noop",
+            "agent_2": "give_wood_to_agent_0"
+          },
+          "rewards": {
+            "agent_0": 1.0,
+            "agent_1": 1.0,
+            "agent_2": 1.0
+          },
+          "state_hash": "d3eeb6ac55f7de58cecd010dc450c2dc0ee556b69ab9e5a7d889a138238ae9a3"
+        }
+      ],
+      "structured": [
+        {
+          "kind": "game_started",
+          "seed": 101,
+          "task_id": "craftax-multiplayer",
+          "timestep": 0
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 0
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 0
+        },
+        {
+          "action": "down",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 0
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 0,
+          "x": 5,
+          "y": 4
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 1
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 1
+        },
+        {
+          "action": "left",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 1
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 1,
+          "x": 4,
+          "y": 4
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 2
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 2
+        },
+        {
+          "action": "left",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 2
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 2,
+          "x": 3,
+          "y": 4
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 3
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 3
+        },
+        {
+          "action": "do",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 3
+        },
+        {
+          "agent_id": "agent_2",
+          "amount": 1,
+          "kind": "resource_collected",
+          "resource": "wood",
+          "timestep": 3
+        },
+        {
+          "action": "request_wood",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 4
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 4
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 4
+        },
+        {
+          "agent_id": "agent_0",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "wood",
+          "timestep": 4
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 5
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 5
+        },
+        {
+          "action": "give_wood_to_agent_0",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 5
+        },
+        {
+          "giver": "agent_2",
+          "kind": "trade_applied",
+          "receiver": "agent_0",
+          "resource": "wood",
+          "timestep": 5
+        }
+      ]
+    },
+    {
+      "legacy": [
+        "GameStarted(404,craftax-multiplayer)",
+        "JointAction(noop,agent_0)",
+        "JointAction(noop,agent_1)",
+        "JointAction(noop,agent_2)",
+        "JointAction(noop,agent_0)",
+        "JointAction(noop,agent_1)",
+        "JointAction(noop,agent_2)",
+        "GameEnded(timestep)"
+      ],
+      "scenario_id": "timestep_termination",
+      "steps": [
+        {
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false
+          },
+          "events": [
+            {
+              "action": "noop",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 0
+            }
+          ],
+          "index": 0,
+          "joint_action": {
+            "agent_0": "noop",
+            "agent_1": "noop",
+            "agent_2": "noop"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "40c34c59790639483dd2fefe05c44b1760e4d69a846461017047069fd2b34eba"
+        },
+        {
+          "dones": {
+            "__all__": true,
+            "agent_0": true,
+            "agent_1": true,
+            "agent_2": true
+          },
+          "events": [
+            {
+              "action": "noop",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 1
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 1
+            },
+            {
+              "action": "noop",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 1
+            },
+            {
+              "kind": "game_ended",
+              "outcome": "timestep",
+              "timestep": 2
+            }
+          ],
+          "index": 1,
+          "joint_action": {
+            "agent_0": "noop",
+            "agent_1": "noop",
+            "agent_2": "noop"
+          },
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0
+          },
+          "state_hash": "637d889fdba0c51a8e401fd8f2a595049dc8aa48164571b5caf6c71585544cd2"
+        }
+      ],
+      "structured": [
+        {
+          "kind": "game_started",
+          "seed": 404,
+          "task_id": "craftax-multiplayer",
+          "timestep": 0
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 0
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 0
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 0
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_0",
+          "kind": "joint_action",
+          "timestep": 1
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_1",
+          "kind": "joint_action",
+          "timestep": 1
+        },
+        {
+          "action": "noop",
+          "agent_id": "agent_2",
+          "kind": "joint_action",
+          "timestep": 1
+        },
+        {
+          "kind": "game_ended",
+          "outcome": "timestep",
+          "timestep": 2
+        }
+      ]
+    }
+  ],
+  "schema_version": "gamebench.craftax_coop.eventlogs.v1"
+}
