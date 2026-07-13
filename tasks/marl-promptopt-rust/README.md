@@ -1,7 +1,7 @@
 # GameBench MARL prompt optimization Rust adapter
 
 This standalone binary exposes public `synth_gepa`'s
-`gepa_optimizer_contract.v1` over the committed Craftax Multiplayer,
+`synth_optimizers.gepa.v2` contract over the committed Craftax Multiplayer,
 DungeonGrid, and Overcooked V2 Rust authorities. It has no model or Python
 dependency: candidate strings are interpreted by a strict bounded semantic
 layer and executed as real Rust-engine continuations from deterministic MAPO

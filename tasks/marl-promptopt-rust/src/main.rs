@@ -25,7 +25,7 @@ use serde::Deserialize;
 use serde_json::{json, Map, Value};
 use uuid::Uuid;
 
-const GEPA_CONTRACT_VERSION: &str = "gepa_optimizer_contract.v1";
+const GEPA_CONTRACT_VERSION: &str = "synth_optimizers.gepa.v2";
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
 enum Environment {
