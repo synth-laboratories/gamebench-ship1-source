@@ -25,7 +25,7 @@ class CraftaxCoopEnv:
     @staticmethod
     def _generate_maps(seed: int) -> list[list[list[str]]]:
         maps = []
-        resources = ("coal", "iron", "diamond", "sapphire", "ruby")
+        floor_resources=((),("coal","iron"),("coal","iron"),("iron",),("diamond",),("diamond","ruby","sapphire"),("ruby",),("sapphire",),())
         biomes = (
             ("grass","water","stone","tree"), ("path","water","stone","stalagmite"),
             ("path","water","stone","stalagmite"), ("path","water","stone","stalagmite"),
@@ -46,9 +46,33 @@ class CraftaxCoopEnv:
                     if roll < .055: grid[y][x] = liquid
                     elif roll < .11: grid[y][x] = mountain
                     elif roll < .15: grid[y][x] = vegetation
-                    elif roll < .18: grid[y][x] = resources[((rng >> 16) + level) % len(resources)] if level else "tree"
+                    elif roll < .18:
+                        choices=floor_resources[level];grid[y][x]=choices[((rng>>16)+level)%len(choices)] if choices else vegetation
                     elif roll < .19: grid[y][x] = "chest"
                     elif roll < .20 and level == 0: grid[y][x] = "plant"
+            if level in (1,3,4):
+                grid=[["wall" for _ in range(MAP_SIZE)] for _ in range(MAP_SIZE)]
+                rooms=[]
+                for row in range(2):
+                    for column in range(4):
+                        x0=2+column*11;y0=3+row*22;width=9;height=17;rooms.append((x0,y0,width,height))
+                        for yy in range(y0,y0+height):
+                            for xx in range(x0,x0+width):grid[yy][xx]="path"
+                for left,right in zip(rooms[:3],rooms[1:4]):
+                    y=left[1]+left[3]//2
+                    for xx in range(left[0]+left[2],right[0]+1):grid[y][xx]="path"
+                for left,right in zip(rooms[4:7],rooms[5:8]):
+                    y=left[1]+left[3]//2
+                    for xx in range(left[0]+left[2],right[0]+1):grid[y][xx]="path"
+                for column in range(4):
+                    x=rooms[column][0]+rooms[column][2]//2
+                    for yy in range(rooms[column][1]+rooms[column][3],rooms[column+4][1]+1):grid[yy][x]="path"
+                for index,(x0,y0,width,height) in enumerate(rooms):
+                    cx,cy=x0+width//2,y0+height//2
+                    if index%2==0:grid[cy][cx]="chest"
+                    if level==3 and index in (1,6):grid[cy][cx]="fountain"
+                    choices=floor_resources[level]
+                    if choices:grid[y0+2][x0+2]=choices[index%len(choices)]
             if level < NUM_LEVELS - 1: grid[MAP_SIZE - 3][MAP_SIZE - 3] = "stairs_down"
             if level > 0: grid[2][2] = "stairs_up"
             if level == 6:grid[10][10]="enchantment_table_fire"
@@ -69,14 +93,21 @@ class CraftaxCoopEnv:
         maps[0][5][5] = "fountain"
         monsters: list[Monster] = []
         items=[[[None for _ in range(MAP_SIZE)] for _ in range(MAP_SIZE)] for _ in range(NUM_LEVELS)]
+        lights=[[[1.0 if level==0 else .15 if level in (6,7) else 0.0 for _ in range(MAP_SIZE)] for _ in range(MAP_SIZE)] for level in range(NUM_LEVELS)]
         for level in range(NUM_LEVELS):
             if level<NUM_LEVELS-1:
                 for x,y in ladders_down[level]:maps[level][y][x]="stairs_down";items[level][y][x]="ladder_down"
             if level>0:
                 for x,y in ladders_up[level]:maps[level][y][x]="stairs_up";items[level][y][x]="ladder_up"
+            if level in (1,3,4):
+                for x,y in ((8,11),(19,33),(30,11),(41,33)):
+                    if maps[level][y][x]=="path":
+                        items[level][y][x]="torch"
+                        for yy in range(max(0,y-4),min(MAP_SIZE,y+5)):
+                            for xx in range(max(0,x-4),min(MAP_SIZE,x+5)):lights[level][yy][xx]=max(lights[level][yy][xx],max(0,1-(abs(xx-x)+abs(yy-y))/6))
         effects = ["health", "harm", "mana", "drain_mana", "energy", "exhaustion"]
         effects.sort(key=lambda effect: self._mix64(seed + sum(map(ord, effect))))
-        self.state = WorldState(seed, 0, self.max_timesteps, players, maps, monsters, item_maps=items, ladders_up=ladders_up, ladders_down=ladders_down, boss_health=BOSS_HEALTH, potion_mapping=effects, chests_opened=[[False] * len(players) for _ in range(NUM_LEVELS)], achievements_by_agent={p.agent_id:{name:False for name in ACHIEVEMENT_REWARDS} for p in players})
+        self.state = WorldState(seed, 0, self.max_timesteps, players, maps, monsters, item_maps=items, light_maps=lights, ladders_up=ladders_up, ladders_down=ladders_down, boss_health=BOSS_HEALTH, potion_mapping=effects, chests_opened=[[False] * len(players) for _ in range(NUM_LEVELS)], achievements_by_agent={p.agent_id:{name:False for name in ACHIEVEMENT_REWARDS} for p in players})
         self._event("game_started", task_id=self.env_family, seed=seed)
         return self.observations(), {"seed": seed, "state_hash": self.state_hash()}
 
@@ -100,7 +131,7 @@ class CraftaxCoopEnv:
 
     def _event(self, kind: str, **payload: Any) -> None:
         assert self.state is not None
-        event = {"timestep": self.state.timestep, "kind": kind, **payload}
+        payload=dict(sorted(payload.items()));event = {"timestep": self.state.timestep, "kind": kind, **payload}
         self.state.nev.append(event)
         self.state.last_joint_event.append(event)
         args = ",".join(str(v) for v in payload.values())
@@ -128,6 +159,7 @@ class CraftaxCoopEnv:
         for agent_id, action in normalized.items():
             if action["kind"] not in self.legal_actions(agent_id):
                 raise ValueError(f"illegal action for {agent_id}: {action['kind']}")
+        for agent_id in self.agent_ids:self._event("joint_action",agent_id=agent_id,action=normalized[agent_id]["kind"])
         effective={agent_id:({"kind":"noop"} if not state.players[i].alive or state.players[i].sleeping or state.players[i].resting else normalized[agent_id]) for i,agent_id in enumerate(self.agent_ids)}
         self._resolve_floor_actions(effective)
         self._resolve_joint_do(effective)
@@ -165,7 +197,7 @@ class CraftaxCoopEnv:
             if target:
                 if not target.alive:target.health=1;target.alive=True;state.revives+=1
                 else:
-                    damage=sum(round(self._player_attack_damage(p,target)*(3.5 if target.sleeping else 1)) for p in players);target.health-=damage;state.ff_damage_dealt+=damage
+                    damage=sum(self._player_attack_damage(p,target)*(3.5 if target.sleeping else 1) for p in players);target.health-=damage;state.ff_damage_dealt+=damage
                 continue
             mob=next((m for m in state.monsters if m.level==level and (m.x,m.y)==(x,y)),None)
             if mob:
@@ -269,7 +301,7 @@ class CraftaxCoopEnv:
     def _do(self, p: Player) -> None:
         state = self._require_state(); dx, dy = {"left": (-1,0), "right": (1,0), "up": (0,-1), "down": (0,1)}[p.facing]
         x, y = p.x + dx, p.y + dy; tile = state.maps[p.level][y][x]
-        mapping = {"tree":"wood", "stone":"stone", "coal":"coal", "iron":"iron", "diamond":"diamond", "ruby":"ruby", "sapphire":"sapphire"}
+        mapping = {"tree":("wood","grass"),"fire_tree":("wood","fire_grass"),"ice_shrub":("wood","ice_grass"),"stone":("stone","path"),"stalagmite":("stone","path"),"coal":("coal","path"),"iron":("iron","path"),"diamond":("diamond","path"),"ruby":("ruby","path"),"sapphire":("sapphire","path")}
         teammate = next((other for other in state.players if other is not p and other.level == p.level and other.x == x and other.y == y), None)
         if teammate is not None:
             if not teammate.alive:
@@ -277,18 +309,19 @@ class CraftaxCoopEnv:
                 self._event("player_revived", agent_id=teammate.agent_id, by=p.agent_id)
             else:
                 damage = self._player_attack_damage(p,teammate)*(3.5 if teammate.sleeping else 1)
-                damage=round(damage)
                 teammate.health -= damage; state.ff_damage_dealt += damage
                 self._event("friendly_fire", attacker=p.agent_id, target=teammate.agent_id, damage=damage)
             return
         if tile in mapping:
-            resource = mapping[tile]
+            resource,replacement = mapping[tile]
             required_pickaxe = {"stone": 1, "coal": 1, "iron": 2, "diamond": 3, "ruby": 4, "sapphire": 4}.get(resource, 0)
             if p.pickaxe < required_pickaxe: return
             amount = 1
-            p.inventory[resource] += amount; state.maps[p.level][y][x] = "grass"
+            p.inventory[resource] = min(99,p.inventory[resource]+amount); state.maps[p.level][y][x] = replacement
             key = f"collect_{resource}"; self._award(key,p)
             self._event("resource_collected", agent_id=p.agent_id, resource=resource, amount=amount)
+        elif tile in ("crafting_table","furnace"):
+            state.maps[p.level][y][x]="path"
         elif tile == "grass" and p.role == "forager" and self._mix64(state.seed ^ state.timestep ^ state.players.index(p)) % 5 == 0:
             p.saplings += 1; self._award("collect_sapling",p)
         elif tile == "ripe_plant":
@@ -402,14 +435,17 @@ class CraftaxCoopEnv:
         elif resource=="torches":p.torches-=cost
         else:p.inventory[resource]-=cost
         state.maps[p.level][y][x]=tile
-        if kind=="place_torch":state.item_maps[p.level][y][x]="torch"
+        if kind=="place_torch":
+            state.item_maps[p.level][y][x]="torch"
+            for yy in range(max(0,y-4),min(MAP_SIZE,y+5)):
+                for xx in range(max(0,x-4),min(MAP_SIZE,x+5)):state.light_maps[p.level][yy][xx]=max(state.light_maps[p.level][yy][xx],max(0,1-(abs(xx-x)+abs(yy-y))/6))
         if kind in state.achievements:self._award(kind,p)
         self._event("block_placed",agent_id=p.agent_id,tile=tile,x=x,y=y)
 
     def _shoot_arrow(self,p:Player)->None:
-        if p.arrows<=0 or p.bow<=0:return
+        if p.arrows<=0 or p.bow<=0 or sum(not projectile.hostile for projectile in self._require_state().projectiles)>=len(self.agent_ids)*3:return
         p.arrows-=1; dx,dy={"left":(-1,0),"right":(1,0),"up":(0,-1),"down":(0,1)}[p.facing]
-        self._require_state().projectiles.append(Projectile(p.agent_id, p.level, p.x, p.y, dx, dy, 5+p.dexterity, 8, "arrow2", False))
+        self._require_state().projectiles.append(Projectile(p.agent_id, p.level, p.x, p.y, dx, dy, 5+p.dexterity, MAP_SIZE, "arrow2", False))
         self._award("fire_bow",p);self._event("arrow_shot",agent_id=p.agent_id)
 
     def _drink_potion(self,p:Player,colour:str)->None:
@@ -466,16 +502,16 @@ class CraftaxCoopEnv:
     def _mob_attack_damage(self,player:Player,mob:Monster)->int:
         return self._vector_damage_to_mob(self._player_damage_vector(player),mob)
     @staticmethod
-    def _vector_damage_to_mob(vector:tuple[float,float,float],mob:Monster)->int:
+    def _vector_damage_to_mob(vector:tuple[float,float,float],mob:Monster)->float:
         physical=0
         if mob.level==4:physical=.5
         elif mob.level==5 and mob.category=="melee":physical=.2
         elif mob.level in (6,7):physical=.9
         defenses=(physical,1.0 if mob.level==6 else 0,1.0 if mob.level==7 else 0)
-        return max(0,round(sum((1-defense)*damage for damage,defense in zip(vector,defenses))))
-    def _incoming_damage(self,vector:tuple[int,int,int],target:Player,boss:bool=False)->int:
+        return max(0,sum((1-defense)*damage for damage,defense in zip(vector,defenses)))
+    def _incoming_damage(self,vector:tuple[int,int,int],target:Player,boss:bool=False)->float:
         amount=sum((1-defense)*damage for damage,defense in zip(vector,self._defense_vector(target)))
-        return max(0,round(amount*(1.5 if boss else 1)))
+        return max(0,amount*(1.5 if boss else 1))
     @staticmethod
     def _projectile_vector(kind:str)->tuple[int,int,int]:
         return {"arrow":(2,0,0),"dagger":(4,0,0),"fireball":(0,3,0),"iceball":(0,0,3),"arrow2":(5,0,0),"slimeball":(4,3,3),"fireball2":(3,5,0),"iceball2":(4,0,5)}.get(kind,(1,0,0))
@@ -540,7 +576,7 @@ class CraftaxCoopEnv:
             player.mana -= 2
             dx,dy={"left":(-1,0),"right":(1,0),"up":(0,-1),"down":(0,1)}[player.facing]
             damage = max(1, round(3 * (1 + .5 * (player.intelligence - 1))))
-            state.projectiles.append(Projectile(player.agent_id, player.level, player.x, player.y, dx, dy, damage, 8, "fireball", False))
+            if sum(not projectile.hostile for projectile in state.projectiles)<len(self.agent_ids)*3:state.projectiles.append(Projectile(player.agent_id, player.level, player.x, player.y, dx, dy, damage, MAP_SIZE, "fireball", False))
             self._award("cast_spell",player)
             self._event("spell_cast", agent_id=player.agent_id, spell="fireball")
 
@@ -571,7 +607,10 @@ class CraftaxCoopEnv:
         state=self._require_state();remaining=[]
         for projectile in state.projectiles:
             projectile.x+=projectile.dx;projectile.y+=projectile.dy;projectile.ttl-=1
-            if projectile.ttl<=0 or not (0<=projectile.x<MAP_SIZE and 0<=projectile.y<MAP_SIZE) or state.maps[projectile.level][projectile.y][projectile.x] in ("stone","wall","water"):continue
+            if projectile.ttl<=0 or not (0<=projectile.x<MAP_SIZE and 0<=projectile.y<MAP_SIZE):continue
+            tile=state.maps[projectile.level][projectile.y][projectile.x]
+            if tile in ("crafting_table","furnace") and projectile.hostile:state.maps[projectile.level][projectile.y][projectile.x]="path";continue
+            if tile in ("stone","wall","water","tree","coal","iron","diamond","ruby","sapphire","stalagmite","fire_tree","ice_shrub"):continue
             if projectile.hostile:
                 target=next((p for p in state.players if p.alive and p.level==projectile.level and p.x==projectile.x and p.y==projectile.y),None)
                 if target:
@@ -606,12 +645,12 @@ class CraftaxCoopEnv:
                 if abs(target.x-mob.x)>=abs(target.y-mob.y):dy=0
                 else:dx=0
                 self._move_mob(mob,dx,dy)
-            elif mob.category=="ranged" and distance<=6 and mob.attack_cooldown<=0:
+            elif mob.category=="ranged" and distance<=6 and mob.attack_cooldown<=0 and sum(projectile.hostile for projectile in state.projectiles)<len(self.agent_ids)*3:
                 dx=0 if target.x==mob.x else (1 if target.x>mob.x else -1);dy=0 if target.y==mob.y else (1 if target.y>mob.y else -1)
                 if abs(target.x-mob.x)>=abs(target.y-mob.y):dy=0
                 else:dx=0
                 kind=PROJECTILE_KIND[mob.kind];damage=sum(MOB_DAMAGE.get(mob.kind,(1,0,0)))
-                state.projectiles.append(Projectile(mob.id,mob.level,mob.x,mob.y,dx,dy,damage,8,kind,True));mob.attack_cooldown=5
+                state.projectiles.append(Projectile(mob.id,mob.level,mob.x,mob.y,dx,dy,damage,MAP_SIZE,kind,True));mob.attack_cooldown=5
             elif mob.category=="ranged":
                 toward_x=0 if target.x==mob.x else (1 if target.x>mob.x else -1);toward_y=0 if target.y==mob.y else (1 if target.y>mob.y else -1)
                 if abs(target.x-mob.x)>=abs(target.y-mob.y):toward_y=0
@@ -635,7 +674,10 @@ class CraftaxCoopEnv:
 
     def _move_mob(self,mob:Monster,dx:int,dy:int)->None:
         state=self._require_state();nx,ny=mob.x+dx,mob.y+dy
-        if state.maps[mob.level][ny][nx] not in ("stone","wall","water","lava") and not any(p.level==mob.level and p.x==nx and p.y==ny for p in state.players) and not any(m is not mob and m.level==mob.level and m.x==nx and m.y==ny for m in state.monsters):mob.x,mob.y=nx,ny
+        if not (0<=nx<MAP_SIZE and 0<=ny<MAP_SIZE):return
+        tile=state.maps[mob.level][ny][nx];flying=mob.kind in ("bat","fire_elemental","ice_elemental");aquatic=mob.kind=="deep_thing";amphibious=mob.kind=="lizard"
+        open_tile=flying or (tile=="water" if aquatic else tile not in ("stone","wall","lava") if amphibious else tile not in ("stone","wall","water","lava"))
+        if open_tile and not any(p.level==mob.level and p.x==nx and p.y==ny for p in state.players) and not any(m is not mob and m.level==mob.level and m.x==nx and m.y==ny for m in state.monsters):mob.x,mob.y=nx,ny
 
     def _update_plants(self) -> None:
         state=self._require_state()
@@ -667,6 +709,7 @@ class CraftaxCoopEnv:
         caps=(len(state.players)*3,len(state.players)*3,len(state.players)*2)
         if level in (1,3,4):caps=(3,3,2)
         chances=(.1,.02+.1*(1-state.light_level)**2,.05) if level==0 else ((0 if level==7 else .1),.06,.05)
+        if state.monsters_killed[level]<8:chances=tuple(min(1,chance*3) for chance in chances)
         for category,(kind,health,chance,cap) in enumerate(zip(FLOOR_MOBS[level],MOB_HEALTH[level],chances,caps)):
             if kind is None or sum(m.level==level and m.category==("passive","melee","ranged")[category] for m in state.monsters)>=cap:continue
             roll=(self._mix64(state.seed^state.timestep^(level<<8)^(category<<16))%10_000)/10_000
@@ -675,7 +718,8 @@ class CraftaxCoopEnv:
             for offset in range(MAP_SIZE*MAP_SIZE):
                 cell=(start+offset)%(MAP_SIZE*MAP_SIZE);x,y=cell%MAP_SIZE,cell//MAP_SIZE
                 distances=[abs(x-p.x)+abs(y-p.y) for p in alive]
-                if min(distances)<=9 or min(distances)>=14 or state.maps[level][y][x] not in ("grass","path","sand","gravel","fire_grass","ice_grass") or any(m.level==level and m.x==x and m.y==y for m in state.monsters):continue
+                valid=("water",) if kind=="deep_thing" else ("grass","path","sand","gravel","fire_grass","ice_grass")
+                if min(distances)<=9 or min(distances)>=14 or state.maps[level][y][x] not in valid or any(m.level==level and m.x==x and m.y==y for m in state.monsters):continue
                 state.monsters.append(Monster(f"spawn_{level}_{state.timestep}_{category}",kind,level,x,y,health,sum(MOB_DAMAGE.get(kind,(0,0,0))),("passive","melee","ranged")[category]));break
 
     def _update_boss(self)->None:
@@ -700,7 +744,7 @@ class CraftaxCoopEnv:
 
     def observations(self) -> dict[str, dict[str, Any]]:
         state = self._require_state(); dashboard = [self._player_summary(p) for p in state.players]
-        return {p.agent_id: {"agent_id":p.agent_id,"agent_index":i,"role":p.role,"legal_agent_ids":list(self.agent_ids),"legal_actions":self.legal_actions(p.agent_id),"self":self._player_summary(p),"achievements":deepcopy(state.achievements_by_agent[p.agent_id]),"teammate_dashboard":deepcopy(dashboard),"level":p.level,"map_size":[MAP_SIZE,MAP_SIZE],"num_levels":NUM_LEVELS,"local_view":self._local_view(p),"ascii":self.render_ascii(p.agent_id),"visible_monsters":[deepcopy(m.__dict__) for m in state.monsters if m.level==p.level and abs(m.x-p.x)<=self.view_radius and abs(m.y-p.y)<=self.view_radius],"shared":{"timestep":state.timestep,"light_level":state.light_level,"boss_health":state.boss_health,"boss_progress":state.boss_progress,"trade_count":state.trade_count,"food_trade_count":state.food_trade_count,"drink_trade_count":state.drink_trade_count,"revives":state.revives,"friendly_fire_damage":state.ff_damage_dealt,"chests_opened":deepcopy(state.chests_opened),"monsters_killed":deepcopy(state.monsters_killed),"achievements":deepcopy(state.achievements)},"last_joint_event":deepcopy(state.last_joint_event)} for i,p in enumerate(state.players)}
+        return {p.agent_id: {"agent_id":p.agent_id,"agent_index":i,"role":p.role,"legal_agent_ids":list(self.agent_ids),"legal_actions":self.legal_actions(p.agent_id),"self":self._player_summary(p),"achievements":{name:True for name,earned in state.achievements_by_agent[p.agent_id].items() if earned},"teammate_dashboard":deepcopy(dashboard),"level":p.level,"map_size":[MAP_SIZE,MAP_SIZE],"num_levels":NUM_LEVELS,"local_view":self._local_view(p),"ascii":self.render_ascii(p.agent_id),"visible_monsters":[deepcopy(m.__dict__) for m in state.monsters if m.level==p.level and abs(m.x-p.x)<=self.view_radius and abs(m.y-p.y)<=self.view_radius],"shared":{"timestep":state.timestep,"light_level":state.light_level,"boss_health":state.boss_health,"boss_progress":state.boss_progress,"trade_count":state.trade_count,"food_trade_count":state.food_trade_count,"drink_trade_count":state.drink_trade_count,"revives":state.revives,"friendly_fire_damage":state.ff_damage_dealt,"chests_opened":deepcopy(state.chests_opened),"monsters_killed":deepcopy(state.monsters_killed),"achievements":{name:True for name,earned in state.achievements.items() if earned}},"last_joint_event":deepcopy(state.last_joint_event)} for i,p in enumerate(state.players)}
 
     @staticmethod
     def _player_summary(p: Player) -> dict[str, Any]:
@@ -715,7 +759,8 @@ class CraftaxCoopEnv:
                 agents=[q.agent_id for q in state.players if q.alive and q.level==p.level and q.x==x and q.y==y]
                 mobs=[m.id for m in state.monsters if m.level==p.level and m.x==x and m.y==y]
                 item=None if not (0<=x<MAP_SIZE and 0<=y<MAP_SIZE) else state.item_maps[p.level][y][x]
-                row.append({"x":x,"y":y,"terrain":terrain,"item":item,"agents":agents,"mobs":mobs})
+                light=0.0 if terrain=="out_of_bounds" else state.light_maps[p.level][y][x]*(state.light_level if p.level==0 else 1.0)
+                row.append({"x":x,"y":y,"terrain":terrain,"item":item,"light":light,"agents":agents,"mobs":mobs})
             out.append(row)
         return out
 
@@ -725,9 +770,11 @@ class CraftaxCoopEnv:
             rows.append("".join((cell["agents"][0][-1] if cell["agents"] else "M" if cell["mobs"] else GLYPHS.get(cell["terrain"],"#")) for cell in row))
         return "\n".join(rows)
 
-    def checkpoint(self) -> dict[str, Any]: return {"schema_version":"craftax-coop.checkpoint.v1","state":deepcopy(self._require_state().to_dict())}
+    def checkpoint(self) -> dict[str, Any]:
+        state=deepcopy(self._require_state().to_dict());state["achievements"]={name:True for name,earned in state["achievements"].items() if earned};state["achievements_by_agent"]={agent:{name:True for name,earned in flags.items() if earned} for agent,flags in state["achievements_by_agent"].items()}
+        return {"schema_version":"craftax-coop.checkpoint.v2","state":state}
     def restore(self, checkpoint: dict[str, Any]) -> dict[str, dict[str, Any]]:
-        if checkpoint.get("schema_version") != "craftax-coop.checkpoint.v1": raise ValueError("unsupported checkpoint schema")
+        if checkpoint.get("schema_version") != "craftax-coop.checkpoint.v2": raise ValueError("unsupported checkpoint schema")
         self.state=WorldState.from_dict(deepcopy(checkpoint["state"])); self.agent_ids=tuple(p.agent_id for p in self.state.players); return self.observations()
     def state_hash(self) -> str: return hashlib.sha256(json.dumps(self._require_state().to_dict(),sort_keys=True,separators=(",", ":")).encode()).hexdigest()
     def _require_state(self) -> WorldState:

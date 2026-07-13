@@ -13,7 +13,7 @@ class Player:
     x: int
     y: int
     level: int = 0
-    health: int = 9
+    health: float = 9.0
     food: int = 9
     drink: int = 9
     energy: int = 9
@@ -59,7 +59,7 @@ class Monster:
     level: int
     x: int
     y: int
-    health: int
+    health: float
     damage: int
     category: str = "melee"
     attack_cooldown: int = 0
@@ -96,6 +96,7 @@ class WorldState:
     maps: list[list[list[str]]]
     monsters: list[Monster]
     item_maps: list[list[list[str | None]]] = field(default_factory=list)
+    light_maps: list[list[list[float]]] = field(default_factory=list)
     ladders_up: list[list[list[int]]] = field(default_factory=list)
     ladders_down: list[list[list[int]]] = field(default_factory=list)
     projectiles: list[Projectile] = field(default_factory=list)
@@ -129,6 +130,8 @@ class WorldState:
         data["achievements"]={name:bool(data.get("achievements",{}).get(name,False)) for name in ACHIEVEMENTS}
         if not data.get("item_maps"):
             size=len(data["maps"][0]);data["item_maps"]=[[[None for _ in range(size)] for _ in range(size)] for _ in data["maps"]]
+        if not data.get("light_maps"):
+            size=len(data["maps"][0]);data["light_maps"]=[[[1.0 if level==0 else 0.0 for _ in range(size)] for _ in range(size)] for level in range(len(data["maps"]))]
         count=len(data["players"])
         data.setdefault("ladders_up",[[[2+i,2] for i in range(count)] for _ in data["maps"]])
         data.setdefault("ladders_down",[[[len(data["maps"][0])-3-i,len(data["maps"][0])-3] for i in range(count)] for _ in data["maps"]])

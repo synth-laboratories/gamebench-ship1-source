@@ -91,7 +91,7 @@ pub struct Player {
     pub x: usize,
     pub y: usize,
     pub level: usize,
-    pub health: i16,
+    pub health: f64,
     pub food: i16,
     pub drink: i16,
     pub energy: i16,
@@ -137,7 +137,7 @@ pub struct Monster {
     pub level: usize,
     pub x: usize,
     pub y: usize,
-    pub health: i16,
+    pub health: f64,
     pub damage: i16,
     pub category: String,
     pub attack_cooldown: i16,
@@ -181,6 +181,7 @@ pub struct State {
     pub players: Vec<Player>,
     pub maps: Vec<Vec<Vec<String>>>,
     pub item_maps: Vec<Vec<Vec<Option<String>>>>,
+    pub light_maps: Vec<Vec<Vec<f64>>>,
     pub ladders_up: Vec<Vec<(usize, usize)>>,
     pub ladders_down: Vec<Vec<(usize, usize)>>,
     pub monsters: Vec<Monster>,
@@ -238,7 +239,7 @@ impl CraftaxCoopEnv {
                 x: 3 + i,
                 y: 3,
                 level: 0,
-                health: 9,
+                health: 9.0,
                 food: 9,
                 drink: 9,
                 energy: 9,
@@ -292,7 +293,17 @@ impl CraftaxCoopEnv {
             ["ice_grass", "water", "stone", "ice_shrub"],
             ["path", "wall", "wall", "grave"],
         ];
-        let resources = ["coal", "iron", "diamond", "sapphire", "ruby"];
+        let floor_resources: [&[&str]; 9] = [
+            &[],
+            &["coal", "iron"],
+            &["coal", "iron"],
+            &["iron"],
+            &["diamond"],
+            &["diamond", "ruby", "sapphire"],
+            &["ruby"],
+            &["sapphire"],
+            &[],
+        ];
         for level in 0..NUM_LEVELS {
             let mut rng = (seed + 1)
                 .wrapping_mul(1_000_003)
@@ -314,10 +325,11 @@ impl CraftaxCoopEnv {
                     } else if roll < 150 {
                         biomes[level][3]
                     } else if roll < 180 {
-                        if level == 0 {
-                            "tree"
+                        let choices = floor_resources[level];
+                        if choices.is_empty() {
+                            biomes[level][3]
                         } else {
-                            resources[(((rng >> 16) as usize) + level) % 5]
+                            choices[(((rng >> 16) as usize) + level) % choices.len()]
                         }
                     } else if roll < 190 {
                         "chest"
@@ -327,6 +339,52 @@ impl CraftaxCoopEnv {
                         biomes[level][0]
                     }
                     .into();
+                }
+            }
+            if [1, 3, 4].contains(&level) {
+                maps[level] = vec![vec!["wall".into(); MAP_SIZE]; MAP_SIZE];
+                let mut rooms = Vec::new();
+                for row in 0..2 {
+                    for column in 0..4 {
+                        let room = (2 + column * 11, 3 + row * 22, 9, 17);
+                        rooms.push(room);
+                        for y in room.1..room.1 + room.3 {
+                            for x in room.0..room.0 + room.2 {
+                                maps[level][y][x] = "path".into();
+                            }
+                        }
+                    }
+                }
+                for row in 0..2 {
+                    for column in 0..3 {
+                        let left = rooms[row * 4 + column];
+                        let right = rooms[row * 4 + column + 1];
+                        let y = left.1 + left.3 / 2;
+                        for x in left.0 + left.2..=right.0 {
+                            maps[level][y][x] = "path".into();
+                        }
+                    }
+                }
+                for column in 0..4 {
+                    let top = rooms[column];
+                    let bottom = rooms[column + 4];
+                    let x = top.0 + top.2 / 2;
+                    for y in top.1 + top.3..=bottom.1 {
+                        maps[level][y][x] = "path".into();
+                    }
+                }
+                for (index, room) in rooms.into_iter().enumerate() {
+                    let (cx, cy) = (room.0 + room.2 / 2, room.1 + room.3 / 2);
+                    if index % 2 == 0 {
+                        maps[level][cy][cx] = "chest".into();
+                    }
+                    if level == 3 && [1, 6].contains(&index) {
+                        maps[level][cy][cx] = "fountain".into();
+                    }
+                    let choices = floor_resources[level];
+                    if !choices.is_empty() {
+                        maps[level][room.1 + 2][room.0 + 2] = choices[index % choices.len()].into();
+                    }
                 }
             }
             if level < NUM_LEVELS - 1 {
@@ -364,11 +422,42 @@ impl CraftaxCoopEnv {
             })
             .collect::<Vec<_>>();
         let mut item_maps = vec![vec![vec![None; MAP_SIZE]; MAP_SIZE]; NUM_LEVELS];
+        let mut light_maps: Vec<Vec<Vec<f64>>> = (0..NUM_LEVELS)
+            .map(|level| {
+                vec![
+                    vec![
+                        if level == 0 {
+                            1.0
+                        } else if [6, 7].contains(&level) {
+                            0.15
+                        } else {
+                            0.0
+                        };
+                        MAP_SIZE
+                    ];
+                    MAP_SIZE
+                ]
+            })
+            .collect();
         for level in 0..NUM_LEVELS {
             if level < NUM_LEVELS - 1 {
                 for &(x, y) in &ladders_down[level] {
                     maps[level][y][x] = "stairs_down".into();
                     item_maps[level][y][x] = Some("ladder_down".into());
+                }
+            }
+            if [1, 3, 4].contains(&level) {
+                for (x, y) in [(8, 11), (19, 33), (30, 11), (41, 33)] {
+                    if maps[level][y][x] == "path" {
+                        item_maps[level][y][x] = Some("torch".into());
+                        for yy in y.saturating_sub(4)..(y + 5).min(MAP_SIZE) {
+                            for xx in x.saturating_sub(4)..(x + 5).min(MAP_SIZE) {
+                                let light =
+                                    (1.0 - (xx.abs_diff(x) + yy.abs_diff(y)) as f64 / 6.0).max(0.0);
+                                light_maps[level][yy][xx] = light_maps[level][yy][xx].max(light);
+                            }
+                        }
+                    }
                 }
             }
             if level > 0 {
@@ -387,6 +476,7 @@ impl CraftaxCoopEnv {
                 players,
                 maps,
                 item_maps,
+                light_maps,
                 ladders_up,
                 ladders_down,
                 monsters,
@@ -415,7 +505,13 @@ impl CraftaxCoopEnv {
                 legacy_nev: vec![],
             },
         };
-        env.event("game_started", [("task_id", "craftax-multiplayer")]);
+        env.event_values(
+            "game_started",
+            BTreeMap::from([
+                ("seed".into(), json!(seed)),
+                ("task_id".into(), json!("craftax-multiplayer")),
+            ]),
+        );
         env
     }
 
@@ -441,7 +537,7 @@ impl CraftaxCoopEnv {
         self.state.last_joint_event.clear();
         let start = self.state.nev.len();
         let before = self.state.achievements_by_agent.clone();
-        let before_health = self.state.players.iter().map(|p| p.health).sum::<i16>();
+        let before_health = self.state.players.iter().map(|p| p.health).sum::<f64>();
         for player in &self.state.players {
             let fields = BTreeMap::from([
                 ("agent_id".to_string(), json!(player.agent_id)),
@@ -456,8 +552,8 @@ impl CraftaxCoopEnv {
             self.state.last_joint_event.push(event);
             self.state.legacy_nev.push(format!(
                 "JointAction({},{})",
-                event_field_text(&fields["agent_id"]),
-                event_field_text(&fields["action"])
+                event_field_text(&fields["action"]),
+                event_field_text(&fields["agent_id"])
             ));
         }
         let effective = self
@@ -495,6 +591,14 @@ impl CraftaxCoopEnv {
                 if RESOURCES.contains(&resource) {
                     self.state.players[idx].request_type = Some(resource.into());
                     self.state.players[idx].request_duration = REQUEST_DURATION;
+                    self.event_values(
+                        "request_made",
+                        BTreeMap::from([
+                            ("agent_id".into(), json!(self.state.players[idx].agent_id)),
+                            ("duration".into(), json!(REQUEST_DURATION)),
+                            ("resource".into(), json!(resource)),
+                        ]),
+                    );
                 }
             }
         }
@@ -547,11 +651,11 @@ impl CraftaxCoopEnv {
                     -1.0
                 };
                 if p.recover > 25.0 {
-                    p.health = (p.health + 2).min(max_health(p));
+                    p.health = (p.health + 2.0).min(max_health(p));
                     p.recover = 0.0;
                 }
                 if p.recover < -15.0 {
-                    p.health -= if p.level == NUM_LEVELS - 1 { 0 } else { 1 };
+                    p.health -= if p.level == NUM_LEVELS - 1 { 0.0 } else { 1.0 };
                     p.recover = 0.0;
                 }
                 p.recover_mana = (p.recover_mana + if p.sleeping { 2.0 } else { 1.0 })
@@ -567,9 +671,9 @@ impl CraftaxCoopEnv {
                 if p.resting && (p.health >= max_health(p) || p.food <= 0 || p.drink <= 0) {
                     p.resting = false;
                 }
-                if p.health <= 0 {
+                if p.health <= 0.0 {
                     p.alive = false;
-                    p.health = 0;
+                    p.health = 0.0;
                 }
             }
         }
@@ -603,8 +707,7 @@ impl CraftaxCoopEnv {
                     .sum::<f64>()
             })
             .sum::<f64>()
-            + 0.1
-                * (self.state.players.iter().map(|p| p.health).sum::<i16>() - before_health) as f64;
+            + 0.1 * (self.state.players.iter().map(|p| p.health).sum::<f64>() - before_health);
         let rewards = self
             .state
             .players
@@ -693,7 +796,7 @@ impl CraftaxCoopEnv {
                     && (self.state.players[*i].x, self.state.players[*i].y) == (x, y)
             }) {
                 if !self.state.players[target].alive {
-                    self.state.players[target].health = 1;
+                    self.state.players[target].health = 1.0;
                     self.state.players[target].alive = true;
                     self.state.revives += 1;
                 } else {
@@ -701,15 +804,14 @@ impl CraftaxCoopEnv {
                     let damage = players
                         .iter()
                         .map(|i| {
-                            (Self::damage(
+                            Self::damage(
                                 Self::player_damage_vector(&self.state.players[*i]),
                                 Self::defense_vector(&self.state.players[target]),
-                            ) * if sleeping { 3.5 } else { 1.0 })
-                            .round() as i16
+                            ) * if sleeping { 3.5 } else { 1.0 }
                         })
-                        .sum::<i16>();
+                        .sum::<f64>();
                     self.state.players[target].health -= damage;
-                    self.state.ff_damage_dealt += damage as f64;
+                    self.state.ff_damage_dealt += damage;
                 }
                 continue;
             }
@@ -727,9 +829,9 @@ impl CraftaxCoopEnv {
                             &self.state.monsters[mi],
                         )
                     })
-                    .sum::<i16>();
+                    .sum::<f64>();
                 self.state.monsters[mi].health -= damage;
-                if self.state.monsters[mi].health <= 0 {
+                if self.state.monsters[mi].health <= 0.0 {
                     let monster = self.state.monsters.remove(mi);
                     if monster.category != "passive" {
                         self.state.monsters_killed[level] += 1;
@@ -828,35 +930,54 @@ impl CraftaxCoopEnv {
                 && player.y == y
         }) {
             if !self.state.players[target].alive {
-                self.state.players[target].health = 1;
+                self.state.players[target].health = 1.0;
                 self.state.players[target].alive = true;
                 self.state.revives += 1;
+                self.event_values(
+                    "player_revived",
+                    BTreeMap::from([
+                        (
+                            "agent_id".into(),
+                            json!(self.state.players[target].agent_id),
+                        ),
+                        ("by".into(), json!(self.state.players[index].agent_id)),
+                    ]),
+                );
             } else {
-                let damage = (Self::damage(
+                let damage = Self::damage(
                     Self::player_damage_vector(&self.state.players[index]),
                     Self::defense_vector(&self.state.players[target]),
                 ) * if self.state.players[target].sleeping {
                     3.5
                 } else {
                     1.0
-                })
-                .round() as i16;
+                };
                 self.state.players[target].health -= damage;
-                self.state.ff_damage_dealt += damage as f64;
+                self.state.ff_damage_dealt += damage;
+                self.event_values(
+                    "friendly_fire",
+                    BTreeMap::from([
+                        ("attacker".into(), json!(self.state.players[index].agent_id)),
+                        ("damage".into(), json!(damage)),
+                        ("target".into(), json!(self.state.players[target].agent_id)),
+                    ]),
+                );
             }
             return;
         }
         let resource = match tile.as_str() {
-            "tree" => Some("wood"),
-            "stone" => Some("stone"),
-            "coal" => Some("coal"),
-            "iron" => Some("iron"),
-            "diamond" => Some("diamond"),
-            "ruby" => Some("ruby"),
-            "sapphire" => Some("sapphire"),
+            "tree" => Some(("wood", "grass")),
+            "fire_tree" => Some(("wood", "fire_grass")),
+            "ice_shrub" => Some(("wood", "ice_grass")),
+            "stone" | "stalagmite" => Some(("stone", "path")),
+            "coal" => Some(("coal", "path")),
+            "iron" => Some(("iron", "path")),
+            "diamond" => Some(("diamond", "path")),
+            "ruby" => Some(("ruby", "path")),
+            "sapphire" => Some(("sapphire", "path")),
             _ => None,
         };
-        if let Some(resource) = resource {
+        if let Some((resource, replacement)) = resource {
             let required = match resource {
                 "stone" | "coal" => 1,
                 "iron" => 2,
@@ -871,9 +992,21 @@ impl CraftaxCoopEnv {
             *self.state.players[index]
                 .inventory
                 .get_mut(resource)
-                .unwrap() += amount;
-            self.state.maps[level][y][x] = "grass".into();
+                .unwrap() = (self.state.players[index].inventory[resource] + amount).min(99);
+            self.state.maps[level][y][x] = replacement.into();
             self.award(&format!("collect_{resource}"), &[index]);
+            self.event_values(
+                "resource_collected",
+                BTreeMap::from([
+                    ("agent_id".into(), json!(self.state.players[index].agent_id)),
+                    ("amount".into(), json!(amount)),
+                    ("resource".into(), json!(resource)),
+                ]),
+            );
+            return;
+        }
+        if ["crafting_table", "furnace"].contains(&tile.as_str()) {
+            self.state.maps[level][y][x] = "path".into();
             return;
         }
         if tile == "grass"
@@ -898,6 +1031,10 @@ impl CraftaxCoopEnv {
                 plant.age = 0;
             }
             self.award("eat_plant", &[index]);
+            self.event_values(
+                "plant_eaten",
+                BTreeMap::from([("agent_id".into(), json!(self.state.players[index].agent_id))]),
+            );
             return;
         }
         if tile == "fountain" || tile == "water" {
@@ -908,6 +1045,14 @@ impl CraftaxCoopEnv {
             self.state.players[index].drink = (self.state.players[index].drink + amount)
                 .min(max_drink(&self.state.players[index]));
             self.award("collect_drink", &[index]);
+            self.event_values(
+                if tile == "fountain" {
+                    "fountain_used"
+                } else {
+                    "water_drunk"
+                },
+                BTreeMap::from([("agent_id".into(), json!(self.state.players[index].agent_id))]),
+            );
             return;
         }
         if tile == "chest" {
@@ -915,6 +1060,10 @@ impl CraftaxCoopEnv {
             self.loot_chest(index);
             self.state.chests_opened[level][index] = true;
             self.award("open_chest", &[index]);
+            self.event_values(
+                "chest_opened",
+                BTreeMap::from([("agent_id".into(), json!(self.state.players[index].agent_id))]),
+            );
             return;
         }
         if let Some(mi) = self
@@ -928,7 +1077,16 @@ impl CraftaxCoopEnv {
                 &self.state.monsters[mi],
             );
             self.state.monsters[mi].health -= damage;
-            if self.state.monsters[mi].health <= 0 {
+            let mob_id = self.state.monsters[mi].id.clone();
+            self.event_values(
+                "mob_damaged",
+                BTreeMap::from([
+                    ("agent_id".into(), json!(self.state.players[index].agent_id)),
+                    ("damage".into(), json!(damage)),
+                    ("mob_id".into(), json!(mob_id)),
+                ]),
+            );
+            if self.state.monsters[mi].health <= 0.0 {
                 let monster = self.state.monsters.remove(mi);
                 if monster.category != "passive" {
                     self.state.monsters_killed[level] += 1;
@@ -943,6 +1101,13 @@ impl CraftaxCoopEnv {
                         self.award(achievement, &[index]);
                     }
                 }
+                self.event_values(
+                    "mob_defeated",
+                    BTreeMap::from([
+                        ("agent_id".into(), json!(self.state.players[index].agent_id)),
+                        ("mob_id".into(), json!(monster.id)),
+                    ]),
+                );
             }
             return;
         }
@@ -957,6 +1122,14 @@ impl CraftaxCoopEnv {
             self.state.boss_wave_timer = 7;
             self.state.maps[level][y][x] = "necromancer".into();
             self.award("damage_necromancer", &[index]);
+            self.event_values(
+                "boss_damaged",
+                BTreeMap::from([
+                    ("agent_id".into(), json!(self.state.players[index].agent_id)),
+                    ("damage".into(), json!(1)),
+                    ("remaining".into(), json!(self.state.boss_health)),
+                ]),
+            );
             if self.state.boss_progress >= NUM_LEVELS - 1 {
                 self.award("defeat_necromancer", &[index]);
             }
@@ -1016,6 +1189,15 @@ impl CraftaxCoopEnv {
                 if unique && free {
                     self.state.players[i].x = pos.0;
                     self.state.players[i].y = pos.1;
+                    self.event_values(
+                        "move_applied",
+                        BTreeMap::from([
+                            ("agent_id".into(), json!(self.state.players[i].agent_id)),
+                            ("level".into(), json!(self.state.players[i].level)),
+                            ("x".into(), json!(pos.0)),
+                            ("y".into(), json!(pos.1)),
+                        ]),
+                    );
                 }
             }
         }
@@ -1136,6 +1318,16 @@ impl CraftaxCoopEnv {
             }
         }
         self.award(action, &[i]);
+        self.event_values(
+            "item_crafted",
+            BTreeMap::from([
+                ("agent_id".into(), json!(self.state.players[i].agent_id)),
+                (
+                    "item".into(),
+                    json!(action.strip_prefix("make_").unwrap_or(action)),
+                ),
+            ]),
+        );
     }
     fn near(&self, i: usize, tile: &str) -> bool {
         let p = &self.state.players[i];
@@ -1198,11 +1390,36 @@ impl CraftaxCoopEnv {
                     age: 0,
                 });
                 self.award("place_plant", &[i]);
+                self.event_values(
+                    "block_placed",
+                    BTreeMap::from([
+                        ("agent_id".into(), json!(self.state.players[i].agent_id)),
+                        ("tile".into(), json!("plant")),
+                        ("x".into(), json!(x)),
+                        ("y".into(), json!(y)),
+                    ]),
+                );
             }
             if action == "place_torch" && self.state.players[i].torches > 0 {
                 self.state.players[i].torches -= 1;
                 self.state.item_maps[level][y][x] = Some("torch".into());
+                for yy in y.saturating_sub(4)..(y + 5).min(MAP_SIZE) {
+                    for xx in x.saturating_sub(4)..(x + 5).min(MAP_SIZE) {
+                        let light = (1.0 - (xx.abs_diff(x) + yy.abs_diff(y)) as f64 / 6.0).max(0.0);
+                        self.state.light_maps[level][yy][xx] =
+                            self.state.light_maps[level][yy][xx].max(light);
+                    }
+                }
                 self.award("place_torch", &[i]);
+                self.event_values(
+                    "block_placed",
+                    BTreeMap::from([
+                        ("agent_id".into(), json!(self.state.players[i].agent_id)),
+                        ("tile".into(), json!(self.state.maps[level][y][x])),
+                        ("x".into(), json!(x)),
+                        ("y".into(), json!(y)),
+                    ]),
+                );
             }
             return;
         }
@@ -1251,9 +1468,22 @@ impl CraftaxCoopEnv {
         if action == "place_table" || action == "place_furnace" {
             self.award(action, &[i]);
         }
+        self.event_values(
+            "block_placed",
+            BTreeMap::from([
+                ("agent_id".into(), json!(self.state.players[i].agent_id)),
+                ("tile".into(), json!(tile)),
+                ("x".into(), json!(x)),
+                ("y".into(), json!(y)),
+            ]),
+        );
     }
     fn shoot_arrow(&mut self, i: usize) {
-        if self.state.players[i].arrows == 0 || self.state.players[i].bow == 0 {
+        if self.state.players[i].arrows == 0
+            || self.state.players[i].bow == 0
+            || self.state.projectiles.iter().filter(|p| !p.hostile).count()
+                >= self.state.players.len() * 3
+        {
             return;
         }
         self.state.players[i].arrows -= 1;
@@ -1273,11 +1503,15 @@ impl CraftaxCoopEnv {
             dx,
             dy,
             damage: 5 + p.dexterity as i16,
-            ttl: 8,
+            ttl: MAP_SIZE as u8,
             kind: "arrow2".into(),
             hostile: false,
         });
         self.award("fire_bow", &[i]);
+        self.event_values(
+            "arrow_shot",
+            BTreeMap::from([("agent_id".into(), json!(self.state.players[i].agent_id))]),
+        );
     }
     fn drink_potion(&mut self, i: usize, colour: &str) {
         if !self.state.players[i].potions.contains_key(colour)
@@ -1293,9 +1527,9 @@ impl CraftaxCoopEnv {
         match effect {
             "health" => {
                 self.state.players[i].health =
-                    (self.state.players[i].health + 8).min(max_health(&self.state.players[i]))
+                    (self.state.players[i].health + 8.0).min(max_health(&self.state.players[i]))
             }
-            "harm" => self.state.players[i].health -= 3,
+            "harm" => self.state.players[i].health -= 3.0,
             "mana" => {
                 self.state.players[i].mana =
                     (self.state.players[i].mana + 8).min(max_mana(&self.state.players[i]))
@@ -1305,6 +1539,13 @@ impl CraftaxCoopEnv {
             _ => self.state.players[i].energy = (self.state.players[i].energy - 3).max(0),
         }
         self.award("drink_potion", &[i]);
+        self.event_values(
+            "potion_drunk",
+            BTreeMap::from([
+                ("agent_id".into(), json!(self.state.players[i].agent_id)),
+                ("colour".into(), json!(colour)),
+            ]),
+        );
     }
     fn read_book(&mut self, i: usize) {
         if self.state.players[i].books == 0 {
@@ -1313,6 +1554,10 @@ impl CraftaxCoopEnv {
         self.state.players[i].books -= 1;
         self.state.players[i].learned_spell = true;
         self.award("learn_spell", &[i]);
+        self.event_values(
+            "book_read",
+            BTreeMap::from([("agent_id".into(), json!(self.state.players[i].agent_id))]),
+        );
     }
     fn level_up(&mut self, i: usize, attribute: &str) {
         if self.state.players[i].xp == 0 {
@@ -1330,6 +1575,13 @@ impl CraftaxCoopEnv {
         }
         self.state.players[i].xp -= 1;
         self.award("level_up", &[i]);
+        self.event_values(
+            "attribute_leveled",
+            BTreeMap::from([
+                ("agent_id".into(), json!(self.state.players[i].agent_id)),
+                ("attribute".into(), json!(attribute)),
+            ]),
+        );
     }
     fn enchant(&mut self, i: usize, item: &str) {
         if !["sword", "armour", "bow"].contains(&item) {
@@ -1385,6 +1637,14 @@ impl CraftaxCoopEnv {
         if item == "armour" {
             self.award("enchant_armour", &[i]);
         }
+        self.event_values(
+            "item_enchanted",
+            BTreeMap::from([
+                ("agent_id".into(), json!(self.state.players[i].agent_id)),
+                ("element".into(), json!(element)),
+                ("item".into(), json!(item)),
+            ]),
+        );
     }
     fn change_floor(&mut self, i: usize, direction: isize) {
         let p = &self.state.players[i];
@@ -1426,6 +1686,13 @@ impl CraftaxCoopEnv {
                 );
             }
         }
+        self.event_values(
+            "level_changed",
+            BTreeMap::from([
+                ("agent_id".into(), json!(self.state.players[i].agent_id)),
+                ("level".into(), json!(next)),
+            ]),
+        );
     }
     fn resolve_floor_actions(&mut self, actions: &BTreeMap<String, String>) {
         if let Some(i) = self
@@ -1445,12 +1712,6 @@ impl CraftaxCoopEnv {
         {
             self.change_floor(i, -1);
         }
-    }
-    fn melee_damage(player: &Player, armour: u8) -> i16 {
-        let base = [1.0, 2.0, 3.0, 5.0, 8.0][player.sword as usize]
-            * if player.role == "warrior" { 2.0 } else { 1.0 };
-        let coefficient = 1.0 + 0.25 * (player.strength as f64 - 1.0);
-        ((base * coefficient).round() as i16 - armour as i16).max(0)
     }
     fn player_damage_vector(player: &Player) -> [f64; 3] {
         let base = [1.0, 2.0, 3.0, 5.0, 8.0][player.sword as usize]
@@ -1491,7 +1752,7 @@ impl CraftaxCoopEnv {
     fn damage(vector: [f64; 3], defense: [f64; 3]) -> f64 {
         (0..3).map(|i| (1.0 - defense[i]) * vector[i]).sum()
     }
-    fn damage_to_mob(vector: [f64; 3], mob: &Monster) -> i16 {
+    fn damage_to_mob(vector: [f64; 3], mob: &Monster) -> f64 {
         let physical = if mob.level == 4 {
             0.5
         } else if mob.level == 5 && mob.category == "melee" {
@@ -1509,13 +1770,10 @@ impl CraftaxCoopEnv {
                 if mob.level == 7 { 1.0 } else { 0.0 },
             ],
         )
-        .round()
-        .max(0.0) as i16
+        .max(0.0)
     }
-    fn incoming(vector: [f64; 3], player: &Player, boss: bool) -> i16 {
-        (Self::damage(vector, Self::defense_vector(player)) * if boss { 1.5 } else { 1.0 })
-            .round()
-            .max(0.0) as i16
+    fn incoming(vector: [f64; 3], player: &Player, boss: bool) -> f64 {
+        (Self::damage(vector, Self::defense_vector(player)) * if boss { 1.5 } else { 1.0 }).max(0.0)
     }
     fn player_projectile_vector(&self, shot: &Projectile) -> [f64; 3] {
         let Some(owner) = self.state.players.iter().find(|p| p.agent_id == shot.owner) else {
@@ -1595,12 +1853,21 @@ impl CraftaxCoopEnv {
             self.state.players[i].mana -= 6;
             for player in &mut self.state.players {
                 if player.alive {
-                    player.health = (player.health + 2).min(max_health(player));
+                    player.health = (player.health + 2.0).min(max_health(player));
                 }
             }
             self.award("cast_spell", &[i]);
+            self.event_values(
+                "spell_cast",
+                BTreeMap::from([
+                    ("agent_id".into(), json!(self.state.players[i].agent_id)),
+                    ("spell".into(), json!("heal")),
+                ]),
+            );
         } else if ["warrior", "miner"].contains(&self.state.players[i].role.as_str())
             && self.state.players[i].mana >= 2
+            && self.state.projectiles.iter().filter(|p| !p.hostile).count()
+                < self.state.players.len() * 3
         {
             self.state.players[i].mana -= 2;
             let p = &self.state.players[i];
@@ -1616,11 +1883,18 @@ impl CraftaxCoopEnv {
                 dx,
                 dy,
                 damage,
-                ttl: 8,
+                ttl: MAP_SIZE as u8,
                 kind: "fireball".into(),
                 hostile: false,
             });
             self.award("cast_spell", &[i]);
+            self.event_values(
+                "spell_cast",
+                BTreeMap::from([
+                    ("agent_id".into(), json!(self.state.players[i].agent_id)),
+                    ("spell".into(), json!("fireball")),
+                ]),
+            );
         }
     }
     fn update_projectiles(&mut self) {
@@ -1638,8 +1912,26 @@ impl CraftaxCoopEnv {
             {
                 continue;
             }
-            if ["stone", "wall", "water"]
-                .contains(&self.state.maps[shot.level][shot.y as usize][shot.x as usize].as_str())
+            let tile = self.state.maps[shot.level][shot.y as usize][shot.x as usize].as_str();
+            if ["crafting_table", "furnace"].contains(&tile) && shot.hostile {
+                self.state.maps[shot.level][shot.y as usize][shot.x as usize] = "path".into();
+                continue;
+            }
+            if [
+                "stone",
+                "wall",
+                "water",
+                "tree",
+                "coal",
+                "iron",
+                "diamond",
+                "ruby",
+                "sapphire",
+                "stalagmite",
+                "fire_tree",
+                "ice_shrub",
+            ]
+            .contains(&tile)
             {
                 continue;
             }
@@ -1689,7 +1981,7 @@ impl CraftaxCoopEnv {
                     &self.state.monsters[mi],
                 );
                 self.state.monsters[mi].health -= damage;
-                if self.state.monsters[mi].health <= 0 {
+                if self.state.monsters[mi].health <= 0.0 {
                     let monster = self.state.monsters.remove(mi);
                     if monster.category != "passive" {
                         self.state.monsters_killed[monster.level] += 1;
@@ -1748,6 +2040,8 @@ impl CraftaxCoopEnv {
             } else if category == "ranged"
                 && distance <= 6
                 && self.state.monsters[mi].attack_cooldown <= 0
+                && self.state.projectiles.iter().filter(|p| p.hostile).count()
+                    < self.state.players.len() * 3
             {
                 let target_x = self.state.players[pi].x;
                 let target_y = self.state.players[pi].y;
@@ -1768,7 +2062,7 @@ impl CraftaxCoopEnv {
                     dx,
                     dy,
                     damage,
-                    ttl: 8,
+                    ttl: MAP_SIZE as u8,
                     kind,
                     hostile: true,
                 });
@@ -1805,8 +2099,7 @@ impl CraftaxCoopEnv {
                     level == NUM_LEVELS - 1,
                 );
                 let sleeping = self.state.players[pi].sleeping;
-                self.state.players[pi].health -=
-                    ((damage as f64) * if sleeping { 3.5 } else { 1.0 }).round() as i16;
+                self.state.players[pi].health -= damage * if sleeping { 3.5 } else { 1.0 };
                 self.state.players[pi].sleeping = false;
                 self.state.players[pi].resting = false;
                 if sleeping {
@@ -1837,8 +2130,17 @@ impl CraftaxCoopEnv {
         if nx >= MAP_SIZE || ny >= MAP_SIZE {
             return;
         }
-        let open =
-            !["stone", "wall", "water", "lava"].contains(&self.state.maps[level][ny][nx].as_str());
+        let tile = self.state.maps[level][ny][nx].as_str();
+        let kind = self.state.monsters[mi].kind.as_str();
+        let open = if ["bat", "fire_elemental", "ice_elemental"].contains(&kind) {
+            true
+        } else if kind == "deep_thing" {
+            tile == "water"
+        } else if kind == "lizard" {
+            !["stone", "wall", "lava"].contains(&tile)
+        } else {
+            !["stone", "wall", "water", "lava"].contains(&tile)
+        };
         let player_free = !self
             .state
             .players
@@ -1952,7 +2254,7 @@ impl CraftaxCoopEnv {
                 self.state.players.len() * 2,
             ]
         };
-        let chances = if level == 0 {
+        let mut chances = if level == 0 {
             [
                 0.1,
                 0.02 + 0.1 * (1.0 - self.state.light_level).powi(2),
@@ -1961,6 +2263,11 @@ impl CraftaxCoopEnv {
         } else {
             [if level == 7 { 0.0 } else { 0.1 }, 0.06, 0.05]
         };
+        if self.state.monsters_killed[level] < 8 {
+            for chance in &mut chances {
+                *chance = (*chance * 3.0_f64).min(1.0_f64);
+            }
+        }
         for category in 0..3 {
             let Some(kind) = kinds[level][category] else {
                 continue;
@@ -1998,8 +2305,12 @@ impl CraftaxCoopEnv {
                     .unwrap();
                 if distance <= 9
                     || distance >= 14
-                    || !["grass", "path", "sand", "gravel", "fire_grass", "ice_grass"]
-                        .contains(&self.state.maps[level][y][x].as_str())
+                    || !(if kind == "deep_thing" {
+                        self.state.maps[level][y][x] == "water"
+                    } else {
+                        ["grass", "path", "sand", "gravel", "fire_grass", "ice_grass"]
+                            .contains(&self.state.maps[level][y][x].as_str())
+                    })
                     || self
                         .state
                         .monsters
@@ -2014,7 +2325,7 @@ impl CraftaxCoopEnv {
                     level,
                     x,
                     y,
-                    health: health[level][category],
+                    health: health[level][category] as f64,
                     damage: mob_damage(kind),
                     category: categories[category].into(),
                     attack_cooldown: 0,
@@ -2089,7 +2400,7 @@ impl CraftaxCoopEnv {
                                 [0, 20, 4],
                                 [0, 20, 14],
                                 [0, 24, 16],
-                            ][floor][category],
+                            ][floor][category] as f64,
                             damage: mob_damage(kind),
                             category: ["passive", "melee", "ranged"][category].into(),
                             attack_cooldown: 0,
@@ -2172,6 +2483,17 @@ impl CraftaxCoopEnv {
             }
             self.award(&format!("collect_{resource}"), &[target]);
             self.award("trade", &[giver, target]);
+            self.event_values(
+                "trade_applied",
+                BTreeMap::from([
+                    ("giver".into(), json!(self.state.players[giver].agent_id)),
+                    (
+                        "receiver".into(),
+                        json!(self.state.players[target].agent_id),
+                    ),
+                    ("resource".into(), json!(resource)),
+                ]),
+            );
             return;
         }
         let stock = *self.state.players[giver]
@@ -2191,6 +2513,17 @@ impl CraftaxCoopEnv {
             .unwrap() += 1;
         self.state.trade_count += 1;
         self.award("trade", &[giver, target]);
+        self.event_values(
+            "trade_applied",
+            BTreeMap::from([
+                ("giver".into(), json!(self.state.players[giver].agent_id)),
+                (
+                    "receiver".into(),
+                    json!(self.state.players[target].agent_id),
+                ),
+                ("resource".into(), json!(resource)),
+            ]),
+        );
     }
     fn finish(&mut self, reason: &str) {
         self.state.terminated = true;
@@ -2202,6 +2535,9 @@ impl CraftaxCoopEnv {
             .into_iter()
             .map(|(k, v)| (k.into(), json!(v)))
             .collect();
+        self.event_values(kind, fields);
+    }
+    fn event_values(&mut self, kind: &str, fields: BTreeMap<String, Value>) {
         let event = Event {
             timestep: self.state.timestep,
             kind: kind.into(),
@@ -2232,14 +2568,14 @@ impl CraftaxCoopEnv {
     }
     pub fn checkpoint_json(&self) -> String {
         serde_json::to_string(&Checkpoint {
-            schema_version: "craftax-coop.checkpoint.v1".into(),
+            schema_version: "craftax-coop.checkpoint.v2".into(),
             state: self.state.clone(),
         })
         .expect("state serializes")
     }
     pub fn restore_json(raw: &str) -> Result<Self, serde_json::Error> {
         let checkpoint: Checkpoint = serde_json::from_str(raw)?;
-        if checkpoint.schema_version != "craftax-coop.checkpoint.v1" {
+        if checkpoint.schema_version != "craftax-coop.checkpoint.v2" {
             return Err(<serde_json::Error as serde::de::Error>::custom(
                 "unsupported checkpoint schema",
             ));
@@ -2343,11 +2679,13 @@ impl CraftaxCoopEnv {
                 let agents=self.state.players.iter().filter(|q|q.alive&&q.level==p.level&&q.x as isize==x&&q.y as isize==y).map(|q|q.agent_id.clone()).collect::<Vec<_>>();
                 let mobs=self.state.monsters.iter().filter(|m|m.level==p.level&&m.x as isize==x&&m.y as isize==y).map(|m|m.id.clone()).collect::<Vec<_>>();
                 let item=if x<0||y<0||x>=MAP_SIZE as isize||y>=MAP_SIZE as isize{None}else{self.state.item_maps[p.level][y as usize][x as usize].clone()};
-                row.push(json!({"x":x,"y":y,"terrain":terrain,"item":item,"agents":agents,"mobs":mobs}));
+                let light=if x<0||y<0||x>=MAP_SIZE as isize||y>=MAP_SIZE as isize{0.0}else{self.state.light_maps[p.level][y as usize][x as usize]*if p.level==0{self.state.light_level}else{1.0}};
+                row.push(json!({"x":x,"y":y,"terrain":terrain,"item":item,"light":light,"agents":agents,"mobs":mobs}));
             } view.push(Value::Array(row)); }
             let visible=self.state.monsters.iter().filter(|m|m.level==p.level&&m.x.abs_diff(p.x)<=radius as usize&&m.y.abs_diff(p.y)<=radius as usize).collect::<Vec<_>>();
             let achievements=self.state.achievements.iter().map(|name|(name.clone(),true)).collect::<BTreeMap<_,_>>();
-            (p.agent_id.clone(),json!({"agent_id":p.agent_id,"agent_index":index,"role":p.role,"legal_agent_ids":self.state.players.iter().map(|q|q.agent_id.clone()).collect::<Vec<_>>(),"legal_actions":self.legal_actions(&p.agent_id),"self":Self::player_json(p),"teammate_dashboard":dashboard,"level":p.level,"map_size":[MAP_SIZE,MAP_SIZE],"num_levels":NUM_LEVELS,"local_view":view,"ascii":self.render_ascii(p,radius),"visible_monsters":visible,"last_joint_event":self.state.last_joint_event,"shared":{"timestep":self.state.timestep,"light_level":self.state.light_level,"boss_health":self.state.boss_health,"boss_progress":self.state.boss_progress,"trade_count":self.state.trade_count,"food_trade_count":self.state.food_trade_count,"drink_trade_count":self.state.drink_trade_count,"revives":self.state.revives,"friendly_fire_damage":self.state.ff_damage_dealt,"chests_opened":self.state.chests_opened,"monsters_killed":self.state.monsters_killed,"achievements":achievements}}))
+            let personal=self.state.achievements_by_agent[&p.agent_id].iter().map(|name|(name.clone(),true)).collect::<BTreeMap<_,_>>();
+            (p.agent_id.clone(),json!({"agent_id":p.agent_id,"agent_index":index,"role":p.role,"legal_agent_ids":self.state.players.iter().map(|q|q.agent_id.clone()).collect::<Vec<_>>(),"legal_actions":self.legal_actions(&p.agent_id),"self":Self::player_json(p),"achievements":personal,"teammate_dashboard":dashboard,"level":p.level,"map_size":[MAP_SIZE,MAP_SIZE],"num_levels":NUM_LEVELS,"local_view":view,"ascii":self.render_ascii(p,radius),"visible_monsters":visible,"last_joint_event":self.state.last_joint_event,"shared":{"timestep":self.state.timestep,"light_level":self.state.light_level,"boss_health":self.state.boss_health,"boss_progress":self.state.boss_progress,"trade_count":self.state.trade_count,"food_trade_count":self.state.food_trade_count,"drink_trade_count":self.state.drink_trade_count,"revives":self.state.revives,"friendly_fire_damage":self.state.ff_damage_dealt,"chests_opened":self.state.chests_opened,"monsters_killed":self.state.monsters_killed,"achievements":achievements}}))
         }).collect()
     }
 
@@ -2442,8 +2780,8 @@ fn direction(facing: &str) -> (isize, isize) {
     }
 }
 
-fn max_health(player: &Player) -> i16 {
-    8 + player.strength as i16
+fn max_health(player: &Player) -> f64 {
+    8.0 + player.strength as f64
 }
 fn max_food(player: &Player) -> i16 {
     (7 + 2 * player.dexterity as i16) * if player.role == "forager" { 3 } else { 1 }
