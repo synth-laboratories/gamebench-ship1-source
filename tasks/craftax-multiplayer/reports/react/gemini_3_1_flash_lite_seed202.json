@@ -1,0 +1,271 @@
+{
+  "achievements": [
+    "all_roles_alive"
+  ],
+  "env_family": "craftax-multiplayer",
+  "lane": "python",
+  "model": "gemini-3.1-flash-lite",
+  "policy_kind": "react",
+  "provider": "gemini",
+  "schema_version": "gamebench.rollout.v1",
+  "seed": 202,
+  "shared_reward": 1.0,
+  "state_hash": "8fe4153ce00b5923c3df80145401102400fe233b4e84a4a66c09520a813f0914",
+  "steps": 12,
+  "termination_reason": null,
+  "trace": [
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "right"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 0,
+      "responses": {
+        "agent_0": "{\"action\":\"right\",\"reason\":\"Moving towards the plant at (7,3) to gather food for the team.\"}",
+        "agent_1": "{\"action\":\"right\",\"reason\":\"Moving towards the plant at (7,3) to forage food for the team.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the iron deposit at (9,5) to begin mining operations for the team.\"}"
+      },
+      "reward": 1.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "right"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 1,
+      "responses": {
+        "agent_0": "{\"action\":\"right\",\"reason\":\"Moving right to allow the forager and miner space to gather resources while I scout for potential threats.\"}",
+        "agent_1": "{\"action\":\"right\",\"reason\":\"Moving towards the plant at (7,3) to forage food for the team.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the center to coordinate with the team and prepare for resource gathering.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "right"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 2,
+      "responses": {
+        "agent_0": "{\"action\":\"right\",\"reason\":\"Moving towards the center to coordinate with the forager and miner for resource gathering.\"}",
+        "agent_1": "{\"action\":\"right\",\"reason\":\"Moving towards the plant at (7,3) to gather food for the team.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the center to coordinate with the team and prepare for resource gathering.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "right"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 3,
+      "responses": {
+        "agent_0": "{\"action\":\"right\",\"reason\":\"Moving towards the plant at (7,3) to gather food for the team.\"}",
+        "agent_1": "{\"action\":\"right\",\"reason\":\"Moving towards the plant at (7,3) to gather food for the team.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the center to coordinate with teammates and prepare for resource gathering.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "right"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 4,
+      "responses": {
+        "agent_0": "{\"action\":\"right\",\"reason\":\"Moving towards the miner to coordinate and prepare for resource gathering.\"}",
+        "agent_1": "{\"action\":\"right\",\"reason\":\"Moving towards the plant at (7,3) to forage food for the team.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the center to coordinate with the team and prepare for resource gathering.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "right"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 5,
+      "responses": {
+        "agent_0": "{\"action\":\"right\",\"reason\":\"Moving towards the center to coordinate with the forager and miner for resource gathering.\"}",
+        "agent_1": "{\"action\":\"right\",\"reason\":\"Moving towards the plant at (7,3) to forage food for the team.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the center to coordinate with teammates and prepare for resource gathering.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "right"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 6,
+      "responses": {
+        "agent_0": "{\"action\":\"right\",\"reason\":\"Moving towards the center to coordinate with the forager and miner for resource gathering.\"}",
+        "agent_1": "{\"action\":\"right\",\"reason\":\"Moving towards the plant at (7,3) to forage food for the team.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the center to coordinate with the team and prepare for resource gathering.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "right"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 7,
+      "responses": {
+        "agent_0": "{\"action\":\"right\",\"reason\":\"Moving towards the plant at (7,3) to gather food for the team.\"}",
+        "agent_1": "{\"action\":\"right\",\"reason\":\"Moving towards the plant at (7,3) to forage food for the team.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the iron deposit at (9,5) to begin mining operations for the team.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "right"
+        },
+        "agent_2": {
+          "kind": "make_wood_pickaxe"
+        }
+      },
+      "ply": 8,
+      "responses": {
+        "agent_0": "{\"action\":\"right\",\"reason\":\"Moving towards the miner to coordinate resource gathering and prepare for descent.\"}",
+        "agent_1": "{\"action\":\"right\",\"reason\":\"Moving towards the plant at [7,3] to forage food for the team.\"}",
+        "agent_2": "{\"action\":\"make_wood_pickaxe\",\"reason\":\"As a miner, I need a pickaxe to start gathering resources for the team.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "right"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 9,
+      "responses": {
+        "agent_0": "{\"action\":\"right\",\"reason\":\"Moving towards the plant at (7,3) to gather resources for the team.\"}",
+        "agent_1": "{\"action\":\"right\",\"reason\":\"Moving towards the plant at (7,3) to forage food for the team.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the center to coordinate with teammates and prepare for resource gathering.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "right"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 10,
+      "responses": {
+        "agent_0": "{\"action\":\"right\",\"reason\":\"Moving towards the plant at (7,3) to gather food for the team.\"}",
+        "agent_1": "{\"action\":\"right\",\"reason\":\"Moving towards the plant at (7,3) to forage food for the team.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the iron deposit at (9,5) to begin mining operations for the team.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "right"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 11,
+      "responses": {
+        "agent_0": "{\"action\":\"right\",\"reason\":\"Moving towards the plant at (7,3) to gather food for the team.\"}",
+        "agent_1": "{\"action\":\"right\",\"reason\":\"Moving towards the plant at (7,3) to forage food for the team.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the center to coordinate with teammates and begin gathering resources.\"}"
+      },
+      "reward": 0.0
+    }
+  ],
+  "trades": 0
+}

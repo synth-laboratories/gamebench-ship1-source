@@ -14,7 +14,7 @@ class CraftaxService:
     def handle(self, method: str, path: str, body: dict[str, Any] | None = None) -> tuple[int, dict[str, Any]]:
         body = body or {}
         if method == "GET" and path == "/health": return 200, {"ok": True, "env_family": self.env.env_family, "runtime": "python"}
-        if method == "GET" and path == "/agents": return 200, {"agents": list(self.env.agent_ids)}
+        if method == "GET" and path == "/agents": return 200, list(self.env.agent_ids)
         if method == "POST" and path == "/reset":
             obs, info = self.env.reset(int(body.get("seed", 0))); return 200, {"observations": obs, "info": info}
         if method == "POST" and path == "/step":

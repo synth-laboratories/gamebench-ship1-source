@@ -17,12 +17,40 @@ fn response(stream: &mut TcpStream, status: u16, payload: Value) {
     let _ = stream.write_all(raw.as_bytes());
 }
 
+fn read_request(stream: &mut TcpStream) -> Option<String> {
+    let mut buffer = Vec::with_capacity(262_144);
+    let mut chunk = [0u8; 16_384];
+    loop {
+        let size = stream.read(&mut chunk).ok()?;
+        if size == 0 {
+            return None;
+        }
+        buffer.extend_from_slice(&chunk[..size]);
+        if let Some(header_end) = buffer.windows(4).position(|window| window == b"\r\n\r\n") {
+            let headers = String::from_utf8_lossy(&buffer[..header_end]);
+            let content_length = headers
+                .lines()
+                .find_map(|line| {
+                    let (name, value) = line.split_once(':')?;
+                    name.eq_ignore_ascii_case("content-length")
+                        .then(|| value.trim().parse::<usize>().ok())
+                        .flatten()
+                })
+                .unwrap_or(0);
+            if buffer.len() >= header_end + 4 + content_length {
+                return String::from_utf8(buffer[..header_end + 4 + content_length].to_vec()).ok();
+            }
+        }
+        if buffer.len() > 8 * 1024 * 1024 {
+            return None;
+        }
+    }
+}
+
 fn handle(stream: &mut TcpStream, env: &mut CraftaxCoopEnv) {
-    let mut buffer = vec![0u8; 1_048_576];
-    let Ok(size) = stream.read(&mut buffer) else {
+    let Some(raw) = read_request(stream) else {
         return;
     };
-    let raw = String::from_utf8_lossy(&buffer[..size]);
     let Some(header_end) = raw.find("\r\n\r\n") else {
         return;
     };
@@ -35,9 +63,12 @@ fn handle(stream: &mut TcpStream, env: &mut CraftaxCoopEnv) {
         ("GET", "/health") => {
             Ok(json!({"ok":true,"env_family":"craftax-multiplayer","runtime":"rust"}))
         }
-        ("GET", "/agents") => Ok(
-            json!({"agents":env.state.players.iter().map(|p|p.agent_id.clone()).collect::<Vec<_>>()}),
-        ),
+        ("GET", "/agents") => Ok(json!(env
+            .state
+            .players
+            .iter()
+            .map(|p| p.agent_id.clone())
+            .collect::<Vec<_>>())),
         ("POST", "/reset") => {
             let seed = body.get("seed").and_then(Value::as_u64).unwrap_or(0);
             *env = CraftaxCoopEnv::reset(seed, 3, 100_000);

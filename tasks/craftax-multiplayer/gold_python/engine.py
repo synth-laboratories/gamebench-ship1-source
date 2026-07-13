@@ -133,7 +133,7 @@ class CraftaxCoopEnv:
             if kind in delta and p.alive:
                 dx, dy = delta[kind]; p.facing = kind
                 nx, ny = p.x + dx, p.y + dy
-                if state.maps[p.level][ny][nx] not in ("stone", "water"): desired[p.agent_id] = (nx, ny)
+                if state.maps[p.level][ny][nx] in ("grass", "path", "sand", "gravel", "fire_grass", "ice_grass", "stairs_down", "stairs_up", "crafting_table", "furnace", "enchantment_table_fire", "enchantment_table_ice"): desired[p.agent_id] = (nx, ny)
         counts = {pos: list(desired.values()).count(pos) for pos in desired.values()}
         occupied = {(p.level, p.x, p.y) for p in state.players if p.alive}
         for p in state.players:
@@ -226,6 +226,10 @@ class CraftaxCoopEnv:
             self._event("level_changed", agent_id=p.agent_id, level=p.level)
 
     def _craft(self, p: Player, kind: str) -> None:
+        if kind == "make_arrow" and p.inventory["wood"] >= 1:
+            p.inventory["wood"] -= 1; p.arrows += 2; self._event("item_crafted", agent_id=p.agent_id, item="arrow", tier=1); return
+        if kind == "make_torch" and p.inventory["wood"] >= 1 and p.inventory["coal"] >= 1:
+            p.inventory["wood"] -= 1; p.inventory["coal"] -= 1; p.torches += 2; self._event("item_crafted", agent_id=p.agent_id, item="torch", tier=1); return
         recipes = {"make_wood_pickaxe": ("wood",1,"pickaxe",1), "make_stone_pickaxe": ("stone",2,"pickaxe",2), "make_iron_pickaxe": ("iron",2,"pickaxe",3), "make_diamond_pickaxe": ("diamond",2,"pickaxe",4), "make_wood_sword": ("wood",1,"sword",1), "make_stone_sword": ("stone",2,"sword",2), "make_iron_sword": ("iron",2,"sword",3), "make_diamond_sword": ("diamond",2,"sword",4), "make_iron_armour": ("iron",3,"armour",1), "make_diamond_armour": ("diamond",3,"armour",2)}
         recipe = recipes.get(kind)
         if not recipe: return
@@ -344,7 +348,7 @@ class CraftaxCoopEnv:
 
     @staticmethod
     def _player_summary(p: Player) -> dict[str, Any]:
-        return {"agent_id":p.agent_id,"role":p.role,"position":[p.x,p.y],"level":p.level,"health":p.health,"food":p.food,"drink":p.drink,"energy":p.energy,"mana":p.mana,"alive":p.alive,"sleeping":p.sleeping,"inventory":deepcopy(p.inventory),"equipment":{"pickaxe":p.pickaxe,"sword":p.sword,"armour":p.armour,"arrows":p.arrows,"torches":p.torches,"books":p.books,"saplings":p.saplings,"potions":deepcopy(p.potions),"enchantments":{"sword":p.sword_enchantment,"armour":p.armour_enchantment,"bow":p.bow_enchantment}},"attributes":{"dexterity":p.dexterity,"strength":p.strength,"intelligence":p.intelligence,"xp":p.xp,"level_points":p.level_points},"request":{"resource":p.request_type,"remaining":p.request_duration}}
+        return {"agent_id":p.agent_id,"role":p.role,"position":[p.x,p.y],"level":p.level,"facing":p.facing,"health":p.health,"food":p.food,"drink":p.drink,"energy":p.energy,"mana":p.mana,"alive":p.alive,"sleeping":p.sleeping,"inventory":deepcopy(p.inventory),"equipment":{"pickaxe":p.pickaxe,"sword":p.sword,"armour":p.armour,"arrows":p.arrows,"torches":p.torches,"books":p.books,"saplings":p.saplings,"potions":deepcopy(p.potions),"enchantments":{"sword":p.sword_enchantment,"armour":p.armour_enchantment,"bow":p.bow_enchantment}},"attributes":{"dexterity":p.dexterity,"strength":p.strength,"intelligence":p.intelligence,"xp":p.xp,"level_points":p.level_points},"request":{"resource":p.request_type,"remaining":p.request_duration}}
 
     def _local_view(self, p: Player) -> list[list[dict[str, Any]]]:
         state=self._require_state(); out=[]

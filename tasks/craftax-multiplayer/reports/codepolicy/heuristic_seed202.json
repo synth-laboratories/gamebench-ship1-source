@@ -10,8 +10,6 @@
     "collect_wood",
     "craft_pickaxe",
     "craft_sword",
-    "defeat_monster",
-    "drink_potion",
     "open_chest",
     "trade"
   ],
@@ -20,10 +18,10 @@
   "policy_kind": "code",
   "policy_path": "/Users/joshpurtell/Documents/GitHub/gamebench-craftax-coop-full/tasks/craftax-multiplayer/policies/heuristic_baseline.py",
   "schema_version": "gamebench.rollout.v1",
-  "seed": 101,
-  "shared_reward": 14.0,
-  "state_hash": "e0d9ed80adb648e9a658c4a784845364805135ac11e55397fa45274b5f44dc07",
-  "steps": 230,
+  "seed": 202,
+  "shared_reward": 12.0,
+  "state_hash": "4179452904a88050eca3d22149662d4ad1fe9551faaadc97fe118032899a854a",
+  "steps": 232,
   "termination_reason": "death",
   "trace": [
     {
@@ -35,6 +33,22 @@
           "timestep": 0,
           "x": 3,
           "y": 4
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 0,
+          "x": 4,
+          "y": 4
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 0,
+          "x": 6,
+          "y": 3
         }
       ],
       "joint_action": {
@@ -42,10 +56,10 @@
           "kind": "down"
         },
         "agent_1": {
-          "kind": "left"
+          "kind": "down"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 0,
@@ -54,113 +68,42 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 1,
+          "x": 3,
+          "y": 5
+        },
+        {
           "agent_id": "agent_1",
-          "amount": 1,
-          "kind": "resource_collected",
-          "resource": "wood",
-          "timestep": 1
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 1,
+          "x": 4,
+          "y": 5
         },
         {
           "agent_id": "agent_2",
-          "amount": 2,
-          "kind": "resource_collected",
-          "resource": "ruby",
-          "timestep": 1
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 1,
+          "x": 6,
+          "y": 4
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "up"
+          "kind": "down"
         },
         "agent_1": {
-          "kind": "do"
+          "kind": "down"
         },
         "agent_2": {
-          "kind": "do"
+          "kind": "down"
         }
       },
       "ply": 1,
-      "reward": 2.0
-    },
-    {
-      "events": [
-        {
-          "agent_id": "agent_0",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 2,
-          "x": 4,
-          "y": 4
-        },
-        {
-          "agent_id": "agent_2",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 2,
-          "x": 6,
-          "y": 3
-        },
-        {
-          "agent_id": "agent_1",
-          "item": "sword",
-          "kind": "item_crafted",
-          "tier": 1,
-          "timestep": 2
-        }
-      ],
-      "joint_action": {
-        "agent_0": {
-          "kind": "right"
-        },
-        "agent_1": {
-          "kind": "make_wood_sword"
-        },
-        "agent_2": {
-          "kind": "right"
-        }
-      },
-      "ply": 2,
-      "reward": 1.0
-    },
-    {
-      "events": [
-        {
-          "agent_id": "agent_0",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 3,
-          "x": 5,
-          "y": 4
-        },
-        {
-          "agent_id": "agent_1",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 3,
-          "x": 5,
-          "y": 3
-        },
-        {
-          "agent_id": "agent_2",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 3,
-          "x": 7,
-          "y": 3
-        }
-      ],
-      "joint_action": {
-        "agent_0": {
-          "kind": "right"
-        },
-        "agent_1": {
-          "kind": "right"
-        },
-        "agent_2": {
-          "kind": "right"
-        }
-      },
-      "ply": 3,
       "reward": 0.0
     },
     {
@@ -169,33 +112,106 @@
           "agent_id": "agent_0",
           "kind": "move_applied",
           "level": 0,
+          "timestep": 2,
+          "x": 3,
+          "y": 6
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 2,
+          "x": 4,
+          "y": 6
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "down"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "ply": 2,
+      "reward": 0.0
+    },
+    {
+      "events": [
+        {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 3,
+          "x": 3,
+          "y": 7
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 3,
+          "x": 4,
+          "y": 7
+        },
+        {
+          "agent_id": "agent_2",
+          "amount": 2,
+          "kind": "resource_collected",
+          "resource": "sapphire",
+          "timestep": 3
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "down"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "ply": 3,
+      "reward": 1.0
+    },
+    {
+      "events": [
+        {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
           "timestep": 4,
-          "x": 6,
-          "y": 4
+          "x": 3,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 4,
-          "x": 6,
-          "y": 3
+          "x": 4,
+          "y": 8
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 4,
-          "x": 8,
-          "y": 3
+          "x": 7,
+          "y": 4
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "right"
+          "kind": "down"
         },
         "agent_1": {
-          "kind": "right"
+          "kind": "down"
         },
         "agent_2": {
           "kind": "right"
@@ -207,36 +223,28 @@
     {
       "events": [
         {
-          "agent_id": "agent_0",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 5,
-          "x": 7,
-          "y": 4
-        },
-        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 5,
-          "x": 7,
-          "y": 3
+          "x": 4,
+          "y": 9
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 5,
-          "x": 9,
-          "y": 3
+          "x": 8,
+          "y": 4
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "right"
+          "kind": "left"
         },
         "agent_1": {
-          "kind": "right"
+          "kind": "down"
         },
         "agent_2": {
           "kind": "right"
@@ -248,33 +256,22 @@
     {
       "events": [
         {
-          "agent_id": "agent_0",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 6,
-          "x": 8,
-          "y": 4
-        },
-        {
-          "agent_id": "agent_1",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 6,
-          "x": 8,
-          "y": 3
-        },
-        {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 6,
-          "x": 10,
-          "y": 3
+          "x": 9,
+          "y": 4
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "chest_opened",
+          "timestep": 6
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "right"
+          "kind": "do"
         },
         "agent_1": {
           "kind": "right"
@@ -284,7 +281,7 @@
         }
       },
       "ply": 6,
-      "reward": 0.0
+      "reward": 1.0
     },
     {
       "events": [
@@ -293,20 +290,21 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 7,
-          "x": 9,
-          "y": 4
+          "x": 4,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 7,
-          "x": 9,
-          "y": 3
+          "amount": 1,
+          "kind": "resource_collected",
+          "resource": "wood",
+          "timestep": 7
         },
         {
           "agent_id": "agent_2",
-          "kind": "chest_opened",
+          "amount": 2,
+          "kind": "resource_collected",
+          "resource": "sapphire",
           "timestep": 7
         }
       ],
@@ -315,7 +313,7 @@
           "kind": "right"
         },
         "agent_1": {
-          "kind": "right"
+          "kind": "do"
         },
         "agent_2": {
           "kind": "do"
@@ -331,24 +329,15 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 8,
-          "x": 10,
-          "y": 4
+          "x": 5,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 8,
-          "x": 8,
-          "y": 3
-        },
-        {
-          "agent_id": "agent_2",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 8,
-          "x": 11,
-          "y": 3
+          "item": "sword",
+          "kind": "item_crafted",
+          "tier": 1,
+          "timestep": 8
         }
       ],
       "joint_action": {
@@ -356,14 +345,14 @@
           "kind": "right"
         },
         "agent_1": {
-          "kind": "left"
+          "kind": "make_wood_sword"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "down"
         }
       },
       "ply": 8,
-      "reward": 0.0
+      "reward": 1.0
     },
     {
       "events": [
@@ -372,56 +361,23 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 9,
-          "x": 11,
-          "y": 4
+          "x": 6,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 9,
-          "x": 8,
-          "y": 4
-        }
-      ],
-      "joint_action": {
-        "agent_0": {
-          "kind": "right"
-        },
-        "agent_1": {
-          "kind": "down"
-        },
-        "agent_2": {
-          "kind": "up"
-        }
-      },
-      "ply": 9,
-      "reward": 0.0
-    },
-    {
-      "events": [
-        {
-          "agent_id": "agent_0",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 10,
-          "x": 12,
-          "y": 4
-        },
-        {
-          "agent_id": "agent_1",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 10,
-          "x": 8,
-          "y": 5
+          "x": 4,
+          "y": 10
         },
         {
           "agent_id": "agent_2",
           "amount": 2,
           "kind": "resource_collected",
-          "resource": "stone",
-          "timestep": 10
+          "resource": "iron",
+          "timestep": 9
         }
       ],
       "joint_action": {
@@ -435,7 +391,7 @@
           "kind": "do"
         }
       },
-      "ply": 10,
+      "ply": 9,
       "reward": 1.0
     },
     {
@@ -444,24 +400,24 @@
           "agent_id": "agent_0",
           "kind": "move_applied",
           "level": 0,
-          "timestep": 11,
-          "x": 13,
-          "y": 4
+          "timestep": 10,
+          "x": 7,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
-          "timestep": 11,
-          "x": 8,
-          "y": 6
+          "timestep": 10,
+          "x": 4,
+          "y": 11
         },
         {
           "agent_id": "agent_2",
           "item": "pickaxe",
           "kind": "item_crafted",
-          "tier": 2,
-          "timestep": 11
+          "tier": 3,
+          "timestep": 10
         }
       ],
       "joint_action": {
@@ -472,10 +428,10 @@
           "kind": "down"
         },
         "agent_2": {
-          "kind": "make_stone_pickaxe"
+          "kind": "make_iron_pickaxe"
         }
       },
-      "ply": 11,
+      "ply": 10,
       "reward": 1.0
     },
     {
@@ -484,25 +440,25 @@
           "agent_id": "agent_0",
           "kind": "move_applied",
           "level": 0,
-          "timestep": 12,
-          "x": 14,
-          "y": 4
+          "timestep": 11,
+          "x": 8,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
-          "timestep": 12,
-          "x": 8,
-          "y": 7
+          "timestep": 11,
+          "x": 4,
+          "y": 12
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
-          "timestep": 12,
-          "x": 12,
-          "y": 3
+          "timestep": 11,
+          "x": 10,
+          "y": 4
         }
       ],
       "joint_action": {
@@ -511,6 +467,39 @@
         },
         "agent_1": {
           "kind": "down"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "ply": 11,
+      "reward": 0.0
+    },
+    {
+      "events": [
+        {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 12,
+          "x": 9,
+          "y": 8
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 12,
+          "x": 11,
+          "y": 4
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "right"
         },
         "agent_2": {
           "kind": "right"
@@ -526,15 +515,7 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 13,
-          "x": 14,
-          "y": 5
-        },
-        {
-          "agent_id": "agent_1",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 13,
-          "x": 8,
+          "x": 10,
           "y": 8
         },
         {
@@ -546,22 +527,20 @@
           "y": 4
         },
         {
-          "agent_id": "agent_0",
-          "damage": 1,
-          "kind": "player_damaged",
-          "mob_id": "mob_0_1",
+          "agent_id": "agent_1",
+          "kind": "chest_opened",
           "timestep": 13
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "down"
+          "kind": "right"
         },
         "agent_1": {
-          "kind": "down"
+          "kind": "do"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "right"
         }
       },
       "ply": 13,
@@ -574,31 +553,16 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 14,
-          "x": 15,
-          "y": 5
+          "x": 11,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 14,
-          "x": 9,
-          "y": 8
-        },
-        {
-          "agent_id": "agent_2",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 14,
-          "x": 13,
-          "y": 4
-        },
-        {
-          "agent_id": "agent_0",
-          "damage": 1,
-          "kind": "player_damaged",
-          "mob_id": "mob_0_1",
-          "timestep": 14
+          "x": 4,
+          "y": 13
         }
       ],
       "joint_action": {
@@ -606,10 +570,10 @@
           "kind": "right"
         },
         "agent_1": {
-          "kind": "right"
+          "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "up"
         }
       },
       "ply": 14,
@@ -622,42 +586,34 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 15,
-          "x": 14,
-          "y": 5
+          "x": 12,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 15,
-          "x": 9,
-          "y": 9
+          "x": 4,
+          "y": 14
         },
         {
           "agent_id": "agent_2",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 15,
-          "x": 14,
-          "y": 4
-        },
-        {
-          "agent_id": "agent_0",
-          "damage": 1,
-          "kind": "player_damaged",
-          "mob_id": "mob_0_1",
+          "amount": 1,
+          "kind": "resource_collected",
+          "resource": "wood",
           "timestep": 15
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "left"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "do"
         }
       },
       "ply": 15,
@@ -670,22 +626,22 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 16,
-          "x": 15,
-          "y": 5
+          "x": 13,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 16,
-          "x": 9,
-          "y": 10
+          "x": 5,
+          "y": 14
         },
         {
-          "agent_id": "agent_0",
-          "damage": 1,
-          "kind": "player_damaged",
-          "mob_id": "mob_0_1",
+          "agent_id": "agent_2",
+          "item": "sword",
+          "kind": "item_crafted",
+          "tier": 1,
           "timestep": 16
         }
       ],
@@ -694,10 +650,10 @@
           "kind": "right"
         },
         "agent_1": {
-          "kind": "down"
+          "kind": "right"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "make_wood_sword"
         }
       },
       "ply": 16,
@@ -711,73 +667,23 @@
           "level": 0,
           "timestep": 17,
           "x": 14,
-          "y": 5
-        },
-        {
-          "ability": "team_heal",
-          "agent_id": "agent_1",
-          "kind": "role_ability",
-          "timestep": 17
-        },
-        {
-          "agent_id": "agent_2",
-          "damage": 1,
-          "kind": "mob_damaged",
-          "mob_id": "mob_0_1",
-          "timestep": 17
-        },
-        {
-          "agent_id": "agent_0",
-          "damage": 1,
-          "kind": "player_damaged",
-          "mob_id": "mob_0_1",
-          "timestep": 17
-        }
-      ],
-      "joint_action": {
-        "agent_0": {
-          "kind": "left"
-        },
-        "agent_1": {
-          "kind": "cast_spell"
-        },
-        "agent_2": {
-          "kind": "do"
-        }
-      },
-      "ply": 17,
-      "reward": 1.0
-    },
-    {
-      "events": [
-        {
-          "agent_id": "agent_0",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 18,
-          "x": 15,
-          "y": 5
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
-          "timestep": 18,
-          "x": 9,
-          "y": 11
+          "timestep": 17,
+          "x": 5,
+          "y": 15
         },
         {
           "agent_id": "agent_2",
-          "damage": 1,
-          "kind": "mob_damaged",
-          "mob_id": "mob_0_1",
-          "timestep": 18
-        },
-        {
-          "agent_id": "agent_2",
-          "kind": "mob_defeated",
-          "mob_id": "mob_0_1",
-          "timestep": 18
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 17,
+          "x": 13,
+          "y": 4
         }
       ],
       "joint_action": {
@@ -788,11 +694,52 @@
           "kind": "down"
         },
         "agent_2": {
-          "kind": "do"
+          "kind": "right"
+        }
+      },
+      "ply": 17,
+      "reward": 0.0
+    },
+    {
+      "events": [
+        {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 18,
+          "x": 15,
+          "y": 8
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 18,
+          "x": 5,
+          "y": 16
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 18,
+          "x": 14,
+          "y": 4
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "down"
+        },
+        "agent_2": {
+          "kind": "right"
         }
       },
       "ply": 18,
-      "reward": 1.0
+      "reward": 0.0
     },
     {
       "events": [
@@ -802,15 +749,15 @@
           "level": 0,
           "timestep": 19,
           "x": 16,
-          "y": 5
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 19,
-          "x": 10,
-          "y": 11
+          "x": 6,
+          "y": 16
         },
         {
           "agent_id": "agent_2",
@@ -843,15 +790,15 @@
           "level": 0,
           "timestep": 20,
           "x": 17,
-          "y": 5
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 20,
-          "x": 10,
-          "y": 12
+          "x": 7,
+          "y": 16
         },
         {
           "agent_id": "agent_2",
@@ -867,7 +814,7 @@
           "kind": "right"
         },
         "agent_1": {
-          "kind": "down"
+          "kind": "right"
         },
         "agent_2": {
           "kind": "right"
@@ -884,15 +831,15 @@
           "level": 0,
           "timestep": 21,
           "x": 18,
-          "y": 5
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 21,
-          "x": 10,
-          "y": 11
+          "x": 7,
+          "y": 17
         },
         {
           "agent_id": "agent_2",
@@ -908,7 +855,7 @@
           "kind": "right"
         },
         "agent_1": {
-          "kind": "up"
+          "kind": "down"
         },
         "agent_2": {
           "kind": "right"
@@ -924,21 +871,21 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 22,
-          "x": 18,
-          "y": 6
+          "x": 19,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 22,
-          "x": 10,
-          "y": 12
+          "x": 7,
+          "y": 18
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "down"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "down"
@@ -957,22 +904,22 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 23,
-          "x": 19,
-          "y": 6
+          "x": 20,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 23,
-          "x": 10,
-          "y": 11
+          "x": 7,
+          "y": 19
         },
         {
           "agent_id": "agent_2",
           "amount": 2,
           "kind": "resource_collected",
-          "resource": "coal",
+          "resource": "stone",
           "timestep": 23
         }
       ],
@@ -981,7 +928,7 @@
           "kind": "right"
         },
         "agent_1": {
-          "kind": "up"
+          "kind": "down"
         },
         "agent_2": {
           "kind": "do"
@@ -997,16 +944,16 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 24,
-          "x": 20,
-          "y": 6
+          "x": 19,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 24,
-          "x": 10,
-          "y": 12
+          "x": 7,
+          "y": 20
         },
         {
           "agent_id": "agent_2",
@@ -1019,7 +966,7 @@
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "right"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
@@ -1038,16 +985,16 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 25,
-          "x": 21,
-          "y": 6
+          "x": 20,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 25,
-          "x": 10,
-          "y": 11
+          "x": 7,
+          "y": 21
         },
         {
           "agent_id": "agent_2",
@@ -1063,7 +1010,7 @@
           "kind": "right"
         },
         "agent_1": {
-          "kind": "up"
+          "kind": "down"
         },
         "agent_2": {
           "kind": "right"
@@ -1079,27 +1026,35 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 26,
-          "x": 21,
-          "y": 7
+          "x": 19,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 26,
-          "x": 10,
-          "y": 12
+          "x": 7,
+          "y": 22
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 26,
+          "x": 20,
+          "y": 4
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "down"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "right"
         }
       },
       "ply": 26,
@@ -1112,22 +1067,22 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 27,
-          "x": 22,
-          "y": 7
+          "x": 20,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 27,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 22
         },
         {
           "agent_id": "agent_2",
           "amount": 2,
           "kind": "resource_collected",
-          "resource": "sapphire",
+          "resource": "diamond",
           "timestep": 27
         }
       ],
@@ -1136,7 +1091,7 @@
           "kind": "right"
         },
         "agent_1": {
-          "kind": "up"
+          "kind": "right"
         },
         "agent_2": {
           "kind": "do"
@@ -1152,7 +1107,7 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 28,
-          "x": 22,
+          "x": 19,
           "y": 8
         },
         {
@@ -1160,27 +1115,26 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 28,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 23
         },
         {
           "agent_id": "agent_2",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 28,
-          "x": 20,
-          "y": 4
+          "item": "pickaxe",
+          "kind": "item_crafted",
+          "tier": 4,
+          "timestep": 28
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "down"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "make_diamond_pickaxe"
         }
       },
       "ply": 28,
@@ -1193,7 +1147,7 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 29,
-          "x": 23,
+          "x": 20,
           "y": 8
         },
         {
@@ -1201,15 +1155,8 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 29,
-          "x": 10,
-          "y": 11
-        },
-        {
-          "agent_id": "agent_2",
-          "amount": 2,
-          "kind": "resource_collected",
-          "resource": "stone",
-          "timestep": 29
+          "x": 8,
+          "y": 24
         }
       ],
       "joint_action": {
@@ -1217,10 +1164,10 @@
           "kind": "right"
         },
         "agent_1": {
-          "kind": "up"
+          "kind": "down"
         },
         "agent_2": {
-          "kind": "do"
+          "kind": "down"
         }
       },
       "ply": 29,
@@ -1233,27 +1180,26 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 30,
-          "x": 24,
+          "x": 19,
           "y": 8
         },
         {
-          "agent_id": "agent_1",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 30,
-          "x": 10,
-          "y": 12
+          "agent_id": "agent_2",
+          "amount": 1,
+          "kind": "resource_collected",
+          "resource": "wood",
+          "timestep": 30
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "right"
+          "kind": "left"
         },
         "agent_1": {
-          "kind": "down"
+          "kind": "right"
         },
         "agent_2": {
-          "kind": "up"
+          "kind": "do"
         }
       },
       "ply": 30,
@@ -1266,22 +1212,20 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 31,
-          "x": 25,
+          "x": 20,
           "y": 8
         },
         {
-          "agent_id": "agent_1",
+          "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 31,
-          "x": 10,
-          "y": 11
+          "x": 21,
+          "y": 4
         },
         {
-          "agent_id": "agent_2",
-          "amount": 2,
-          "kind": "resource_collected",
-          "resource": "diamond",
+          "agent_id": "agent_1",
+          "kind": "chest_opened",
           "timestep": 31
         }
       ],
@@ -1290,14 +1234,14 @@
           "kind": "right"
         },
         "agent_1": {
-          "kind": "up"
+          "kind": "do"
         },
         "agent_2": {
-          "kind": "do"
+          "kind": "right"
         }
       },
       "ply": 31,
-      "reward": 1.0
+      "reward": 0.0
     },
     {
       "events": [
@@ -1306,34 +1250,27 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 32,
-          "x": 25,
-          "y": 9
+          "x": 19,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 32,
-          "x": 10,
-          "y": 12
-        },
-        {
-          "agent_id": "agent_2",
-          "item": "pickaxe",
-          "kind": "item_crafted",
-          "tier": 4,
-          "timestep": 32
+          "x": 8,
+          "y": 25
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "down"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "make_diamond_pickaxe"
+          "kind": "up"
         }
       },
       "ply": 32,
@@ -1346,24 +1283,23 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 33,
-          "x": 26,
-          "y": 9
+          "x": 20,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 33,
-          "x": 10,
-          "y": 11
+          "x": 9,
+          "y": 25
         },
         {
           "agent_id": "agent_2",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 33,
-          "x": 21,
-          "y": 4
+          "amount": 2,
+          "kind": "resource_collected",
+          "resource": "sapphire",
+          "timestep": 33
         }
       ],
       "joint_action": {
@@ -1371,10 +1307,10 @@
           "kind": "right"
         },
         "agent_1": {
-          "kind": "up"
+          "kind": "right"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "do"
         }
       },
       "ply": 33,
@@ -1387,16 +1323,16 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 34,
-          "x": 27,
-          "y": 9
+          "x": 19,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 34,
-          "x": 10,
-          "y": 12
+          "x": 9,
+          "y": 26
         },
         {
           "agent_id": "agent_2",
@@ -1409,7 +1345,7 @@
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "right"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
@@ -1424,12 +1360,20 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 35,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 35,
-          "x": 10,
-          "y": 11
+          "x": 9,
+          "y": 27
         },
         {
           "agent_id": "agent_2",
@@ -1438,19 +1382,14 @@
           "timestep": 35,
           "x": 23,
           "y": 4
-        },
-        {
-          "agent_id": "agent_0",
-          "kind": "chest_opened",
-          "timestep": 35
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
-          "kind": "up"
+          "kind": "down"
         },
         "agent_2": {
           "kind": "right"
@@ -1462,31 +1401,31 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 36,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 36,
-          "x": 10,
-          "y": 12
-        },
-        {
-          "agent_id": "agent_2",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 36,
-          "x": 24,
-          "y": 4
+          "x": 9,
+          "y": 28
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "up"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "up"
         }
       },
       "ply": 36,
@@ -1495,32 +1434,35 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 37,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 37,
-          "x": 10,
-          "y": 11
-        },
-        {
-          "agent_id": "agent_0",
-          "kind": "chest_opened",
-          "timestep": 37
+          "x": 9,
+          "y": 29
         },
         {
           "agent_id": "agent_2",
-          "amount": 2,
+          "amount": 1,
           "kind": "resource_collected",
-          "resource": "diamond",
+          "resource": "wood",
           "timestep": 37
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
-          "kind": "up"
+          "kind": "down"
         },
         "agent_2": {
           "kind": "do"
@@ -1536,27 +1478,35 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 38,
-          "x": 28,
-          "y": 9
+          "x": 19,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 38,
-          "x": 10,
-          "y": 12
+          "x": 9,
+          "y": 30
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 38,
+          "x": 24,
+          "y": 4
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "right"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "up"
+          "kind": "right"
         }
       },
       "ply": 38,
@@ -1565,104 +1515,106 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 39,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 39,
-          "x": 10,
-          "y": 11
-        },
-        {
-          "agent_id": "agent_2",
-          "amount": 2,
-          "kind": "resource_collected",
-          "resource": "iron",
-          "timestep": 39
+          "x": 8,
+          "y": 30
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "up"
+          "kind": "right"
         },
         "agent_1": {
-          "kind": "up"
+          "kind": "left"
         },
         "agent_2": {
-          "kind": "do"
+          "kind": "up"
         }
       },
       "ply": 39,
-      "reward": 1.0
-    },
-    {
-      "events": [
-        {
-          "agent_id": "agent_1",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 40,
-          "x": 10,
-          "y": 12
-        },
-        {
-          "agent_id": "agent_2",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 40,
-          "x": 25,
-          "y": 4
-        },
-        {
-          "agent_id": "agent_0",
-          "amount": 1,
-          "kind": "resource_collected",
-          "resource": "wood",
-          "timestep": 40
-        }
-      ],
-      "joint_action": {
-        "agent_0": {
-          "kind": "do"
-        },
-        "agent_1": {
-          "kind": "down"
-        },
-        "agent_2": {
-          "kind": "right"
-        }
-      },
-      "ply": 40,
       "reward": 0.0
     },
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 40,
+          "x": 19,
+          "y": 8
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 40,
+          "x": 8,
+          "y": 31
+        },
+        {
+          "agent_id": "agent_2",
+          "amount": 2,
+          "kind": "resource_collected",
+          "resource": "coal",
+          "timestep": 40
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "left"
+        },
+        "agent_1": {
+          "kind": "down"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "ply": 40,
+      "reward": 1.0
+    },
+    {
+      "events": [
+        {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 41,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 41,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 41,
-          "x": 26,
+          "x": 25,
           "y": 4
-        },
-        {
-          "agent_id": "agent_0",
-          "item": "sword",
-          "kind": "item_crafted",
-          "tier": 1,
-          "timestep": 41
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "make_wood_sword"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
@@ -1681,29 +1633,29 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 42,
-          "x": 29,
-          "y": 9
+          "x": 19,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 42,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 42,
-          "x": 27,
+          "x": 26,
           "y": 4
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "right"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
@@ -1722,22 +1674,103 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 43,
-          "x": 30,
-          "y": 9
+          "x": 20,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 43,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
+        },
+        {
+          "agent_id": "agent_2",
+          "amount": 2,
+          "kind": "resource_collected",
+          "resource": "coal",
+          "timestep": 43
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "up"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "ply": 43,
+      "reward": 0.0
+    },
+    {
+      "events": [
+        {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 44,
+          "x": 19,
+          "y": 8
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 44,
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
-          "timestep": 43,
+          "timestep": 44,
+          "x": 27,
+          "y": 4
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "left"
+        },
+        "agent_1": {
+          "kind": "down"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "ply": 44,
+      "reward": 0.0
+    },
+    {
+      "events": [
+        {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 45,
+          "x": 20,
+          "y": 8
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 45,
+          "x": 8,
+          "y": 30
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 45,
           "x": 28,
           "y": 4
         }
@@ -1753,76 +1786,6 @@
           "kind": "right"
         }
       },
-      "ply": 43,
-      "reward": 0.0
-    },
-    {
-      "events": [
-        {
-          "agent_id": "agent_1",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 44,
-          "x": 10,
-          "y": 12
-        },
-        {
-          "agent_id": "agent_2",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 44,
-          "x": 29,
-          "y": 4
-        }
-      ],
-      "joint_action": {
-        "agent_0": {
-          "kind": "down"
-        },
-        "agent_1": {
-          "kind": "down"
-        },
-        "agent_2": {
-          "kind": "right"
-        }
-      },
-      "ply": 44,
-      "reward": 0.0
-    },
-    {
-      "events": [
-        {
-          "agent_id": "agent_1",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 45,
-          "x": 10,
-          "y": 11
-        },
-        {
-          "agent_id": "agent_0",
-          "kind": "chest_opened",
-          "timestep": 45
-        },
-        {
-          "agent_id": "agent_2",
-          "amount": 2,
-          "kind": "resource_collected",
-          "resource": "stone",
-          "timestep": 45
-        }
-      ],
-      "joint_action": {
-        "agent_0": {
-          "kind": "do"
-        },
-        "agent_1": {
-          "kind": "up"
-        },
-        "agent_2": {
-          "kind": "do"
-        }
-      },
       "ply": 45,
       "reward": 0.0
     },
@@ -1833,29 +1796,29 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 46,
-          "x": 30,
-          "y": 10
+          "x": 19,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 46,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 46,
-          "x": 30,
+          "x": 29,
           "y": 4
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "down"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
@@ -1874,24 +1837,16 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 47,
-          "x": 31,
-          "y": 10
+          "x": 20,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 47,
-          "x": 10,
-          "y": 11
-        },
-        {
-          "agent_id": "agent_2",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 47,
-          "x": 31,
-          "y": 4
+          "x": 8,
+          "y": 30
         }
       ],
       "joint_action": {
@@ -1902,7 +1857,7 @@
           "kind": "up"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "down"
         }
       },
       "ply": 47,
@@ -1911,28 +1866,38 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 48,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 48,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
-          "agent_id": "agent_0",
-          "kind": "chest_opened",
+          "agent_id": "agent_2",
+          "amount": 2,
+          "kind": "resource_collected",
+          "resource": "sapphire",
           "timestep": 48
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "up"
+          "kind": "do"
         }
       },
       "ply": 48,
@@ -1945,23 +1910,24 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 49,
-          "x": 32,
-          "y": 10
+          "x": 20,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 49,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
-          "amount": 2,
-          "kind": "resource_collected",
-          "resource": "sapphire",
-          "timestep": 49
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 49,
+          "x": 29,
+          "y": 5
         }
       ],
       "joint_action": {
@@ -1972,7 +1938,7 @@
           "kind": "up"
         },
         "agent_2": {
-          "kind": "do"
+          "kind": "down"
         }
       },
       "ply": 49,
@@ -1985,35 +1951,34 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 50,
-          "x": 33,
-          "y": 10
+          "x": 19,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 50,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 50,
-          "x": 32,
-          "y": 4
+          "amount": 2,
+          "kind": "resource_collected",
+          "resource": "stone",
+          "timestep": 50
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "right"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "do"
         }
       },
       "ply": 50,
@@ -2026,24 +1991,24 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 51,
-          "x": 34,
-          "y": 10
+          "x": 20,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 51,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 51,
-          "x": 33,
-          "y": 4
+          "x": 30,
+          "y": 5
         }
       ],
       "joint_action": {
@@ -2067,29 +2032,29 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 52,
-          "x": 35,
-          "y": 10
+          "x": 19,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 52,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 52,
-          "x": 34,
-          "y": 4
+          "x": 31,
+          "y": 5
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "right"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
@@ -2104,38 +2069,31 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 53,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 53,
-          "x": 10,
-          "y": 11
-        },
-        {
-          "agent_id": "agent_2",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 53,
-          "x": 35,
-          "y": 4
-        },
-        {
-          "agent_id": "agent_0",
-          "amount": 1,
-          "kind": "resource_collected",
-          "resource": "wood",
-          "timestep": 53
+          "x": 8,
+          "y": 30
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "down"
         }
       },
       "ply": 53,
@@ -2148,35 +2106,34 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 54,
-          "x": 36,
-          "y": 10
+          "x": 19,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 54,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 54,
-          "x": 36,
-          "y": 4
+          "amount": 2,
+          "kind": "resource_collected",
+          "resource": "coal",
+          "timestep": 54
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "right"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "do"
         }
       },
       "ply": 54,
@@ -2189,16 +2146,24 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 55,
-          "x": 37,
-          "y": 10
+          "x": 20,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 55,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 55,
+          "x": 32,
+          "y": 5
         }
       ],
       "joint_action": {
@@ -2209,7 +2174,7 @@
           "kind": "up"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "right"
         }
       },
       "ply": 55,
@@ -2222,28 +2187,28 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 56,
-          "x": 37,
-          "y": 11
+          "x": 19,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 56,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "amount": 2,
           "kind": "resource_collected",
-          "resource": "diamond",
+          "resource": "stone",
           "timestep": 56
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "down"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
@@ -2262,24 +2227,24 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 57,
-          "x": 38,
-          "y": 11
+          "x": 20,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 57,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 57,
-          "x": 37,
-          "y": 4
+          "x": 33,
+          "y": 5
         }
       ],
       "joint_action": {
@@ -2303,35 +2268,34 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 58,
-          "x": 39,
-          "y": 11
+          "x": 19,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 58,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 58,
-          "x": 38,
-          "y": 4
+          "amount": 2,
+          "kind": "resource_collected",
+          "resource": "coal",
+          "timestep": 58
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "right"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "do"
         }
       },
       "ply": 58,
@@ -2344,29 +2308,29 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 59,
-          "x": 39,
-          "y": 12
+          "x": 20,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 59,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 59,
-          "x": 39,
-          "y": 4
+          "x": 34,
+          "y": 5
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "down"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
@@ -2381,28 +2345,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 60,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 60,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
-          "agent_id": "agent_0",
-          "kind": "chest_opened",
-          "timestep": 60
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 60,
+          "x": 35,
+          "y": 5
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "up"
+          "kind": "right"
         }
       },
       "ply": 60,
@@ -2415,23 +2390,16 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 61,
-          "x": 40,
-          "y": 12
+          "x": 20,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 61,
-          "x": 10,
-          "y": 11
-        },
-        {
-          "agent_id": "agent_2",
-          "amount": 1,
-          "kind": "resource_collected",
-          "resource": "wood",
-          "timestep": 61
+          "x": 8,
+          "y": 30
         }
       ],
       "joint_action": {
@@ -2442,7 +2410,7 @@
           "kind": "up"
         },
         "agent_2": {
-          "kind": "do"
+          "kind": "down"
         }
       },
       "ply": 61,
@@ -2451,30 +2419,38 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 62,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 62,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
-          "item": "sword",
-          "kind": "item_crafted",
-          "tier": 1,
+          "amount": 2,
+          "kind": "resource_collected",
+          "resource": "coal",
           "timestep": 62
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "down"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "make_wood_sword"
+          "kind": "do"
         }
       },
       "ply": 62,
@@ -2483,30 +2459,33 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 63,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 63,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 63,
-          "x": 40,
-          "y": 4
-        },
-        {
-          "agent_id": "agent_0",
-          "kind": "chest_opened",
-          "timestep": 63
+          "x": 36,
+          "y": 5
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
@@ -2525,35 +2504,34 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 64,
-          "x": 40,
-          "y": 13
+          "x": 19,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 64,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 64,
-          "x": 41,
-          "y": 4
+          "amount": 2,
+          "kind": "resource_collected",
+          "resource": "coal",
+          "timestep": 64
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "down"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "do"
         }
       },
       "ply": 64,
@@ -2566,23 +2544,24 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 65,
-          "x": 41,
-          "y": 13
+          "x": 20,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 65,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
-          "amount": 2,
-          "kind": "resource_collected",
-          "resource": "iron",
-          "timestep": 65
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 65,
+          "x": 37,
+          "y": 5
         }
       ],
       "joint_action": {
@@ -2593,7 +2572,7 @@
           "kind": "up"
         },
         "agent_2": {
-          "kind": "do"
+          "kind": "right"
         }
       },
       "ply": 65,
@@ -2606,35 +2585,34 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 66,
-          "x": 42,
-          "y": 13
+          "x": 19,
+          "y": 8
         },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 66,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 66,
-          "x": 42,
-          "y": 4
+          "amount": 2,
+          "kind": "resource_collected",
+          "resource": "coal",
+          "timestep": 66
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "right"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "do"
         }
       },
       "ply": 66,
@@ -2643,25 +2621,33 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 67,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 67,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 67,
-          "x": 43,
-          "y": 4
+          "x": 38,
+          "y": 5
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "up"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
@@ -2676,25 +2662,33 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 68,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 68,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 68,
-          "x": 44,
-          "y": 4
+          "x": 39,
+          "y": 5
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
@@ -2709,30 +2703,31 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 69,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 69,
-          "x": 10,
-          "y": 11
-        },
-        {
-          "agent_id": "agent_2",
-          "amount": 1,
-          "kind": "resource_collected",
-          "resource": "wood",
-          "timestep": 69
+          "x": 8,
+          "y": 30
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "do"
+          "kind": "up"
         }
       },
       "ply": 69,
@@ -2741,23 +2736,38 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 70,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 70,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
+        },
+        {
+          "agent_id": "agent_2",
+          "amount": 2,
+          "kind": "resource_collected",
+          "resource": "sapphire",
+          "timestep": 70
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "up"
+          "kind": "do"
         }
       },
       "ply": 70,
@@ -2766,30 +2776,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 71,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 71,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
-          "amount": 2,
-          "kind": "resource_collected",
-          "resource": "sapphire",
-          "timestep": 71
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 71,
+          "x": 40,
+          "y": 5
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "do"
+          "kind": "right"
         }
       },
       "ply": 71,
@@ -2798,82 +2817,33 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 72,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 72,
-          "x": 10,
-          "y": 12
-        }
-      ],
-      "joint_action": {
-        "agent_0": {
-          "kind": "do"
-        },
-        "agent_1": {
-          "kind": "down"
-        },
-        "agent_2": {
-          "kind": "down"
-        }
-      },
-      "ply": 72,
-      "reward": 0.0
-    },
-    {
-      "events": [
-        {
-          "agent_id": "agent_1",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 73,
-          "x": 10,
-          "y": 11
-        },
-        {
-          "agent_id": "agent_2",
-          "amount": 2,
-          "kind": "resource_collected",
-          "resource": "sapphire",
-          "timestep": 73
-        }
-      ],
-      "joint_action": {
-        "agent_0": {
-          "kind": "do"
-        },
-        "agent_1": {
-          "kind": "up"
-        },
-        "agent_2": {
-          "kind": "do"
-        }
-      },
-      "ply": 73,
-      "reward": 0.0
-    },
-    {
-      "events": [
-        {
-          "agent_id": "agent_1",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 74,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
-          "timestep": 74,
-          "x": 45,
-          "y": 4
+          "timestep": 72,
+          "x": 41,
+          "y": 5
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
@@ -2882,29 +2852,118 @@
           "kind": "right"
         }
       },
+      "ply": 72,
+      "reward": 0.0
+    },
+    {
+      "events": [
+        {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 73,
+          "x": 20,
+          "y": 8
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 73,
+          "x": 8,
+          "y": 30
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 73,
+          "x": 42,
+          "y": 5
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "up"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "ply": 73,
+      "reward": 0.0
+    },
+    {
+      "events": [
+        {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 74,
+          "x": 19,
+          "y": 8
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 74,
+          "x": 8,
+          "y": 31
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "left"
+        },
+        "agent_1": {
+          "kind": "down"
+        },
+        "agent_2": {
+          "kind": "up"
+        }
+      },
       "ply": 74,
       "reward": 0.0
     },
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 75,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 75,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
+        },
+        {
+          "agent_id": "agent_2",
+          "amount": 2,
+          "kind": "resource_collected",
+          "resource": "iron",
+          "timestep": 75
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "up"
+          "kind": "do"
         }
       },
       "ply": 75,
@@ -2913,30 +2972,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 76,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 76,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
-          "amount": 2,
-          "kind": "resource_collected",
-          "resource": "coal",
-          "timestep": 76
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 76,
+          "x": 43,
+          "y": 5
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "do"
+          "kind": "right"
         }
       },
       "ply": 76,
@@ -2945,31 +3013,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 77,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 77,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 77,
-          "x": 45,
+          "x": 44,
           "y": 5
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "right"
         }
       },
       "ply": 77,
@@ -2978,17 +3054,33 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 78,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 78,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 78,
+          "x": 45,
+          "y": 5
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
@@ -3003,30 +3095,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 79,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 79,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
-          "amount": 2,
-          "kind": "resource_collected",
-          "resource": "iron",
-          "timestep": 79
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 79,
+          "x": 45,
+          "y": 6
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "do"
+          "kind": "down"
         }
       },
       "ply": 79,
@@ -3035,31 +3136,38 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 80,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 80,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 80,
-          "x": 45,
-          "y": 6
+          "amount": 2,
+          "kind": "resource_collected",
+          "resource": "coal",
+          "timestep": 80
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "do"
         }
       },
       "ply": 80,
@@ -3068,31 +3176,31 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 81,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 81,
-          "x": 10,
-          "y": 11
-        },
-        {
-          "agent_id": "agent_2",
-          "kind": "move_applied",
-          "level": 0,
-          "timestep": 81,
-          "x": 45,
-          "y": 7
+          "x": 8,
+          "y": 30
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "right"
         }
       },
       "ply": 81,
@@ -3101,53 +3209,79 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 82,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 82,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
+        },
+        {
+          "agent_id": "agent_2",
+          "amount": 2,
+          "kind": "resource_collected",
+          "resource": "ruby",
+          "timestep": 82
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "do"
         }
       },
       "ply": 82,
-      "reward": 0.0
+      "reward": 1.0
     },
     {
       "events": [
+        {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 83,
+          "x": 20,
+          "y": 8
+        },
         {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 83,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
-          "kind": "chest_opened",
-          "timestep": 83
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 83,
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "do"
+          "kind": "down"
         }
       },
       "ply": 83,
@@ -3156,31 +3290,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 84,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 84,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 84,
-          "x": 45,
-          "y": 8
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "left"
         }
       },
       "ply": 84,
@@ -3189,23 +3331,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 85,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 85,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 85,
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 85,
@@ -3214,30 +3372,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 86,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 86,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
-          "amount": 2,
-          "kind": "resource_collected",
-          "resource": "stone",
-          "timestep": 86
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 86,
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "do"
+          "kind": "left"
         }
       },
       "ply": 86,
@@ -3246,12 +3413,20 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 87,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 87,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
@@ -3259,18 +3434,18 @@
           "level": 0,
           "timestep": 87,
           "x": 45,
-          "y": 9
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "right"
         }
       },
       "ply": 87,
@@ -3279,31 +3454,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 88,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 88,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 88,
-          "x": 45,
-          "y": 10
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "left"
         }
       },
       "ply": 88,
@@ -3312,12 +3495,20 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 89,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 89,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
@@ -3325,18 +3516,18 @@
           "level": 0,
           "timestep": 89,
           "x": 45,
-          "y": 11
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "right"
         }
       },
       "ply": 89,
@@ -3345,17 +3536,33 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 90,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 90,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 90,
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
@@ -3370,30 +3577,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 91,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 91,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
-          "amount": 2,
-          "kind": "resource_collected",
-          "resource": "sapphire",
-          "timestep": 91
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 91,
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "do"
+          "kind": "right"
         }
       },
       "ply": 91,
@@ -3402,31 +3618,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 92,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 92,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 92,
-          "x": 45,
-          "y": 12
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "left"
         }
       },
       "ply": 92,
@@ -3435,12 +3659,20 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 93,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 93,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
@@ -3448,18 +3680,18 @@
           "level": 0,
           "timestep": 93,
           "x": 45,
-          "y": 13
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "right"
         }
       },
       "ply": 93,
@@ -3468,31 +3700,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 94,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 94,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 94,
-          "x": 45,
-          "y": 14
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "left"
         }
       },
       "ply": 94,
@@ -3501,12 +3741,20 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 95,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 95,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
@@ -3514,18 +3762,18 @@
           "level": 0,
           "timestep": 95,
           "x": 45,
-          "y": 15
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "right"
         }
       },
       "ply": 95,
@@ -3534,31 +3782,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 96,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 96,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 96,
-          "x": 45,
-          "y": 16
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "left"
         }
       },
       "ply": 96,
@@ -3567,23 +3823,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 97,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 97,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 97,
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 97,
@@ -3592,30 +3864,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 98,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 98,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
-          "amount": 2,
-          "kind": "resource_collected",
-          "resource": "iron",
-          "timestep": 98
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 98,
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "do"
+          "kind": "left"
         }
       },
       "ply": 98,
@@ -3624,12 +3905,20 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 99,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 99,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
@@ -3637,18 +3926,18 @@
           "level": 0,
           "timestep": 99,
           "x": 45,
-          "y": 17
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "right"
         }
       },
       "ply": 99,
@@ -3657,31 +3946,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 100,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 100,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 100,
-          "x": 45,
-          "y": 18
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "left"
         }
       },
       "ply": 100,
@@ -3690,17 +3987,33 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 101,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 101,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 101,
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
@@ -3715,30 +4028,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 102,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 102,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
-          "amount": 2,
-          "kind": "resource_collected",
-          "resource": "coal",
-          "timestep": 102
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 102,
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "do"
+          "kind": "left"
         }
       },
       "ply": 102,
@@ -3747,12 +4069,20 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 103,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 103,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
@@ -3760,18 +4090,18 @@
           "level": 0,
           "timestep": 103,
           "x": 45,
-          "y": 19
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "right"
         }
       },
       "ply": 103,
@@ -3780,31 +4110,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 104,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 104,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 104,
-          "x": 45,
-          "y": 20
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "left"
         }
       },
       "ply": 104,
@@ -3813,30 +4151,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 105,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 105,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
-          "amount": 2,
-          "kind": "resource_collected",
-          "resource": "stone",
-          "timestep": 105
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 105,
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "do"
+          "kind": "right"
         }
       },
       "ply": 105,
@@ -3845,31 +4192,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 106,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 106,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 106,
-          "x": 45,
-          "y": 21
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "left"
         }
       },
       "ply": 106,
@@ -3878,12 +4233,20 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 107,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 107,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
@@ -3891,18 +4254,18 @@
           "level": 0,
           "timestep": 107,
           "x": 45,
-          "y": 22
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "right"
         }
       },
       "ply": 107,
@@ -3911,31 +4274,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 108,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 108,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 108,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "down"
+          "kind": "left"
         }
       },
       "ply": 108,
@@ -3944,31 +4315,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 109,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 109,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 109,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 109,
@@ -3977,31 +4356,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 110,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 110,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 110,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 110,
@@ -4010,31 +4397,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 111,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 111,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 111,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 111,
@@ -4043,31 +4438,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 112,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 112,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 112,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 112,
@@ -4076,31 +4479,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 113,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 113,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 113,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 113,
@@ -4109,31 +4520,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 114,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 114,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 114,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 114,
@@ -4142,31 +4561,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 115,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 115,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 115,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 115,
@@ -4175,31 +4602,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 116,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 116,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 116,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 116,
@@ -4208,31 +4643,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 117,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 117,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 117,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 117,
@@ -4241,31 +4684,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 118,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 118,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 118,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 118,
@@ -4274,31 +4725,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 119,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 119,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 119,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 119,
@@ -4307,31 +4766,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 120,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 120,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 120,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 120,
@@ -4340,31 +4807,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 121,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 121,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 121,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 121,
@@ -4373,31 +4848,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 122,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 122,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 122,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 122,
@@ -4406,31 +4889,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 123,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 123,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 123,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 123,
@@ -4439,31 +4930,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 124,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 124,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 124,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 124,
@@ -4472,31 +4971,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 125,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 125,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 125,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 125,
@@ -4505,31 +5012,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 126,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 126,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 126,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 126,
@@ -4538,31 +5053,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 127,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 127,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 127,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 127,
@@ -4571,31 +5094,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 128,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 128,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 128,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 128,
@@ -4604,31 +5135,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 129,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 129,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 129,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 129,
@@ -4637,31 +5176,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 130,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 130,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 130,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 130,
@@ -4670,31 +5217,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 131,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 131,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 131,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 131,
@@ -4703,31 +5258,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 132,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 132,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 132,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 132,
@@ -4736,31 +5299,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 133,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 133,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 133,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 133,
@@ -4769,31 +5340,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 134,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 134,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 134,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 134,
@@ -4802,31 +5381,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 135,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 135,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 135,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 135,
@@ -4835,31 +5422,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 136,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 136,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 136,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 136,
@@ -4868,31 +5463,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 137,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 137,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 137,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 137,
@@ -4901,31 +5504,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 138,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 138,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 138,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 138,
@@ -4934,31 +5545,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 139,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 139,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 139,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 139,
@@ -4967,31 +5586,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 140,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 140,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 140,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 140,
@@ -5000,31 +5627,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 141,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 141,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 141,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 141,
@@ -5033,31 +5668,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 142,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 142,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 142,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 142,
@@ -5066,31 +5709,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 143,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 143,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 143,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 143,
@@ -5099,31 +5750,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 144,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 144,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 144,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 144,
@@ -5132,31 +5791,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 145,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 145,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 145,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 145,
@@ -5165,31 +5832,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 146,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 146,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 146,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 146,
@@ -5198,31 +5873,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 147,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 147,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 147,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 147,
@@ -5231,31 +5914,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 148,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 148,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 148,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 148,
@@ -5264,31 +5955,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 149,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 149,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 149,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 149,
@@ -5297,31 +5996,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 150,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 150,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 150,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 150,
@@ -5330,31 +6037,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 151,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 151,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 151,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 151,
@@ -5363,31 +6078,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 152,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 152,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 152,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 152,
@@ -5396,31 +6119,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 153,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 153,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 153,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 153,
@@ -5429,31 +6160,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 154,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 154,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 154,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 154,
@@ -5462,31 +6201,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 155,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 155,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 155,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 155,
@@ -5495,31 +6242,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 156,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 156,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 156,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 156,
@@ -5528,31 +6283,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 157,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 157,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 157,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 157,
@@ -5561,31 +6324,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 158,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 158,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 158,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 158,
@@ -5594,31 +6365,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 159,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 159,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 159,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 159,
@@ -5627,31 +6406,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 160,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 160,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 160,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 160,
@@ -5660,31 +6447,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 161,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 161,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 161,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 161,
@@ -5693,31 +6488,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 162,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 162,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 162,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 162,
@@ -5726,31 +6529,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 163,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 163,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 163,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 163,
@@ -5759,31 +6570,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 164,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 164,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 164,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 164,
@@ -5792,31 +6611,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 165,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 165,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 165,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 165,
@@ -5825,31 +6652,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 166,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 166,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 166,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 166,
@@ -5858,31 +6693,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 167,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 167,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 167,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 167,
@@ -5891,31 +6734,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 168,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 168,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 168,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 168,
@@ -5924,31 +6775,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 169,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 169,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 169,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 169,
@@ -5957,31 +6816,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 170,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 170,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 170,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 170,
@@ -5990,31 +6857,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 171,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 171,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 171,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 171,
@@ -6023,31 +6898,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 172,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 172,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 172,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 172,
@@ -6056,31 +6939,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 173,
+          "x": 20,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 173,
-          "x": 10,
-          "y": 11
+          "x": 8,
+          "y": 30
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 173,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "right"
         },
         "agent_1": {
           "kind": "up"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 173,
@@ -6089,31 +6980,39 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 174,
+          "x": 19,
+          "y": 8
+        },
+        {
           "agent_id": "agent_1",
           "kind": "move_applied",
           "level": 0,
           "timestep": 174,
-          "x": 10,
-          "y": 12
+          "x": 8,
+          "y": 31
         },
         {
           "agent_id": "agent_2",
           "kind": "move_applied",
           "level": 0,
           "timestep": 174,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "do"
+          "kind": "left"
         },
         "agent_1": {
           "kind": "down"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 174,
@@ -6340,8 +7239,8 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 181,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
@@ -6352,7 +7251,7 @@
           "kind": "request_food"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 181,
@@ -6410,8 +7309,8 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 183,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
@@ -6422,7 +7321,7 @@
           "kind": "request_food"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 183,
@@ -6480,8 +7379,8 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 185,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
@@ -6492,7 +7391,7 @@
           "kind": "request_food"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 185,
@@ -6550,8 +7449,8 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 187,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
@@ -6562,7 +7461,7 @@
           "kind": "request_food"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 187,
@@ -6620,8 +7519,8 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 189,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
@@ -6632,7 +7531,7 @@
           "kind": "request_food"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 189,
@@ -6690,8 +7589,8 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 191,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
@@ -6702,7 +7601,7 @@
           "kind": "request_food"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 191,
@@ -6760,8 +7659,8 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 193,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
@@ -6772,7 +7671,7 @@
           "kind": "request_food"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 193,
@@ -6830,8 +7729,8 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 195,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
@@ -6842,7 +7741,7 @@
           "kind": "request_food"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 195,
@@ -6900,8 +7799,8 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 197,
-          "x": 44,
-          "y": 23
+          "x": 45,
+          "y": 7
         }
       ],
       "joint_action": {
@@ -6912,7 +7811,7 @@
           "kind": "request_food"
         },
         "agent_2": {
-          "kind": "left"
+          "kind": "right"
         }
       },
       "ply": 197,
@@ -6970,8 +7869,8 @@
           "kind": "move_applied",
           "level": 0,
           "timestep": 199,
-          "x": 45,
-          "y": 23
+          "x": 44,
+          "y": 7
         }
       ],
       "joint_action": {
@@ -6982,7 +7881,7 @@
           "kind": "request_food"
         },
         "agent_2": {
-          "kind": "right"
+          "kind": "left"
         }
       },
       "ply": 199,
@@ -7022,16 +7921,17 @@
     {
       "events": [
         {
-          "giver": "agent_0",
-          "kind": "trade_applied",
-          "receiver": "agent_1",
+          "agent_id": "agent_1",
+          "duration": 10,
+          "kind": "request_made",
           "resource": "food",
           "timestep": 201
         },
         {
-          "ability": "team_heal",
-          "agent_id": "agent_1",
-          "kind": "role_ability",
+          "giver": "agent_0",
+          "kind": "trade_applied",
+          "receiver": "agent_1",
+          "resource": "food",
           "timestep": 201
         }
       ],
@@ -7040,7 +7940,7 @@
           "kind": "give_food_to_agent_1"
         },
         "agent_1": {
-          "kind": "cast_spell"
+          "kind": "request_food"
         },
         "agent_2": {
           "kind": "give_food_to_agent_1"
@@ -7059,16 +7959,17 @@
           "timestep": 202
         },
         {
-          "agent_id": "agent_2",
+          "agent_id": "agent_1",
           "duration": 10,
           "kind": "request_made",
           "resource": "food",
           "timestep": 202
         },
         {
-          "ability": "team_heal",
-          "agent_id": "agent_1",
-          "kind": "role_ability",
+          "agent_id": "agent_2",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "food",
           "timestep": 202
         }
       ],
@@ -7077,7 +7978,7 @@
           "kind": "request_food"
         },
         "agent_1": {
-          "kind": "cast_spell"
+          "kind": "request_food"
         },
         "agent_2": {
           "kind": "request_food"
@@ -7120,16 +8021,9 @@
     {
       "events": [
         {
-          "agent_id": "agent_2",
-          "duration": 10,
-          "kind": "request_made",
-          "resource": "food",
-          "timestep": 204
-        },
-        {
           "giver": "agent_0",
           "kind": "trade_applied",
-          "receiver": "agent_2",
+          "receiver": "agent_1",
           "resource": "food",
           "timestep": 204
         },
@@ -7142,17 +8036,17 @@
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "give_food_to_agent_2"
+          "kind": "give_food_to_agent_1"
         },
         "agent_1": {
           "kind": "cast_spell"
         },
         "agent_2": {
-          "kind": "request_food"
+          "kind": "give_food_to_agent_1"
         }
       },
       "ply": 204,
-      "reward": 0.0
+      "reward": 1.0
     },
     {
       "events": [
@@ -7164,17 +8058,17 @@
           "timestep": 205
         },
         {
-          "agent_id": "agent_1",
+          "agent_id": "agent_2",
           "duration": 10,
           "kind": "request_made",
           "resource": "food",
           "timestep": 205
         },
         {
-          "agent_id": "agent_2",
-          "duration": 10,
-          "kind": "request_made",
-          "resource": "drink",
+          "giver": "agent_1",
+          "kind": "trade_applied",
+          "receiver": "agent_2",
+          "resource": "food",
           "timestep": 205
         }
       ],
@@ -7183,10 +8077,10 @@
           "kind": "request_food"
         },
         "agent_1": {
-          "kind": "request_food"
+          "kind": "give_food_to_agent_2"
         },
         "agent_2": {
-          "kind": "request_drink"
+          "kind": "request_food"
         }
       },
       "ply": 205,
@@ -7202,10 +8096,9 @@
           "timestep": 206
         },
         {
-          "giver": "agent_1",
-          "kind": "trade_applied",
-          "receiver": "agent_2",
-          "resource": "drink",
+          "ability": "team_heal",
+          "agent_id": "agent_1",
+          "kind": "role_ability",
           "timestep": 206
         },
         {
@@ -7221,7 +8114,7 @@
           "kind": "request_food"
         },
         "agent_1": {
-          "kind": "give_drink_to_agent_2"
+          "kind": "cast_spell"
         },
         "agent_2": {
           "kind": "give_food_to_agent_0"
@@ -7233,29 +8126,35 @@
     {
       "events": [
         {
-          "agent_id": "agent_1",
+          "agent_id": "agent_0",
           "duration": 10,
           "kind": "request_made",
           "resource": "food",
           "timestep": 207
         },
         {
-          "giver": "agent_0",
-          "kind": "trade_applied",
-          "receiver": "agent_1",
+          "agent_id": "agent_2",
+          "duration": 10,
+          "kind": "request_made",
           "resource": "food",
+          "timestep": 207
+        },
+        {
+          "ability": "team_heal",
+          "agent_id": "agent_1",
+          "kind": "role_ability",
           "timestep": 207
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "give_food_to_agent_1"
-        },
-        "agent_1": {
           "kind": "request_food"
         },
+        "agent_1": {
+          "kind": "cast_spell"
+        },
         "agent_2": {
-          "kind": "give_food_to_agent_1"
+          "kind": "request_food"
         }
       },
       "ply": 207,
@@ -7271,63 +8170,56 @@
           "timestep": 208
         },
         {
-          "agent_id": "agent_2",
-          "duration": 10,
-          "kind": "request_made",
+          "giver": "agent_0",
+          "kind": "trade_applied",
+          "receiver": "agent_2",
           "resource": "food",
           "timestep": 208
         },
         {
-          "agent_id": "agent_0",
-          "colour": "red",
-          "kind": "potion_drunk",
+          "giver": "agent_2",
+          "kind": "trade_applied",
+          "receiver": "agent_0",
+          "resource": "food",
           "timestep": 208
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "drink_potion_red"
+          "kind": "give_food_to_agent_2"
         },
         "agent_1": {
           "kind": "request_food"
         },
         "agent_2": {
-          "kind": "request_food"
+          "kind": "give_food_to_agent_0"
         }
       },
       "ply": 208,
-      "reward": 1.0
+      "reward": 0.0
     },
     {
       "events": [
         {
-          "agent_id": "agent_0",
-          "duration": 10,
-          "kind": "request_made",
-          "resource": "food",
-          "timestep": 209
-        },
-        {
-          "giver": "agent_1",
-          "kind": "trade_applied",
-          "receiver": "agent_2",
-          "resource": "food",
-          "timestep": 209
-        },
-        {
-          "giver": "agent_2",
+          "giver": "agent_0",
           "kind": "trade_applied",
           "receiver": "agent_1",
           "resource": "food",
+          "timestep": 209
+        },
+        {
+          "ability": "team_heal",
+          "agent_id": "agent_1",
+          "kind": "role_ability",
           "timestep": 209
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "request_food"
+          "kind": "give_food_to_agent_1"
         },
         "agent_1": {
-          "kind": "give_food_to_agent_2"
+          "kind": "cast_spell"
         },
         "agent_2": {
           "kind": "give_food_to_agent_1"
@@ -7346,9 +8238,16 @@
           "timestep": 210
         },
         {
-          "giver": "agent_1",
-          "kind": "trade_applied",
-          "receiver": "agent_0",
+          "agent_id": "agent_1",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "food",
+          "timestep": 210
+        },
+        {
+          "agent_id": "agent_2",
+          "duration": 10,
+          "kind": "request_made",
           "resource": "food",
           "timestep": 210
         }
@@ -7358,10 +8257,10 @@
           "kind": "request_food"
         },
         "agent_1": {
-          "kind": "give_food_to_agent_0"
+          "kind": "request_food"
         },
         "agent_2": {
-          "kind": "give_food_to_agent_0"
+          "kind": "request_food"
         }
       },
       "ply": 210,
@@ -7377,16 +8276,9 @@
           "timestep": 211
         },
         {
-          "agent_id": "agent_1",
-          "duration": 10,
-          "kind": "request_made",
-          "resource": "food",
-          "timestep": 211
-        },
-        {
-          "agent_id": "agent_2",
-          "duration": 10,
-          "kind": "request_made",
+          "giver": "agent_1",
+          "kind": "trade_applied",
+          "receiver": "agent_0",
           "resource": "food",
           "timestep": 211
         }
@@ -7396,10 +8288,10 @@
           "kind": "request_food"
         },
         "agent_1": {
-          "kind": "request_food"
+          "kind": "give_food_to_agent_0"
         },
         "agent_2": {
-          "kind": "request_food"
+          "kind": "give_food_to_agent_0"
         }
       },
       "ply": 211,
@@ -7420,18 +8312,6 @@
           "receiver": "agent_1",
           "resource": "food",
           "timestep": 212
-        },
-        {
-          "giver": "agent_2",
-          "kind": "trade_applied",
-          "receiver": "agent_0",
-          "resource": "food",
-          "timestep": 212
-        },
-        {
-          "agent_id": "agent_1",
-          "kind": "player_died",
-          "timestep": 212
         }
       ],
       "joint_action": {
@@ -7442,14 +8322,21 @@
           "kind": "request_food"
         },
         "agent_2": {
-          "kind": "give_food_to_agent_0"
+          "kind": "give_food_to_agent_1"
         }
       },
       "ply": 212,
-      "reward": -1.0
+      "reward": 0.0
     },
     {
       "events": [
+        {
+          "agent_id": "agent_0",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "food",
+          "timestep": 213
+        },
         {
           "agent_id": "agent_2",
           "duration": 10,
@@ -7458,7 +8345,7 @@
           "timestep": 213
         },
         {
-          "giver": "agent_0",
+          "giver": "agent_1",
           "kind": "trade_applied",
           "receiver": "agent_2",
           "resource": "food",
@@ -7467,7 +8354,7 @@
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "give_food_to_agent_2"
+          "kind": "request_food"
         },
         "agent_1": {
           "kind": "give_food_to_agent_2"
@@ -7496,9 +8383,9 @@
           "timestep": 214
         },
         {
-          "agent_id": "agent_2",
-          "duration": 10,
-          "kind": "request_made",
+          "giver": "agent_2",
+          "kind": "trade_applied",
+          "receiver": "agent_0",
           "resource": "food",
           "timestep": 214
         }
@@ -7511,7 +8398,7 @@
           "kind": "request_food"
         },
         "agent_2": {
-          "kind": "request_food"
+          "kind": "give_food_to_agent_0"
         }
       },
       "ply": 214,
@@ -7520,16 +8407,16 @@
     {
       "events": [
         {
-          "agent_id": "agent_0",
+          "agent_id": "agent_1",
           "duration": 10,
           "kind": "request_made",
           "resource": "food",
           "timestep": 215
         },
         {
-          "giver": "agent_2",
+          "giver": "agent_0",
           "kind": "trade_applied",
-          "receiver": "agent_0",
+          "receiver": "agent_1",
           "resource": "food",
           "timestep": 215
         },
@@ -7541,37 +8428,51 @@
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "request_food"
+          "kind": "give_food_to_agent_1"
         },
         "agent_1": {
-          "kind": "give_food_to_agent_0"
+          "kind": "request_food"
         },
         "agent_2": {
-          "kind": "give_food_to_agent_0"
+          "kind": "give_food_to_agent_1"
         }
       },
       "ply": 215,
-      "reward": 0.0
+      "reward": -1.0
     },
     {
       "events": [
         {
-          "giver": "agent_2",
-          "kind": "trade_applied",
-          "receiver": "agent_1",
+          "agent_id": "agent_0",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "food",
+          "timestep": 216
+        },
+        {
+          "agent_id": "agent_1",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "food",
+          "timestep": 216
+        },
+        {
+          "agent_id": "agent_2",
+          "duration": 10,
+          "kind": "request_made",
           "resource": "food",
           "timestep": 216
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "give_food_to_agent_1"
+          "kind": "request_food"
         },
         "agent_1": {
-          "kind": "give_food_to_agent_2"
+          "kind": "request_food"
         },
         "agent_2": {
-          "kind": "give_food_to_agent_1"
+          "kind": "request_food"
         }
       },
       "ply": 216,
@@ -7580,22 +8481,29 @@
     {
       "events": [
         {
-          "agent_id": "agent_2",
+          "agent_id": "agent_0",
           "duration": 10,
           "kind": "request_made",
+          "resource": "food",
+          "timestep": 217
+        },
+        {
+          "giver": "agent_1",
+          "kind": "trade_applied",
+          "receiver": "agent_0",
           "resource": "food",
           "timestep": 217
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "give_food_to_agent_2"
+          "kind": "request_food"
         },
         "agent_1": {
-          "kind": "give_food_to_agent_2"
+          "kind": "give_food_to_agent_0"
         },
         "agent_2": {
-          "kind": "request_food"
+          "kind": "give_food_to_agent_0"
         }
       },
       "ply": 217,
@@ -7604,22 +8512,29 @@
     {
       "events": [
         {
-          "agent_id": "agent_2",
+          "agent_id": "agent_1",
           "duration": 10,
           "kind": "request_made",
+          "resource": "food",
+          "timestep": 218
+        },
+        {
+          "giver": "agent_2",
+          "kind": "trade_applied",
+          "receiver": "agent_1",
           "resource": "food",
           "timestep": 218
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "give_food_to_agent_2"
+          "kind": "give_food_to_agent_1"
         },
         "agent_1": {
-          "kind": "give_food_to_agent_2"
+          "kind": "request_food"
         },
         "agent_2": {
-          "kind": "request_food"
+          "kind": "give_food_to_agent_1"
         }
       },
       "ply": 218,
@@ -7631,6 +8546,13 @@
           "agent_id": "agent_2",
           "duration": 10,
           "kind": "request_made",
+          "resource": "food",
+          "timestep": 219
+        },
+        {
+          "giver": "agent_1",
+          "kind": "trade_applied",
+          "receiver": "agent_2",
           "resource": "food",
           "timestep": 219
         }
@@ -7652,6 +8574,20 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "food",
+          "timestep": 220
+        },
+        {
+          "agent_id": "agent_1",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "food",
+          "timestep": 220
+        },
+        {
           "agent_id": "agent_2",
           "duration": 10,
           "kind": "request_made",
@@ -7661,10 +8597,10 @@
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "give_food_to_agent_2"
+          "kind": "request_food"
         },
         "agent_1": {
-          "kind": "give_food_to_agent_2"
+          "kind": "request_food"
         },
         "agent_2": {
           "kind": "request_food"
@@ -7676,22 +8612,29 @@
     {
       "events": [
         {
-          "agent_id": "agent_2",
+          "agent_id": "agent_1",
           "duration": 10,
           "kind": "request_made",
+          "resource": "food",
+          "timestep": 221
+        },
+        {
+          "giver": "agent_2",
+          "kind": "trade_applied",
+          "receiver": "agent_0",
           "resource": "food",
           "timestep": 221
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "give_food_to_agent_2"
+          "kind": "give_food_to_agent_1"
         },
         "agent_1": {
-          "kind": "give_food_to_agent_2"
+          "kind": "request_food"
         },
         "agent_2": {
-          "kind": "request_food"
+          "kind": "give_food_to_agent_0"
         }
       },
       "ply": 221,
@@ -7700,21 +8643,29 @@
     {
       "events": [
         {
-          "agent_id": "agent_2",
-          "colour": "red",
-          "kind": "potion_drunk",
+          "agent_id": "agent_1",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "food",
+          "timestep": 222
+        },
+        {
+          "giver": "agent_2",
+          "kind": "trade_applied",
+          "receiver": "agent_1",
+          "resource": "food",
           "timestep": 222
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "give_food_to_agent_2"
+          "kind": "give_food_to_agent_1"
         },
         "agent_1": {
-          "kind": "give_food_to_agent_2"
+          "kind": "request_food"
         },
         "agent_2": {
-          "kind": "drink_potion_red"
+          "kind": "give_food_to_agent_1"
         }
       },
       "ply": 222,
@@ -7726,6 +8677,13 @@
           "agent_id": "agent_2",
           "duration": 10,
           "kind": "request_made",
+          "resource": "food",
+          "timestep": 223
+        },
+        {
+          "giver": "agent_1",
+          "kind": "trade_applied",
+          "receiver": "agent_2",
           "resource": "food",
           "timestep": 223
         }
@@ -7747,19 +8705,38 @@
     {
       "events": [
         {
+          "agent_id": "agent_0",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "food",
+          "timestep": 224
+        },
+        {
+          "agent_id": "agent_1",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "food",
+          "timestep": 224
+        },
+        {
           "agent_id": "agent_2",
           "duration": 10,
           "kind": "request_made",
           "resource": "food",
           "timestep": 224
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "player_died",
+          "timestep": 224
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "give_food_to_agent_2"
+          "kind": "request_food"
         },
         "agent_1": {
-          "kind": "give_food_to_agent_2"
+          "kind": "request_food"
         },
         "agent_2": {
           "kind": "request_food"
@@ -7771,6 +8748,13 @@
     {
       "events": [
         {
+          "agent_id": "agent_1",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "food",
+          "timestep": 225
+        },
+        {
           "agent_id": "agent_2",
           "duration": 10,
           "kind": "request_made",
@@ -7780,10 +8764,10 @@
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "give_food_to_agent_2"
+          "kind": "give_food_to_agent_1"
         },
         "agent_1": {
-          "kind": "give_food_to_agent_2"
+          "kind": "request_food"
         },
         "agent_2": {
           "kind": "request_food"
@@ -7795,6 +8779,13 @@
     {
       "events": [
         {
+          "agent_id": "agent_1",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "food",
+          "timestep": 226
+        },
+        {
           "agent_id": "agent_2",
           "duration": 10,
           "kind": "request_made",
@@ -7804,10 +8795,10 @@
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "give_food_to_agent_2"
+          "kind": "give_food_to_agent_1"
         },
         "agent_1": {
-          "kind": "give_food_to_agent_2"
+          "kind": "request_food"
         },
         "agent_2": {
           "kind": "request_food"
@@ -7819,6 +8810,13 @@
     {
       "events": [
         {
+          "agent_id": "agent_1",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "food",
+          "timestep": 227
+        },
+        {
           "agent_id": "agent_2",
           "duration": 10,
           "kind": "request_made",
@@ -7828,10 +8826,10 @@
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "give_food_to_agent_2"
+          "kind": "give_food_to_agent_1"
         },
         "agent_1": {
-          "kind": "give_food_to_agent_2"
+          "kind": "request_food"
         },
         "agent_2": {
           "kind": "request_food"
@@ -7843,6 +8841,13 @@
     {
       "events": [
         {
+          "agent_id": "agent_1",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "food",
+          "timestep": 228
+        },
+        {
           "agent_id": "agent_2",
           "duration": 10,
           "kind": "request_made",
@@ -7852,10 +8857,10 @@
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "give_food_to_agent_2"
+          "kind": "give_food_to_agent_1"
         },
         "agent_1": {
-          "kind": "give_food_to_agent_2"
+          "kind": "request_food"
         },
         "agent_2": {
           "kind": "request_food"
@@ -7867,7 +8872,7 @@
     {
       "events": [
         {
-          "agent_id": "agent_2",
+          "agent_id": "agent_1",
           "duration": 10,
           "kind": "request_made",
           "resource": "food",
@@ -7875,21 +8880,18 @@
         },
         {
           "agent_id": "agent_2",
-          "kind": "player_died",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "food",
           "timestep": 229
-        },
-        {
-          "kind": "game_ended",
-          "outcome": "death",
-          "timestep": 230
         }
       ],
       "joint_action": {
         "agent_0": {
-          "kind": "give_food_to_agent_2"
+          "kind": "give_food_to_agent_1"
         },
         "agent_1": {
-          "kind": "give_food_to_agent_2"
+          "kind": "request_food"
         },
         "agent_2": {
           "kind": "request_food"
@@ -7897,7 +8899,79 @@
       },
       "ply": 229,
       "reward": 0.0
+    },
+    {
+      "events": [
+        {
+          "agent_id": "agent_1",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "food",
+          "timestep": 230
+        },
+        {
+          "agent_id": "agent_2",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "food",
+          "timestep": 230
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "ply": 230,
+      "reward": 0.0
+    },
+    {
+      "events": [
+        {
+          "agent_id": "agent_1",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "food",
+          "timestep": 231
+        },
+        {
+          "agent_id": "agent_2",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "food",
+          "timestep": 231
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "player_died",
+          "timestep": 231
+        },
+        {
+          "kind": "game_ended",
+          "outcome": "death",
+          "timestep": 232
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "ply": 231,
+      "reward": 0.0
     }
   ],
-  "trades": 39
+  "trades": 44
 }

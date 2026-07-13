@@ -1,0 +1,316 @@
+{
+  "achievements": [
+    "all_roles_alive"
+  ],
+  "env_family": "craftax-multiplayer",
+  "lane": "python",
+  "model": "gemini-3.1-flash-lite",
+  "policy_kind": "react",
+  "provider": "gemini",
+  "schema_version": "gamebench.rollout.v1",
+  "seed": 101,
+  "shared_reward": 1.0,
+  "state_hash": "1174c8cba11bbe25dc12b1ebaffdc62ab2e41122e513854d6edbb603367e69be",
+  "steps": 12,
+  "termination_reason": null,
+  "trace": [
+    {
+      "events": [
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 0,
+          "x": 6,
+          "y": 3
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "do"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "ply": 0,
+      "responses": {
+        "agent_0": "{\"action\":\"do\",\"reason\":\"I am a warrior standing next to a tree; I will chop it to gather wood for crafting equipment.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"I am standing on a ruby; I will collect it to contribute to our team's resources.\"}",
+        "agent_2": "{\"action\":\"right\",\"reason\":\"Moving towards the diamond at (6,1) to begin mining operations.\"}"
+      },
+      "reward": 1.0
+    },
+    {
+      "events": [
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 1,
+          "x": 6,
+          "y": 4
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "do"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "down"
+        }
+      },
+      "ply": 1,
+      "responses": {
+        "agent_0": "{\"action\":\"do\",\"reason\":\"I am a warrior standing on a tree; I will chop it to gather wood for crafting equipment.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"I am standing on a ruby; as a forager, I should collect resources to support the team.\"}",
+        "agent_2": "{\"action\":\"down\",\"reason\":\"Moving towards the iron deposit at (6, 6) to begin mining operations.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 2,
+          "x": 5,
+          "y": 4
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "do"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 2,
+      "responses": {
+        "agent_0": "{\"action\":\"do\",\"reason\":\"I am a warrior standing on a tree; I will chop it to gather wood for the team's crafting needs.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"I am a forager standing on a ruby tile; I will collect it to contribute to our team's resources.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the iron deposit at (4,5) to begin mining operations.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 3,
+          "x": 4,
+          "y": 4
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "do"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 3,
+      "responses": {
+        "agent_0": "{\"action\":\"do\",\"reason\":\"I am standing on a tree; I will chop it to gather wood for the team.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"I am standing on a ruby; I will collect it to contribute to our team's resources.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the coal deposit at [2,4] to begin mining operations as a miner.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "do"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "down"
+        }
+      },
+      "ply": 4,
+      "responses": {
+        "agent_0": "{\"action\":\"do\",\"reason\":\"I am a warrior standing on a tree; I will chop it to gather wood for crafting equipment.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"I am a forager standing on a ruby; I will collect it to contribute to our team's resources.\"}",
+        "agent_2": "{\"action\":\"down\",\"reason\":\"Moving towards the iron deposit at [4,5] to begin mining duties.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 5,
+          "x": 3,
+          "y": 4
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "do"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 5,
+      "responses": {
+        "agent_0": "{\"action\":\"do\",\"reason\":\"I am standing on a tree; I will chop it to gather wood for the team.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"I am standing on a ruby tile; I will collect it to contribute to our team's resources.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the coal deposit at [2,4] to begin mining operations as a miner.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "do"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 6,
+      "responses": {
+        "agent_0": "{\"action\":\"do\",\"reason\":\"I am a warrior standing on a tree; I will chop it to gather wood for the team's crafting needs.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"I am standing on a ruby tile; I will harvest it to contribute to our team's resources.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the coal deposit at [2,4] to begin mining operations.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "do"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 7,
+      "responses": {
+        "agent_0": "{\"action\":\"do\",\"reason\":\"I am a warrior standing on a tree; I will chop it to gather wood for crafting tools.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"I am standing on a ruby; I will collect it to contribute to our team's resources.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the coal deposit at [2,4] to begin mining operations.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "do"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 8,
+      "responses": {
+        "agent_0": "{\"action\":\"do\",\"reason\":\"I am a warrior standing on a tree; I will chop it to gather wood for the team.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"I am standing on a ruby; I will collect it to contribute to our resources.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the coal deposit at [2,4] to begin mining resources for the team.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "do"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 9,
+      "responses": {
+        "agent_0": "{\"action\":\"do\",\"reason\":\"I am a warrior standing on a tree; I will chop it to gather wood for the team's crafting needs.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"I am standing on a ruby; I will collect it to contribute to our team's resources.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the coal deposit at [2,4] to begin mining operations.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "do"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 10,
+      "responses": {
+        "agent_0": "{\"action\":\"do\",\"reason\":\"I am a warrior starting at a tree; I will chop wood to begin crafting equipment for the team.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"I am standing on a ruby; I will collect it to contribute to our team's resources.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the coal deposit at [2,4] to begin mining resources for the team.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "do"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 11,
+      "responses": {
+        "agent_0": "{\"action\":\"do\",\"reason\":\"I am a warrior and need to start gathering resources or clearing space; interacting with the tree to collect wood.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"I am standing on a ruby; I will collect it to contribute to our team's resources.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the coal deposit at [2,4] to begin mining operations.\"}"
+      },
+      "reward": 0.0
+    }
+  ],
+  "trades": 0
+}

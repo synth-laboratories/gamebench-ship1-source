@@ -284,6 +284,21 @@ impl CraftaxCoopEnv {
         }
         let start = self.state.nev.len();
         let before = self.state.achievements.len();
+        for player in &self.state.players {
+            let fields = BTreeMap::from([
+                ("agent_id".to_string(), player.agent_id.clone()),
+                ("action".to_string(), actions[&player.agent_id].clone()),
+            ]);
+            self.state.nev.push(Event {
+                timestep: self.state.timestep,
+                kind: "joint_action".into(),
+                fields: fields.clone(),
+            });
+            self.state.legacy_nev.push(format!(
+                "JointAction({},{})",
+                fields["agent_id"], fields["action"]
+            ));
+        }
         for p in &mut self.state.players {
             p.request_duration = p.request_duration.saturating_sub(1);
             if p.request_duration == 0 {
@@ -292,6 +307,8 @@ impl CraftaxCoopEnv {
         }
         if self.state.players.iter().all(|p| p.alive) {
             self.state.achievements.insert("all_roles_alive".into());
+        } else {
+            self.state.achievements.remove("all_roles_alive");
         }
         for idx in 0..self.state.players.len() {
             let action = &actions[&self.state.players[idx].agent_id];
@@ -309,12 +326,13 @@ impl CraftaxCoopEnv {
         }
         self.update_projectiles();
         self.update_monsters();
-        self.state.timestep += 1;
+        self.update_plants();
         self.state.light_level = (1.0
             + (std::f64::consts::TAU * (self.state.timestep % DAY_LENGTH) as f64
                 / DAY_LENGTH as f64)
                 .cos())
             / 2.0;
+        self.state.timestep += 1;
         for p in &mut self.state.players {
             if p.alive {
                 if p.sleeping {
@@ -533,7 +551,22 @@ impl CraftaxCoopEnv {
             if let Some(&(dx, dy)) = delta.get(actions[&p.agent_id].as_str()) {
                 let nx = (p.x as isize + dx) as usize;
                 let ny = (p.y as isize + dy) as usize;
-                if !["stone", "water"].contains(&self.state.maps[p.level][ny][nx].as_str()) {
+                if [
+                    "grass",
+                    "path",
+                    "sand",
+                    "gravel",
+                    "fire_grass",
+                    "ice_grass",
+                    "stairs_down",
+                    "stairs_up",
+                    "crafting_table",
+                    "furnace",
+                    "enchantment_table_fire",
+                    "enchantment_table_ice",
+                ]
+                .contains(&self.state.maps[p.level][ny][nx].as_str())
+                {
                     desired[i] = Some((nx, ny));
                 }
             }
@@ -559,6 +592,20 @@ impl CraftaxCoopEnv {
         }
     }
     fn craft(&mut self, i: usize, action: &str) {
+        if action == "make_arrow" && self.state.players[i].inventory["wood"] >= 1 {
+            *self.state.players[i].inventory.get_mut("wood").unwrap() -= 1;
+            self.state.players[i].arrows += 2;
+            return;
+        }
+        if action == "make_torch"
+            && self.state.players[i].inventory["wood"] >= 1
+            && self.state.players[i].inventory["coal"] >= 1
+        {
+            *self.state.players[i].inventory.get_mut("wood").unwrap() -= 1;
+            *self.state.players[i].inventory.get_mut("coal").unwrap() -= 1;
+            self.state.players[i].torches += 2;
+            return;
+        }
         let recipe = match action {
             "make_wood_pickaxe" => Some(("wood", 1, "pickaxe", 1)),
             "make_stone_pickaxe" => Some(("stone", 2, "pickaxe", 2)),
@@ -590,6 +637,24 @@ impl CraftaxCoopEnv {
         self.state.achievements.insert(format!("craft_{item}"));
     }
     fn place(&mut self, i: usize, action: &str) {
+        if action == "place_plant" || action == "place_torch" {
+            let (x, y) = self.front(i);
+            let level = self.state.players[i].level;
+            if !["grass", "path", "sand", "gravel"].contains(&self.state.maps[level][y][x].as_str())
+            {
+                return;
+            }
+            if action == "place_plant" && self.state.players[i].saplings > 0 {
+                self.state.players[i].saplings -= 1;
+                self.state.maps[level][y][x] = "plant".into();
+                self.state.achievements.insert("place_plant".into());
+            }
+            if action == "place_torch" && self.state.players[i].torches > 0 {
+                self.state.players[i].torches -= 1;
+                self.state.maps[level][y][x] = "path".into();
+            }
+            return;
+        }
         let Some((resource, cost, tile)) = (match action {
             "place_stone" => Some(("stone", 1, "stone")),
             "place_table" => Some(("wood", 2, "crafting_table")),
@@ -724,7 +789,7 @@ impl CraftaxCoopEnv {
             return;
         }
         self.state.players[i].level = next as usize;
-        self.state.players[i].x = if direction > 0 { 2 } else { MAP_SIZE - 3 };
+        self.state.players[i].x = if direction > 0 { 3 } else { 2 };
         self.state.players[i].y = self.state.players[i].x;
         if direction > 0 {
             self.state.achievements.insert("descend".into());
@@ -786,6 +851,43 @@ impl CraftaxCoopEnv {
                         + self.state.players[pi].strength as i16 / 2))
                     .max(0);
                 self.state.players[pi].health -= damage;
+            } else if distance <= 8 {
+                let target_x = self.state.players[pi].x;
+                let target_y = self.state.players[pi].y;
+                let mob_x = self.state.monsters[mi].x;
+                let mob_y = self.state.monsters[mi].y;
+                let (dx, dy) = if target_x.abs_diff(mob_x) >= target_y.abs_diff(mob_y) {
+                    (if target_x > mob_x { 1 } else { -1 }, 0)
+                } else {
+                    (0, if target_y > mob_y { 1 } else { -1 })
+                };
+                let nx = (mob_x as isize + dx) as usize;
+                let ny = (mob_y as isize + dy) as usize;
+                let open = !["stone", "wall", "water", "lava"]
+                    .contains(&self.state.maps[level][ny][nx].as_str());
+                let player_free = !self
+                    .state
+                    .players
+                    .iter()
+                    .any(|p| p.level == level && p.x == nx && p.y == ny);
+                if open && player_free {
+                    self.state.monsters[mi].x = nx;
+                    self.state.monsters[mi].y = ny;
+                }
+            }
+        }
+    }
+
+    fn update_plants(&mut self) {
+        if self.state.timestep > 0 && self.state.timestep % 50 == 0 {
+            for level in 0..NUM_LEVELS {
+                for y in 0..MAP_SIZE {
+                    for x in 0..MAP_SIZE {
+                        if self.state.maps[level][y][x] == "plant" {
+                            self.state.maps[level][y][x] = "ripe_plant".into();
+                        }
+                    }
+                }
             }
         }
     }
@@ -808,6 +910,28 @@ impl CraftaxCoopEnv {
             || self.state.players[target].request_type.as_deref() != Some(resource)
             || self.state.players[target].request_duration == 0
         {
+            return;
+        }
+        if resource == "food" || resource == "drink" {
+            let stock = if resource == "food" {
+                self.state.players[giver].food
+            } else {
+                self.state.players[giver].drink
+            };
+            if stock <= 0 {
+                return;
+            }
+            if resource == "food" {
+                self.state.players[giver].food -= 1;
+                self.state.players[target].food = (self.state.players[target].food + 1).min(9);
+            } else {
+                self.state.players[giver].drink -= 1;
+                self.state.players[target].drink = (self.state.players[target].drink + 1).min(9);
+            }
+            self.state.players[target].request_type = None;
+            self.state.players[target].request_duration = 0;
+            self.state.trade_count += 1;
+            self.state.achievements.insert("trade".into());
             return;
         }
         let stock = *self.state.players[giver]
@@ -867,11 +991,15 @@ impl CraftaxCoopEnv {
         ));
     }
     pub fn checkpoint_json(&self) -> String {
-        serde_json::to_string(&self.state).expect("state serializes")
+        serde_json::to_string(
+            &json!({"schema_version":"craftax-coop.checkpoint.v1","state":self.state}),
+        )
+        .expect("state serializes")
     }
     pub fn restore_json(raw: &str) -> Result<Self, serde_json::Error> {
+        let value: Value = serde_json::from_str(raw)?;
         Ok(Self {
-            state: serde_json::from_str(raw)?,
+            state: serde_json::from_value(value.get("state").cloned().unwrap_or(value))?,
         })
     }
 
@@ -956,6 +1084,6 @@ impl CraftaxCoopEnv {
     }
 
     fn player_json(p: &Player) -> Value {
-        json!({"agent_id":p.agent_id,"role":p.role,"position":[p.x,p.y],"level":p.level,"health":p.health,"food":p.food,"drink":p.drink,"energy":p.energy,"mana":p.mana,"alive":p.alive,"sleeping":p.sleeping,"inventory":p.inventory,"equipment":{"pickaxe":p.pickaxe,"sword":p.sword,"armour":p.armour,"arrows":p.arrows,"torches":p.torches,"books":p.books,"saplings":p.saplings,"potions":p.potions,"enchantments":{"sword":p.sword_enchantment,"armour":p.armour_enchantment,"bow":p.bow_enchantment}},"attributes":{"dexterity":p.dexterity,"strength":p.strength,"intelligence":p.intelligence,"xp":p.xp,"level_points":p.level_points},"request":{"resource":p.request_type,"remaining":p.request_duration}})
+        json!({"agent_id":p.agent_id,"role":p.role,"position":[p.x,p.y],"level":p.level,"facing":p.facing,"health":p.health,"food":p.food,"drink":p.drink,"energy":p.energy,"mana":p.mana,"alive":p.alive,"sleeping":p.sleeping,"inventory":p.inventory,"equipment":{"pickaxe":p.pickaxe,"sword":p.sword,"armour":p.armour,"arrows":p.arrows,"torches":p.torches,"books":p.books,"saplings":p.saplings,"potions":p.potions,"enchantments":{"sword":p.sword_enchantment,"armour":p.armour_enchantment,"bow":p.bow_enchantment}},"attributes":{"dexterity":p.dexterity,"strength":p.strength,"intelligence":p.intelligence,"xp":p.xp,"level_points":p.level_points},"request":{"resource":p.request_type,"remaining":p.request_duration}})
     }
 }

@@ -1,0 +1,271 @@
+{
+  "achievements": [
+    "all_roles_alive"
+  ],
+  "env_family": "craftax-multiplayer",
+  "lane": "python",
+  "model": "gemini-3.1-flash-lite",
+  "policy_kind": "react",
+  "provider": "gemini",
+  "schema_version": "gamebench.rollout.v1",
+  "seed": 303,
+  "shared_reward": 1.0,
+  "state_hash": "fae1bdc41933654e92714fb5f5ef42914f0917c7358c7d5e2e2496e5adca84d8",
+  "steps": 12,
+  "termination_reason": null,
+  "trace": [
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "left"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 0,
+      "responses": {
+        "agent_0": "{\"action\":\"left\",\"reason\":\"Moving towards the diamond at [2,3] to secure resources for the team.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"I am standing on a sapphire tile; I will harvest it to contribute to our team's resources.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the diamond at [2,3] to begin mining operations.\"}"
+      },
+      "reward": 1.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 1,
+      "responses": {
+        "agent_0": "{\"action\":\"right\",\"reason\":\"Moving towards the miner to coordinate resource gathering and prepare for equipment crafting.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"I am standing on a sapphire tile; I will collect it to contribute to the team's resources.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the diamond at [2,3] to begin mining operations.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "left"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 2,
+      "responses": {
+        "agent_0": "{\"action\":\"left\",\"reason\":\"Moving towards the diamond at [2,3] to secure resources for the team.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"As a forager, I am standing on a sapphire tile. I will collect it to contribute to our team's resources.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the diamond at [2,3] to begin mining operations.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 3,
+      "responses": {
+        "agent_0": "{\"action\":\"right\",\"reason\":\"Moving towards the diamond at [2,3] is not possible as I am at [3,3], moving right to position [4,3] to coordinate with the forager and miner.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"I am standing on a sapphire tile; using 'do' will collect it to contribute to our team's resources.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the diamond deposit at [2,3] to begin mining operations.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "left"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 4,
+      "responses": {
+        "agent_0": "{\"action\":\"left\",\"reason\":\"Moving left to position myself to gather resources or support the team.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"As a forager, I am standing on a sapphire tile. I will collect it to contribute to our team's resources.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the diamond at [2,3] to begin mining operations.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "left"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 5,
+      "responses": {
+        "agent_0": "{\"action\":\"left\",\"reason\":\"Moving left to reach the diamond tile at [2,3] to begin gathering resources for equipment.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"I am a forager standing on a sapphire tile; I will attempt to collect it to contribute to our team's resources.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the diamond at [2,3] to begin mining operations as the team's miner.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "left"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 6,
+      "responses": {
+        "agent_0": "{\"action\":\"left\",\"reason\":\"Moving towards the diamond to secure resources for the team.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"I am standing on a sapphire tile; I will collect it to contribute to our team's resources.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the diamond at [2,3] to begin mining operations as the team's miner.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "left"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 7,
+      "responses": {
+        "agent_0": "{\"action\":\"left\",\"reason\":\"Moving towards the diamond at [2,3] to secure resources for the team.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"I am standing on a sapphire tile; I will collect it to contribute to our team's resources.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the diamond at [2,3] to begin mining operations.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "left"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 8,
+      "responses": {
+        "agent_0": "{\"action\":\"left\",\"reason\":\"Moving towards the diamond at [2,3] to secure resources for the team.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"I am standing on a sapphire tile; I will harvest it to contribute to our team's resources.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the diamond at [2,3] to begin mining operations as the team's miner.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "left"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 9,
+      "responses": {
+        "agent_0": "{\"action\":\"left\",\"reason\":\"Moving towards the diamond at [2,3] to secure resources for the team.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"I am a forager standing on a sapphire tile; I will attempt to collect it to contribute to our team's resources.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the diamond resource at [2,3] to begin mining operations.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "left"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 10,
+      "responses": {
+        "agent_0": "{\"action\":\"left\",\"reason\":\"Moving towards the diamond at [2,3] to secure resources for the team.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"I am a forager standing on a sapphire tile; I will attempt to collect it to contribute to our team's resources.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the diamond deposit at [2,3] to begin mining operations.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "left"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 11,
+      "responses": {
+        "agent_0": "{\"action\":\"left\",\"reason\":\"Moving towards the diamond at [2,3] to secure resources for the team.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"I am a forager standing on a sapphire tile; I will attempt to collect it to contribute to our team's resources.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the diamond deposit at [2,3] to begin mining operations.\"}"
+      },
+      "reward": 0.0
+    }
+  ],
+  "trades": 0
+}

@@ -12,9 +12,11 @@ Actions are objects such as `{"kind":"left"}`, `{"kind":"request_iron"}`, or `{"
 - Forager can team-heal and rests more efficiently.
 - Miner alone gathers advanced ores, receives double ore yield, and crafts advanced equipment.
 
-## Intentional parity boundaries
+## Parity and author-reference boundaries
 
-The Python and Rust lanes share dimensions, roles, simultaneous movement conflict rules, request expiry, directed trades, shared rewards, checkpoint state, and death/timestep termination. Python is the complete GameBench HTTP/JSON authority and additionally implements collection/crafting, nine-level traversal, role-gated abilities, symbolic observations, achievements, and boss combat. Rust exposes the deterministic contract core as a library and CLI fixture runner; its map PRNG and currently smaller mechanic surface are an explicit parity deviation. Exact author-reference parity is also not claimed for JAX PRNG bitstreams, pixel rendering, procedural dungeon rooms, the complete Craftax mob taxonomy, projectile physics, enchantments, or every original achievement; those require JAX-specific arrays/assets or considerably broader engine work. These omissions are surfaced here rather than silently replaced with a single-player fallback.
+Python and Rust are independent runtime authorities with the same deterministic map generator, world/player state, simultaneous conflict rules, role abilities, requests/trades, collection and crafting, mobs and projectiles, plants/chests/potions/books/enchantments, attributes, traversal, boss progression, rewards, checkpoints, observations, NEV, and terminal conditions. `scripts/verify_python_rust_parity.py` compares canonical cooperative, combat, collection, expiry, plant/time, boss, death, timestep, and checkpoint scenarios.
+
+This is a pure-language semantic port, not a byte-for-byte execution of the authors' JAX program. Consequently JAX PRNG bitstreams and vectorized update ordering are not reproduced. The GameBench task provides symbolic JSON/ASCII rather than the author repository's pixel asset renderer, and represents the long-tail mob/projectile taxonomy through the same shared combat model instead of importing JAX array layouts. These are explicit representation boundaries; none falls back to `craftax-singleplayer` or removes the requested cooperative mechanics.
 
 ## Usage
 
@@ -23,6 +25,10 @@ The Python and Rust lanes share dimensions, roles, simultaneous movement conflic
 `python scripts/run_service.py --port 8080`
 
 `cargo run --manifest-path gold_rust/Cargo.toml --example smoke`
+
+`cargo run --manifest-path gold_rust/Cargo.toml --bin service -- 127.0.0.1:8081`
+
+`python scripts/verify_python_rust_parity.py`
 
 Code-policy rollout:
 
