@@ -1,5 +1,7 @@
+use craftax_coop_gamebench::render::{encode_gif, render_rgb, RenderMode, RgbFrame};
 use craftax_coop_gamebench::CraftaxCoopEnv;
 use serde_json::{json, Map, Value};
+use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
@@ -7,6 +9,9 @@ use std::net::{TcpListener, TcpStream};
 struct Service {
     env: CraftaxCoopEnv,
     rollouts: BTreeMap<String, CraftaxCoopEnv>,
+    frames: BTreeMap<String, BTreeMap<u64, RgbFrame>>,
+    capture_frames: BTreeMap<String, bool>,
+    render_modes: BTreeMap<String, RenderMode>,
     next_rollout: u64,
 }
 
@@ -15,6 +20,9 @@ impl Service {
         Self {
             env: CraftaxCoopEnv::reset(0, 3, 100_000),
             rollouts: BTreeMap::new(),
+            frames: BTreeMap::new(),
+            capture_frames: BTreeMap::new(),
+            render_modes: BTreeMap::new(),
             next_rollout: 1,
         }
     }
@@ -179,6 +187,54 @@ impl Service {
             "readout": Self::readout(&env),
         }))
     }
+
+    fn visual_configuration(body: &Value) -> Result<(bool, RenderMode), String> {
+        let task = body
+            .get("task")
+            .filter(|value| value.is_object())
+            .unwrap_or(body);
+        let readouts = task.get("readouts");
+        let visual = readouts
+            .and_then(|value| value.get("visual"))
+            .and_then(Value::as_bool)
+            .unwrap_or(false);
+        let stream = readouts.and_then(|value| value.get("stream"));
+        let capture = visual
+            || stream
+                .and_then(|value| value.get("enabled"))
+                .and_then(Value::as_bool)
+                .unwrap_or(false)
+            || stream
+                .and_then(|value| value.get("persist_frames"))
+                .and_then(Value::as_bool)
+                .unwrap_or(false);
+        let raw_mode = task
+            .get("render_mode")
+            .or_else(|| {
+                task.get("readouts")
+                    .and_then(|value| value.get("render_mode"))
+            })
+            .and_then(Value::as_str);
+        Ok((capture, RenderMode::parse(raw_mode)?))
+    }
+
+    fn store_frame(&mut self, rollout_id: &str) -> Result<(), String> {
+        let env = self
+            .rollouts
+            .get(rollout_id)
+            .ok_or_else(|| "rollout_not_found".to_string())?;
+        let mode = self
+            .render_modes
+            .get(rollout_id)
+            .copied()
+            .unwrap_or(RenderMode::Auto);
+        let frame = render_rgb(env, mode)?;
+        self.frames
+            .entry(rollout_id.to_string())
+            .or_default()
+            .insert(env.state.timestep, frame);
+        Ok(())
+    }
 }
 
 fn response(stream: &mut TcpStream, status: u16, payload: Value) {
@@ -193,6 +249,16 @@ fn response(stream: &mut TcpStream, status: u16, payload: Value) {
         body.len()
     );
     let _ = stream.write_all(raw.as_bytes());
+}
+
+fn binary_response(stream: &mut TcpStream, status: u16, content_type: &str, body: &[u8]) {
+    let label = if status == 200 { "OK" } else { "Not Found" };
+    let headers = format!(
+        "HTTP/1.1 {status} {label}\r\nContent-Type: {content_type}\r\nContent-Length: {}\r\nCache-Control: no-store\r\nConnection: close\r\n\r\n",
+        body.len()
+    );
+    let _ = stream.write_all(headers.as_bytes());
+    let _ = stream.write_all(body);
 }
 
 fn read_request(stream: &mut TcpStream) -> Option<String> {
@@ -241,10 +307,13 @@ fn handle(stream: &mut TcpStream, service: &mut Service) {
         response(stream, 400, json!({"error":"missing HTTP method"}));
         return;
     };
-    let Some(path) = parts.next() else {
+    let Some(request_target) = parts.next() else {
         response(stream, 400, json!({"error":"missing HTTP path"}));
         return;
     };
+    let (path, query) = request_target
+        .split_once('?')
+        .unwrap_or((request_target, ""));
     let body_text = &raw[header_end + 4..];
     let body = if body_text.is_empty() {
         json!({})
@@ -262,10 +331,125 @@ fn handle(stream: &mut TcpStream, service: &mut Service) {
         }
     };
 
+    let query_value = |name: &str| {
+        query.split('&').find_map(|part| {
+            let (key, value) = part.split_once('=')?;
+            (key == name).then_some(value)
+        })
+    };
     let path_parts = path.trim_matches('/').split('/').collect::<Vec<_>>();
+    if path_parts.len() == 4 && path_parts[0] == "rollouts" && path_parts[2] == "frames" {
+        let rollout_id = path_parts[1];
+        if !service.rollouts.contains_key(rollout_id) {
+            response(stream, 404, json!({"error":"rollout_not_found"}));
+            return;
+        }
+        if path_parts[3] == "manifest" && method == "GET" {
+            let frames = service.frames.get(rollout_id).into_iter().flat_map(|frames| frames.iter()).filter_map(|(step, frame)| {
+                let png = frame.png().ok()?;
+                let sha256 = format!("{:x}", Sha256::digest(&png));
+                Some(json!({"step":step,"bytes":png.len(),"sha256":sha256,"url":format!("/rollouts/{rollout_id}/frames/{step}.png")}))
+            }).collect::<Vec<_>>();
+            response(
+                stream,
+                200,
+                json!({"rollout_id":rollout_id,"frame_count":frames.len(),"latest_step":frames.last().and_then(|frame|frame.get("step")).cloned(),"frames":frames}),
+            );
+            return;
+        }
+        if method == "GET" {
+            let Some(step_text) = path_parts[3].strip_suffix(".png") else {
+                response(stream, 404, json!({"error":"not_found"}));
+                return;
+            };
+            let Ok(step) = step_text.parse::<u64>() else {
+                response(stream, 404, json!({"error":"frame_not_found"}));
+                return;
+            };
+            let current = service.rollouts[rollout_id].state.timestep;
+            if step == current
+                && !service
+                    .frames
+                    .get(rollout_id)
+                    .is_some_and(|frames| frames.contains_key(&step))
+            {
+                if let Err(error) = service.store_frame(rollout_id) {
+                    response(stream, 400, json!({"error":error}));
+                    return;
+                }
+            }
+            match service
+                .frames
+                .get(rollout_id)
+                .and_then(|frames| frames.get(&step))
+                .and_then(|frame| frame.png().ok())
+            {
+                Some(png) => binary_response(stream, 200, "image/png", &png),
+                None => response(stream, 404, json!({"error":"frame_not_found"})),
+            }
+            return;
+        }
+    }
     if path_parts.len() == 3 && path_parts[0] == "rollouts" {
         let rollout_id = path_parts[1];
         let operation = path_parts[2];
+        if method == "GET" && operation == "render.png" {
+            let Some(env) = service.rollouts.get(rollout_id) else {
+                response(stream, 404, json!({"error":"rollout_not_found"}));
+                return;
+            };
+            let mode = match query_value("render_mode")
+                .map(|value| RenderMode::parse(Some(value)))
+                .unwrap_or_else(|| {
+                    Ok(service
+                        .render_modes
+                        .get(rollout_id)
+                        .copied()
+                        .unwrap_or(RenderMode::Auto))
+                }) {
+                Ok(mode) => mode,
+                Err(error) => {
+                    response(stream, 400, json!({"error":error}));
+                    return;
+                }
+            };
+            match render_rgb(env, mode).and_then(|frame| frame.png()) {
+                Ok(png) => binary_response(stream, 200, "image/png", &png),
+                Err(error) => response(stream, 400, json!({"error":error})),
+            }
+            return;
+        }
+        if method == "GET" && operation == "replay.gif" {
+            if !service.rollouts.contains_key(rollout_id) {
+                response(stream, 404, json!({"error":"rollout_not_found"}));
+                return;
+            }
+            if service
+                .frames
+                .get(rollout_id)
+                .is_none_or(BTreeMap::is_empty)
+            {
+                if let Err(error) = service.store_frame(rollout_id) {
+                    response(stream, 400, json!({"error":error}));
+                    return;
+                }
+            }
+            let through_step =
+                query_value("through_step").and_then(|value| value.parse::<u64>().ok());
+            let frames = service
+                .frames
+                .get(rollout_id)
+                .into_iter()
+                .flat_map(|frames| frames.iter())
+                .filter(|(step, _)| through_step.is_none_or(|limit| **step <= limit))
+                .map(|(_, frame)| frame.clone())
+                .collect::<Vec<_>>();
+            match encode_gif(&frames, 10) {
+                Ok(gif) => binary_response(stream, 200, "image/gif", &gif),
+                Err(error) => response(stream, 400, json!({"error":error})),
+            }
+            return;
+        }
         let Some(env) = service.rollouts.get_mut(rollout_id) else {
             response(stream, 404, json!({"error":"rollout_not_found"}));
             return;
@@ -305,6 +489,36 @@ fn handle(stream: &mut TcpStream, service: &mut Service) {
                 return;
             }
         };
+        if result.is_ok() && operation == "restore" {
+            let timestep = service.rollouts[rollout_id].state.timestep;
+            if let Some(frames) = service.frames.get_mut(rollout_id) {
+                frames.retain(|step, _| *step <= timestep);
+            }
+            if service
+                .capture_frames
+                .get(rollout_id)
+                .copied()
+                .unwrap_or(false)
+            {
+                if let Err(error) = service.store_frame(rollout_id) {
+                    response(stream, 400, json!({"error":error}));
+                    return;
+                }
+            }
+        }
+        if result.is_ok()
+            && operation == "step"
+            && service
+                .capture_frames
+                .get(rollout_id)
+                .copied()
+                .unwrap_or(false)
+        {
+            if let Err(error) = service.store_frame(rollout_id) {
+                response(stream, 400, json!({"error":error}));
+                return;
+            }
+        }
         match result {
             Ok(payload) => response(stream, 200, payload),
             Err(error) => response(stream, 400, json!({"error":error})),
@@ -314,16 +528,22 @@ fn handle(stream: &mut TcpStream, service: &mut Service) {
 
     let result: Result<Value, String> = match (method, path) {
         ("GET", "/health") => Ok(json!({"ok":true,"env_family":"craftax-multiplayer","runtime":"rust","sessions":service.rollouts.len()})),
+        ("GET", "/info") => Ok(json!({"env_family":"craftax-multiplayer","runtime":"rust","capabilities":["rollout","checkpoint","nev_log","symbolic_readout","render_png","frame_manifest","frame_png","replay_gif"]})),
         ("GET", "/agents") => Ok(json!(Service::agent_ids(&service.env))),
         ("POST", "/run_scenario") => Service::run_scenario(&body),
-        ("POST", "/rollouts") => Service::new_env(&body).map(|env| {
+        ("POST", "/rollouts") => Service::new_env(&body).and_then(|env| {
+            let (capture, render_mode) = Service::visual_configuration(&body)?;
             let rollout_id = format!("rollout-{}", service.next_rollout);
             service.next_rollout += 1;
             let observations = env.observations(5);
             let seed = env.state.seed;
             let readout = Service::readout(&env);
             service.rollouts.insert(rollout_id.clone(), env);
-            json!({"rollout_id":rollout_id,"observations":observations,"info":{"seed":seed},"readout":readout})
+            service.frames.insert(rollout_id.clone(), BTreeMap::new());
+            service.capture_frames.insert(rollout_id.clone(), capture);
+            service.render_modes.insert(rollout_id.clone(), render_mode);
+            if capture { service.store_frame(&rollout_id)?; }
+            Ok(json!({"rollout_id":rollout_id,"observations":observations,"info":{"seed":seed},"readout":readout,"visual":{"render_url":format!("/rollouts/{rollout_id}/render.png"),"frame_manifest_url":format!("/rollouts/{rollout_id}/frames/manifest"),"replay_gif_url":format!("/rollouts/{rollout_id}/replay.gif")}}))
         }),
         ("POST", "/reset") => Service::new_env(&body).map(|env| {
             let seed = env.state.seed;

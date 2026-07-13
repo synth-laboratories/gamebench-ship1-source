@@ -23,6 +23,14 @@ python_entrypoint: gold_python.engine:CraftaxCoopEnv
 rust_crate: gold_rust
 service_entrypoint: scripts/run_service.py
 rust_service_entrypoint: gold_rust/src/bin/service.rs
+visuals:
+  default_render: team_private_view_strip
+  default_size: [528, 272]
+  panel_size: [176, 272]
+  formats: [png, gif]
+  frame_capture: rollout_opt_in
+  parity: semantic_layout_and_state_layers
+  sprite_assets: shared/assets/craftax_coop
 policy_runner: scripts/run_policy.py
 parity_verifier: scripts/verify_python_rust_parity.py
 fixture_generator: scripts/generate_gold_fixtures.py
