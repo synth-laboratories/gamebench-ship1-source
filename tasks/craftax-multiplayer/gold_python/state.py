@@ -17,6 +17,7 @@ class Player:
     food: int = 9
     drink: int = 9
     energy: int = 9
+    mana: int = 9
     alive: bool = True
     facing: str = "down"
     inventory: dict[str, int] = field(default_factory=lambda: {r: 0 for r in RESOURCES})
@@ -24,6 +25,19 @@ class Player:
     sword: int = 0
     armour: int = 0
     arrows: int = 0
+    torches: int = 0
+    books: int = 0
+    saplings: int = 0
+    potions: dict[str, int] = field(default_factory=lambda: {colour: 0 for colour in ("red", "green", "blue", "pink", "cyan", "yellow")})
+    dexterity: int = 0
+    strength: int = 0
+    intelligence: int = 0
+    xp: int = 0
+    level_points: int = 0
+    sword_enchantment: str | None = None
+    armour_enchantment: str | None = None
+    bow_enchantment: str | None = None
+    sleeping: bool = False
     request_type: str | None = None
     request_duration: int = 0
 
@@ -36,8 +50,12 @@ class WorldState:
     players: list[Player]
     maps: list[list[list[str]]]
     monsters: list[dict[str, Any]]
+    projectiles: list[dict[str, Any]] = field(default_factory=list)
+    plants: list[dict[str, Any]] = field(default_factory=list)
     boss_health: int = 24
     boss_progress: int = 0
+    boss_wave_timer: int = 0
+    light_level: float = 1.0
     achievements: dict[str, bool] = field(default_factory=lambda: {a: False for a in ACHIEVEMENTS})
     trade_count: int = 0
     terminated: bool = False
