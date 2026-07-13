@@ -1,0 +1,8 @@
+{
+  "schema": "gamebench.overcooked_v2.rules.v1",
+  "base": "stochastic_spawn",
+  "stochastic_spawn": true,
+  "overrides": {
+    "max_steps": 48
+  }
+}

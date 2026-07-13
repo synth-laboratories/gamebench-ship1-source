@@ -1,0 +1,6 @@
+{
+  "distinguishing_experiment": "Present a state where onion is salient and compare against a policy that handles it correctly.",
+  "evidence": "Trace actions show: None (onion only prep); None (onion only prep); None (onion only prep); None (onion only prep); None (onion only prep); None (onion only prep); None (onion only prep); None (onion only prep); chops onions but never starts pot.",
+  "flaw_id": "onion_only_prep",
+  "summary": "The hidden joint policy chops onions repeatedly but never coordinates pot cooking or plating."
+}

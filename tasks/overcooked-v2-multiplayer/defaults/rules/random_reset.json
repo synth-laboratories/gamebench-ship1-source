@@ -1,0 +1,7 @@
+{
+  "base": "cooperative_full_obs",
+  "random_reset": true,
+  "overrides": {
+    "max_steps": 96
+  }
+}

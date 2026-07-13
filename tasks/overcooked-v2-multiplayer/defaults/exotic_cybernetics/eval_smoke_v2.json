@@ -1,0 +1,10 @@
+{
+  "input_token_budget": 20000,
+  "max_steps": 40,
+  "schema": "gamebench.overcooked.exotic_cybernetics_sweep.v1",
+  "seeds": [
+    101,
+    102
+  ],
+  "suite_id": "overcooked_exotic_cybernetics_smoke_v2"
+}

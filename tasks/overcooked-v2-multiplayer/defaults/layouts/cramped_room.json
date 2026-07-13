@@ -1,0 +1,20 @@
+{
+  "ascii": [
+    "##P##",
+    "OA AO",
+    "# #",
+    "#D#S#"
+  ],
+  "layout_id": "cramped_room",
+  "possible_recipes": [
+    [
+      0,
+      0,
+      0
+    ]
+  ],
+  "recipe_pool": [
+    "trio_soup"
+  ],
+  "swap_agents": true
+}

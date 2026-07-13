@@ -1,0 +1,14 @@
+{
+  "schema": "gamebench.overcooked_v2.rules.v1",
+  "base": "zsc_coop",
+  "partial_obs": true,
+  "view_radius": 2,
+  "hidden_recipe": true,
+  "stochastic_spawn": true,
+  "recipe_pool": ["simple_soup", "trio_soup"],
+  "resample_on_delivery": true,
+  "target_deliveries": 2,
+  "overrides": {
+    "max_steps": 160
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "expected_flaw_id": "plate_block_carrier",
+  "gamebench_task": "overcooked-v2-multiplayer",
+  "gold_summary": "The hidden policy blocks the partner with a plate instead of clearing a delivery path.",
+  "hidden_policy_id": "plate_block_carrier",
+  "keywords": [
+    "plate",
+    "block",
+    "partner",
+    "path"
+  ],
+  "prompt": "Diagnose the hidden Overcooked v2 policy flaw from the provided state-action traces.",
+  "puzzle_id": "puzzle_plate_block_v1",
+  "rollout": {
+    "expected_outcome": "failure",
+    "max_steps": 200,
+    "min_failure_seeds": 2,
+    "scenario": {
+      "layout_id": "demo_tiny"
+    },
+    "seeds": [
+      101,
+      102,
+      103
+    ]
+  },
+  "schema_version": "gamebench.policy_puzzle.task.v1"
+}

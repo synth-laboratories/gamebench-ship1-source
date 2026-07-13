@@ -1,0 +1,28 @@
+{
+  "expected_flaw_id": "serve_counter_blind",
+  "gamebench_task": "overcooked-v2-multiplayer",
+  "gold_summary": "The hidden policy never reaches the service counter with ready soup despite a clear route.",
+  "hidden_policy_id": "serve_counter_blind",
+  "keywords": [
+    "serve",
+    "counter",
+    "delivery",
+    "route"
+  ],
+  "prompt": "Diagnose the hidden Overcooked v2 policy flaw from the provided state-action traces.",
+  "puzzle_id": "puzzle_serve_counter_blind_v1",
+  "rollout": {
+    "expected_outcome": "failure",
+    "max_steps": 200,
+    "min_failure_seeds": 2,
+    "scenario": {
+      "layout_id": "demo_tiny"
+    },
+    "seeds": [
+      101,
+      102,
+      103
+    ]
+  },
+  "schema_version": "gamebench.policy_puzzle.task.v1"
+}

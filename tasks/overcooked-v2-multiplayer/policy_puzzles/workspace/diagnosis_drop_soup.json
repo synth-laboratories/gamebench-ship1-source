@@ -1,0 +1,6 @@
+{
+  "distinguishing_experiment": "Present a state where soup is salient and compare against a policy that handles it correctly.",
+  "evidence": "Trace actions show: None (soup delivery dropper); None (soup delivery dropper); None (soup delivery dropper); None (soup delivery dropper); None (soup delivery dropper); None (soup delivery dropper); None (soup delivery dropper); None (soup delivery dropper).",
+  "flaw_id": "soup_delivery_dropper",
+  "summary": "The hidden joint policy drops or abandons ready soup instead of coordinating delivery to the service counter."
+}
