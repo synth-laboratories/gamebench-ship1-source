@@ -19,6 +19,24 @@ from containers.http_rollout import read_action_tape, run_http_rollout, write_ac
 SYSTEM = """You control one member of a three-agent Craftax-Coop team. Coordinate through the teammate dashboard and request/give actions. Respect your Warrior, Forager, or Miner specialization. Return JSON only: {\"action\":\"one exact legal action\",\"reason\":\"short reason\"}."""
 
 
+def _parse_response(text: str) -> tuple[dict[str, Any], bool]:
+    candidate = text.strip()
+    if candidate.startswith("```") and candidate.endswith("```"):
+        lines = candidate.splitlines()
+        candidate = "\n".join(lines[1:-1]).strip()
+    try:
+        value = json.loads(candidate)
+    except json.JSONDecodeError:
+        start, end = candidate.find("{"), candidate.rfind("}")
+        if start < 0 or end <= start:
+            return {}, False
+        try:
+            value = json.loads(candidate[start : end + 1])
+        except json.JSONDecodeError:
+            return {}, False
+    return (value, True) if isinstance(value, dict) else ({}, False)
+
+
 def _completion(api_key: str, model: str, observation: dict[str, Any]) -> dict[str, Any]:
     prompt = json.dumps(
         {
@@ -46,15 +64,16 @@ def _completion(api_key: str, model: str, observation: dict[str, Any]) -> dict[s
     with urllib.request.urlopen(request, timeout=120) as response:
         raw = json.loads(response.read())
     assistant_text = raw["choices"][0]["message"]["content"]
-    parsed = json.loads(assistant_text)
-    if not isinstance(parsed, dict) or not isinstance(parsed.get("action"), str):
-        raise ValueError("Gemini response must be a JSON object with a string action")
-    action = parsed["action"]
+    parsed, parse_ok = _parse_response(assistant_text)
+    requested_action = parsed.get("action")
     legal = observation["legal_actions"]
-    if action not in legal:
-        raise ValueError(f"Gemini returned illegal action: {action}")
+    action_valid = isinstance(requested_action, str) and requested_action in legal
+    action = requested_action if action_valid else "noop" if "noop" in legal else legal[0]
     return {
         "action": action,
+        "requested_action": requested_action,
+        "parse_ok": parse_ok,
+        "action_valid": action_valid,
         "reason": parsed.get("reason"),
         "assistant_text": assistant_text,
         "usage": raw.get("usage", {}),
