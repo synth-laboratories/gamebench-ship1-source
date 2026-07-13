@@ -1,0 +1,72 @@
+{
+  "schema": "gamebench.overcooked_v2.policy_sweep.v1",
+  "suite_id": "overcooked_v2_policy_dev_v1",
+  "scenarios": [
+    {
+      "scenario_id": "policy_dev_delivery",
+      "layout_id": "demo_tiny",
+      "seed": 8,
+      "rules": {"base": "cooperative_full_obs", "overrides": {"max_steps": 64, "cook_time": 2}}
+    },
+    {
+      "scenario_id": "policy_dev_counter_row",
+      "layout_id": "counter_row",
+      "seed": 11,
+      "rules": {"base": "cooperative_full_obs", "overrides": {"max_steps": 80, "cook_time": 2}}
+    },
+    {
+      "scenario_id": "policy_dev_trio",
+      "layout_id": "demo_tiny",
+      "seed": 12,
+      "rules": {
+        "base": "cooperative_full_obs",
+        "recipe_id": "trio_soup",
+        "overrides": {"max_steps": 96, "cook_time": 3, "required_onions": 3}
+      }
+    },
+    {
+      "scenario_id": "policy_dev_full_delivery",
+      "layout_id": "demo_tiny",
+      "seed": 8,
+      "rules": {"base": "cooperative_full_obs", "overrides": {"max_steps": 64, "cook_time": 2}}
+    },
+    {
+      "scenario_id": "policy_dev_trio_delivery",
+      "layout_id": "demo_tiny",
+      "seed": 12,
+      "rules": {
+        "base": "cooperative_full_obs",
+        "recipe_id": "trio_soup",
+        "overrides": {"max_steps": 96, "cook_time": 3, "required_onions": 3}
+      }
+    },
+    {
+      "scenario_id": "policy_dev_plated",
+      "layout_id": "plated_kitchen",
+      "seed": 18,
+      "rules": {"base": "cooperative_full_obs", "overrides": {"max_steps": 80, "cook_time": 2}}
+    },
+    {
+      "scenario_id": "policy_dev_mixed_soup",
+      "layout_id": "dual_ingredient",
+      "seed": 21,
+      "rules": {
+        "recipe_id": "mixed_soup",
+        "overrides": {"max_steps": 96, "cook_time": 2}
+      }
+    },
+    {
+      "scenario_id": "policy_dev_counter_place",
+      "layout_id": "plated_kitchen",
+      "seed": 17,
+      "rules": {"base": "cooperative_full_obs", "overrides": {"max_steps": 80, "cook_time": 2}}
+    },
+    {
+      "scenario_id": "policy_dev_catalog_cramped",
+      "layout_id": "cramped_room",
+      "seed": 29,
+      "rules": {"recipe_id": "trio_soup", "overrides": {"max_steps": 120, "cook_time": 3, "required_onions": 3}}
+    }
+  ],
+  "max_steps": 120
+}

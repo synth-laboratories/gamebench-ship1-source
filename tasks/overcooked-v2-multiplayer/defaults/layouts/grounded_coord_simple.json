@@ -1,0 +1,10 @@
+{
+  "layout_id": "grounded_coord_simple",
+  "ascii": [
+    "########",
+    "# 2    #",
+    "#R#L#P#S#",
+    "# 0   1#",
+    "########"
+  ]
+}

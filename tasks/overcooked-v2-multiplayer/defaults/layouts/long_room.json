@@ -1,0 +1,19 @@
+{
+  "ascii": [
+    "###############",
+    "D AP",
+    "0 S",
+    "###############"
+  ],
+  "layout_id": "long_room",
+  "possible_recipes": [
+    [
+      0,
+      0,
+      0
+    ]
+  ],
+  "recipe_pool": [
+    "trio_soup"
+  ]
+}

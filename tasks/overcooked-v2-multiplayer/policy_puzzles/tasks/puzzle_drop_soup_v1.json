@@ -1,0 +1,28 @@
+{
+  "expected_flaw_id": "soup_delivery_dropper",
+  "gamebench_task": "overcooked-v2-multiplayer",
+  "gold_summary": "The hidden joint policy drops or abandons ready soup instead of coordinating delivery to the service counter.",
+  "hidden_policy_id": "soup_delivery_dropper",
+  "keywords": [
+    "soup",
+    "delivery",
+    "drop",
+    "coordination"
+  ],
+  "prompt": "Diagnose the hidden Overcooked v2 policy flaw from the provided state-action traces.",
+  "puzzle_id": "puzzle_drop_soup_v1",
+  "rollout": {
+    "expected_outcome": "failure",
+    "max_steps": 200,
+    "min_failure_seeds": 2,
+    "scenario": {
+      "layout_id": "demo_tiny"
+    },
+    "seeds": [
+      101,
+      102,
+      103
+    ]
+  },
+  "schema_version": "gamebench.policy_puzzle.task.v1"
+}

@@ -1,0 +1,7 @@
+{
+  "base": "cooperative_full_obs",
+  "observation_profile": "pixel_rgb",
+  "overrides": {
+    "max_steps": 64
+  }
+}

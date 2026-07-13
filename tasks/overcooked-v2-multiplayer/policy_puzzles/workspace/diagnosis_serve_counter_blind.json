@@ -1,0 +1,6 @@
+{
+  "distinguishing_experiment": "Present a state where serve is salient and compare against a policy that handles it correctly.",
+  "evidence": "Trace actions show: None (serve counter blind); None (serve counter blind); None (serve counter blind); None (serve counter blind); None (serve counter blind); None (serve counter blind); None (serve counter blind); None (serve counter blind).",
+  "flaw_id": "serve_counter_blind",
+  "summary": "The hidden policy never reaches the service counter with ready soup despite a clear route."
+}
