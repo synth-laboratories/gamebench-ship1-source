@@ -4,11 +4,14 @@
 from __future__ import annotations
 
 import argparse
+import atexit
 import hashlib
 import http.client
 import json
 import os
+import signal
 import statistics
+import subprocess
 import sys
 import threading
 import time
@@ -18,7 +21,7 @@ import urllib.request
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Mapping
 
 
 TASK_DIR = Path(__file__).resolve().parents[1]
@@ -27,13 +30,17 @@ for path in (TASK_DIR, TASK_DIR / "gold_python", TASK_DIR / "shared"):
         sys.path.insert(0, str(path))
 
 from containers.codepolicy.rollout_code_policy import compile_check_policy, load_policy_module, rollout_code_policy
+from containers.codepolicy.policy_subprocess import IsolatedPolicyProcess
 from containers.codepolicy.rust_repl_session import RustReplSession, ensure_rust_repl_binary
 from scoring import achievement_success_score
 
 
 _WORKER_RUST_REPL: RustReplSession | None = None
 _WORKER_POLICY_CACHE: dict[str, Any] = {}
+_ACTIVE_EPISODE_PROCESSES: dict[int, subprocess.Popen[str]] = {}
+_ACTIVE_EPISODE_GROUPS_LOCK = threading.Lock()
 MAX_RUST_REPL_ACTION_BATCH = 16
+MAX_SUPERVISED_RUST_PARALLEL = 8
 RUST_REPL_VALID_ACTIONS = [
     "noop",
     "left",
@@ -129,7 +136,7 @@ def _rust_rollout_job(payload: tuple[str, int, str, int, bool]) -> dict[str, Any
         _init_rust_worker()
     policy_path_s, seed, task_path, max_steps, include_trace = payload
     policy_path = Path(policy_path_s)
-    candidate_fn = _load_worker_policy(policy_path_s, policy_path)
+    candidate_fn = _load_worker_policy(policy_path_s, policy_path, isolated=True)
     return rollout_code_policy_rust_repl(
         policy_path=policy_path,
         seed=seed,
@@ -141,11 +148,18 @@ def _rust_rollout_job(payload: tuple[str, int, str, int, bool]) -> dict[str, Any
     )
 
 
-def _load_worker_policy(policy_path_s: str, policy_path: Path) -> Any:
-    candidate_fn = _WORKER_POLICY_CACHE.get(policy_path_s)
+def _load_worker_policy(
+    policy_path_s: str, policy_path: Path, *, isolated: bool = False
+) -> Any:
+    cache_key = f"{'isolated' if isolated else 'in_process'}:{policy_path_s}"
+    candidate_fn = _WORKER_POLICY_CACHE.get(cache_key)
     if candidate_fn is None:
-        candidate_fn = load_policy_module(policy_path)
-        _WORKER_POLICY_CACHE[policy_path_s] = candidate_fn
+        candidate_fn = (
+            IsolatedPolicyProcess(policy_path)
+            if isolated
+            else load_policy_module(policy_path)
+        )
+        _WORKER_POLICY_CACHE[cache_key] = candidate_fn
     return candidate_fn
 
 
@@ -182,7 +196,7 @@ def _rust_rollout_batch_job(
     results: list[tuple[int, dict[str, Any]]] = []
     for policy_path_s, seed, task_path, max_steps, include_trace in payloads:
         policy_path = Path(policy_path_s)
-        candidate_fn = _load_worker_policy(policy_path_s, policy_path)
+        candidate_fn = _load_worker_policy(policy_path_s, policy_path, isolated=True)
         results.append(
             (
                 seed,
@@ -200,11 +214,161 @@ def _rust_rollout_batch_job(
     return results
 
 
+def _close_worker_resources() -> None:
+    global _WORKER_RUST_REPL
+    for candidate in list(_WORKER_POLICY_CACHE.values()):
+        close = getattr(candidate, "close", None)
+        if callable(close):
+            close()
+    _WORKER_POLICY_CACHE.clear()
+    if _WORKER_RUST_REPL is not None:
+        _WORKER_RUST_REPL.close()
+        _WORKER_RUST_REPL = None
+
+
+def _terminate_episode_process(process: subprocess.Popen[str]) -> None:
+    if process.poll() is not None:
+        return
+    try:
+        if os.name == "posix":
+            os.killpg(process.pid, signal.SIGTERM)
+        else:
+            process.terminate()
+        process.wait(timeout=2)
+    except (ProcessLookupError, subprocess.TimeoutExpired):
+        if process.poll() is None:
+            if os.name == "posix":
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            else:
+                process.kill()
+            process.wait(timeout=2)
+
+
+def _terminate_active_episode_processes() -> None:
+    with _ACTIVE_EPISODE_GROUPS_LOCK:
+        processes = list(_ACTIVE_EPISODE_PROCESSES.values())
+    for process in processes:
+        _terminate_episode_process(process)
+
+
+def _run_supervised_rust_episode(
+    payload: tuple[str, int, str, int, bool],
+    *,
+    timeout_seconds: float,
+) -> tuple[int, dict[str, Any]]:
+    policy_path_s, seed, task_path, max_steps, include_trace = payload
+    started = time.monotonic()
+    process = subprocess.Popen(
+        [sys.executable, str(Path(__file__).resolve()), "--rust-episode-worker"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        start_new_session=os.name == "posix",
+        close_fds=True,
+        env=os.environ.copy(),
+        cwd=TASK_DIR,
+    )
+    with _ACTIVE_EPISODE_GROUPS_LOCK:
+        _ACTIVE_EPISODE_PROCESSES[process.pid] = process
+    request = {
+        "policy_path": policy_path_s,
+        "seed": seed,
+        "task_path": task_path,
+        "max_steps": max_steps,
+        "include_trace": include_trace,
+    }
+    try:
+        try:
+            stdout, stderr = process.communicate(
+                json.dumps(request, separators=(",", ":")),
+                timeout=timeout_seconds,
+            )
+        except subprocess.TimeoutExpired as exc:
+            _terminate_episode_process(process)
+            raise TimeoutError(
+                f"Craftax Rust episode exceeded {timeout_seconds:.3f}s"
+            ) from exc
+        if process.returncode != 0:
+            raise RuntimeError(
+                "Craftax Rust episode worker failed: "
+                f"{stderr[-2000:].strip() or f'exit {process.returncode}'}"
+            )
+        result = json.loads(stdout)
+        if not isinstance(result, dict):
+            raise RuntimeError("Craftax Rust episode worker returned a non-object")
+        result["benchmark_supervision"] = {
+            "contract": "process_group_episode_timeout.v1",
+            "timeout_seconds": float(timeout_seconds),
+            "elapsed_seconds": round(time.monotonic() - started, 6),
+            "worker_returncode": process.returncode,
+        }
+        return seed, result
+    finally:
+        with _ACTIVE_EPISODE_GROUPS_LOCK:
+            _ACTIVE_EPISODE_PROCESSES.pop(process.pid, None)
+        _terminate_episode_process(process)
+
+
+def _run_supervised_rust_episodes(
+    payloads: list[tuple[str, int, str, int, bool]],
+    *,
+    parallel: int,
+    timeout_seconds: float,
+) -> list[dict[str, Any]]:
+    if not 1 <= parallel <= MAX_SUPERVISED_RUST_PARALLEL:
+        raise ValueError(
+            "supervised Rust parallelism must be from 1 through "
+            f"{MAX_SUPERVISED_RUST_PARALLEL}"
+        )
+    if timeout_seconds <= 0:
+        raise ValueError("episode timeout must be positive")
+    seed_order = [payload[1] for payload in payloads]
+    by_seed: dict[int, dict[str, Any]] = {}
+    with ThreadPoolExecutor(max_workers=parallel) as pool:
+        futures = {
+            pool.submit(
+                _run_supervised_rust_episode,
+                payload,
+                timeout_seconds=timeout_seconds,
+            ): payload[1]
+            for payload in payloads
+        }
+        for future in as_completed(futures):
+            seed, result = future.result()
+            by_seed[seed] = result
+    return [by_seed[seed] for seed in seed_order]
+
+
+def _run_internal_rust_episode_worker() -> int:
+    request = json.load(sys.stdin)
+    if not isinstance(request, Mapping):
+        raise ValueError("Rust episode worker request must be an object")
+    payload = (
+        str(request.get("policy_path") or ""),
+        int(request["seed"]),
+        str(request.get("task_path") or ""),
+        int(request["max_steps"]),
+        bool(request.get("include_trace")),
+    )
+    try:
+        result = _rust_rollout_job(payload)
+        sys.stdout.write(json.dumps(result, separators=(",", ":")) + "\n")
+        sys.stdout.flush()
+        return 0
+    finally:
+        _close_worker_resources()
+
+
 def run_policy_sweep(
     *,
     policy_path: Path,
-    suite_path: Path,
+    suite_path: Path | None,
     output_path: Path,
+    suite_payload: Mapping[str, Any] | None = None,
     include_trace: bool = False,
     lane: str = "python",
     base_url: str = "http://127.0.0.1:8098",
@@ -212,11 +376,21 @@ def run_policy_sweep(
     summary_only: bool = False,
     progress: Callable[[int, int, int, float], None] | None = None,
     max_steps_override: int | None = None,
+    episode_timeout_seconds: float | None = None,
 ) -> dict[str, Any]:
     started = time.time()
-    compile_check_policy(policy_path)
-    policy_fn = load_policy_module(policy_path)
-    suite = load_suite(suite_path)
+    if (suite_path is None) == (suite_payload is None):
+        raise ValueError("provide exactly one of suite_path or suite_payload")
+    suite = (
+        dict(suite_payload)
+        if suite_payload is not None
+        else load_suite(Path(suite_path))
+    )
+    if lane == "rust":
+        policy_fn = None
+    else:
+        compile_check_policy(policy_path)
+        policy_fn = load_policy_module(policy_path)
     seeds = [int(seed) for seed in suite["seeds"]]
     task_path = str(suite.get("task_template", "tasks/policy_dev_template.json"))
     max_steps = int(
@@ -264,14 +438,23 @@ def run_policy_sweep(
         raise ValueError(f"unsupported lane: {lane}")
 
     workers = max(1, int(parallel))
-    use_process_pool = lane in {"python", "rust"} and workers > 1 and len(seeds) > 1
-    executor_kind = "process" if use_process_pool else "thread"
-    if workers == 1 or len(seeds) == 1:
+    supervised_rust = lane == "rust" and episode_timeout_seconds is not None
+    if supervised_rust:
+        results = _run_supervised_rust_episodes(
+            job_payloads,
+            parallel=workers,
+            timeout_seconds=float(episode_timeout_seconds),
+        )
+        for seed in seeds:
+            emit_progress(seed)
+    elif workers == 1 or len(seeds) == 1:
         results = []
         for seed in seeds:
             results.append(rollout_fn(seed))
             emit_progress(seed)
     else:
+        use_process_pool = lane in {"python", "rust"}
+        executor_kind = "process" if use_process_pool else "thread"
         results = [None] * len(seeds)
         seed_index = {seed: idx for idx, seed in enumerate(seeds)}
         pool_cls = ProcessPoolExecutor if executor_kind == "process" else ThreadPoolExecutor
@@ -319,10 +502,15 @@ def run_policy_sweep(
         "schema": "gamebench.craftax.policy_sweep_summary.v1",
         "env_family": "craftax-singleplayer",
         "suite_id": str(suite["suite_id"]),
-        "suite_path": str(suite_path),
+        "suite_path": str(suite_path) if suite_path is not None else None,
+        "suite_source": "stdin" if suite_payload is not None else "path",
         "max_steps": max_steps,
         "lane": lane,
         "engine_mode": "rust_repl" if lane == "rust" else "rust_http" if lane == "rust_http" else "python",
+        "policy_isolation": (
+            "subprocess_observation_action_v1" if lane == "rust" else "in_process"
+        ),
+        "episode_timeout_seconds": episode_timeout_seconds,
         "base_url": base_url if lane == "rust_http" else None,
         "policy_path": str(policy_path),
         "policy_sha256": policy_sha256(policy_path),
@@ -338,6 +526,7 @@ def run_policy_sweep(
                 "reward": round(float(item["reward_info"]["outcome_reward"]), 4),
                 "achievement_count": int(item["reward_info"]["details"].get("achievement_count", 0)),
                 "achievements": sorted(item["reward_info"]["details"].get("achievements", [])),
+                "supervision": item.get("benchmark_supervision"),
             }
             for index, item in enumerate(results)
         ],
@@ -642,10 +831,17 @@ def distribution_stats(values: list[float]) -> dict[str, Any]:
     }
 
 
-def main() -> None:
+def main() -> int:
+    if sys.argv[1:] == ["--rust-episode-worker"]:
+        return _run_internal_rust_episode_worker()
     parser = argparse.ArgumentParser(description="Run a Craftax code-policy sweep.")
     parser.add_argument("--policy", default=str(TASK_DIR / "policies" / "heuristic_baseline.py"))
     parser.add_argument("--suite", default=str(TASK_DIR / "defaults" / "policy_sweep" / "policy_dev_v1.json"))
+    parser.add_argument(
+        "--suite-stdin",
+        action="store_true",
+        help="Read the sealed suite from stdin so candidate processes never receive its path",
+    )
     parser.add_argument("--output", required=True)
     parser.add_argument("--include-trace", action="store_true")
     parser.add_argument("--lane", choices=["python", "rust", "rust_http"], default="python")
@@ -656,17 +852,46 @@ def main() -> None:
         help="Use legacy Rust HTTP lane (slow; per-step POST /rollouts/{id}/step)",
     )
     parser.add_argument("--parallel", type=int, default=1, help="Concurrent rollouts (Rust HTTP lane)")
+    parser.add_argument(
+        "--episode-timeout-seconds",
+        type=float,
+        default=None,
+        help="Supervise each Rust episode in its own process group with this deadline",
+    )
     parser.add_argument("--summary-only", action="store_true", help="Omit per-episode traces from output JSON")
     args = parser.parse_args()
+    if args.suite_stdin:
+        suite_payload = json.load(sys.stdin)
+        suite_path = None
+    else:
+        suite_payload = None
+        suite_path = Path(args.suite).expanduser().resolve()
+    if (
+        args.suite_stdin
+        and args.lane == "rust"
+        and args.episode_timeout_seconds is None
+    ):
+        parser.error("sealed Rust suites require --episode-timeout-seconds")
+
+    def terminate_children(signum: int, _frame: Any) -> None:
+        _terminate_active_episode_processes()
+        raise SystemExit(128 + signum)
+
+    if os.name == "posix":
+        signal.signal(signal.SIGTERM, terminate_children)
+        signal.signal(signal.SIGINT, terminate_children)
+    atexit.register(_terminate_active_episode_processes)
     report = run_policy_sweep(
         policy_path=Path(args.policy).expanduser().resolve(),
-        suite_path=Path(args.suite).expanduser().resolve(),
+        suite_path=suite_path,
+        suite_payload=suite_payload,
         output_path=Path(args.output).expanduser().resolve(),
         include_trace=bool(args.include_trace),
         lane=str(args.lane),
         base_url=str(args.base_url),
         parallel=int(args.parallel),
         summary_only=bool(args.summary_only),
+        episode_timeout_seconds=args.episode_timeout_seconds,
     )
     printable = {
         key: report[key]
@@ -682,7 +907,8 @@ def main() -> None:
         )
     }
     print(json.dumps(printable, indent=2, sort_keys=True))
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
