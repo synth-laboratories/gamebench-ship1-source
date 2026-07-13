@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, BTreeSet};
 
+pub mod render;
+
 mod achievement_map {
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
     use std::collections::{BTreeMap, BTreeSet};
