@@ -180,6 +180,11 @@ class CraftaxCoopEnv:
         if not any(p.alive for p in state.players): self._terminate("death")
         elif state.boss_progress >= NUM_LEVELS - 1: self._terminate("boss")
         elif state.timestep >= state.max_timesteps: self._terminate("timestep")
+        for player in state.players:
+            player.health = float(player.health)
+            player.recover = float(player.recover)
+        for monster in state.monsters:
+            monster.health = float(monster.health)
         reward=float(sum(ACHIEVEMENT_REWARDS.get(name,1) for agent,flags in state.achievements_by_agent.items() for name,earned in flags.items() if earned and name not in before[agent])+.1*(sum(p.health for p in state.players)-before_health))
         rewards = {a: reward for a in self.agent_ids}
         dones = {a: state.terminated for a in self.agent_ids} | {"__all__": state.terminated}
@@ -252,10 +257,16 @@ class CraftaxCoopEnv:
                 nx, ny = p.x + dx, p.y + dy
                 if state.maps[p.level][ny][nx] in ("grass", "path", "sand", "gravel", "fire_grass", "ice_grass", "stairs_down", "stairs_up", "crafting_table", "furnace", "enchantment_table_fire", "enchantment_table_ice"): desired[p.agent_id] = (nx, ny)
         counts = {pos: list(desired.values()).count(pos) for pos in desired.values()}
-        occupied = {(p.level, p.x, p.y) for p in state.players if p.alive} | {(m.level,m.x,m.y) for m in state.monsters}
         for p in state.players:
             pos = desired.get(p.agent_id)
-            if pos and counts[pos] == 1 and (p.level, *pos) not in occupied:
+            occupied = any(
+                other.level == p.level and (other.x, other.y) == pos
+                for other in state.players
+            ) or any(
+                monster.level == p.level and (monster.x, monster.y) == pos
+                for monster in state.monsters
+            )
+            if pos and counts[pos] == 1 and not occupied:
                 p.x, p.y = pos; self._event("move_applied", agent_id=p.agent_id, x=p.x, y=p.y, level=p.level)
 
     def _apply_nonmovement(self, p: Player, action: dict[str, Any]) -> None:
@@ -582,7 +593,7 @@ class CraftaxCoopEnv:
 
     def _world_tick(self) -> None:
         state = self._require_state()
-        state.light_level = max(0.1, (1.0 + __import__("math").cos(2 * __import__("math").pi * (state.timestep % DAY_LENGTH) / DAY_LENGTH)) / 2)
+        state.light_level = round(max(0.1, (1.0 + __import__("math").cos(2 * __import__("math").pi * (state.timestep % DAY_LENGTH) / DAY_LENGTH)) / 2), 14)
         for p in state.players:
             if not p.alive: continue
             decay = 1.0 - .125 * (p.dexterity - 1)

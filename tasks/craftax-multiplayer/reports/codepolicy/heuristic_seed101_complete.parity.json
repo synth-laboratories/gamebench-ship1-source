@@ -3,6 +3,7 @@
   "seed": 101,
   "steps": 100,
   "action_sha256": "10060d5bc857da1776f065726337ed30d561a759b340c1b1df2cd7cf51ffcb7a",
+  "checkpoint_sha256": "7e9e86078ddcc7671bc338fb7cc80dbfaf05cf67af53c7fde59da6745da4e32a",
   "python": {
     "shared_reward": 11.0,
     "structured_event_count": 407,
@@ -16,6 +17,7 @@
     "terminated": false
   },
   "normalized_trace_equal": true,
+  "checkpoint_equal": true,
   "final_observations_equal": true,
   "events_equal": true,
   "achievements": [

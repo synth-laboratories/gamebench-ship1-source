@@ -52,7 +52,8 @@ class Player:
     request_duration: int = 0
 
     def __post_init__(self) -> None:
-        self.health=float(self.health)
+        self.health = float(self.health)
+        self.recover = float(self.recover)
 
 
 @dataclass
@@ -68,7 +69,7 @@ class Monster:
     attack_cooldown: int = 0
 
     def __post_init__(self) -> None:
-        self.health=float(self.health)
+        self.health = float(self.health)
 
 
 @dataclass

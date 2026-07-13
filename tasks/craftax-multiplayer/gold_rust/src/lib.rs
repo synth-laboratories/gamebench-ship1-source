@@ -608,12 +608,12 @@ impl CraftaxCoopEnv {
         self.spawn_mobs();
         self.update_boss();
         self.update_plants();
-        self.state.light_level = ((1.0
+        self.state.light_level = ((((1.0
             + (std::f64::consts::TAU * (self.state.timestep % DAY_LENGTH) as f64
                 / DAY_LENGTH as f64)
                 .cos())
             / 2.0)
-            .max(0.1);
+            .max(0.1) * 100_000_000_000_000.0).round()) / 100_000_000_000_000.0;
         self.state.timestep += 1;
         let mut woke = Vec::new();
         for (player_index, p) in self.state.players.iter_mut().enumerate() {

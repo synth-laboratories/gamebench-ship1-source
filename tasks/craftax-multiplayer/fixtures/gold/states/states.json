@@ -34,7 +34,7 @@
             "agent_2"
           ],
           "level": 0,
-          "local_view_digest": "7dbad7fdd6fe48cc2e193c9cb611fbb64cf9580afe7e7d12c26b10861c3228d3",
+          "local_view_digest": "81bf3df1c75e64522ae5c77123bba3089a17e3727e35f05f8666351d2511b64a",
           "map_size": [
             48,
             48
@@ -180,7 +180,7 @@
             "drink_trade_count": 0,
             "food_trade_count": 0,
             "friendly_fire_damage": 0.0,
-            "light_level": 0.9990133642141358,
+            "light_level": 0.99901336421414,
             "monsters_killed": [
               10,
               0,
@@ -480,7 +480,7 @@
             "agent_2"
           ],
           "level": 0,
-          "local_view_digest": "9269287c88b9a288a8d2d5d935fe40101e632b807e992c11027a4116ebd813af",
+          "local_view_digest": "ae41a3951d0eec36b923b25cc3fde6cf6fc417cc2e09485928469c9cf8299033",
           "map_size": [
             48,
             48
@@ -626,7 +626,7 @@
             "drink_trade_count": 0,
             "food_trade_count": 0,
             "friendly_fire_damage": 0.0,
-            "light_level": 0.9990133642141358,
+            "light_level": 0.99901336421414,
             "monsters_killed": [
               10,
               0,
@@ -926,7 +926,7 @@
             "agent_2"
           ],
           "level": 0,
-          "local_view_digest": "44dd3067174a68b0ab14a0d97263021a7bb41e4ac92a1af6913f033e4146b9e1",
+          "local_view_digest": "13457060d8c458d1ff7fa9f33f14723781ea9a2bd482d59cc67086d828d84ca9",
           "map_size": [
             48,
             48
@@ -1072,7 +1072,7 @@
             "drink_trade_count": 0,
             "food_trade_count": 0,
             "friendly_fire_damage": 0.0,
-            "light_level": 0.9990133642141358,
+            "light_level": 0.99901336421414,
             "monsters_killed": [
               10,
               0,
@@ -1342,7 +1342,7 @@
           "visible_monsters": []
         }
       },
-      "final_state_hash": "41ae563f894337bec3653bd6ada2e084e0a399f78fc4586be27c8655460c6299",
+      "final_state_hash": "349dd400484c49ece67ace324247a9abdd6bf67a0d4ff14a01deaa58a8b33764",
       "initial_observations": {
         "agent_0": {
           "agent_id": "agent_0",
@@ -2979,7 +2979,7 @@
             "agent_2"
           ],
           "level": 0,
-          "local_view_digest": "ade475170c8fbc6d2214ddc9cf8956d935e33d2dc58012f3073b03bcba256d4b",
+          "local_view_digest": "5ad6ccf0059beb7b4bc7515bf1d7029cb9f8f29e4eb1a8123699cdb788ce2059",
           "map_size": [
             48,
             48
@@ -3125,7 +3125,7 @@
             "drink_trade_count": 0,
             "food_trade_count": 0,
             "friendly_fire_damage": 0.0,
-            "light_level": 0.9990133642141358,
+            "light_level": 0.99901336421414,
             "monsters_killed": [
               10,
               0,
@@ -3425,7 +3425,7 @@
             "agent_2"
           ],
           "level": 0,
-          "local_view_digest": "4bc1371ad27bf90c26db085a4d09a7dba162ac1d6180bd9bd4a1616aec1b1fda",
+          "local_view_digest": "981064a556ed7e3c0960a61d5805cf1fa2d06a011ac8a17cb4fb25f36c9c66e7",
           "map_size": [
             48,
             48
@@ -3571,7 +3571,7 @@
             "drink_trade_count": 0,
             "food_trade_count": 0,
             "friendly_fire_damage": 0.0,
-            "light_level": 0.9990133642141358,
+            "light_level": 0.99901336421414,
             "monsters_killed": [
               10,
               0,
@@ -3871,7 +3871,7 @@
             "agent_2"
           ],
           "level": 0,
-          "local_view_digest": "fe17f9a57c200ce68a38d80a0f74a53e65ab569b703fe697644f68c6f432d331",
+          "local_view_digest": "f7fe5dc6bacb152d8a8bd4d3db50bc6c9303c583ce3c37c26d8e7b2fdba6ef57",
           "map_size": [
             48,
             48
@@ -4017,7 +4017,7 @@
             "drink_trade_count": 0,
             "food_trade_count": 0,
             "friendly_fire_damage": 0.0,
-            "light_level": 0.9990133642141358,
+            "light_level": 0.99901336421414,
             "monsters_killed": [
               10,
               0,
@@ -4287,7 +4287,7 @@
           "visible_monsters": []
         }
       },
-      "final_state_hash": "0efbe007c503f836f89a77991a79937c701b201a6889c455e33215f703dfb7a5",
+      "final_state_hash": "f223e3638cea6bb1afeff0946fa7060f5cd37a91b7fed3a6bf07289862dc3163",
       "initial_observations": {
         "agent_0": {
           "agent_id": "agent_0",
@@ -5924,7 +5924,7 @@
             "agent_2"
           ],
           "level": 0,
-          "local_view_digest": "5ffa4e49576d8fa80428e2d57a8827a5df6abb29b30aa0fa613b5b2175632680",
+          "local_view_digest": "8cda3349cb04d1e69d000e2b157115db0ecdcf2ab31b31d2619be72cfce87af3",
           "map_size": [
             48,
             48
@@ -6070,7 +6070,7 @@
             "drink_trade_count": 0,
             "food_trade_count": 0,
             "friendly_fire_damage": 0.0,
-            "light_level": 0.9890738003669028,
+            "light_level": 0.9890738003669,
             "monsters_killed": [
               10,
               0,
@@ -6370,7 +6370,7 @@
             "agent_2"
           ],
           "level": 0,
-          "local_view_digest": "ac749a7ea247f4254ebff739da8547f6d7964629e562f80beb8dc12168b544bc",
+          "local_view_digest": "bae1abbee9b4fc55ea1185a08350a35aa3688c5545a3e2550a9ad26d20062ea6",
           "map_size": [
             48,
             48
@@ -6516,7 +6516,7 @@
             "drink_trade_count": 0,
             "food_trade_count": 0,
             "friendly_fire_damage": 0.0,
-            "light_level": 0.9890738003669028,
+            "light_level": 0.9890738003669,
             "monsters_killed": [
               10,
               0,
@@ -6816,7 +6816,7 @@
             "agent_2"
           ],
           "level": 0,
-          "local_view_digest": "a78898e0cc3e88330240d5c533a1481db794e1608a24b15ba56952e25cc567a6",
+          "local_view_digest": "77294769a259d59bae5fc52250cf01ff66ddf285603243bc708a79947d6f913b",
           "map_size": [
             48,
             48
@@ -6962,7 +6962,7 @@
             "drink_trade_count": 0,
             "food_trade_count": 0,
             "friendly_fire_damage": 0.0,
-            "light_level": 0.9890738003669028,
+            "light_level": 0.9890738003669,
             "monsters_killed": [
               10,
               0,
@@ -7232,7 +7232,7 @@
           "visible_monsters": []
         }
       },
-      "final_state_hash": "b61f7eae53ae0971f5a1389a172df0081d5e169e44f669784808879579aad9ba",
+      "final_state_hash": "cf656b719b5f299349fe912a718ae85c65d318ef24eada9083b712d1f318e5d2",
       "initial_observations": {
         "agent_0": {
           "agent_id": "agent_0",
@@ -8876,7 +8876,7 @@
             "agent_2"
           ],
           "level": 0,
-          "local_view_digest": "091a73b263f8209c83ee4ba451190f41086d66b4ec629c31cebadf304275d59c",
+          "local_view_digest": "63083975dc2df8849a1bf481e693c59eae9dfab5f7cce8202a693bfd4a8f1aac",
           "map_size": [
             48,
             48
@@ -9024,7 +9024,7 @@
             "drink_trade_count": 0,
             "food_trade_count": 0,
             "friendly_fire_damage": 0.0,
-            "light_level": 0.9972609476841366,
+            "light_level": 0.99726094768414,
             "monsters_killed": [
               10,
               0,
@@ -9331,7 +9331,7 @@
             "agent_2"
           ],
           "level": 0,
-          "local_view_digest": "f61041461ce4a141863505e9cb9f75e3e43d24a5ebd653811cf31fd63c0aa708",
+          "local_view_digest": "5d1682a22a2dd21b0b9b1ba16b61f4f0026330e3b737525b0e0dccad04cfc87e",
           "map_size": [
             48,
             48
@@ -9479,7 +9479,7 @@
             "drink_trade_count": 0,
             "food_trade_count": 0,
             "friendly_fire_damage": 0.0,
-            "light_level": 0.9972609476841366,
+            "light_level": 0.99726094768414,
             "monsters_killed": [
               10,
               0,
@@ -9786,7 +9786,7 @@
             "agent_2"
           ],
           "level": 0,
-          "local_view_digest": "7685b62df4e4540a1969bb269fe4d052fd1566cc11007e03f90d144fd83ba779",
+          "local_view_digest": "75246bcad3f50c1274652038be9b6ba47413d48da8eeff5dc2d28b302bc618eb",
           "map_size": [
             48,
             48
@@ -9934,7 +9934,7 @@
             "drink_trade_count": 0,
             "food_trade_count": 0,
             "friendly_fire_damage": 0.0,
-            "light_level": 0.9972609476841366,
+            "light_level": 0.99726094768414,
             "monsters_killed": [
               10,
               0,
@@ -10204,7 +10204,7 @@
           "visible_monsters": []
         }
       },
-      "final_state_hash": "edac6c82cbb8af0f3042ca322a7ae59372e37ad541b0145063beb367382754e6",
+      "final_state_hash": "5cf3a16a3fc3359866898f1a6f4a31ab20d80f9864e31ee4ace1efd9b903cb28",
       "initial_observations": {
         "agent_0": {
           "agent_id": "agent_0",
@@ -11848,7 +11848,7 @@
             "agent_2"
           ],
           "level": 0,
-          "local_view_digest": "02ca15cdfe909d607df6e957cf93b2ba1b962acecadc1b81b025fa646e624020",
+          "local_view_digest": "6bae25b3731f7f7ae291af549b748ab4230979601fc98a4b3466b9b31f0a1444",
           "map_size": [
             48,
             48
@@ -11994,7 +11994,7 @@
             "drink_trade_count": 0,
             "food_trade_count": 0,
             "friendly_fire_damage": 0.0,
-            "light_level": 0.9998903417374227,
+            "light_level": 0.99989034173742,
             "monsters_killed": [
               10,
               0,
@@ -12299,7 +12299,7 @@
             "agent_2"
           ],
           "level": 0,
-          "local_view_digest": "2fdc75e982a526eeb4082ded11467a6c719f351795084ea5cced8e974de79cda",
+          "local_view_digest": "2dfd61b498d10f6115747c09ee985d448fd589ecdde031254046a66b14d9ad03",
           "map_size": [
             48,
             48
@@ -12445,7 +12445,7 @@
             "drink_trade_count": 0,
             "food_trade_count": 0,
             "friendly_fire_damage": 0.0,
-            "light_level": 0.9998903417374227,
+            "light_level": 0.99989034173742,
             "monsters_killed": [
               10,
               0,
@@ -12750,7 +12750,7 @@
             "agent_2"
           ],
           "level": 0,
-          "local_view_digest": "b7d0ad8efa67a89d69ef4044d7035898ea4967d813a8db12fe6ec3ad83fcea12",
+          "local_view_digest": "a5bd88380b12f76dc01d4f606f8c7eb4c6456e152ff994b4f3bd04b3846b9a97",
           "map_size": [
             48,
             48
@@ -12896,7 +12896,7 @@
             "drink_trade_count": 0,
             "food_trade_count": 0,
             "friendly_fire_damage": 0.0,
-            "light_level": 0.9998903417374227,
+            "light_level": 0.99989034173742,
             "monsters_killed": [
               10,
               0,
@@ -13166,7 +13166,7 @@
           "visible_monsters": []
         }
       },
-      "final_state_hash": "67724e48bc899830f831af2444bb566b2ff4ffb94e9ba0196db69fc8b7830891",
+      "final_state_hash": "cf98acb240264dccdcf4d7a5f3848cbe933d7ce43a37aef06d3500b5c5e597b8",
       "initial_observations": {
         "agent_0": {
           "agent_id": "agent_0",
