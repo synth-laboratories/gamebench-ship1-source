@@ -2,6 +2,32 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, BTreeSet};
 
+mod achievement_map {
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    use std::collections::{BTreeMap, BTreeSet};
+
+    pub fn serialize<S>(achievements: &BTreeSet<String>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        achievements
+            .iter()
+            .map(|achievement| (achievement.as_str(), true))
+            .collect::<BTreeMap<_, _>>()
+            .serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<BTreeSet<String>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(BTreeMap::<String, bool>::deserialize(deserializer)?
+            .into_iter()
+            .filter_map(|(achievement, earned)| earned.then_some(achievement))
+            .collect())
+    }
+}
+
 pub const MAP_SIZE: usize = 48;
 pub const NUM_LEVELS: usize = 9;
 pub const REQUEST_DURATION: u8 = 10;
@@ -70,10 +96,19 @@ pub struct Projectile {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct Plant {
+    pub level: usize,
+    pub x: usize,
+    pub y: usize,
+    pub age: u16,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Event {
     pub timestep: u64,
     pub kind: String,
-    pub fields: BTreeMap<String, String>,
+    #[serde(flatten)]
+    pub fields: BTreeMap<String, Value>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
@@ -85,10 +120,12 @@ pub struct State {
     pub maps: Vec<Vec<Vec<String>>>,
     pub monsters: Vec<Monster>,
     pub projectiles: Vec<Projectile>,
+    pub plants: Vec<Plant>,
     pub boss_health: i16,
     pub boss_progress: usize,
     pub boss_wave_timer: u16,
     pub light_level: f64,
+    #[serde(with = "achievement_map")]
     pub achievements: BTreeSet<String>,
     pub trade_count: u64,
     pub terminated: bool,
@@ -263,6 +300,7 @@ impl CraftaxCoopEnv {
                 maps,
                 monsters,
                 projectiles: vec![],
+                plants: vec![],
                 boss_health: 24,
                 boss_progress: 0,
                 boss_wave_timer: 0,
@@ -302,8 +340,8 @@ impl CraftaxCoopEnv {
         let before = self.state.achievements.len();
         for player in &self.state.players {
             let fields = BTreeMap::from([
-                ("agent_id".to_string(), player.agent_id.clone()),
-                ("action".to_string(), actions[&player.agent_id].clone()),
+                ("agent_id".to_string(), json!(player.agent_id)),
+                ("action".to_string(), json!(actions[&player.agent_id])),
             ]);
             self.state.nev.push(Event {
                 timestep: self.state.timestep,
@@ -312,7 +350,8 @@ impl CraftaxCoopEnv {
             });
             self.state.legacy_nev.push(format!(
                 "JointAction({},{})",
-                fields["agent_id"], fields["action"]
+                event_field_text(&fields["agent_id"]),
+                event_field_text(&fields["action"])
             ));
         }
         for p in &mut self.state.players {
@@ -320,11 +359,6 @@ impl CraftaxCoopEnv {
             if p.request_duration == 0 {
                 p.request_type = None;
             }
-        }
-        if self.state.players.iter().all(|p| p.alive) {
-            self.state.achievements.insert("all_roles_alive".into());
-        } else {
-            self.state.achievements.remove("all_roles_alive");
         }
         for idx in 0..self.state.players.len() {
             let action = &actions[&self.state.players[idx].agent_id];
@@ -367,11 +401,19 @@ impl CraftaxCoopEnv {
                 if p.food == 0 || p.drink == 0 {
                     p.health -= 1;
                 }
+                if p.level == NUM_LEVELS - 1 && self.state.boss_health > 0 {
+                    p.health -= (2 - p.armour as i16).max(0);
+                }
                 if p.health <= 0 {
                     p.alive = false;
                     p.health = 0;
                 }
             }
+        }
+        if self.state.players.iter().all(|p| p.alive) {
+            self.state.achievements.insert("all_roles_alive".into());
+        } else {
+            self.state.achievements.remove("all_roles_alive");
         }
         if !self.state.players.iter().any(|p| p.alive) {
             self.finish("death");
@@ -380,7 +422,7 @@ impl CraftaxCoopEnv {
         } else if self.state.timestep >= self.state.max_timesteps {
             self.finish("timestep");
         }
-        let reward = (self.state.achievements.len() - before) as f64
+        let reward = (self.state.achievements.len() as isize - before as isize) as f64
             + if self.state.termination_reason.as_deref() == Some("boss") {
                 10.0
             } else {
@@ -535,6 +577,13 @@ impl CraftaxCoopEnv {
             let colour =
                 colours[((self.state.seed + self.state.timestep + level as u64) % 6) as usize];
             *self.state.players[index].potions.get_mut(colour).unwrap() += 1;
+            if self.state.players[index].role == "miner" {
+                let resource = ["coal", "iron", "diamond"][(level / 3).min(2)];
+                *self.state.players[index]
+                    .inventory
+                    .get_mut(resource)
+                    .unwrap() += 2;
+            }
             self.state.achievements.insert("open_chest".into());
             return;
         }
@@ -555,6 +604,9 @@ impl CraftaxCoopEnv {
                 let kind = self.state.monsters[mi].kind.clone();
                 self.state.monsters.remove(mi);
                 self.state.players[index].xp += 1;
+                if [3, 7, 12, 18].contains(&self.state.players[index].xp) {
+                    self.state.players[index].level_points += 1;
+                }
                 if kind == "cow" {
                     self.state.players[index].food = (self.state.players[index].food + 4)
                         .min(9 + 2 * self.state.players[index].dexterity as i16);
@@ -850,6 +902,11 @@ impl CraftaxCoopEnv {
             {
                 continue;
             }
+            if ["stone", "wall", "water"]
+                .contains(&self.state.maps[shot.level][shot.y as usize][shot.x as usize].as_str())
+            {
+                continue;
+            }
             if let Some(mi) = self.state.monsters.iter().position(|m| {
                 m.level == shot.level && m.x == shot.x as usize && m.y == shot.y as usize
             }) {
@@ -1008,7 +1065,7 @@ impl CraftaxCoopEnv {
     fn event<const N: usize>(&mut self, kind: &str, fields: [(&str, &str); N]) {
         let fields: BTreeMap<_, _> = fields
             .into_iter()
-            .map(|(k, v)| (k.into(), v.into()))
+            .map(|(k, v)| (k.into(), json!(v)))
             .collect();
         self.state.nev.push(Event {
             timestep: self.state.timestep,
@@ -1031,7 +1088,7 @@ impl CraftaxCoopEnv {
                 .unwrap()
                 .fields
                 .values()
-                .cloned()
+                .map(event_field_text)
                 .collect::<Vec<_>>()
                 .join(",")
         ));
@@ -1157,5 +1214,12 @@ impl CraftaxCoopEnv {
 
     fn player_json(p: &Player) -> Value {
         json!({"agent_id":p.agent_id,"role":p.role,"position":[p.x,p.y],"level":p.level,"facing":p.facing,"health":p.health,"food":p.food,"drink":p.drink,"energy":p.energy,"mana":p.mana,"alive":p.alive,"sleeping":p.sleeping,"inventory":p.inventory,"equipment":{"pickaxe":p.pickaxe,"sword":p.sword,"armour":p.armour,"arrows":p.arrows,"torches":p.torches,"books":p.books,"saplings":p.saplings,"potions":p.potions,"enchantments":{"sword":p.sword_enchantment,"armour":p.armour_enchantment,"bow":p.bow_enchantment}},"attributes":{"dexterity":p.dexterity,"strength":p.strength,"intelligence":p.intelligence,"xp":p.xp,"level_points":p.level_points},"request":{"resource":p.request_type,"remaining":p.request_duration}})
+    }
+}
+
+fn event_field_text(value: &Value) -> String {
+    match value {
+        Value::String(text) => text.clone(),
+        _ => value.to_string(),
     }
 }
