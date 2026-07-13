@@ -205,10 +205,9 @@ def _apply_candidate_resource_limits() -> None:
             (resource.RLIMIT_NPROC, 32),
         )
     for kind, ceiling in limits:
-        soft, hard = resource.getrlimit(kind)
+        _soft, hard = resource.getrlimit(kind)
         target = min(ceiling, hard) if hard != resource.RLIM_INFINITY else ceiling
-        if soft == resource.RLIM_INFINITY or soft > target:
-            resource.setrlimit(kind, (target, hard))
+        resource.setrlimit(kind, (target, target))
 
 
 def _load_policy(policy_path: Path) -> Any:
