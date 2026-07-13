@@ -1,0 +1,52 @@
+schema_version: gamebench.task_family.v1
+id: overcooked-v2-multiplayer
+name: Overcooked V2 Multiplayer
+kind: gamebench_gold_reference
+game: overcooked-v2
+visibility: private
+task_id: overcooked-v2-multiplayer
+env_family: overcooked-v2-multiplayer
+agent_count:
+  min: 2
+  max: 4
+joint_action: simultaneous
+reward: shared
+step_api: joint_action_dict
+scenario_dir: fixtures/gold/scenarios
+fixture_dir: fixtures/gold
+layout_dir: defaults/layouts
+rules_dir: defaults/rules
+python_entrypoint: gold_python.engine:OvercookedV2Engine
+python_service_entrypoint: scripts/run_service.py
+rust_crate: gold_rust
+rust_library: overcooked_v2_gold::OvercookedV2Env
+rust_service_entrypoint: gold_rust/src/bin/service.rs
+rust_service_command: cargo run --manifest-path gold_rust/Cargo.toml --bin service -- 127.0.0.1:8081
+checkpoint:
+  rust_schema: gamebench.overcooked_v2.checkpoint.v2
+  encoding: deterministic_utf8_json
+  self_contained: true
+  includes: [resolved_task, parsed_layout, rng_state, dynamic_state, metrics, event_trace]
+observations:
+  rust_authority: [symbolic_compact]
+  python_only_initially: [spatial_tensor, featurized, pixel_rgb, jaxmarl_default, jaxmarl_featurized]
+mapo_promptopt:
+  dataset_manifest: defaults/mapo_promptopt/dataset_v1.json
+  evaluator_example: gold_rust/examples/mapo_checkpoint_replay.rs
+  evaluator_command: cargo run --manifest-path gold_rust/Cargo.toml --example mapo_checkpoint_replay
+  splits: [train, selection, heldout]
+  probes: [hidden_recipe_reveal, ingredient_cook_role_assignment, delivery_handoff]
+  executor_scope: typed_substrate_reference_protocols_not_arbitrary_natural_language
+runtime_scope:
+  - simultaneous movement and collision resolution
+  - counters and ingredient pickup/drop
+  - pots, cooking, plates, and delivery
+  - per-agent partial symbolic observations
+  - hidden recipe indicators and grounded button activation
+  - deterministic checkpoint/restore
+  - event trace and terminal metrics
+status:
+  reference_engine_python: tasks/overcooked-v2-multiplayer/gold_python/
+  reference_engine_rust: tasks/overcooked-v2-multiplayer/gold_rust/
+  implementation: dual_lane_symbolic_authorities
+  rust_mapo_checkpoint_substrate: ready

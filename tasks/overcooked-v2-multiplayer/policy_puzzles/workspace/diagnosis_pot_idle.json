@@ -1,0 +1,6 @@
+{
+  "distinguishing_experiment": "Present a state where pot is salient and compare against a policy that handles it correctly.",
+  "evidence": "Trace actions show: None (pot idle cook); None (pot idle cook); None (pot idle cook); None (pot idle cook); None (pot idle cook); None (pot idle cook); None (pot idle cook); None (pot idle cook).",
+  "flaw_id": "pot_idle_cook",
+  "summary": "The hidden policy leaves the pot idle when ingredients are available at the counter."
+}

@@ -1,0 +1,38 @@
+{
+  "schema": "gamebench.overcooked_v2.policy_sweep.v1",
+  "suite_id": "mapo_overcooked_v2_p6_simple_p0_21_20260707",
+  "purpose": "MAPO Overcooked v2 P0 candidate headroom receipt: 21 grounded-communication simple_soup episodes balanced from p5 diagnostic layouts.",
+  "acceptance": {
+    "baseline_success_target": [0.1, 0.5],
+    "episodes_per_arm": 21,
+    "notes": [
+      "Environment qualification only, not MAPO efficacy evidence.",
+      "Uses grounded_communication base so hidden recipe and recipe indicator channel are active.",
+      "Layout mix is predeclared from p5 diagnostic: expected success layouts dual_ingredient/plated_kitchen/counter_row, expected hard layouts forced_coord/counter_circuit/cramped_room."
+    ]
+  },
+  "max_steps": 96,
+  "scenarios": [
+    {"scenario_id": "mapo_ocv2_p6_dual_ingredient_seed_30", "layout_id": "dual_ingredient", "seed": 30, "rules": {"base": "grounded_communication", "recipe_id": "simple_soup", "overrides": {"max_steps": 96, "target_deliveries": 1, "view_radius": 3, "recipe_pool": ["simple_soup"], "wrong_delivery_penalty": 1.0, "cook_time": 2}}},
+    {"scenario_id": "mapo_ocv2_p6_forced_coord_seed_31", "layout_id": "forced_coord", "seed": 31, "rules": {"base": "grounded_communication", "recipe_id": "simple_soup", "overrides": {"max_steps": 96, "target_deliveries": 1, "view_radius": 3, "recipe_pool": ["simple_soup"], "wrong_delivery_penalty": 1.0, "cook_time": 2}}},
+    {"scenario_id": "mapo_ocv2_p6_counter_circuit_seed_32", "layout_id": "counter_circuit", "seed": 32, "rules": {"base": "grounded_communication", "recipe_id": "simple_soup", "overrides": {"max_steps": 96, "target_deliveries": 1, "view_radius": 3, "recipe_pool": ["simple_soup"], "wrong_delivery_penalty": 1.0, "cook_time": 2}}},
+    {"scenario_id": "mapo_ocv2_p6_plated_kitchen_seed_33", "layout_id": "plated_kitchen", "seed": 33, "rules": {"base": "grounded_communication", "recipe_id": "simple_soup", "overrides": {"max_steps": 96, "target_deliveries": 1, "view_radius": 3, "recipe_pool": ["simple_soup"], "wrong_delivery_penalty": 1.0, "cook_time": 2}}},
+    {"scenario_id": "mapo_ocv2_p6_cramped_room_seed_34", "layout_id": "cramped_room", "seed": 34, "rules": {"base": "grounded_communication", "recipe_id": "simple_soup", "overrides": {"max_steps": 96, "target_deliveries": 1, "view_radius": 3, "recipe_pool": ["simple_soup"], "wrong_delivery_penalty": 1.0, "cook_time": 2}}},
+    {"scenario_id": "mapo_ocv2_p6_counter_row_seed_35", "layout_id": "counter_row", "seed": 35, "rules": {"base": "grounded_communication", "recipe_id": "simple_soup", "overrides": {"max_steps": 96, "target_deliveries": 1, "view_radius": 3, "recipe_pool": ["simple_soup"], "wrong_delivery_penalty": 1.0, "cook_time": 2}}},
+    {"scenario_id": "mapo_ocv2_p6_forced_coord_seed_36", "layout_id": "forced_coord", "seed": 36, "rules": {"base": "grounded_communication", "recipe_id": "simple_soup", "overrides": {"max_steps": 96, "target_deliveries": 1, "view_radius": 3, "recipe_pool": ["simple_soup"], "wrong_delivery_penalty": 1.0, "cook_time": 2}}},
+    {"scenario_id": "mapo_ocv2_p6_dual_ingredient_seed_37", "layout_id": "dual_ingredient", "seed": 37, "rules": {"base": "grounded_communication", "recipe_id": "simple_soup", "overrides": {"max_steps": 96, "target_deliveries": 1, "view_radius": 3, "recipe_pool": ["simple_soup"], "wrong_delivery_penalty": 1.0, "cook_time": 2}}},
+    {"scenario_id": "mapo_ocv2_p6_counter_circuit_seed_38", "layout_id": "counter_circuit", "seed": 38, "rules": {"base": "grounded_communication", "recipe_id": "simple_soup", "overrides": {"max_steps": 96, "target_deliveries": 1, "view_radius": 3, "recipe_pool": ["simple_soup"], "wrong_delivery_penalty": 1.0, "cook_time": 2}}},
+    {"scenario_id": "mapo_ocv2_p6_cramped_room_seed_39", "layout_id": "cramped_room", "seed": 39, "rules": {"base": "grounded_communication", "recipe_id": "simple_soup", "overrides": {"max_steps": 96, "target_deliveries": 1, "view_radius": 3, "recipe_pool": ["simple_soup"], "wrong_delivery_penalty": 1.0, "cook_time": 2}}},
+    {"scenario_id": "mapo_ocv2_p6_plated_kitchen_seed_40", "layout_id": "plated_kitchen", "seed": 40, "rules": {"base": "grounded_communication", "recipe_id": "simple_soup", "overrides": {"max_steps": 96, "target_deliveries": 1, "view_radius": 3, "recipe_pool": ["simple_soup"], "wrong_delivery_penalty": 1.0, "cook_time": 2}}},
+    {"scenario_id": "mapo_ocv2_p6_forced_coord_seed_41", "layout_id": "forced_coord", "seed": 41, "rules": {"base": "grounded_communication", "recipe_id": "simple_soup", "overrides": {"max_steps": 96, "target_deliveries": 1, "view_radius": 3, "recipe_pool": ["simple_soup"], "wrong_delivery_penalty": 1.0, "cook_time": 2}}},
+    {"scenario_id": "mapo_ocv2_p6_counter_row_seed_42", "layout_id": "counter_row", "seed": 42, "rules": {"base": "grounded_communication", "recipe_id": "simple_soup", "overrides": {"max_steps": 96, "target_deliveries": 1, "view_radius": 3, "recipe_pool": ["simple_soup"], "wrong_delivery_penalty": 1.0, "cook_time": 2}}},
+    {"scenario_id": "mapo_ocv2_p6_counter_circuit_seed_43", "layout_id": "counter_circuit", "seed": 43, "rules": {"base": "grounded_communication", "recipe_id": "simple_soup", "overrides": {"max_steps": 96, "target_deliveries": 1, "view_radius": 3, "recipe_pool": ["simple_soup"], "wrong_delivery_penalty": 1.0, "cook_time": 2}}},
+    {"scenario_id": "mapo_ocv2_p6_cramped_room_seed_44", "layout_id": "cramped_room", "seed": 44, "rules": {"base": "grounded_communication", "recipe_id": "simple_soup", "overrides": {"max_steps": 96, "target_deliveries": 1, "view_radius": 3, "recipe_pool": ["simple_soup"], "wrong_delivery_penalty": 1.0, "cook_time": 2}}},
+    {"scenario_id": "mapo_ocv2_p6_dual_ingredient_seed_45", "layout_id": "dual_ingredient", "seed": 45, "rules": {"base": "grounded_communication", "recipe_id": "simple_soup", "overrides": {"max_steps": 96, "target_deliveries": 1, "view_radius": 3, "recipe_pool": ["simple_soup"], "wrong_delivery_penalty": 1.0, "cook_time": 2}}},
+    {"scenario_id": "mapo_ocv2_p6_forced_coord_seed_46", "layout_id": "forced_coord", "seed": 46, "rules": {"base": "grounded_communication", "recipe_id": "simple_soup", "overrides": {"max_steps": 96, "target_deliveries": 1, "view_radius": 3, "recipe_pool": ["simple_soup"], "wrong_delivery_penalty": 1.0, "cook_time": 2}}},
+    {"scenario_id": "mapo_ocv2_p6_counter_circuit_seed_47", "layout_id": "counter_circuit", "seed": 47, "rules": {"base": "grounded_communication", "recipe_id": "simple_soup", "overrides": {"max_steps": 96, "target_deliveries": 1, "view_radius": 3, "recipe_pool": ["simple_soup"], "wrong_delivery_penalty": 1.0, "cook_time": 2}}},
+    {"scenario_id": "mapo_ocv2_p6_cramped_room_seed_48", "layout_id": "cramped_room", "seed": 48, "rules": {"base": "grounded_communication", "recipe_id": "simple_soup", "overrides": {"max_steps": 96, "target_deliveries": 1, "view_radius": 3, "recipe_pool": ["simple_soup"], "wrong_delivery_penalty": 1.0, "cook_time": 2}}},
+    {"scenario_id": "mapo_ocv2_p6_forced_coord_seed_49", "layout_id": "forced_coord", "seed": 49, "rules": {"base": "grounded_communication", "recipe_id": "simple_soup", "overrides": {"max_steps": 96, "target_deliveries": 1, "view_radius": 3, "recipe_pool": ["simple_soup"], "wrong_delivery_penalty": 1.0, "cook_time": 2}}},
+    {"scenario_id": "mapo_ocv2_p6_counter_circuit_seed_50", "layout_id": "counter_circuit", "seed": 50, "rules": {"base": "grounded_communication", "recipe_id": "simple_soup", "overrides": {"max_steps": 96, "target_deliveries": 1, "view_radius": 3, "recipe_pool": ["simple_soup"], "wrong_delivery_penalty": 1.0, "cook_time": 2}}}
+  ]
+}

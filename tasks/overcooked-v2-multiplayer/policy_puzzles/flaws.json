@@ -1,0 +1,61 @@
+{
+  "flaws": [
+    {
+      "flaw_id": "soup_delivery_dropper",
+      "keywords": [
+        "soup",
+        "delivery",
+        "drop",
+        "coordination"
+      ],
+      "summary": "The hidden joint policy drops or abandons ready soup instead of coordinating delivery to the service counter.",
+      "title": "Overcooked v2 drop soup"
+    },
+    {
+      "flaw_id": "onion_only_prep",
+      "keywords": [
+        "onion",
+        "pot",
+        "cook",
+        "coordinate"
+      ],
+      "summary": "The hidden joint policy chops onions repeatedly but never coordinates pot cooking or plating.",
+      "title": "Onion only prep"
+    },
+    {
+      "flaw_id": "pot_idle_cook",
+      "keywords": [
+        "pot",
+        "idle",
+        "ingredient",
+        "counter"
+      ],
+      "summary": "The hidden policy leaves the pot idle when ingredients are available at the counter.",
+      "title": "Pot idle cook"
+    },
+    {
+      "flaw_id": "plate_block_carrier",
+      "keywords": [
+        "plate",
+        "block",
+        "partner",
+        "path"
+      ],
+      "summary": "The hidden policy blocks the partner with a plate instead of clearing a delivery path.",
+      "title": "Plate block carrier"
+    },
+    {
+      "flaw_id": "serve_counter_blind",
+      "keywords": [
+        "serve",
+        "counter",
+        "delivery",
+        "route"
+      ],
+      "summary": "The hidden policy never reaches the service counter with ready soup despite a clear route.",
+      "title": "Serve counter blind"
+    }
+  ],
+  "gamebench_task": "overcooked-v2-multiplayer",
+  "schema_version": "gamebench.policy_puzzles.flaws.v1"
+}

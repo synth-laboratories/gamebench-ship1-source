@@ -1,0 +1,8 @@
+{
+  "base": "hidden_recipe_indicator",
+  "indicator_activation_time": 10,
+  "indicator_activation_cost": 0.0,
+  "overrides": {
+    "max_steps": 64
+  }
+}

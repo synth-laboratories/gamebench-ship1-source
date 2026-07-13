@@ -1,0 +1,26 @@
+{
+  "schema": "gamebench.overcooked_v2.layout_index.v1",
+  "layout_ids": [
+    "asymm_advantages",
+    "asymm_advantages_recipes_center",
+    "asymm_advantages_recipes_left",
+    "asymm_advantages_recipes_right",
+    "coord_ring",
+    "counter_circuit",
+    "cramped_room",
+    "cramped_room_v2",
+    "demo_cook_simple",
+    "demo_cook_wide",
+    "forced_coord",
+    "fun_symmetries",
+    "fun_symmetries1",
+    "fun_symmetries_plates",
+    "grounded_coord_ring",
+    "long_room",
+    "more_fun_coordination",
+    "test_time_simple",
+    "test_time_wide",
+    "two_rooms",
+    "two_rooms_both"
+  ]
+}

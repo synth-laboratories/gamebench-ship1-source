@@ -1,0 +1,197 @@
+{
+  "schema": "gamebench.overcooked_v2.policy_sweep.v1",
+  "suite_id": "mapo_overcooked_v2_p10_partial_button_channel_diag9_20260707",
+  "purpose": "MAPO Overcooked v2 P2 diagnostic with explicit hidden_recipe=true, partial_obs=true, and L button tiles.",
+  "max_steps": 96,
+  "scenarios": [
+    {
+      "scenario_id": "mapo_ocv2_p10_grounded_simple_seed_60",
+      "layout_id": "grounded_coord_simple",
+      "seed": 60,
+      "rules": {
+        "base": "grounded_communication",
+        "recipe_id": "simple_soup",
+        "overrides": {
+          "hidden_recipe": true,
+          "max_steps": 96,
+          "target_deliveries": 1,
+          "view_radius": 3,
+          "recipe_pool": [
+            "simple_soup"
+          ],
+          "wrong_delivery_penalty": 1.0,
+          "cook_time": 2,
+          "partial_obs": true
+        }
+      }
+    },
+    {
+      "scenario_id": "mapo_ocv2_p10_grounded_ring_seed_61",
+      "layout_id": "grounded_coord_ring",
+      "seed": 61,
+      "rules": {
+        "base": "grounded_communication",
+        "recipe_id": "simple_soup",
+        "overrides": {
+          "hidden_recipe": true,
+          "max_steps": 96,
+          "target_deliveries": 1,
+          "view_radius": 3,
+          "recipe_pool": [
+            "simple_soup"
+          ],
+          "wrong_delivery_penalty": 1.0,
+          "cook_time": 2,
+          "partial_obs": true
+        }
+      }
+    },
+    {
+      "scenario_id": "mapo_ocv2_p10_demo_seed_62",
+      "layout_id": "overcookedv2_demo",
+      "seed": 62,
+      "rules": {
+        "base": "grounded_communication",
+        "recipe_id": "simple_soup",
+        "overrides": {
+          "hidden_recipe": true,
+          "max_steps": 96,
+          "target_deliveries": 1,
+          "view_radius": 3,
+          "recipe_pool": [
+            "simple_soup"
+          ],
+          "wrong_delivery_penalty": 1.0,
+          "cook_time": 2,
+          "partial_obs": true
+        }
+      }
+    },
+    {
+      "scenario_id": "mapo_ocv2_p10_grounded_simple_seed_63",
+      "layout_id": "grounded_coord_simple",
+      "seed": 63,
+      "rules": {
+        "base": "grounded_communication",
+        "recipe_id": "simple_soup",
+        "overrides": {
+          "hidden_recipe": true,
+          "max_steps": 96,
+          "target_deliveries": 1,
+          "view_radius": 3,
+          "recipe_pool": [
+            "simple_soup"
+          ],
+          "wrong_delivery_penalty": 1.0,
+          "cook_time": 2,
+          "partial_obs": true
+        }
+      }
+    },
+    {
+      "scenario_id": "mapo_ocv2_p10_grounded_ring_seed_64",
+      "layout_id": "grounded_coord_ring",
+      "seed": 64,
+      "rules": {
+        "base": "grounded_communication",
+        "recipe_id": "simple_soup",
+        "overrides": {
+          "hidden_recipe": true,
+          "max_steps": 96,
+          "target_deliveries": 1,
+          "view_radius": 3,
+          "recipe_pool": [
+            "simple_soup"
+          ],
+          "wrong_delivery_penalty": 1.0,
+          "cook_time": 2,
+          "partial_obs": true
+        }
+      }
+    },
+    {
+      "scenario_id": "mapo_ocv2_p10_demo_seed_65",
+      "layout_id": "overcookedv2_demo",
+      "seed": 65,
+      "rules": {
+        "base": "grounded_communication",
+        "recipe_id": "simple_soup",
+        "overrides": {
+          "hidden_recipe": true,
+          "max_steps": 96,
+          "target_deliveries": 1,
+          "view_radius": 3,
+          "recipe_pool": [
+            "simple_soup"
+          ],
+          "wrong_delivery_penalty": 1.0,
+          "cook_time": 2,
+          "partial_obs": true
+        }
+      }
+    },
+    {
+      "scenario_id": "mapo_ocv2_p10_grounded_simple_seed_66",
+      "layout_id": "grounded_coord_simple",
+      "seed": 66,
+      "rules": {
+        "base": "grounded_communication",
+        "recipe_id": "simple_soup",
+        "overrides": {
+          "hidden_recipe": true,
+          "max_steps": 96,
+          "target_deliveries": 1,
+          "view_radius": 3,
+          "recipe_pool": [
+            "simple_soup"
+          ],
+          "wrong_delivery_penalty": 1.0,
+          "cook_time": 2,
+          "partial_obs": true
+        }
+      }
+    },
+    {
+      "scenario_id": "mapo_ocv2_p10_grounded_ring_seed_67",
+      "layout_id": "grounded_coord_ring",
+      "seed": 67,
+      "rules": {
+        "base": "grounded_communication",
+        "recipe_id": "simple_soup",
+        "overrides": {
+          "hidden_recipe": true,
+          "max_steps": 96,
+          "target_deliveries": 1,
+          "view_radius": 3,
+          "recipe_pool": [
+            "simple_soup"
+          ],
+          "wrong_delivery_penalty": 1.0,
+          "cook_time": 2,
+          "partial_obs": true
+        }
+      }
+    },
+    {
+      "scenario_id": "mapo_ocv2_p10_demo_seed_68",
+      "layout_id": "overcookedv2_demo",
+      "seed": 68,
+      "rules": {
+        "base": "grounded_communication",
+        "recipe_id": "simple_soup",
+        "overrides": {
+          "hidden_recipe": true,
+          "max_steps": 96,
+          "target_deliveries": 1,
+          "view_radius": 3,
+          "recipe_pool": [
+            "simple_soup"
+          ],
+          "wrong_delivery_penalty": 1.0,
+          "cook_time": 2,
+          "partial_obs": true
+        }
+      }
+    }
+  ]
+}

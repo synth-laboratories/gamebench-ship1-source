@@ -1,0 +1,16 @@
+{
+  "schema": "gamebench.overcooked_v2.rules.v1",
+  "base": "cooperative_full_obs",
+  "recipe_id": "simple_soup",
+  "partial_obs": false,
+  "view_radius": 0,
+  "hidden_recipe": false,
+  "stochastic_spawn": false,
+  "resample_on_delivery": false,
+  "target_deliveries": 1,
+  "wrong_delivery_penalty": 0.0,
+  "overrides": {
+    "max_steps": 64,
+    "cook_time": 2
+  }
+}

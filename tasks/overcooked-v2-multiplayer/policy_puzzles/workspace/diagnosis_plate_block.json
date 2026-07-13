@@ -1,0 +1,6 @@
+{
+  "distinguishing_experiment": "Present a state where plate is salient and compare against a policy that handles it correctly.",
+  "evidence": "Trace actions show: None (plate block carrier); None (plate block carrier); None (plate block carrier); None (plate block carrier); None (plate block carrier); None (plate block carrier); None (plate block carrier); None (plate block carrier).",
+  "flaw_id": "plate_block_carrier",
+  "summary": "The hidden policy blocks the partner with a plate instead of clearing a delivery path."
+}

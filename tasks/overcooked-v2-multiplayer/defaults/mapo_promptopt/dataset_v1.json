@@ -1,0 +1,266 @@
+{
+  "schema": "gamebench.mapo_promptopt_dataset.v1",
+  "dataset_id": "overcooked_v2_rust_checkpoint_promptopt_v1",
+  "environment": {
+    "env_family": "overcooked-v2-multiplayer",
+    "authority": "gold_rust",
+    "checkpoint_schema": "gamebench.overcooked_v2.checkpoint.v2",
+    "joint_step": "simultaneous_agent_action_map",
+    "policy_boundary": "per_agent_symbolic_observation"
+  },
+  "prompt_program": {
+    "schema": "gamebench.mapo.prompt_program.v1",
+    "mutable_fields": [
+      "shared_prompt",
+      "role_prompts",
+      "protocol"
+    ],
+    "seed": {
+      "shared_prompt": "Use only each chef's observation. Assign ingredient, cook, plate, and delivery roles; activate a recipe button before committing when the recipe is hidden; use counters as explicit handoff points.",
+      "role_prompts": {
+        "ingredient_0": "Fetch and place ingredient 0, then clear the pot approach.",
+        "ingredient_1": "Fetch and place ingredient 1, then clear the pot approach.",
+        "cook": "Start cooking only after the required multiset is present.",
+        "delivery": "Receive plated soup at the counter and deliver it."
+      },
+      "protocol": {
+        "recipe_unknown": "activate_button",
+        "pot_commit": "distinct_carriers_then_cook",
+        "delivery": "counter_handoff"
+      }
+    },
+    "output_contract": {
+      "type": "joint_action",
+      "agent_keys": "exact_active_agent_ids",
+      "actions": [
+        "wait",
+        "move:north|south|east|west",
+        "interact"
+      ]
+    }
+  },
+  "reference_executor": {
+    "id": "overcooked_v2_rust_typed_reference_protocols.v1",
+    "scope": "Substrate/reference behavior only. Executor profiles map typed phases to environment actions and do not execute arbitrary natural-language prompts. Model-backed policy execution is a separate adapter boundary."
+  },
+  "reference_protocols": [
+    {
+      "id": "phase_aware_grounded",
+      "executor_profile": "phase_aware_grounded_v1",
+      "purpose": "Positive reference: reveal, distinct ingredient/cook roles, and counter delivery handoff."
+    },
+    {
+      "id": "silent_wait_control",
+      "executor_profile": "silent_wait_v1",
+      "purpose": "Matched checkpoint control with no load-bearing coordination action."
+    },
+    {
+      "id": "coordination_omission_control",
+      "executor_profile": "coordination_omission_v1",
+      "purpose": "Acts locally but omits the phase-specific reveal, ingredient role, or handoff."
+    }
+  ],
+  "probes": {
+    "hidden_recipe_reveal": {
+      "checkpoint": "button operator is adjacent and facing an inactive L tile; recipe fields remain hidden",
+      "success": "ButtonActivated event and every chef in button range observes recipe_indicator_visible=true"
+    },
+    "ingredient_cook_role_assignment": {
+      "checkpoint": "distinct carriers hold ingredient 0 and ingredient 1 before pot commitment",
+      "success": "both ingredients are placed and the designated cook emits CookStart"
+    },
+    "delivery_handoff": {
+      "checkpoint": "plated_soup is on a counter, producer has cleared the lane, receiver is empty-handed",
+      "success": "receiver picks from counter and emits Delivery"
+    }
+  },
+  "probe_rules": {
+    "hidden_recipe_reveal": {
+      "base": "grounded_communication",
+      "recipe_id": "mixed_soup",
+      "overrides": {
+        "partial_obs": true,
+        "view_radius": 2,
+        "hidden_recipe": true,
+        "recipe_ingredients": [0, 1],
+        "recipe_pool": ["mixed_soup"],
+        "indicator_activation_time": 12,
+        "cook_time": 3,
+        "max_steps": 64
+      }
+    },
+    "ingredient_cook_role_assignment": {
+      "base": "cooperative_full_obs",
+      "recipe_id": "mixed_soup",
+      "overrides": {
+        "recipe_ingredients": [0, 1],
+        "recipe_pool": ["mixed_soup"],
+        "start_cooking_interaction": true,
+        "cook_time": 3,
+        "max_steps": 128
+      }
+    },
+    "delivery_handoff": {
+      "base": "cooperative_full_obs",
+      "recipe_id": "simple_soup",
+      "overrides": {
+        "recipe_ingredients": [0],
+        "recipe_pool": ["simple_soup"],
+        "cook_time": 2,
+        "max_steps": 128
+      }
+    }
+  },
+  "splits": {
+    "train": [
+      {
+        "row_id": "train_hidden_1101",
+        "layout_family": "button_alcove",
+        "seed": 1101,
+        "probe": "hidden_recipe_reveal",
+        "layout": {
+          "ascii": [
+            "#######",
+            "#0L P #",
+            "# O D #",
+            "#1  S #",
+            "#######"
+          ]
+        }
+      },
+      {
+        "row_id": "train_roles_1102",
+        "layout_family": "dual_line_station",
+        "seed": 1102,
+        "probe": "ingredient_cook_role_assignment",
+        "layout": {
+          "ascii": [
+            "#########",
+            "#0 O P 2#",
+            "#       #",
+            "#1 T D S#",
+            "#########"
+          ]
+        }
+      },
+      {
+        "row_id": "train_handoff_1103",
+        "layout_family": "counter_pass",
+        "seed": 1103,
+        "probe": "delivery_handoff",
+        "layout": {
+          "ascii": [
+            "#########",
+            "#O P C S#",
+            "#0     1#",
+            "#   D   #",
+            "#########"
+          ]
+        }
+      }
+    ],
+    "selection": [
+      {
+        "row_id": "selection_hidden_2101",
+        "layout_family": "button_offset",
+        "seed": 2101,
+        "probe": "hidden_recipe_reveal",
+        "layout": {
+          "ascii": [
+            "#######",
+            "# P L0#",
+            "# D O #",
+            "# S 1 #",
+            "#######"
+          ]
+        }
+      },
+      {
+        "row_id": "selection_roles_2102",
+        "layout_family": "mirrored_station",
+        "seed": 2102,
+        "probe": "ingredient_cook_role_assignment",
+        "layout": {
+          "ascii": [
+            "#########",
+            "#2 P O 0#",
+            "#       #",
+            "#S D T 1#",
+            "#########"
+          ]
+        }
+      },
+      {
+        "row_id": "selection_handoff_2103",
+        "layout_family": "reverse_counter_pass",
+        "seed": 2103,
+        "probe": "delivery_handoff",
+        "layout": {
+          "ascii": [
+            "#########",
+            "#S C P O#",
+            "#1     0#",
+            "#   D   #",
+            "#########"
+          ]
+        }
+      }
+    ],
+    "heldout": [
+      {
+        "row_id": "heldout_hidden_3101",
+        "layout_family": "button_ring",
+        "seed": 3101,
+        "probe": "hidden_recipe_reveal",
+        "layout": {
+          "ascii": [
+            "########",
+            "# 0 L P#",
+            "# O D  #",
+            "# 1 S  #",
+            "########"
+          ]
+        }
+      },
+      {
+        "row_id": "heldout_roles_3102",
+        "layout_family": "four_chef_split_station",
+        "seed": 3102,
+        "probe": "ingredient_cook_role_assignment",
+        "layout": {
+          "ascii": [
+            "#######",
+            "#0 O 3#",
+            "#  P 2#",
+            "#1 T  #",
+            "#  D S#",
+            "#######"
+          ]
+        }
+      },
+      {
+        "row_id": "heldout_handoff_3103",
+        "layout_family": "vertical_relay",
+        "seed": 3103,
+        "probe": "delivery_handoff",
+        "layout": {
+          "ascii": [
+            "#######",
+            "#  O  #",
+            "#0 P  #",
+            "#  C 1#",
+            "# D S #",
+            "#######"
+          ]
+        }
+      }
+    ]
+  },
+  "leakage_guards": {
+    "layout_families_disjoint_across_splits": true,
+    "seeds_disjoint_across_splits": true,
+    "selection_receipts_available_to_proposer": false,
+    "heldout_receipts_available_to_proposer": false,
+    "checkpoint_setup_uses_legal_environment_actions": true
+  }
+}

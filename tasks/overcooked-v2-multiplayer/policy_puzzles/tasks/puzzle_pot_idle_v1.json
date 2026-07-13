@@ -1,0 +1,28 @@
+{
+  "expected_flaw_id": "pot_idle_cook",
+  "gamebench_task": "overcooked-v2-multiplayer",
+  "gold_summary": "The hidden policy leaves the pot idle when ingredients are available at the counter.",
+  "hidden_policy_id": "pot_idle_cook",
+  "keywords": [
+    "pot",
+    "idle",
+    "ingredient",
+    "counter"
+  ],
+  "prompt": "Diagnose the hidden Overcooked v2 policy flaw from the provided state-action traces.",
+  "puzzle_id": "puzzle_pot_idle_v1",
+  "rollout": {
+    "expected_outcome": "failure",
+    "max_steps": 200,
+    "min_failure_seeds": 2,
+    "scenario": {
+      "layout_id": "demo_tiny"
+    },
+    "seeds": [
+      101,
+      102,
+      103
+    ]
+  },
+  "schema_version": "gamebench.policy_puzzle.task.v1"
+}
