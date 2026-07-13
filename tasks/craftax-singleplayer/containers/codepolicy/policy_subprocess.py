@@ -366,6 +366,13 @@ class IsolatedPolicyProcess:
         session = dict(kwargs.get("session") or {})
         observation_text = str(kwargs.get("observation_text") or "")
         valid_actions = [str(action) for action in kwargs.get("valid_actions") or []]
+        source_readout = dict(kwargs.get("readout") or {})
+        public_readout = {
+            key: source_readout[key]
+            for key in ("ascii", "observation", "observation_text")
+            if key in source_readout
+        }
+        public_readout["valid_actions"] = valid_actions
         request = {
             "op": "choose_actions",
             "observation_text": observation_text,
@@ -375,10 +382,7 @@ class IsolatedPolicyProcess:
             },
             "valid_actions": valid_actions,
             "ply": int(kwargs.get("ply") or 0),
-            "readout": {
-                "observation_text": observation_text,
-                "valid_actions": valid_actions,
-            },
+            "readout": public_readout,
         }
         with self._lock:
             if self._proc.poll() is not None:
