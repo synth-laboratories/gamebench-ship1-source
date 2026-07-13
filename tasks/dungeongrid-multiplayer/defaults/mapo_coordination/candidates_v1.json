@@ -1,0 +1,101 @@
+{
+  "schema": "gamebench.mapo_coordination_candidates.v1",
+  "candidates": [
+    {
+      "id": "no_message",
+      "executor_profile": "no_message",
+      "shared_prompt": "Do not send coordination messages. Act only from each hero's current local state.",
+      "role_prompts": {
+        "barbarian": "Advance when your turn arrives.",
+        "wizard": "Yield initiative to the frontline."
+      },
+      "protocol": {
+        "speak_gate": "never",
+        "authority_policy": "decentralized",
+        "role_policy": "fixed",
+        "max_chars": 140
+      }
+    },
+    {
+      "id": "verbose_baseline",
+      "executor_profile": "verbose_baseline",
+      "shared_prompt": "Narrate plans and status continuously so every hero knows that coordination is happening.",
+      "role_prompts": {
+        "barbarian": "Acknowledge the support hero and narrate the action you are about to take.",
+        "wizard": "Broadcast multiple planning updates before yielding the turn."
+      },
+      "protocol": {
+        "speak_gate": "always",
+        "authority_policy": "decentralized",
+        "role_policy": "fixed",
+        "max_chars": 240
+      }
+    },
+    {
+      "id": "compact_message_only",
+      "executor_profile": "compact_message_only",
+      "shared_prompt": "Send one compact event-specific assignment, but do not change the underlying action policy.",
+      "role_prompts": {
+        "barbarian": "Follow the existing action policy after receiving the assignment.",
+        "wizard": "Name the relevant role and action once, then yield."
+      },
+      "protocol": {
+        "speak_gate": "information_change",
+        "authority_policy": "decentralized",
+        "role_policy": "fixed",
+        "max_chars": 140,
+        "max_messages_per_round": 1
+      }
+    },
+    {
+      "id": "silent_structured_actions",
+      "executor_profile": "silent_structured_actions",
+      "shared_prompt": "Execute the correct role-specialized joint action sequence without sending messages.",
+      "role_prompts": {
+        "barbarian": "Wait for support counterplay, carry the objective, and extract when positioned.",
+        "wizard": "Reveal before breach and hand the objective to the positioned extractor."
+      },
+      "protocol": {
+        "speak_gate": "never",
+        "authority_policy": "decentralized",
+        "role_policy": "fixed",
+        "max_chars": 140
+      }
+    },
+    {
+      "id": "event_triggered_compact",
+      "executor_profile": "event_triggered_compact",
+      "shared_prompt": "Send one compact, load-bearing message at a breach, carrier assignment, blocker, or extraction handoff. Name the responsible role and intended next action. Do not require a reply. After the objective is secured, prioritize extraction over optional work.",
+      "role_prompts": {
+        "barbarian": "Hold a breach until support counterplay is complete; carry or extract when assigned.",
+        "wizard": "Reveal before breach, assign the carrier, and hand off the objective when the extractor is already on the escape tile."
+      },
+      "protocol": {
+        "speak_gate": "information_change",
+        "authority_policy": "decentralized",
+        "role_policy": "fixed",
+        "confirmation_policy": "none",
+        "max_chars": 140,
+        "max_messages_per_round": 1
+      }
+    },
+    {
+      "id": "event_triggered_channel_masked",
+      "executor_profile": "event_triggered_channel_masked",
+      "shared_prompt": "Use the same event-triggered protocol and action policy, but evaluate it with the communication channel masked.",
+      "role_prompts": {
+        "barbarian": "Take the assigned load-bearing action only after its matching coordination message is received.",
+        "wizard": "Issue the same compact assignment from local evidence; the evaluator masks delivery."
+      },
+      "protocol": {
+        "speak_gate": "information_change",
+        "authority_policy": "decentralized",
+        "role_policy": "fixed",
+        "confirmation_policy": "none",
+        "channel_masked": true,
+        "max_chars": 140,
+        "max_messages_per_round": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+schema_version: gamebench.task_family.v1
+env_family: dungeongrid-multiplayer
+status: dual_lane_reset_checkpoint_contract
+gold_lanes:
+  rust: gold_rust
+  python: gold_python
+step_api: active_agent_action
+scenario_dir: defaults/scenarios
+fixture_dir: defaults/fixtures
+reportbench_lanes:
+  contract_smoke: ../../evals/reportbench/lanes/dungeongrid_gamebench_contract_smoke_1cand
+  code_policy_deo_hillclimb: ../../evals/reportbench/lanes/dungeongrid_gamebench_code_policy_deo_hillclimb_1cand
+  policy_puzzle_diagnosis: ../../evals/reportbench/lanes/dungeongrid_gamebench_policy_puzzle_1cand
+  engine_rebuild: ../../evals/reportbench/lanes/dungeongrid_gamebench_engine_rebuild_1cand
+harbor:
+  contract_bundle: ../../harbor/dungeongrid_multiplayer_gold
+notes:
+  - GameBench-native DungeonGrid lane starts with Rust and Python engines.
+  - Scenario suite verifies reset, checkpoint restore, reset_to_initial, entity counts, and deterministic state digests on both lanes.
+  - Rust and Python mechanics probes verify event-rich state over message, movement, door, search, spell, handoff, item use, chest, combat, objective, inspect, and checkpoint restore.
+  - ReportBench/SMR contract-smoke lane mounts this task and runs scenario suite, lane compare, Rust mechanics probe, and Python/Rust mechanics parity.
+  - Code-policy DEO hillclimb lane ranks heuristic_policy.py candidates against a deterministic DungeonGrid policy suite with ten full-seed-inspired breach mini-envs.
+  - Policy puzzle assets cover ten diagnosis slices over the breach suite: protocol, ward timing, reveal timing, trap scan, double-door sequencing, cache greed, handoff, spell range, objective safety, and AP budget.
+  - Engine-rebuild lane scores candidate DungeonGridSession implementations against reset/checkpoint/rich-state digests and the mechanics probe.
+  - Harbor contract bundle runs the same DungeonGrid contract checks and writes result.json plus reward.txt.
+  - Scenario families are distilled from Black Standard Keep, Tusk Warlord Lair, Three Locks of the Low Shrine, The Iron Captive, Moonblade Vault, Bells Under Blackwater, Cinder Mage Tower, Frost Mirror Hold, Hourglass Escape, and Lantern Crypt.

@@ -1,0 +1,26 @@
+{
+  "task_id": "dg_hourglass_escape_breach_rust_smoke",
+  "scenario_id": "hourglass_escape_breach",
+  "quest_id": "gamebench:hourglass_escape_breach:lite",
+  "title": "Hourglass Escape Breach",
+  "seed": 12,
+  "max_steps": 100,
+  "map_ascii": "#########\n#E.DRI..#\n#..C....#\n#########",
+  "hero_roles": ["barbarian", "wizard"],
+  "objective_item": "hourglass_core",
+  "metadata": {
+    "source_seed": {
+      "quest_id": "hourglass_escape",
+      "title": "Hourglass Escape",
+      "tier": "full",
+      "distillation": "compresses the full timed-escape seed into one costly breach where optional handoff and defender clear compete for tempo"
+    },
+    "marl_axis": "timed breach with handoff pressure",
+    "coordination_type": "frontline gives support a ration before committing to the breach",
+    "coordination_skills": [
+      "encode handoff and breach order in a compact protocol message",
+      "handoff before the frontline spends the breach turn",
+      "clear the defender quickly enough to recover the timed objective"
+    ]
+  }
+}

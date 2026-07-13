@@ -1,0 +1,26 @@
+{
+  "task_id": "dg_blackwater_bell_breach_rust_smoke",
+  "scenario_id": "blackwater_bell_breach",
+  "quest_id": "gamebench:blackwater_bell_breach:lite",
+  "title": "Blackwater Bell Breach",
+  "seed": 9,
+  "max_steps": 100,
+  "map_ascii": "#########\n#E.TDRI.#\n#..C....#\n#########",
+  "hero_roles": ["barbarian", "wizard"],
+  "objective_item": "bell_silencer",
+  "metadata": {
+    "source_seed": {
+      "quest_id": "bells_under_blackwater",
+      "title": "Bells Under Blackwater",
+      "tier": "full",
+      "distillation": "compresses the full bell-suppression seed into a trap-marked threshold and one alarm-critical breach"
+    },
+    "marl_axis": "alarm-sensitive trap breach",
+    "coordination_type": "scan the bell approach before opening the defender door",
+    "coordination_skills": [
+      "send trap-first breach intent before movement",
+      "search the threshold instead of rushing the bell door",
+      "combine reveal and strike to prevent a noisy prolonged fight"
+    ]
+  }
+}

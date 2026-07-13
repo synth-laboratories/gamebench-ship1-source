@@ -1,0 +1,26 @@
+{
+  "task_id": "dg_moonblade_vault_breach_rust_smoke",
+  "scenario_id": "moonblade_vault_breach",
+  "quest_id": "gamebench:moonblade_vault_breach:lite",
+  "title": "Moonblade Vault Breach",
+  "seed": 8,
+  "max_steps": 100,
+  "map_ascii": "#########\n#E.D.RI.#\n#...C...#\n#########",
+  "hero_roles": ["barbarian", "wizard"],
+  "objective_item": "moonblade_shard",
+  "metadata": {
+    "source_seed": {
+      "quest_id": "moonblade_vault",
+      "title": "Moonblade Vault",
+      "tier": "full",
+      "distillation": "compresses the full vault's guarded treasure-door beat into a compact breach, optional cache, and objective pickup"
+    },
+    "marl_axis": "vault-door breach with optional loot pressure",
+    "coordination_type": "frontline breaches while support removes the vault guard",
+    "coordination_skills": [
+      "announce whether the optional cache is worth the tempo loss",
+      "reveal the vault guard before the frontline crosses the door",
+      "finish the guard before touching the moonblade objective"
+    ]
+  }
+}

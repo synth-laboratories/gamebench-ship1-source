@@ -1,0 +1,26 @@
+{
+  "task_id": "dg_frost_mirror_crossfire_rust_smoke",
+  "scenario_id": "frost_mirror_crossfire",
+  "quest_id": "gamebench:frost_mirror_crossfire:lite",
+  "title": "Frost Mirror Crossfire",
+  "seed": 11,
+  "max_steps": 100,
+  "map_ascii": "##########\n#E.D.RDI.#\n#..T.C...#\n##########",
+  "hero_roles": ["barbarian", "wizard"],
+  "objective_item": "mirror_ice_lens",
+  "metadata": {
+    "source_seed": {
+      "quest_id": "frost_mirror_hold",
+      "title": "Frost Mirror Hold",
+      "tier": "full",
+      "distillation": "compresses the full mirror-hold crossfire into an outer breach, defender clear, and inner-door objective timing"
+    },
+    "marl_axis": "crossfire breach with inner-door timing",
+    "coordination_type": "outer door commitment must not block the later inner-door objective route",
+    "coordination_skills": [
+      "sequence breach and reveal before moving into the crossfire lane",
+      "clear the defender before opening the inner door",
+      "avoid spending the frontline turn so the objective can be reached after the second door"
+    ]
+  }
+}
