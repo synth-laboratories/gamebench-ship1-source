@@ -28,6 +28,54 @@ mod achievement_map {
     }
 }
 
+mod achievement_maps {
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    use std::collections::{BTreeMap, BTreeSet};
+
+    pub fn serialize<S>(
+        value: &BTreeMap<String, BTreeSet<String>>,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        value
+            .iter()
+            .map(|(agent, earned)| {
+                (
+                    agent,
+                    earned
+                        .iter()
+                        .map(|name| (name, true))
+                        .collect::<BTreeMap<_, _>>(),
+                )
+            })
+            .collect::<BTreeMap<_, _>>()
+            .serialize(serializer)
+    }
+    pub fn deserialize<'de, D>(
+        deserializer: D,
+    ) -> Result<BTreeMap<String, BTreeSet<String>>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(
+            BTreeMap::<String, BTreeMap<String, bool>>::deserialize(deserializer)?
+                .into_iter()
+                .map(|(agent, flags)| {
+                    (
+                        agent,
+                        flags
+                            .into_iter()
+                            .filter_map(|(name, earned)| earned.then_some(name))
+                            .collect(),
+                    )
+                })
+                .collect(),
+        )
+    }
+}
+
 pub const MAP_SIZE: usize = 48;
 pub const NUM_LEVELS: usize = 9;
 pub const REQUEST_DURATION: u8 = 10;
@@ -53,6 +101,8 @@ pub struct Player {
     pub pickaxe: u8,
     pub sword: u8,
     pub armour: u8,
+    pub armour_slots: Vec<u8>,
+    pub bow: u8,
     pub arrows: u16,
     pub torches: u16,
     pub books: u16,
@@ -65,8 +115,16 @@ pub struct Player {
     pub level_points: u8,
     pub sword_enchantment: Option<String>,
     pub armour_enchantment: Option<String>,
+    pub armour_enchantments: Vec<Option<String>>,
     pub bow_enchantment: Option<String>,
+    pub learned_spell: bool,
     pub sleeping: bool,
+    pub resting: bool,
+    pub recover: f64,
+    pub hunger: f64,
+    pub thirst: f64,
+    pub fatigue: f64,
+    pub recover_mana: f64,
     pub facing: String,
     pub request_type: Option<String>,
     pub request_duration: u8,
@@ -81,6 +139,8 @@ pub struct Monster {
     pub y: usize,
     pub health: i16,
     pub damage: i16,
+    pub category: String,
+    pub attack_cooldown: i16,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
@@ -93,6 +153,8 @@ pub struct Projectile {
     pub dy: isize,
     pub damage: i16,
     pub ttl: u8,
+    pub kind: String,
+    pub hostile: bool,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
@@ -118,16 +180,28 @@ pub struct State {
     pub max_timesteps: u64,
     pub players: Vec<Player>,
     pub maps: Vec<Vec<Vec<String>>>,
+    pub item_maps: Vec<Vec<Vec<Option<String>>>>,
+    pub ladders_up: Vec<Vec<(usize, usize)>>,
+    pub ladders_down: Vec<Vec<(usize, usize)>>,
     pub monsters: Vec<Monster>,
     pub projectiles: Vec<Projectile>,
     pub plants: Vec<Plant>,
     pub boss_health: i16,
     pub boss_progress: usize,
     pub boss_wave_timer: u16,
+    pub chests_opened: Vec<Vec<bool>>,
+    pub monsters_killed: Vec<u16>,
+    pub potion_mapping: Vec<String>,
     pub light_level: f64,
     #[serde(with = "achievement_map")]
     pub achievements: BTreeSet<String>,
+    #[serde(with = "achievement_maps")]
+    pub achievements_by_agent: BTreeMap<String, BTreeSet<String>>,
     pub trade_count: u64,
+    pub food_trade_count: u64,
+    pub drink_trade_count: u64,
+    pub revives: u64,
+    pub ff_damage_dealt: f64,
     pub terminated: bool,
     pub termination_reason: Option<String>,
     pub last_joint_event: Vec<Event>,
@@ -174,6 +248,8 @@ impl CraftaxCoopEnv {
                 pickaxe: 0,
                 sword: 0,
                 armour: 0,
+                armour_slots: vec![0; 4],
+                bow: 0,
                 arrows: 0,
                 torches: 0,
                 books: 0,
@@ -182,53 +258,73 @@ impl CraftaxCoopEnv {
                     .into_iter()
                     .map(|c| (c.into(), 0))
                     .collect(),
-                dexterity: 0,
-                strength: 0,
-                intelligence: 0,
+                dexterity: 1,
+                strength: 1,
+                intelligence: 1,
                 xp: 0,
                 level_points: 0,
                 sword_enchantment: None,
                 armour_enchantment: None,
+                armour_enchantments: vec![None; 4],
                 bow_enchantment: None,
+                learned_spell: false,
                 sleeping: false,
+                resting: false,
+                recover: 0.0,
+                hunger: 0.0,
+                thirst: 0.0,
+                fatigue: 0.0,
+                recover_mana: 0.0,
                 facing: "down".into(),
                 request_type: None,
                 request_duration: 0,
             })
             .collect();
         let mut maps = vec![vec![vec!["grass".to_string(); MAP_SIZE]; MAP_SIZE]; NUM_LEVELS];
+        let biomes = [
+            ["grass", "water", "stone", "tree"],
+            ["path", "water", "stone", "stalagmite"],
+            ["path", "water", "stone", "stalagmite"],
+            ["path", "water", "stone", "stalagmite"],
+            ["path", "water", "stone", "stalagmite"],
+            ["path", "water", "stone", "stalagmite"],
+            ["fire_grass", "lava", "stone", "fire_tree"],
+            ["ice_grass", "water", "stone", "ice_shrub"],
+            ["path", "wall", "wall", "grave"],
+        ];
+        let resources = ["coal", "iron", "diamond", "sapphire", "ruby"];
         for level in 0..NUM_LEVELS {
             let mut rng = (seed + 1)
                 .wrapping_mul(1_000_003)
                 .wrapping_add(level as u64 * 97);
             for i in 0..MAP_SIZE {
-                maps[level][0][i] = "stone".into();
-                maps[level][MAP_SIZE - 1][i] = "stone".into();
-                maps[level][i][0] = "stone".into();
-                maps[level][i][MAP_SIZE - 1] = "stone".into();
+                maps[level][0][i] = biomes[level][2].into();
+                maps[level][MAP_SIZE - 1][i] = biomes[level][2].into();
+                maps[level][i][0] = biomes[level][2].into();
+                maps[level][i][MAP_SIZE - 1] = biomes[level][2].into();
             }
             for y in 1..MAP_SIZE - 1 {
                 for x in 1..MAP_SIZE - 1 {
                     rng = rng.wrapping_mul(6364136223846793005).wrapping_add(1);
                     let roll = ((rng >> 32) % 1000) as usize;
                     maps[level][y][x] = if roll < 55 {
-                        if level < 6 {
-                            "water"
-                        } else if level == 6 {
-                            "lava"
-                        } else {
-                            "ice_grass"
-                        }
+                        biomes[level][1]
+                    } else if roll < 110 {
+                        biomes[level][2]
+                    } else if roll < 150 {
+                        biomes[level][3]
                     } else if roll < 180 {
-                        [
-                            "tree", "stone", "coal", "iron", "diamond", "ruby", "sapphire",
-                        ][(((rng >> 16) as usize) + level / 2) % 7]
+                        if level == 0 {
+                            "tree"
+                        } else {
+                            resources[(((rng >> 16) as usize) + level) % 5]
+                        }
                     } else if roll < 190 {
                         "chest"
                     } else if roll < 200 && level == 0 {
                         "plant"
                     } else {
-                        "grass"
+                        biomes[level][0]
                     }
                     .into();
                 }
@@ -239,59 +335,50 @@ impl CraftaxCoopEnv {
             if level > 0 {
                 maps[level][2][2] = "stairs_up".into();
             }
+            if level == 6 {
+                maps[level][10][10] = "enchantment_table_fire".into();
+            }
+            if level == 7 {
+                maps[level][10][10] = "enchantment_table_ice".into();
+            }
         }
-        maps[NUM_LEVELS - 1][MAP_SIZE / 2][MAP_SIZE / 2] = "boss".into();
+        maps[NUM_LEVELS - 1][MAP_SIZE / 2][MAP_SIZE / 2] = "necromancer".into();
+        for (offset, tile) in (-3isize..=3).zip([
+            "grave", "grave2", "grave3", "grave", "grave3", "grave2", "grave",
+        ]) {
+            maps[NUM_LEVELS - 1][MAP_SIZE / 2 + 3][(MAP_SIZE as isize / 2 + offset) as usize] =
+                tile.into();
+        }
         for index in 0..agent_count {
             maps[0][3][3 + index] = "grass".into();
         }
         maps[0][5][5] = "fountain".into();
-        let mut monsters = Vec::new();
-        let kinds = [
-            "cow",
-            "bat",
-            "zombie",
-            "skeleton",
-            "gnome",
-            "orc",
-            "troll",
-            "fire_elemental",
-            "ice_elemental",
-            "necromancer_minion",
-        ];
-        let stats = [
-            (3, 0),
-            (2, 1),
-            (5, 2),
-            (4, 2),
-            (5, 2),
-            (7, 3),
-            (10, 4),
-            (8, 4),
-            (8, 4),
-            (10, 5),
-        ];
-        for level in 0..NUM_LEVELS - 1 {
-            for index in 0..3 + level {
-                let value = ((seed + 17)
-                    .wrapping_mul(1_103_515_245)
-                    .wrapping_add(level as u64 * 7919)
-                    .wrapping_add(index as u64 * 104729))
-                    & 0xffff_ffff;
-                let (x, y) = (6 + (value as usize) % 36, 6 + ((value / 37) as usize) % 36);
-                if ["grass", "path", "sand", "gravel"].contains(&maps[level][y][x].as_str()) {
-                    let kind_index = (level + index % 2).min(kinds.len() - 1);
-                    monsters.push(Monster {
-                        id: format!("mob_{level}_{index}"),
-                        kind: kinds[kind_index].into(),
-                        level,
-                        x,
-                        y,
-                        health: stats[kind_index].0,
-                        damage: stats[kind_index].1,
-                    });
+        let ladders_up = (0..NUM_LEVELS)
+            .map(|_| (0..agent_count).map(|i| (2 + i, 2)).collect::<Vec<_>>())
+            .collect::<Vec<_>>();
+        let ladders_down = (0..NUM_LEVELS)
+            .map(|_| {
+                (0..agent_count)
+                    .map(|i| (MAP_SIZE - 3 - i, MAP_SIZE - 3))
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>();
+        let mut item_maps = vec![vec![vec![None; MAP_SIZE]; MAP_SIZE]; NUM_LEVELS];
+        for level in 0..NUM_LEVELS {
+            if level < NUM_LEVELS - 1 {
+                for &(x, y) in &ladders_down[level] {
+                    maps[level][y][x] = "stairs_down".into();
+                    item_maps[level][y][x] = Some("ladder_down".into());
+                }
+            }
+            if level > 0 {
+                for &(x, y) in &ladders_up[level] {
+                    maps[level][y][x] = "stairs_up".into();
+                    item_maps[level][y][x] = Some("ladder_up".into());
                 }
             }
         }
+        let monsters = Vec::new();
         let mut env = Self {
             state: State {
                 seed,
@@ -299,15 +386,28 @@ impl CraftaxCoopEnv {
                 max_timesteps,
                 players,
                 maps,
+                item_maps,
+                ladders_up,
+                ladders_down,
                 monsters,
                 projectiles: vec![],
                 plants: vec![],
-                boss_health: 24,
+                boss_health: 8,
                 boss_progress: 0,
-                boss_wave_timer: 0,
+                boss_wave_timer: 7,
+                chests_opened: vec![vec![false; agent_count]; NUM_LEVELS],
+                monsters_killed: [vec![10], vec![0; NUM_LEVELS - 1]].concat(),
+                potion_mapping: potion_mapping(seed),
                 light_level: 1.0,
                 achievements: BTreeSet::new(),
+                achievements_by_agent: (0..agent_count)
+                    .map(|i| (format!("agent_{i}"), BTreeSet::new()))
+                    .collect(),
                 trade_count: 0,
+                food_trade_count: 0,
+                drink_trade_count: 0,
+                revives: 0,
+                ff_damage_dealt: 0.0,
                 terminated: false,
                 termination_reason: None,
                 last_joint_event: vec![],
@@ -340,7 +440,8 @@ impl CraftaxCoopEnv {
         }
         self.state.last_joint_event.clear();
         let start = self.state.nev.len();
-        let before = self.state.achievements.len();
+        let before = self.state.achievements_by_agent.clone();
+        let before_health = self.state.players.iter().map(|p| p.health).sum::<i16>();
         for player in &self.state.players {
             let fields = BTreeMap::from([
                 ("agent_id".to_string(), json!(player.agent_id)),
@@ -359,6 +460,29 @@ impl CraftaxCoopEnv {
                 event_field_text(&fields["action"])
             ));
         }
+        let effective = self
+            .state
+            .players
+            .iter()
+            .map(|p| {
+                (
+                    p.agent_id.clone(),
+                    if !p.alive || p.sleeping || p.resting {
+                        "noop".into()
+                    } else {
+                        actions[&p.agent_id].clone()
+                    },
+                )
+            })
+            .collect::<BTreeMap<_, _>>();
+        self.resolve_floor_actions(&effective);
+        self.resolve_joint_do(&effective);
+        for idx in 0..self.state.players.len() {
+            let action = effective[&self.state.players[idx].agent_id].clone();
+            if !["do", "attack"].contains(&action.as_str()) {
+                self.apply_action(idx, &action);
+            }
+        }
         for p in &mut self.state.players {
             p.request_duration = p.request_duration.saturating_sub(1);
             if p.request_duration == 0 {
@@ -366,7 +490,7 @@ impl CraftaxCoopEnv {
             }
         }
         for idx in 0..self.state.players.len() {
-            let action = &actions[&self.state.players[idx].agent_id];
+            let action = &effective[&self.state.players[idx].agent_id];
             if let Some(resource) = action.strip_prefix("request_") {
                 if RESOURCES.contains(&resource) {
                     self.state.players[idx].request_type = Some(resource.into());
@@ -374,40 +498,74 @@ impl CraftaxCoopEnv {
                 }
             }
         }
-        self.resolve_moves(actions);
-        for idx in 0..self.state.players.len() {
-            let action = actions[&self.state.players[idx].agent_id].clone();
-            self.apply_action(idx, &action);
-        }
+        self.resolve_moves(&effective);
         self.update_projectiles();
         self.update_monsters();
+        self.spawn_mobs();
+        self.update_boss();
         self.update_plants();
-        self.state.light_level = (1.0
+        self.state.light_level = ((1.0
             + (std::f64::consts::TAU * (self.state.timestep % DAY_LENGTH) as f64
                 / DAY_LENGTH as f64)
                 .cos())
-            / 2.0;
+            / 2.0)
+            .max(0.1);
         self.state.timestep += 1;
-        for p in &mut self.state.players {
+        let mut woke = Vec::new();
+        for (player_index, p) in self.state.players.iter_mut().enumerate() {
             if p.alive {
-                if p.sleeping {
-                    p.energy = (p.energy + 2).min(9);
-                    if p.energy >= 9 {
-                        p.sleeping = false;
-                        self.state.achievements.insert("wake_up".into());
+                let decay = 1.0 - 0.125 * (p.dexterity as f64 - 1.0);
+                p.hunger += if p.sleeping { 0.5 } else { 1.0 } * decay;
+                p.thirst += if p.sleeping { 0.5 } else { 1.0 } * decay;
+                if p.hunger > 25.0 {
+                    p.food = (p.food - if p.level == NUM_LEVELS - 1 { 0 } else { 1 }).max(0);
+                    p.hunger = 0.0;
+                }
+                if p.thirst > 20.0 {
+                    p.drink = (p.drink - if p.level == NUM_LEVELS - 1 { 0 } else { 1 }).max(0);
+                    p.thirst = 0.0;
+                }
+                p.fatigue += if p.sleeping { -1.0 } else { decay };
+                if p.fatigue > 30.0 {
+                    p.energy = (p.energy - 1).max(0);
+                    p.fatigue = 0.0;
+                }
+                if p.fatigue < -10.0 {
+                    p.energy = (p.energy + 1).min(max_energy(p));
+                    p.fatigue = 0.0;
+                }
+                let necessities = p.food > 0 && p.drink > 0 && (p.energy > 0 || p.sleeping);
+                p.recover += if necessities {
+                    if p.sleeping {
+                        2.0
+                    } else {
+                        1.0
                     }
-                    continue;
+                } else if p.sleeping {
+                    -0.5
+                } else {
+                    -1.0
+                };
+                if p.recover > 25.0 {
+                    p.health = (p.health + 2).min(max_health(p));
+                    p.recover = 0.0;
                 }
-                p.energy = (p.energy - 1).max(0);
-                if self.state.timestep % 25 == 0 {
-                    p.food = (p.food - 1).max(0);
-                    p.drink = (p.drink - 1).max(0);
+                if p.recover < -15.0 {
+                    p.health -= if p.level == NUM_LEVELS - 1 { 0 } else { 1 };
+                    p.recover = 0.0;
                 }
-                if p.food == 0 || p.drink == 0 {
-                    p.health -= 1;
+                p.recover_mana = (p.recover_mana + if p.sleeping { 2.0 } else { 1.0 })
+                    * (1.0 + 0.25 * (p.intelligence as f64 - 1.0));
+                if p.recover_mana > 30.0 {
+                    p.mana = (p.mana + 1).min(max_mana(p));
+                    p.recover_mana = 0.0;
                 }
-                if p.level == NUM_LEVELS - 1 && self.state.boss_health > 0 {
-                    p.health -= (2 - p.armour as i16).max(0);
+                if p.sleeping && p.energy >= max_energy(p) {
+                    p.sleeping = false;
+                    woke.push(player_index);
+                }
+                if p.resting && (p.health >= max_health(p) || p.food <= 0 || p.drink <= 0) {
+                    p.resting = false;
                 }
                 if p.health <= 0 {
                     p.alive = false;
@@ -415,8 +573,15 @@ impl CraftaxCoopEnv {
                 }
             }
         }
+        for index in woke {
+            self.award("wake_up", &[index]);
+        }
+        self.calculate_inventory_achievements();
         if self.state.players.iter().all(|p| p.alive) {
-            self.state.achievements.insert("all_roles_alive".into());
+            self.award(
+                "all_roles_alive",
+                &(0..self.state.players.len()).collect::<Vec<_>>(),
+            );
         } else {
             self.state.achievements.remove("all_roles_alive");
         }
@@ -427,12 +592,19 @@ impl CraftaxCoopEnv {
         } else if self.state.timestep >= self.state.max_timesteps {
             self.finish("timestep");
         }
-        let reward = (self.state.achievements.len() as isize - before as isize) as f64
-            + if self.state.termination_reason.as_deref() == Some("boss") {
-                10.0
-            } else {
-                0.0
-            };
+        let reward = self
+            .state
+            .achievements_by_agent
+            .iter()
+            .map(|(agent, earned)| {
+                earned
+                    .difference(&before[agent])
+                    .map(|name| achievement_reward(name))
+                    .sum::<f64>()
+            })
+            .sum::<f64>()
+            + 0.1
+                * (self.state.players.iter().map(|p| p.health).sum::<i16>() - before_health) as f64;
         let rewards = self
             .state
             .players
@@ -453,6 +625,17 @@ impl CraftaxCoopEnv {
         })
     }
 
+    fn award(&mut self, name: &str, recipients: &[usize]) {
+        self.state.achievements.insert(name.into());
+        for &index in recipients {
+            self.state
+                .achievements_by_agent
+                .get_mut(&self.state.players[index].agent_id)
+                .unwrap()
+                .insert(name.into());
+        }
+    }
+
     fn apply_action(&mut self, index: usize, action: &str) {
         if !self.state.players[index].alive {
             return;
@@ -464,28 +647,16 @@ impl CraftaxCoopEnv {
         match action {
             "do" | "attack" => self.do_action(index),
             "rest" => {
-                let amount = if self.state.players[index].role == "forager" {
-                    4
-                } else {
-                    2
-                };
-                self.state.players[index].energy =
-                    (self.state.players[index].energy + amount).min(9);
+                self.state.players[index].resting =
+                    self.state.players[index].health < max_health(&self.state.players[index]);
             }
-            "sleep" => self.state.players[index].sleeping = true,
-            "cast_spell"
-                if self.state.players[index].role == "forager"
-                    && self.state.players[index].mana >= 2 =>
-            {
-                self.state.players[index].mana -= 2;
-                for player in &mut self.state.players {
-                    player.health = (player.health + 2).min(9);
-                }
-                self.state.achievements.insert("cast_spell".into());
+            "sleep" => {
+                self.state.players[index].sleeping =
+                    self.state.players[index].energy < max_energy(&self.state.players[index])
             }
+            "cast_spell" => self.cast_spell(index),
             "shoot_arrow" => self.shoot_arrow(index),
-            "descend" => self.change_floor(index, 1),
-            "ascend" => self.change_floor(index, -1),
+            "descend" | "ascend" => {}
             value if value.starts_with("make_") => self.craft(index, value),
             value if value.starts_with("place_") => self.place(index, value),
             value if value.starts_with("drink_potion_") => {
@@ -499,6 +670,138 @@ impl CraftaxCoopEnv {
                 self.enchant(index, value.trim_start_matches("enchant_"))
             }
             _ => {}
+        }
+    }
+
+    fn resolve_joint_do(&mut self, actions: &BTreeMap<String, String>) {
+        let mut groups: BTreeMap<(usize, usize, usize), Vec<usize>> = BTreeMap::new();
+        for (index, player) in self.state.players.iter().enumerate() {
+            if ["do", "attack"].contains(&actions[&player.agent_id].as_str()) {
+                let (x, y) = self.front(index);
+                groups.entry((player.level, x, y)).or_default().push(index);
+            }
+        }
+        for ((level, x, y), players) in groups {
+            if players.len() == 1 {
+                self.do_action(players[0]);
+                continue;
+            }
+            let tile = self.state.maps[level][y][x].clone();
+            if let Some(target) = (0..self.state.players.len()).find(|i| {
+                !players.contains(i)
+                    && self.state.players[*i].level == level
+                    && (self.state.players[*i].x, self.state.players[*i].y) == (x, y)
+            }) {
+                if !self.state.players[target].alive {
+                    self.state.players[target].health = 1;
+                    self.state.players[target].alive = true;
+                    self.state.revives += 1;
+                } else {
+                    let sleeping = self.state.players[target].sleeping;
+                    let damage = players
+                        .iter()
+                        .map(|i| {
+                            (Self::damage(
+                                Self::player_damage_vector(&self.state.players[*i]),
+                                Self::defense_vector(&self.state.players[target]),
+                            ) * if sleeping { 3.5 } else { 1.0 })
+                            .round() as i16
+                        })
+                        .sum::<i16>();
+                    self.state.players[target].health -= damage;
+                    self.state.ff_damage_dealt += damage as f64;
+                }
+                continue;
+            }
+            if let Some(mi) = self
+                .state
+                .monsters
+                .iter()
+                .position(|m| m.level == level && (m.x, m.y) == (x, y))
+            {
+                let damage = players
+                    .iter()
+                    .map(|i| {
+                        Self::damage_to_mob(
+                            Self::player_damage_vector(&self.state.players[*i]),
+                            &self.state.monsters[mi],
+                        )
+                    })
+                    .sum::<i16>();
+                self.state.monsters[mi].health -= damage;
+                if self.state.monsters[mi].health <= 0 {
+                    let monster = self.state.monsters.remove(mi);
+                    if monster.category != "passive" {
+                        self.state.monsters_killed[level] += 1;
+                    }
+                    for &index in &players {
+                        if monster.category == "passive"
+                            && self.state.players[index].role == "forager"
+                        {
+                            self.state.players[index].food = (self.state.players[index].food + 6)
+                                .min(max_food(&self.state.players[index]));
+                            self.state.players[index].hunger = 0.0;
+                        }
+                        if monster.category != "passive"
+                            || self.state.players[index].role == "forager"
+                        {
+                            if let Some(name) = kill_achievement(&monster.kind) {
+                                self.award(name, &[index]);
+                            }
+                        }
+                    }
+                }
+                continue;
+            }
+            let resource = match tile.as_str() {
+                "tree" => Some(("wood", 0, "grass")),
+                "fire_tree" => Some(("wood", 0, "fire_grass")),
+                "ice_shrub" => Some(("wood", 0, "ice_grass")),
+                "stone" => Some(("stone", 1, "path")),
+                "stalagmite" => Some(("stone", 1, "path")),
+                "coal" => Some(("coal", 1, "path")),
+                "iron" => Some(("iron", 2, "path")),
+                "diamond" => Some(("diamond", 3, "path")),
+                "ruby" => Some(("ruby", 4, "path")),
+                "sapphire" => Some(("sapphire", 4, "path")),
+                _ => None,
+            };
+            if let Some((resource, tier, replacement)) = resource {
+                for &index in &players {
+                    if self.state.players[index].pickaxe >= tier {
+                        let stock = self.state.players[index]
+                            .inventory
+                            .get_mut(resource)
+                            .unwrap();
+                        *stock = (*stock + 1).min(99);
+                        self.award(&format!("collect_{resource}"), &[index]);
+                    }
+                }
+                self.state.maps[level][y][x] = replacement.into();
+                continue;
+            }
+            if tile == "chest" {
+                for &index in &players {
+                    self.loot_chest(index);
+                    self.state.chests_opened[level][index] = true;
+                    self.award("open_chest", &[index]);
+                }
+                self.state.maps[level][y][x] = "path".into();
+                continue;
+            }
+            if tile == "ripe_plant" {
+                for &index in &players {
+                    self.state.players[index].food = (self.state.players[index].food + 4)
+                        .min(max_food(&self.state.players[index]));
+                    self.state.players[index].hunger = 0.0;
+                    self.award("eat_plant", &[index]);
+                }
+                self.state.maps[level][y][x] = "plant".into();
+                continue;
+            }
+            for index in players {
+                self.do_action(index);
+            }
         }
     }
 
@@ -518,6 +821,31 @@ impl CraftaxCoopEnv {
         let (x, y) = self.front(index);
         let level = self.state.players[index].level;
         let tile = self.state.maps[level][y][x].clone();
+        if let Some(target) = self.state.players.iter().position(|player| {
+            player.agent_id != self.state.players[index].agent_id
+                && player.level == level
+                && player.x == x
+                && player.y == y
+        }) {
+            if !self.state.players[target].alive {
+                self.state.players[target].health = 1;
+                self.state.players[target].alive = true;
+                self.state.revives += 1;
+            } else {
+                let damage = (Self::damage(
+                    Self::player_damage_vector(&self.state.players[index]),
+                    Self::defense_vector(&self.state.players[target]),
+                ) * if self.state.players[target].sleeping {
+                    3.5
+                } else {
+                    1.0
+                })
+                .round() as i16;
+                self.state.players[target].health -= damage;
+                self.state.ff_damage_dealt += damage as f64;
+            }
+            return;
+        }
         let resource = match tile.as_str() {
             "tree" => Some("wood"),
             "stone" => Some("stone"),
@@ -529,67 +857,64 @@ impl CraftaxCoopEnv {
             _ => None,
         };
         if let Some(resource) = resource {
-            if ["coal", "iron", "diamond", "ruby", "sapphire"].contains(&resource)
-                && self.state.players[index].role != "miner"
-            {
+            let required = match resource {
+                "stone" | "coal" => 1,
+                "iron" => 2,
+                "diamond" => 3,
+                "ruby" | "sapphire" => 4,
+                _ => 0,
+            };
+            if self.state.players[index].pickaxe < required {
                 return;
             }
-            let amount = if self.state.players[index].role == "miner" && resource != "wood" {
-                2
-            } else {
-                1
-            };
+            let amount = 1;
             *self.state.players[index]
                 .inventory
                 .get_mut(resource)
                 .unwrap() += amount;
             self.state.maps[level][y][x] = "grass".into();
-            if tile == "tree"
-                && self.state.players[index].role == "forager"
-                && (self.state.seed + self.state.timestep) % 2 == 0
-            {
-                self.state.players[index].saplings += 1;
-                self.state.achievements.insert("collect_sapling".into());
-            }
-            self.state
-                .achievements
-                .insert(format!("collect_{resource}"));
+            self.award(&format!("collect_{resource}"), &[index]);
             return;
         }
-        if tile == "ripe_plant" && self.state.players[index].role == "forager" {
-            self.state.players[index].food = (self.state.players[index].food + 4)
-                .min(9 + 2 * self.state.players[index].dexterity as i16);
+        if tile == "grass"
+            && self.state.players[index].role == "forager"
+            && mix64(self.state.seed ^ self.state.timestep ^ index as u64) % 5 == 0
+        {
+            self.state.players[index].saplings += 1;
+            self.award("collect_sapling", &[index]);
+            return;
+        }
+        if tile == "ripe_plant" {
+            self.state.players[index].food =
+                (self.state.players[index].food + 4).min(max_food(&self.state.players[index]));
+            self.state.players[index].hunger = 0.0;
             self.state.maps[level][y][x] = "plant".into();
-            self.state.achievements.insert("eat_plant".into());
+            if let Some(plant) = self
+                .state
+                .plants
+                .iter_mut()
+                .find(|plant| (plant.level, plant.x, plant.y) == (level, x, y))
+            {
+                plant.age = 0;
+            }
+            self.award("eat_plant", &[index]);
             return;
         }
         if tile == "fountain" || tile == "water" {
-            let amount = if self.state.players[index].role == "forager" {
-                5
-            } else {
-                3
-            };
+            if self.state.players[index].role != "forager" {
+                return;
+            }
+            let amount = 4;
             self.state.players[index].drink = (self.state.players[index].drink + amount)
-                .min(9 + 2 * self.state.players[index].dexterity as i16);
-            self.state.achievements.insert("drink_water".into());
+                .min(max_drink(&self.state.players[index]));
+            self.award("collect_drink", &[index]);
             return;
         }
         if tile == "chest" {
-            self.state.maps[level][y][x] = "grass".into();
-            self.state.players[index].books += 1;
-            self.state.players[index].arrows += 2;
-            let colours = ["red", "green", "blue", "pink", "cyan", "yellow"];
-            let colour =
-                colours[((self.state.seed + self.state.timestep + level as u64) % 6) as usize];
-            *self.state.players[index].potions.get_mut(colour).unwrap() += 1;
-            if self.state.players[index].role == "miner" {
-                let resource = ["coal", "iron", "diamond"][(level / 3).min(2)];
-                *self.state.players[index]
-                    .inventory
-                    .get_mut(resource)
-                    .unwrap() += 2;
-            }
-            self.state.achievements.insert("open_chest".into());
+            self.state.maps[level][y][x] = "path".into();
+            self.loot_chest(index);
+            self.state.chests_opened[level][index] = true;
+            self.award("open_chest", &[index]);
             return;
         }
         if let Some(mi) = self
@@ -598,40 +923,42 @@ impl CraftaxCoopEnv {
             .iter()
             .position(|m| m.level == level && m.x == x && m.y == y)
         {
-            let mut damage = 1
-                + self.state.players[index].strength as i16
-                + self.state.players[index].sword as i16 * 2;
-            if self.state.players[index].role == "warrior" {
-                damage *= 2
-            }
+            let damage = Self::damage_to_mob(
+                Self::player_damage_vector(&self.state.players[index]),
+                &self.state.monsters[mi],
+            );
             self.state.monsters[mi].health -= damage;
             if self.state.monsters[mi].health <= 0 {
-                let kind = self.state.monsters[mi].kind.clone();
-                self.state.monsters.remove(mi);
-                self.state.players[index].xp += 1;
-                if [3, 7, 12, 18].contains(&self.state.players[index].xp) {
-                    self.state.players[index].level_points += 1;
+                let monster = self.state.monsters.remove(mi);
+                if monster.category != "passive" {
+                    self.state.monsters_killed[level] += 1;
                 }
-                if kind == "cow" {
-                    self.state.players[index].food = (self.state.players[index].food + 4)
-                        .min(9 + 2 * self.state.players[index].dexterity as i16);
+                if monster.category == "passive" && self.state.players[index].role == "forager" {
+                    self.state.players[index].food = (self.state.players[index].food + 6)
+                        .min(max_food(&self.state.players[index]));
+                    self.state.players[index].hunger = 0.0;
                 }
-                self.state.achievements.insert("defeat_monster".into());
+                if monster.category != "passive" || self.state.players[index].role == "forager" {
+                    if let Some(achievement) = kill_achievement(&monster.kind) {
+                        self.award(achievement, &[index]);
+                    }
+                }
             }
             return;
         }
-        if tile == "boss" && level == NUM_LEVELS - 1 {
-            let damage =
-                2 * (if self.state.players[index].role == "warrior" {
-                    2
-                } else {
-                    1
-                }) + self.state.players[index].sword as i16;
-            self.state.boss_health -= damage;
-            self.state.achievements.insert("damage_boss".into());
-            if self.state.boss_health <= 0 {
-                self.state.boss_progress = NUM_LEVELS - 1;
-                self.state.achievements.insert("defeat_boss".into());
+        if ["boss", "necromancer", "necromancer_vulnerable"].contains(&tile.as_str())
+            && level == NUM_LEVELS - 1
+            && self.state.boss_wave_timer == 0
+            && !self.state.monsters.iter().any(|mob| mob.level == level)
+        {
+            self.state.boss_progress += 1;
+            self.state.boss_health =
+                (NUM_LEVELS as i16 - 1 - self.state.boss_progress as i16).max(0);
+            self.state.boss_wave_timer = 7;
+            self.state.maps[level][y][x] = "necromancer".into();
+            self.award("damage_necromancer", &[index]);
+            if self.state.boss_progress >= NUM_LEVELS - 1 {
+                self.award("defeat_necromancer", &[index]);
             }
         }
     }
@@ -680,7 +1007,12 @@ impl CraftaxCoopEnv {
                     .state
                     .players
                     .iter()
-                    .any(|p| p.level == self.state.players[i].level && (p.x, p.y) == pos);
+                    .any(|p| p.level == self.state.players[i].level && (p.x, p.y) == pos)
+                    && !self
+                        .state
+                        .monsters
+                        .iter()
+                        .any(|m| m.level == self.state.players[i].level && (m.x, m.y) == pos);
                 if unique && free {
                     self.state.players[i].x = pos.0;
                     self.state.players[i].y = pos.1;
@@ -689,92 +1021,239 @@ impl CraftaxCoopEnv {
         }
     }
     fn craft(&mut self, i: usize, action: &str) {
-        if action == "make_arrow" && self.state.players[i].inventory["wood"] >= 1 {
-            *self.state.players[i].inventory.get_mut("wood").unwrap() -= 1;
+        let table = self.near(i, "crafting_table");
+        let furnace = self.near(i, "furnace");
+        if action == "make_arrow" {
+            if self.state.players[i].role != "warrior"
+                || !table
+                || !self.has(i, &[("wood", 1), ("stone", 1)])
+            {
+                return;
+            }
+            self.spend(i, &[("wood", 1), ("stone", 1)]);
             self.state.players[i].arrows += 2;
-            return;
+        } else if action == "make_torch" {
+            if self.state.players[i].role != "miner"
+                || !table
+                || !self.has(i, &[("wood", 1), ("coal", 1)])
+            {
+                return;
+            }
+            self.spend(i, &[("wood", 1), ("coal", 1)]);
+            self.state.players[i].torches += 4;
+        } else if ["make_iron_armour", "make_diamond_armour"].contains(&action) {
+            let tier = if action == "make_iron_armour" { 1 } else { 2 };
+            let costs = if tier == 1 {
+                vec![("iron", 3), ("coal", 3)]
+            } else {
+                vec![("diamond", 3)]
+            };
+            if !table
+                || (tier == 1 && !furnace)
+                || !self.has(i, &costs)
+                || !self.state.players[i]
+                    .armour_slots
+                    .iter()
+                    .any(|slot| *slot < tier)
+            {
+                return;
+            }
+            self.spend(i, &costs);
+            let slot = self.state.players[i]
+                .armour_slots
+                .iter()
+                .position(|value| *value < tier)
+                .unwrap();
+            self.state.players[i].armour_slots[slot] = tier;
+            self.state.players[i].armour =
+                *self.state.players[i].armour_slots.iter().max().unwrap();
+        } else {
+            let (costs, item, tier, role, needs_furnace) = match action {
+                "make_wood_pickaxe" => (vec![("wood", 1)], "pickaxe", 1, Some("miner"), false),
+                "make_stone_pickaxe" => (
+                    vec![("wood", 1), ("stone", 1)],
+                    "pickaxe",
+                    2,
+                    Some("miner"),
+                    false,
+                ),
+                "make_iron_pickaxe" => (
+                    vec![("wood", 1), ("stone", 1), ("iron", 1), ("coal", 1)],
+                    "pickaxe",
+                    3,
+                    Some("miner"),
+                    true,
+                ),
+                "make_diamond_pickaxe" => (
+                    vec![("wood", 1), ("diamond", 3)],
+                    "pickaxe",
+                    4,
+                    Some("miner"),
+                    false,
+                ),
+                "make_wood_sword" => (vec![("wood", 1)], "sword", 1, None, false),
+                "make_stone_sword" => (
+                    vec![("wood", 1), ("stone", 1)],
+                    "sword",
+                    2,
+                    Some("warrior"),
+                    false,
+                ),
+                "make_iron_sword" => (
+                    vec![("wood", 1), ("stone", 1), ("iron", 1), ("coal", 1)],
+                    "sword",
+                    3,
+                    Some("warrior"),
+                    true,
+                ),
+                "make_diamond_sword" => (
+                    vec![("wood", 1), ("diamond", 2)],
+                    "sword",
+                    4,
+                    Some("warrior"),
+                    false,
+                ),
+                _ => return,
+            };
+            let current = if item == "pickaxe" {
+                self.state.players[i].pickaxe
+            } else {
+                self.state.players[i].sword
+            };
+            if !table
+                || (needs_furnace && !furnace)
+                || role.is_some_and(|role| self.state.players[i].role != role)
+                || current >= tier
+                || !self.has(i, &costs)
+            {
+                return;
+            }
+            self.spend(i, &costs);
+            if item == "pickaxe" {
+                self.state.players[i].pickaxe = tier
+            } else {
+                self.state.players[i].sword = tier
+            }
         }
-        if action == "make_torch"
-            && self.state.players[i].inventory["wood"] >= 1
-            && self.state.players[i].inventory["coal"] >= 1
-        {
-            *self.state.players[i].inventory.get_mut("wood").unwrap() -= 1;
-            *self.state.players[i].inventory.get_mut("coal").unwrap() -= 1;
-            self.state.players[i].torches += 2;
-            return;
+        self.award(action, &[i]);
+    }
+    fn near(&self, i: usize, tile: &str) -> bool {
+        let p = &self.state.players[i];
+        (-1..=1).any(|dx| {
+            (-1..=1).any(|dy| {
+                if dx == 0 && dy == 0 {
+                    return false;
+                }
+                let x = p.x as isize + dx;
+                let y = p.y as isize + dy;
+                x >= 0
+                    && y >= 0
+                    && x < MAP_SIZE as isize
+                    && y < MAP_SIZE as isize
+                    && self.state.maps[p.level][y as usize][x as usize] == tile
+            })
+        })
+    }
+    fn has(&self, i: usize, costs: &[(&str, u16)]) -> bool {
+        costs
+            .iter()
+            .all(|(resource, amount)| self.state.players[i].inventory[*resource] >= *amount)
+    }
+    fn spend(&mut self, i: usize, costs: &[(&str, u16)]) {
+        for (resource, amount) in costs {
+            *self.state.players[i].inventory.get_mut(*resource).unwrap() -= *amount;
         }
-        let recipe = match action {
-            "make_wood_pickaxe" => Some(("wood", 1, "pickaxe", 1)),
-            "make_stone_pickaxe" => Some(("stone", 2, "pickaxe", 2)),
-            "make_iron_pickaxe" => Some(("iron", 2, "pickaxe", 3)),
-            "make_diamond_pickaxe" => Some(("diamond", 2, "pickaxe", 4)),
-            "make_wood_sword" => Some(("wood", 1, "sword", 1)),
-            "make_stone_sword" => Some(("stone", 2, "sword", 2)),
-            "make_iron_sword" => Some(("iron", 2, "sword", 3)),
-            "make_diamond_sword" => Some(("diamond", 2, "sword", 4)),
-            "make_iron_armour" => Some(("iron", 3, "armour", 1)),
-            "make_diamond_armour" => Some(("diamond", 3, "armour", 2)),
-            _ => None,
-        };
-        let Some((resource, cost, item, tier)) = recipe else {
-            return;
-        };
-        if self.state.players[i].inventory[resource] < cost {
-            return;
-        }
-        if ["iron", "diamond"].contains(&resource) && self.state.players[i].role != "miner" {
-            return;
-        }
-        *self.state.players[i].inventory.get_mut(resource).unwrap() -= cost;
-        match item {
-            "pickaxe" => self.state.players[i].pickaxe = self.state.players[i].pickaxe.max(tier),
-            "sword" => self.state.players[i].sword = self.state.players[i].sword.max(tier),
-            _ => self.state.players[i].armour = self.state.players[i].armour.max(tier),
-        };
-        self.state.achievements.insert(format!("craft_{item}"));
     }
     fn place(&mut self, i: usize, action: &str) {
         if action == "place_plant" || action == "place_torch" {
             let (x, y) = self.front(i);
             let level = self.state.players[i].level;
-            if !["grass", "path", "sand", "gravel"].contains(&self.state.maps[level][y][x].as_str())
+            let valid = if action == "place_plant" {
+                vec!["grass"]
+            } else {
+                vec!["grass", "path", "sand", "gravel", "fire_grass", "ice_grass"]
+            };
+            if !valid.contains(&self.state.maps[level][y][x].as_str())
+                || self.state.item_maps[level][y][x].is_some()
+                || self
+                    .state
+                    .players
+                    .iter()
+                    .any(|p| p.alive && p.level == level && p.x == x && p.y == y)
+                || self
+                    .state
+                    .monsters
+                    .iter()
+                    .any(|m| m.level == level && m.x == x && m.y == y)
             {
                 return;
             }
             if action == "place_plant" && self.state.players[i].saplings > 0 {
                 self.state.players[i].saplings -= 1;
                 self.state.maps[level][y][x] = "plant".into();
-                self.state.achievements.insert("place_plant".into());
+                self.state.plants.push(Plant {
+                    level,
+                    x,
+                    y,
+                    age: 0,
+                });
+                self.award("place_plant", &[i]);
             }
             if action == "place_torch" && self.state.players[i].torches > 0 {
                 self.state.players[i].torches -= 1;
-                self.state.maps[level][y][x] = "path".into();
+                self.state.item_maps[level][y][x] = Some("torch".into());
+                self.award("place_torch", &[i]);
             }
             return;
         }
         let Some((resource, cost, tile)) = (match action {
             "place_stone" => Some(("stone", 1, "stone")),
             "place_table" => Some(("wood", 2, "crafting_table")),
-            "place_furnace" => Some(("stone", 4, "furnace")),
+            "place_furnace" => Some(("stone", 1, "furnace")),
             _ => None,
         }) else {
             return;
         };
         let (x, y) = self.front(i);
         let level = self.state.players[i].level;
-        if !["grass", "path", "sand", "gravel"].contains(&self.state.maps[level][y][x].as_str())
+        let valid = if action == "place_stone" {
+            vec![
+                "grass",
+                "path",
+                "sand",
+                "gravel",
+                "fire_grass",
+                "ice_grass",
+                "water",
+            ]
+        } else {
+            vec!["grass", "path", "sand", "gravel", "fire_grass", "ice_grass"]
+        };
+        if !valid.contains(&self.state.maps[level][y][x].as_str())
             || self.state.players[i].inventory[resource] < cost
+            || self.state.item_maps[level][y][x].is_some()
+            || (action == "place_stone" && self.state.players[i].role != "miner")
+            || self
+                .state
+                .players
+                .iter()
+                .any(|p| p.alive && p.level == level && p.x == x && p.y == y)
+            || self
+                .state
+                .monsters
+                .iter()
+                .any(|m| m.level == level && m.x == x && m.y == y)
         {
             return;
         }
         *self.state.players[i].inventory.get_mut(resource).unwrap() -= cost;
         self.state.maps[level][y][x] = tile.into();
         if action == "place_table" || action == "place_furnace" {
-            self.state.achievements.insert(action.into());
+            self.award(action, &[i]);
         }
     }
     fn shoot_arrow(&mut self, i: usize) {
-        if self.state.players[i].arrows == 0 {
+        if self.state.players[i].arrows == 0 || self.state.players[i].bow == 0 {
             return;
         }
         self.state.players[i].arrows -= 1;
@@ -793,10 +1272,12 @@ impl CraftaxCoopEnv {
             y: p.y as isize,
             dx,
             dy,
-            damage: 2 + p.dexterity as i16 + if p.role == "warrior" { 2 } else { 0 },
+            damage: 5 + p.dexterity as i16,
             ttl: 8,
+            kind: "arrow2".into(),
+            hostile: false,
         });
-        self.state.achievements.insert("shoot_arrow".into());
+        self.award("fire_bow", &[i]);
     }
     fn drink_potion(&mut self, i: usize, colour: &str) {
         if !self.state.players[i].potions.contains_key(colour)
@@ -805,72 +1286,105 @@ impl CraftaxCoopEnv {
             return;
         }
         *self.state.players[i].potions.get_mut(colour).unwrap() -= 1;
-        match colour {
-            "red" => {
-                self.state.players[i].health = (self.state.players[i].health + 5)
-                    .min(9 + 2 * self.state.players[i].strength as i16)
+        let colours = ["red", "green", "blue", "pink", "cyan", "yellow"];
+        let effect = self.state.potion_mapping
+            [colours.iter().position(|value| *value == colour).unwrap()]
+        .as_str();
+        match effect {
+            "health" => {
+                self.state.players[i].health =
+                    (self.state.players[i].health + 8).min(max_health(&self.state.players[i]))
             }
-            "green" => {
-                self.state.players[i].food = (self.state.players[i].food + 5)
-                    .min(9 + 2 * self.state.players[i].dexterity as i16)
+            "harm" => self.state.players[i].health -= 3,
+            "mana" => {
+                self.state.players[i].mana =
+                    (self.state.players[i].mana + 8).min(max_mana(&self.state.players[i]))
             }
-            "blue" => {
-                self.state.players[i].drink = (self.state.players[i].drink + 5)
-                    .min(9 + 2 * self.state.players[i].dexterity as i16)
-            }
-            "pink" => {
-                self.state.players[i].mana = (self.state.players[i].mana + 5)
-                    .min(9 + 2 * self.state.players[i].intelligence as i16)
-            }
-            "cyan" => self.state.players[i].energy = (self.state.players[i].energy + 5).min(9),
-            _ => self.state.players[i].level_points += 1,
+            "drain_mana" => self.state.players[i].mana = (self.state.players[i].mana - 3).max(0),
+            "energy" => self.state.players[i].energy = (self.state.players[i].energy + 8).min(9),
+            _ => self.state.players[i].energy = (self.state.players[i].energy - 3).max(0),
         }
-        self.state.achievements.insert("drink_potion".into());
+        self.award("drink_potion", &[i]);
     }
     fn read_book(&mut self, i: usize) {
         if self.state.players[i].books == 0 {
             return;
         }
         self.state.players[i].books -= 1;
-        self.state.players[i].intelligence += 1;
-        self.state.achievements.insert("read_book".into());
+        self.state.players[i].learned_spell = true;
+        self.award("learn_spell", &[i]);
     }
     fn level_up(&mut self, i: usize, attribute: &str) {
-        if self.state.players[i].level_points == 0 {
+        if self.state.players[i].xp == 0 {
             return;
         }
         match attribute {
-            "dexterity" => self.state.players[i].dexterity += 1,
-            "strength" => self.state.players[i].strength += 1,
-            "intelligence" => self.state.players[i].intelligence += 1,
+            "dexterity" if self.state.players[i].dexterity < 5 => {
+                self.state.players[i].dexterity += 1
+            }
+            "strength" if self.state.players[i].strength < 5 => self.state.players[i].strength += 1,
+            "intelligence" if self.state.players[i].intelligence < 5 => {
+                self.state.players[i].intelligence += 1
+            }
             _ => return,
         }
-        self.state.players[i].level_points -= 1;
-        self.state.achievements.insert("level_up".into());
+        self.state.players[i].xp -= 1;
+        self.award("level_up", &[i]);
     }
     fn enchant(&mut self, i: usize, item: &str) {
-        if !["sword", "armour", "bow"].contains(&item)
-            || self.state.players[i].inventory["ruby"] == 0
-            || self.state.players[i].inventory["sapphire"] == 0
+        if !["sword", "armour", "bow"].contains(&item) {
+            return;
+        }
+        let (x, y) = self.front(i);
+        let table = self.state.maps[self.state.players[i].level][y][x].as_str();
+        let (element, gem) = match table {
+            "enchantment_table_fire" => ("fire", "ruby"),
+            "enchantment_table_ice" => ("ice", "sapphire"),
+            _ => return,
+        };
+        if self.state.players[i].mana < 9
+            || self.state.players[i].inventory[gem] == 0
+            || (["sword", "bow"].contains(&item) && self.state.players[i].role != "warrior")
+            || (item == "sword" && self.state.players[i].sword == 0)
+            || (item == "bow" && self.state.players[i].bow == 0)
+            || (item == "armour"
+                && !self.state.players[i]
+                    .armour_slots
+                    .iter()
+                    .any(|tier| *tier > 0))
         {
             return;
         }
-        *self.state.players[i].inventory.get_mut("ruby").unwrap() -= 1;
-        *self.state.players[i].inventory.get_mut("sapphire").unwrap() -= 1;
-        let value = Some(
-            if (self.state.seed + self.state.timestep) % 2 == 0 {
-                "fire"
-            } else {
-                "ice"
-            }
-            .into(),
-        );
+        let value = Some(element.into());
         match item {
             "sword" => self.state.players[i].sword_enchantment = value,
-            "armour" => self.state.players[i].armour_enchantment = value,
+            "armour" => {
+                let Some(slot) = self.state.players[i]
+                    .armour_enchantments
+                    .iter()
+                    .position(Option::is_none)
+                    .or_else(|| {
+                        self.state.players[i]
+                            .armour_enchantments
+                            .iter()
+                            .position(|current| current.as_deref() != Some(element))
+                    })
+                else {
+                    return;
+                };
+                self.state.players[i].armour_enchantments[slot] = value.clone();
+                self.state.players[i].armour_enchantment = value;
+            }
             _ => self.state.players[i].bow_enchantment = value,
         }
-        self.state.achievements.insert("enchant_item".into());
+        *self.state.players[i].inventory.get_mut(gem).unwrap() -= 1;
+        self.state.players[i].mana -= 9;
+        if item == "sword" {
+            self.award("enchant_sword", &[i]);
+        }
+        if item == "armour" {
+            self.award("enchant_armour", &[i]);
+        }
     }
     fn change_floor(&mut self, i: usize, direction: isize) {
         let p = &self.state.players[i];
@@ -879,23 +1393,240 @@ impl CraftaxCoopEnv {
         } else {
             "stairs_up"
         };
-        if self.state.maps[p.level][p.y][p.x] != required {
+        if self.state.maps[p.level][p.y][p.x] != required
+            || (direction > 0 && self.state.monsters_killed[p.level] < 8)
+        {
             return;
         }
         let next = p.level as isize + direction;
         if !(0..NUM_LEVELS as isize).contains(&next) {
             return;
         }
-        self.state.players[i].level = next as usize;
-        self.state.players[i].x = if direction > 0 { 2 } else { 45 };
-        self.state.players[i].y = self.state.players[i].x;
+        let next = next as usize;
+        let first = direction > 0
+            && level_achievement(next)
+                .is_some_and(|achievement| !self.state.achievements.contains(achievement));
+        let destinations = if direction < 0 {
+            self.state.ladders_down[next].clone()
+        } else {
+            self.state.ladders_up[next].clone()
+        };
+        for (index, player) in self.state.players.iter_mut().enumerate() {
+            player.level = next;
+            (player.x, player.y) = destinations[index];
+            if first {
+                player.xp += 1;
+            }
+        }
         if direction > 0 {
-            self.state.achievements.insert("descend".into());
+            if let Some(achievement) = level_achievement(next) {
+                self.award(
+                    achievement,
+                    &(0..self.state.players.len()).collect::<Vec<_>>(),
+                );
+            }
+        }
+    }
+    fn resolve_floor_actions(&mut self, actions: &BTreeMap<String, String>) {
+        if let Some(i) = self
+            .state
+            .players
+            .iter()
+            .position(|p| actions[&p.agent_id] == "descend")
+        {
+            self.change_floor(i, 1);
+            return;
+        }
+        if let Some(i) = self
+            .state
+            .players
+            .iter()
+            .position(|p| actions[&p.agent_id] == "ascend")
+        {
+            self.change_floor(i, -1);
+        }
+    }
+    fn melee_damage(player: &Player, armour: u8) -> i16 {
+        let base = [1.0, 2.0, 3.0, 5.0, 8.0][player.sword as usize]
+            * if player.role == "warrior" { 2.0 } else { 1.0 };
+        let coefficient = 1.0 + 0.25 * (player.strength as f64 - 1.0);
+        ((base * coefficient).round() as i16 - armour as i16).max(0)
+    }
+    fn player_damage_vector(player: &Player) -> [f64; 3] {
+        let base = [1.0, 2.0, 3.0, 5.0, 8.0][player.sword as usize]
+            * if player.role == "warrior" { 2.0 } else { 1.0 };
+        let physical = base * (1.0 + 0.25 * (player.strength as f64 - 1.0));
+        let element = base * 0.5 * (1.0 + 0.05 * (player.intelligence as f64 - 1.0));
+        [
+            physical,
+            if player.sword_enchantment.as_deref() == Some("fire") {
+                element
+            } else {
+                0.0
+            },
+            if player.sword_enchantment.as_deref() == Some("ice") {
+                element
+            } else {
+                0.0
+            },
+        ]
+    }
+    fn defense_vector(player: &Player) -> [f64; 3] {
+        [
+            player.armour_slots.iter().map(|v| *v as f64 * 0.1).sum(),
+            player
+                .armour_enchantments
+                .iter()
+                .filter(|v| v.as_deref() == Some("fire"))
+                .count() as f64
+                * 0.2,
+            player
+                .armour_enchantments
+                .iter()
+                .filter(|v| v.as_deref() == Some("ice"))
+                .count() as f64
+                * 0.2,
+        ]
+    }
+    fn damage(vector: [f64; 3], defense: [f64; 3]) -> f64 {
+        (0..3).map(|i| (1.0 - defense[i]) * vector[i]).sum()
+    }
+    fn damage_to_mob(vector: [f64; 3], mob: &Monster) -> i16 {
+        let physical = if mob.level == 4 {
+            0.5
+        } else if mob.level == 5 && mob.category == "melee" {
+            0.2
+        } else if [6, 7].contains(&mob.level) {
+            0.9
+        } else {
+            0.0
+        };
+        Self::damage(
+            vector,
+            [
+                physical,
+                if mob.level == 6 { 1.0 } else { 0.0 },
+                if mob.level == 7 { 1.0 } else { 0.0 },
+            ],
+        )
+        .round()
+        .max(0.0) as i16
+    }
+    fn incoming(vector: [f64; 3], player: &Player, boss: bool) -> i16 {
+        (Self::damage(vector, Self::defense_vector(player)) * if boss { 1.5 } else { 1.0 })
+            .round()
+            .max(0.0) as i16
+    }
+    fn player_projectile_vector(&self, shot: &Projectile) -> [f64; 3] {
+        let Some(owner) = self.state.players.iter().find(|p| p.agent_id == shot.owner) else {
+            return projectile_vector(&shot.kind);
+        };
+        if shot.kind == "arrow2" {
+            let physical = 5.0 * (1.0 + 0.2 * (owner.dexterity as f64 - 1.0));
+            [
+                physical,
+                if owner.bow_enchantment.as_deref() == Some("fire") {
+                    2.5
+                } else {
+                    0.0
+                },
+                if owner.bow_enchantment.as_deref() == Some("ice") {
+                    2.5
+                } else {
+                    0.0
+                },
+            ]
+        } else if shot.kind == "fireball" {
+            [
+                0.0,
+                3.0 * (1.0 + 0.5 * (owner.intelligence as f64 - 1.0)),
+                0.0,
+            ]
+        } else {
+            projectile_vector(&shot.kind)
+        }
+    }
+    fn loot_chest(&mut self, i: usize) {
+        let level = self.state.players[i].level;
+        let agent_sum = self.state.players[i]
+            .agent_id
+            .bytes()
+            .map(u64::from)
+            .sum::<u64>();
+        let value = mix64(
+            self.state.seed ^ (self.state.timestep << 17) ^ ((level as u64) << 9) ^ agent_sum,
+        );
+        if self.state.players[i].role == "miner" && value % 10 < 6 {
+            *self.state.players[i].inventory.get_mut("wood").unwrap() += 1 + (value % 5) as u16;
+            self.state.players[i].torches += 4 + ((value / 7) % 4) as u16;
+            let ore = ["coal", "iron", "diamond", "sapphire", "ruby"][((value / 11) % 5) as usize];
+            let span = if ore == "coal" { 3 } else { 2 };
+            *self.state.players[i].inventory.get_mut(ore).unwrap() +=
+                1 + ((value / 13) % span) as u16;
+            self.state.players[i].pickaxe = self.state.players[i]
+                .pickaxe
+                .max(1 + ((value / 17) % 4) as u8);
+        }
+        let colour =
+            ["red", "green", "blue", "pink", "cyan", "yellow"][((value / 19) % 6) as usize];
+        if (value / 23) % 2 == 0 {
+            *self.state.players[i].potions.get_mut(colour).unwrap() +=
+                1 + ((value / 29) % 2) as u16;
+        }
+        let opened = self.state.chests_opened[level][i];
+        if self.state.players[i].role == "warrior" {
+            if (value / 31) % 2 == 0 {
+                self.state.players[i].arrows += 4 + ((value / 37) % 5) as u16;
+            }
+            if level == 1 && !opened {
+                self.state.players[i].bow = self.state.players[i].bow.max(1);
+                self.award("find_bow", &[i]);
+            }
+        }
+        if [3, 4].contains(&level) && !opened {
+            self.state.players[i].books += 1;
+        }
+    }
+    fn cast_spell(&mut self, i: usize) {
+        if !self.state.players[i].learned_spell {
+            return;
+        }
+        if self.state.players[i].role == "forager" && self.state.players[i].mana >= 6 {
+            self.state.players[i].mana -= 6;
+            for player in &mut self.state.players {
+                if player.alive {
+                    player.health = (player.health + 2).min(max_health(player));
+                }
+            }
+            self.award("cast_spell", &[i]);
+        } else if ["warrior", "miner"].contains(&self.state.players[i].role.as_str())
+            && self.state.players[i].mana >= 2
+        {
+            self.state.players[i].mana -= 2;
+            let p = &self.state.players[i];
+            let (dx, dy) = direction(&p.facing);
+            let damage = (3.0 * (1.0 + 0.5 * (p.intelligence as f64 - 1.0)))
+                .round()
+                .max(1.0) as i16;
+            self.state.projectiles.push(Projectile {
+                owner: p.agent_id.clone(),
+                level: p.level,
+                x: p.x as isize,
+                y: p.y as isize,
+                dx,
+                dy,
+                damage,
+                ttl: 8,
+                kind: "fireball".into(),
+                hostile: false,
+            });
+            self.award("cast_spell", &[i]);
         }
     }
     fn update_projectiles(&mut self) {
         let mut remaining = Vec::new();
-        for mut shot in self.state.projectiles.drain(..) {
+        let shots = std::mem::take(&mut self.state.projectiles);
+        for mut shot in shots {
             shot.x += shot.dx;
             shot.y += shot.dy;
             shot.ttl -= 1;
@@ -912,13 +1643,67 @@ impl CraftaxCoopEnv {
             {
                 continue;
             }
-            if let Some(mi) = self.state.monsters.iter().position(|m| {
-                m.level == shot.level && m.x == shot.x as usize && m.y == shot.y as usize
+            if shot.hostile {
+                if let Some(pi) = self.state.players.iter().position(|p| {
+                    p.alive
+                        && p.level == shot.level
+                        && p.x == shot.x as usize
+                        && p.y == shot.y as usize
+                }) {
+                    let damage = Self::incoming(
+                        projectile_vector(&shot.kind),
+                        &self.state.players[pi],
+                        shot.level == NUM_LEVELS - 1,
+                    );
+                    self.state.players[pi].health -= damage;
+                    self.state.players[pi].sleeping = false;
+                    self.state.players[pi].resting = false;
+                    continue;
+                }
+            } else if let Some(pi) = self.state.players.iter().position(|p| {
+                p.alive
+                    && p.agent_id != shot.owner
+                    && p.level == shot.level
+                    && p.x == shot.x as usize
+                    && p.y == shot.y as usize
             }) {
-                self.state.monsters[mi].health -= shot.damage;
+                let damage = Self::incoming(
+                    self.player_projectile_vector(&shot),
+                    &self.state.players[pi],
+                    false,
+                );
+                self.state.players[pi].health -= damage;
+                self.state.players[pi].sleeping = false;
+                self.state.players[pi].resting = false;
+                self.state.ff_damage_dealt += damage as f64;
+                continue;
+            }
+            if let Some(mi) = self.state.monsters.iter().position(|m| {
+                !shot.hostile
+                    && m.level == shot.level
+                    && m.x == shot.x as usize
+                    && m.y == shot.y as usize
+            }) {
+                let damage = Self::damage_to_mob(
+                    self.player_projectile_vector(&shot),
+                    &self.state.monsters[mi],
+                );
+                self.state.monsters[mi].health -= damage;
                 if self.state.monsters[mi].health <= 0 {
-                    self.state.monsters.remove(mi);
-                    self.state.achievements.insert("defeat_monster".into());
+                    let monster = self.state.monsters.remove(mi);
+                    if monster.category != "passive" {
+                        self.state.monsters_killed[monster.level] += 1;
+                    }
+                    if let Some(owner) = self
+                        .state
+                        .players
+                        .iter()
+                        .position(|p| p.agent_id == shot.owner)
+                    {
+                        if let Some(achievement) = kill_achievement(&monster.kind) {
+                            self.award(achievement, &[owner]);
+                        }
+                    }
                 }
                 continue;
             }
@@ -948,12 +1733,86 @@ impl CraftaxCoopEnv {
             };
             let distance = self.state.players[pi].x.abs_diff(self.state.monsters[mi].x)
                 + self.state.players[pi].y.abs_diff(self.state.monsters[mi].y);
-            if distance <= 1 {
-                let damage = (self.state.monsters[mi].damage
-                    - (self.state.players[pi].armour as i16
-                        + self.state.players[pi].strength as i16 / 2))
-                    .max(0);
-                self.state.players[pi].health -= damage;
+            let category = self.state.monsters[mi].category.clone();
+            if category == "passive" {
+                let target_x = self.state.players[pi].x;
+                let target_y = self.state.players[pi].y;
+                let mob_x = self.state.monsters[mi].x;
+                let mob_y = self.state.monsters[mi].y;
+                let (dx, dy) = if target_x.abs_diff(mob_x) >= target_y.abs_diff(mob_y) {
+                    (if target_x > mob_x { -1 } else { 1 }, 0)
+                } else {
+                    (0, if target_y > mob_y { -1 } else { 1 })
+                };
+                self.move_mob(mi, dx, dy);
+            } else if category == "ranged"
+                && distance <= 6
+                && self.state.monsters[mi].attack_cooldown <= 0
+            {
+                let target_x = self.state.players[pi].x;
+                let target_y = self.state.players[pi].y;
+                let mob_x = self.state.monsters[mi].x;
+                let mob_y = self.state.monsters[mi].y;
+                let (dx, dy) = if target_x.abs_diff(mob_x) >= target_y.abs_diff(mob_y) {
+                    (if target_x > mob_x { 1 } else { -1 }, 0)
+                } else {
+                    (0, if target_y > mob_y { 1 } else { -1 })
+                };
+                let kind = projectile_kind(&self.state.monsters[mi].kind).to_string();
+                let damage = self.state.monsters[mi].damage;
+                self.state.projectiles.push(Projectile {
+                    owner: self.state.monsters[mi].id.clone(),
+                    level,
+                    x: mob_x as isize,
+                    y: mob_y as isize,
+                    dx,
+                    dy,
+                    damage,
+                    ttl: 8,
+                    kind,
+                    hostile: true,
+                });
+                self.state.monsters[mi].attack_cooldown = 5;
+            } else if category == "ranged" {
+                let target_x = self.state.players[pi].x;
+                let target_y = self.state.players[pi].y;
+                let mob_x = self.state.monsters[mi].x;
+                let mob_y = self.state.monsters[mi].y;
+                let (tx, ty) = if target_x.abs_diff(mob_x) >= target_y.abs_diff(mob_y) {
+                    (if target_x > mob_x { 1 } else { -1 }, 0)
+                } else {
+                    (0, if target_y > mob_y { 1 } else { -1 })
+                };
+                if distance <= 3 {
+                    self.move_mob(mi, -tx, -ty)
+                } else if distance >= 6 {
+                    self.move_mob(mi, tx, ty)
+                } else {
+                    let dirs = [(-1, 0), (1, 0), (0, -1), (0, 1)];
+                    let key = self.state.monsters[mi]
+                        .id
+                        .bytes()
+                        .map(u64::from)
+                        .sum::<u64>();
+                    let (dx, dy) =
+                        dirs[(mix64(self.state.seed ^ self.state.timestep ^ key) % 4) as usize];
+                    self.move_mob(mi, dx, dy)
+                }
+            } else if distance <= 1 && self.state.monsters[mi].attack_cooldown <= 0 {
+                let damage = Self::incoming(
+                    mob_damage_vector(&self.state.monsters[mi].kind),
+                    &self.state.players[pi],
+                    level == NUM_LEVELS - 1,
+                );
+                let sleeping = self.state.players[pi].sleeping;
+                self.state.players[pi].health -=
+                    ((damage as f64) * if sleeping { 3.5 } else { 1.0 }).round() as i16;
+                self.state.players[pi].sleeping = false;
+                self.state.players[pi].resting = false;
+                if sleeping {
+                    self.award("wake_up", &[pi]);
+                }
+                self.state.monsters[mi].attack_cooldown = 5;
             } else if distance <= 8 {
                 let target_x = self.state.players[pi].x;
                 let target_y = self.state.players[pi].y;
@@ -964,31 +1823,292 @@ impl CraftaxCoopEnv {
                 } else {
                     (0, if target_y > mob_y { 1 } else { -1 })
                 };
-                let nx = (mob_x as isize + dx) as usize;
-                let ny = (mob_y as isize + dy) as usize;
-                let open = !["stone", "wall", "water", "lava"]
-                    .contains(&self.state.maps[level][ny][nx].as_str());
-                let player_free = !self
-                    .state
-                    .players
-                    .iter()
-                    .any(|p| p.level == level && p.x == nx && p.y == ny);
-                if open && player_free {
-                    self.state.monsters[mi].x = nx;
-                    self.state.monsters[mi].y = ny;
-                }
+                self.move_mob(mi, dx, dy);
             }
+            self.state.monsters[mi].attack_cooldown =
+                (self.state.monsters[mi].attack_cooldown - 1).max(0);
+        }
+    }
+
+    fn move_mob(&mut self, mi: usize, dx: isize, dy: isize) {
+        let level = self.state.monsters[mi].level;
+        let nx = (self.state.monsters[mi].x as isize + dx) as usize;
+        let ny = (self.state.monsters[mi].y as isize + dy) as usize;
+        if nx >= MAP_SIZE || ny >= MAP_SIZE {
+            return;
+        }
+        let open =
+            !["stone", "wall", "water", "lava"].contains(&self.state.maps[level][ny][nx].as_str());
+        let player_free = !self
+            .state
+            .players
+            .iter()
+            .any(|p| p.level == level && p.x == nx && p.y == ny);
+        let mob_free = !self
+            .state
+            .monsters
+            .iter()
+            .enumerate()
+            .any(|(i, m)| i != mi && m.level == level && m.x == nx && m.y == ny);
+        if open && player_free && mob_free {
+            self.state.monsters[mi].x = nx;
+            self.state.monsters[mi].y = ny;
         }
     }
 
     fn update_plants(&mut self) {
-        if self.state.timestep > 0 && self.state.timestep % 50 == 0 {
-            for level in 0..NUM_LEVELS {
-                for y in 0..MAP_SIZE {
-                    for x in 0..MAP_SIZE {
-                        if self.state.maps[level][y][x] == "plant" {
-                            self.state.maps[level][y][x] = "ripe_plant".into();
-                        }
+        for plant in &mut self.state.plants {
+            plant.age = (plant.age + 1).min(500);
+            if plant.age >= 500 && self.state.maps[plant.level][plant.y][plant.x] == "plant" {
+                self.state.maps[plant.level][plant.y][plant.x] = "ripe_plant".into();
+            }
+        }
+    }
+    fn calculate_inventory_achievements(&mut self) {
+        let mut awards = Vec::new();
+        for (index, p) in self.state.players.iter().enumerate() {
+            for resource in [
+                "wood", "stone", "coal", "iron", "diamond", "ruby", "sapphire",
+            ] {
+                if p.inventory[resource] > 0 {
+                    awards.push((format!("collect_{resource}"), index));
+                }
+            }
+            if p.saplings > 0 {
+                awards.push(("collect_sapling".into(), index));
+            }
+            if p.bow > 0 {
+                awards.push(("find_bow".into(), index));
+            }
+            if p.arrows > 0 {
+                awards.push(("make_arrow".into(), index));
+            }
+            if p.torches > 0 {
+                awards.push(("make_torch".into(), index));
+            }
+            for (item, value) in [("pickaxe", p.pickaxe), ("sword", p.sword)] {
+                for (tier, name) in ["wood", "stone", "iron", "diamond"].into_iter().enumerate() {
+                    if value >= tier as u8 + 1 {
+                        awards.push((format!("make_{name}_{item}"), index));
+                    }
+                }
+            }
+        }
+        for (name, index) in awards {
+            self.award(&name, &[index]);
+        }
+    }
+    fn spawn_mobs(&mut self) {
+        let alive = self
+            .state
+            .players
+            .iter()
+            .filter(|p| p.alive)
+            .cloned()
+            .collect::<Vec<_>>();
+        if alive.is_empty() {
+            return;
+        }
+        let level = alive[0].level;
+        if level == NUM_LEVELS - 1 {
+            return;
+        }
+        self.state.monsters.retain(|m| {
+            m.level != level
+                || alive
+                    .iter()
+                    .map(|p| p.x.abs_diff(m.x) + p.y.abs_diff(m.y))
+                    .min()
+                    .unwrap_or(0)
+                    < 14
+        });
+        let kinds = [
+            [Some("cow"), Some("zombie"), Some("skeleton")],
+            [Some("snail"), Some("orc_soldier"), Some("orc_mage")],
+            [Some("bat"), Some("gnome_warrior"), Some("gnome_archer")],
+            [Some("bat"), Some("lizard"), Some("kobold")],
+            [None, Some("knight"), Some("archer")],
+            [None, Some("troll"), Some("deep_thing")],
+            [None, Some("pigman"), Some("fire_elemental")],
+            [None, Some("frost_troll"), Some("ice_elemental")],
+        ];
+        let health = [
+            [3, 5, 3],
+            [6, 9, 6],
+            [4, 7, 5],
+            [8, 11, 8],
+            [0, 12, 12],
+            [0, 20, 4],
+            [0, 20, 14],
+            [0, 24, 16],
+        ];
+        let categories = ["passive", "melee", "ranged"];
+        let caps = if [1, 3, 4].contains(&level) {
+            [3, 3, 2]
+        } else {
+            [
+                self.state.players.len() * 3,
+                self.state.players.len() * 3,
+                self.state.players.len() * 2,
+            ]
+        };
+        let chances = if level == 0 {
+            [
+                0.1,
+                0.02 + 0.1 * (1.0 - self.state.light_level).powi(2),
+                0.05,
+            ]
+        } else {
+            [if level == 7 { 0.0 } else { 0.1 }, 0.06, 0.05]
+        };
+        for category in 0..3 {
+            let Some(kind) = kinds[level][category] else {
+                continue;
+            };
+            if self
+                .state
+                .monsters
+                .iter()
+                .filter(|m| m.level == level && m.category == categories[category])
+                .count()
+                >= caps[category]
+            {
+                continue;
+            }
+            let roll = (mix64(
+                self.state.seed
+                    ^ self.state.timestep
+                    ^ ((level as u64) << 8)
+                    ^ ((category as u64) << 16),
+            ) % 10_000) as f64
+                / 10_000.0;
+            if roll >= chances[category] {
+                continue;
+            }
+            let start =
+                (mix64(self.state.seed ^ (self.state.timestep << 11) ^ ((category as u64) << 25))
+                    % (MAP_SIZE * MAP_SIZE) as u64) as usize;
+            for offset in 0..MAP_SIZE * MAP_SIZE {
+                let cell = (start + offset) % (MAP_SIZE * MAP_SIZE);
+                let (x, y) = (cell % MAP_SIZE, cell / MAP_SIZE);
+                let distance = alive
+                    .iter()
+                    .map(|p| p.x.abs_diff(x) + p.y.abs_diff(y))
+                    .min()
+                    .unwrap();
+                if distance <= 9
+                    || distance >= 14
+                    || !["grass", "path", "sand", "gravel", "fire_grass", "ice_grass"]
+                        .contains(&self.state.maps[level][y][x].as_str())
+                    || self
+                        .state
+                        .monsters
+                        .iter()
+                        .any(|m| m.level == level && m.x == x && m.y == y)
+                {
+                    continue;
+                }
+                self.state.monsters.push(Monster {
+                    id: format!("spawn_{level}_{}_{category}", self.state.timestep),
+                    kind: kind.into(),
+                    level,
+                    x,
+                    y,
+                    health: health[level][category],
+                    damage: mob_damage(kind),
+                    category: categories[category].into(),
+                    attack_cooldown: 0,
+                });
+                break;
+            }
+        }
+    }
+    fn update_boss(&mut self) {
+        if !self
+            .state
+            .players
+            .iter()
+            .any(|p| p.alive && p.level == NUM_LEVELS - 1)
+        {
+            return;
+        }
+        if self.state.boss_wave_timer > 0 {
+            self.state.boss_wave_timer -= 1;
+            let category = 1 + (self.state.boss_wave_timer as usize % 2);
+            let floor = self.state.boss_progress.min(7);
+            let kinds = [
+                [Some("cow"), Some("zombie"), Some("skeleton")],
+                [Some("snail"), Some("orc_soldier"), Some("orc_mage")],
+                [Some("bat"), Some("gnome_warrior"), Some("gnome_archer")],
+                [Some("bat"), Some("lizard"), Some("kobold")],
+                [None, Some("knight"), Some("archer")],
+                [None, Some("troll"), Some("deep_thing")],
+                [None, Some("pigman"), Some("fire_elemental")],
+                [None, Some("frost_troll"), Some("ice_elemental")],
+            ];
+            if let Some(kind) = kinds[floor][category] {
+                if self
+                    .state
+                    .monsters
+                    .iter()
+                    .filter(|m| m.level == NUM_LEVELS - 1)
+                    .count()
+                    < 6
+                {
+                    let graves = self.state.maps[NUM_LEVELS - 1]
+                        .iter()
+                        .enumerate()
+                        .flat_map(|(y, row)| {
+                            row.iter().enumerate().filter_map(move |(x, tile)| {
+                                ["grave", "grave2", "grave3"]
+                                    .contains(&tile.as_str())
+                                    .then_some((x, y))
+                            })
+                        })
+                        .collect::<Vec<_>>();
+                    if !graves.is_empty() {
+                        let (x, y) = graves[(mix64(
+                            self.state.seed ^ self.state.timestep ^ self.state.boss_progress as u64,
+                        ) % graves.len() as u64)
+                            as usize];
+                        self.state.monsters.push(Monster {
+                            id: format!(
+                                "boss_{}_{}_{}",
+                                self.state.boss_progress, self.state.timestep, category
+                            ),
+                            kind: kind.into(),
+                            level: NUM_LEVELS - 1,
+                            x,
+                            y,
+                            health: [
+                                [3, 5, 3],
+                                [6, 9, 6],
+                                [4, 7, 5],
+                                [8, 11, 8],
+                                [0, 12, 12],
+                                [0, 20, 4],
+                                [0, 20, 14],
+                                [0, 24, 16],
+                            ][floor][category],
+                            damage: mob_damage(kind),
+                            category: ["passive", "melee", "ranged"][category].into(),
+                            attack_cooldown: 0,
+                        });
+                    }
+                }
+            }
+        }
+        if self.state.boss_wave_timer == 0
+            && !self
+                .state
+                .monsters
+                .iter()
+                .any(|m| m.level == NUM_LEVELS - 1)
+        {
+            for row in &mut self.state.maps[NUM_LEVELS - 1] {
+                for tile in row {
+                    if tile == "necromancer" {
+                        *tile = "necromancer_vulnerable".into();
                     }
                 }
             }
@@ -1026,20 +2146,32 @@ impl CraftaxCoopEnv {
             } else {
                 self.state.players[target].drink
             };
-            if stock <= 0 || target_stock >= 9 {
+            let cap = if resource == "food" {
+                max_food(&self.state.players[target])
+            } else {
+                max_drink(&self.state.players[target])
+            };
+            if stock <= 0 || target_stock >= cap {
                 return;
             }
             if resource == "food" {
                 self.state.players[giver].food -= 1;
-                self.state.players[target].food = (self.state.players[target].food + 1).min(9);
+                self.state.players[target].food = (self.state.players[target].food + 1).min(cap);
             } else {
                 self.state.players[giver].drink -= 1;
-                self.state.players[target].drink = (self.state.players[target].drink + 1).min(9);
+                self.state.players[target].drink = (self.state.players[target].drink + 1).min(cap);
             }
-            self.state.players[target].request_type = None;
-            self.state.players[target].request_duration = 0;
             self.state.trade_count += 1;
-            self.state.achievements.insert("trade".into());
+            if resource == "food" {
+                self.state.players[target].hunger = 0.0;
+                self.state.food_trade_count += 1;
+            }
+            if resource == "drink" {
+                self.state.players[target].thirst = 0.0;
+                self.state.drink_trade_count += 1;
+            }
+            self.award(&format!("collect_{resource}"), &[target]);
+            self.award("trade", &[giver, target]);
             return;
         }
         let stock = *self.state.players[giver]
@@ -1057,10 +2189,8 @@ impl CraftaxCoopEnv {
             .inventory
             .get_mut(resource)
             .unwrap() += 1;
-        self.state.players[target].request_type = None;
-        self.state.players[target].request_duration = 0;
         self.state.trade_count += 1;
-        self.state.achievements.insert("trade".into());
+        self.award("trade", &[giver, target]);
     }
     fn finish(&mut self, reason: &str) {
         self.state.terminated = true;
@@ -1212,11 +2342,12 @@ impl CraftaxCoopEnv {
                 let terrain=if x<0||y<0||x>=MAP_SIZE as isize||y>=MAP_SIZE as isize{"out_of_bounds"}else{self.state.maps[p.level][y as usize][x as usize].as_str()};
                 let agents=self.state.players.iter().filter(|q|q.alive&&q.level==p.level&&q.x as isize==x&&q.y as isize==y).map(|q|q.agent_id.clone()).collect::<Vec<_>>();
                 let mobs=self.state.monsters.iter().filter(|m|m.level==p.level&&m.x as isize==x&&m.y as isize==y).map(|m|m.id.clone()).collect::<Vec<_>>();
-                row.push(json!({"x":x,"y":y,"terrain":terrain,"agents":agents,"mobs":mobs}));
+                let item=if x<0||y<0||x>=MAP_SIZE as isize||y>=MAP_SIZE as isize{None}else{self.state.item_maps[p.level][y as usize][x as usize].clone()};
+                row.push(json!({"x":x,"y":y,"terrain":terrain,"item":item,"agents":agents,"mobs":mobs}));
             } view.push(Value::Array(row)); }
             let visible=self.state.monsters.iter().filter(|m|m.level==p.level&&m.x.abs_diff(p.x)<=radius as usize&&m.y.abs_diff(p.y)<=radius as usize).collect::<Vec<_>>();
             let achievements=self.state.achievements.iter().map(|name|(name.clone(),true)).collect::<BTreeMap<_,_>>();
-            (p.agent_id.clone(),json!({"agent_id":p.agent_id,"agent_index":index,"role":p.role,"legal_agent_ids":self.state.players.iter().map(|q|q.agent_id.clone()).collect::<Vec<_>>(),"legal_actions":self.legal_actions(&p.agent_id),"self":Self::player_json(p),"teammate_dashboard":dashboard,"level":p.level,"map_size":[MAP_SIZE,MAP_SIZE],"num_levels":NUM_LEVELS,"local_view":view,"ascii":self.render_ascii(p,radius),"visible_monsters":visible,"last_joint_event":self.state.last_joint_event,"shared":{"timestep":self.state.timestep,"light_level":self.state.light_level,"boss_health":self.state.boss_health,"boss_progress":self.state.boss_progress,"trade_count":self.state.trade_count,"achievements":achievements}}))
+            (p.agent_id.clone(),json!({"agent_id":p.agent_id,"agent_index":index,"role":p.role,"legal_agent_ids":self.state.players.iter().map(|q|q.agent_id.clone()).collect::<Vec<_>>(),"legal_actions":self.legal_actions(&p.agent_id),"self":Self::player_json(p),"teammate_dashboard":dashboard,"level":p.level,"map_size":[MAP_SIZE,MAP_SIZE],"num_levels":NUM_LEVELS,"local_view":view,"ascii":self.render_ascii(p,radius),"visible_monsters":visible,"last_joint_event":self.state.last_joint_event,"shared":{"timestep":self.state.timestep,"light_level":self.state.light_level,"boss_health":self.state.boss_health,"boss_progress":self.state.boss_progress,"trade_count":self.state.trade_count,"food_trade_count":self.state.food_trade_count,"drink_trade_count":self.state.drink_trade_count,"revives":self.state.revives,"friendly_fire_damage":self.state.ff_damage_dealt,"chests_opened":self.state.chests_opened,"monsters_killed":self.state.monsters_killed,"achievements":achievements}}))
         }).collect()
     }
 
@@ -1269,7 +2400,7 @@ impl CraftaxCoopEnv {
     }
 
     fn player_json(p: &Player) -> Value {
-        json!({"agent_id":p.agent_id,"role":p.role,"position":[p.x,p.y],"level":p.level,"facing":p.facing,"health":p.health,"food":p.food,"drink":p.drink,"energy":p.energy,"mana":p.mana,"alive":p.alive,"sleeping":p.sleeping,"inventory":p.inventory,"equipment":{"pickaxe":p.pickaxe,"sword":p.sword,"armour":p.armour,"arrows":p.arrows,"torches":p.torches,"books":p.books,"saplings":p.saplings,"potions":p.potions,"enchantments":{"sword":p.sword_enchantment,"armour":p.armour_enchantment,"bow":p.bow_enchantment}},"attributes":{"dexterity":p.dexterity,"strength":p.strength,"intelligence":p.intelligence,"xp":p.xp,"level_points":p.level_points},"request":{"resource":p.request_type,"remaining":p.request_duration}})
+        json!({"agent_id":p.agent_id,"role":p.role,"position":[p.x,p.y],"level":p.level,"facing":p.facing,"health":p.health,"food":p.food,"drink":p.drink,"energy":p.energy,"mana":p.mana,"alive":p.alive,"sleeping":p.sleeping,"resting":p.resting,"inventory":p.inventory,"equipment":{"pickaxe":p.pickaxe,"sword":p.sword,"armour":p.armour,"armour_slots":p.armour_slots,"bow":p.bow,"arrows":p.arrows,"torches":p.torches,"books":p.books,"saplings":p.saplings,"potions":p.potions,"learned_spell":p.learned_spell,"enchantments":{"sword":p.sword_enchantment,"armour":p.armour_enchantment,"armour_slots":p.armour_enchantments,"bow":p.bow_enchantment}},"attributes":{"dexterity":p.dexterity,"strength":p.strength,"intelligence":p.intelligence,"xp":p.xp,"level_points":p.level_points},"intrinsics":{"recover":p.recover,"hunger":p.hunger,"thirst":p.thirst,"fatigue":p.fatigue,"recover_mana":p.recover_mana},"request":{"resource":p.request_type,"remaining":p.request_duration}})
     }
 }
 
@@ -1277,5 +2408,224 @@ fn event_field_text(value: &Value) -> String {
     match value {
         Value::String(text) => text.clone(),
         _ => value.to_string(),
+    }
+}
+
+fn mix64(mut value: u64) -> u64 {
+    value = value.wrapping_add(0x9e3779b97f4a7c15);
+    value = (value ^ (value >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
+    value = (value ^ (value >> 27)).wrapping_mul(0x94d049bb133111eb);
+    value ^ (value >> 31)
+}
+
+fn potion_mapping(seed: u64) -> Vec<String> {
+    let mut effects = [
+        "health",
+        "harm",
+        "mana",
+        "drain_mana",
+        "energy",
+        "exhaustion",
+    ];
+    effects
+        .sort_by_key(|effect| mix64(seed.wrapping_add(effect.bytes().map(u64::from).sum::<u64>())));
+    effects.into_iter().map(str::to_string).collect()
+}
+
+fn direction(facing: &str) -> (isize, isize) {
+    match facing {
+        "left" => (-1, 0),
+        "right" => (1, 0),
+        "up" => (0, -1),
+        "down" => (0, 1),
+        other => panic!("invalid player facing: {other}"),
+    }
+}
+
+fn max_health(player: &Player) -> i16 {
+    8 + player.strength as i16
+}
+fn max_food(player: &Player) -> i16 {
+    (7 + 2 * player.dexterity as i16) * if player.role == "forager" { 3 } else { 1 }
+}
+fn max_drink(player: &Player) -> i16 {
+    max_food(player)
+}
+fn max_energy(player: &Player) -> i16 {
+    7 + 2 * player.dexterity as i16
+}
+fn max_mana(player: &Player) -> i16 {
+    6 + 3 * player.intelligence as i16
+}
+
+fn mob_damage(kind: &str) -> i16 {
+    match kind {
+        "zombie" | "skeleton" => 2,
+        "gnome_warrior" | "gnome_archer" => 4,
+        "orc_soldier" | "orc_mage" => 3,
+        "lizard" => 5,
+        "kobold" => 3,
+        "knight" => 6,
+        "archer" => 5,
+        "troll" => 8,
+        "deep_thing" => 10,
+        "pigman" | "fire_elemental" => 8,
+        "frost_troll" | "ice_elemental" => 9,
+        _ => 0,
+    }
+}
+
+fn projectile_kind(kind: &str) -> &'static str {
+    match kind {
+        "skeleton" | "gnome_archer" => "arrow",
+        "orc_mage" => "fireball",
+        "kobold" => "dagger",
+        "archer" => "arrow2",
+        "deep_thing" => "slimeball",
+        "fire_elemental" => "fireball2",
+        "ice_elemental" => "iceball2",
+        _ => "arrow",
+    }
+}
+fn projectile_vector(kind: &str) -> [f64; 3] {
+    match kind {
+        "arrow" => [2., 0., 0.],
+        "dagger" => [4., 0., 0.],
+        "fireball" => [0., 3., 0.],
+        "iceball" => [0., 0., 3.],
+        "arrow2" => [5., 0., 0.],
+        "slimeball" => [4., 3., 3.],
+        "fireball2" => [3., 5., 0.],
+        "iceball2" => [4., 0., 5.],
+        _ => [1., 0., 0.],
+    }
+}
+fn mob_damage_vector(kind: &str) -> [f64; 3] {
+    match kind {
+        "zombie" => [2., 0., 0.],
+        "gnome_warrior" => [4., 0., 0.],
+        "orc_soldier" => [3., 0., 0.],
+        "lizard" => [5., 0., 0.],
+        "knight" => [6., 0., 0.],
+        "troll" => [6., 1., 1.],
+        "pigman" => [3., 5., 0.],
+        "frost_troll" => [4., 0., 5.],
+        _ => [mob_damage(kind) as f64, 0., 0.],
+    }
+}
+
+fn level_achievement(level: usize) -> Option<&'static str> {
+    [
+        None,
+        Some("enter_dungeon"),
+        Some("enter_gnomish_mines"),
+        Some("enter_sewers"),
+        Some("enter_vault"),
+        Some("enter_troll_mines"),
+        Some("enter_fire_realm"),
+        Some("enter_ice_realm"),
+        Some("enter_graveyard"),
+    ][level]
+}
+
+fn kill_achievement(kind: &str) -> Option<&'static str> {
+    Some(match kind {
+        "cow" => "eat_cow",
+        "bat" => "eat_bat",
+        "snail" => "eat_snail",
+        "zombie" => "defeat_zombie",
+        "skeleton" => "defeat_skeleton",
+        "gnome_warrior" => "defeat_gnome_warrior",
+        "gnome_archer" => "defeat_gnome_archer",
+        "orc_soldier" => "defeat_orc_soldier",
+        "orc_mage" => "defeat_orc_mage",
+        "lizard" => "defeat_lizard",
+        "kobold" => "defeat_kobold",
+        "knight" => "defeat_knight",
+        "archer" => "defeat_archer",
+        "troll" => "defeat_troll",
+        "deep_thing" => "defeat_deep_thing",
+        "pigman" => "defeat_pigman",
+        "fire_elemental" => "defeat_fire_elemental",
+        "frost_troll" => "defeat_frost_troll",
+        "ice_elemental" => "defeat_ice_elemental",
+        _ => return None,
+    })
+}
+
+fn achievement_reward(name: &str) -> f64 {
+    if ["trade", "all_roles_alive", "level_up"].contains(&name) {
+        return 0.0;
+    }
+    if [
+        "collect_wood",
+        "place_table",
+        "eat_cow",
+        "collect_sapling",
+        "collect_drink",
+        "collect_food",
+        "make_wood_pickaxe",
+        "make_wood_sword",
+        "place_plant",
+        "defeat_zombie",
+        "collect_stone",
+        "place_stone",
+        "eat_plant",
+        "defeat_skeleton",
+        "make_stone_pickaxe",
+        "make_stone_sword",
+        "wake_up",
+        "place_furnace",
+        "collect_coal",
+        "collect_iron",
+        "collect_diamond",
+        "make_iron_pickaxe",
+        "make_iron_sword",
+        "make_arrow",
+        "make_torch",
+        "place_torch",
+    ]
+    .contains(&name)
+    {
+        1.0
+    } else if [
+        "collect_sapphire",
+        "collect_ruby",
+        "make_diamond_pickaxe",
+        "make_diamond_sword",
+        "make_iron_armour",
+        "make_diamond_armour",
+        "enter_gnomish_mines",
+        "enter_dungeon",
+        "defeat_gnome_warrior",
+        "defeat_gnome_archer",
+        "defeat_orc_soldier",
+        "defeat_orc_mage",
+        "eat_bat",
+        "eat_snail",
+        "find_bow",
+        "fire_bow",
+        "open_chest",
+        "drink_potion",
+    ]
+    .contains(&name)
+    {
+        3.0
+    } else if [
+        "enter_fire_realm",
+        "enter_ice_realm",
+        "enter_graveyard",
+        "defeat_pigman",
+        "defeat_fire_elemental",
+        "defeat_frost_troll",
+        "defeat_ice_elemental",
+        "damage_necromancer",
+        "defeat_necromancer",
+    ]
+    .contains(&name)
+    {
+        8.0
+    } else {
+        5.0
     }
 }

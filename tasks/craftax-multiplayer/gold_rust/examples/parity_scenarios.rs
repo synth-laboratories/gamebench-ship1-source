@@ -46,6 +46,8 @@ fn main() {
         y: 4,
         health: 4,
         damage: 2,
+        category: "melee".into(),
+        attack_cooldown: 0,
     }];
     env.step(&joint("do", "noop", "noop")).unwrap();
     env.step(&joint("do", "noop", "noop")).unwrap();
@@ -127,6 +129,8 @@ fn main() {
         y: 4,
         health: 2,
         damage: 0,
+        category: "passive".into(),
+        attack_cooldown: 0,
     }];
     survival_env.step(&joint("do", "noop", "noop")).unwrap();
     out.insert("survival".into(),json!({"saplings":survival_env.state.players[1].saplings,"drink":survival_env.state.players[1].drink,"food":survival_env.state.players[0].food,"achievements":survival_env.state.achievements}));
@@ -139,6 +143,8 @@ fn main() {
         y: 5,
         health: 4,
         damage: 0,
+        category: "melee".into(),
+        attack_cooldown: 0,
     }];
     projectile_env.state.maps[0][4][3] = "stone".into();
     projectile_env.state.players[0].arrows = 1;
@@ -156,6 +162,8 @@ fn main() {
         y: 4,
         health: 2,
         damage: 0,
+        category: "melee".into(),
+        attack_cooldown: 0,
     }];
     progression_env.step(&joint("do", "noop", "noop")).unwrap();
     out.insert("level_point".into(), json!({"xp":progression_env.state.players[0].xp,"points":progression_env.state.players[0].level_points}));

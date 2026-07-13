@@ -12,7 +12,7 @@ MAX_FOOD = 9
 MAX_DRINK = 9
 MAX_ENERGY = 9
 MAX_MANA = 9
-BOSS_HEALTH = 24
+BOSS_HEALTH = 8
 RESOURCES = ("food", "drink", "wood", "stone", "iron", "coal", "diamond", "ruby", "sapphire")
 TERRAINS = (
     "grass", "water", "stone", "tree", "wood", "path", "coal", "iron", "diamond",
@@ -56,13 +56,17 @@ ACHIEVEMENTS = (
     # GameBench cooperative contract achievements retained in addition to author achievements.
     "trade", "all_roles_alive", "level_up",
 )
+BASIC_ACHIEVEMENTS=set(ACHIEVEMENTS[:26])|{"trade","all_roles_alive","level_up"}
+INTERMEDIATE_ACHIEVEMENTS={"collect_sapphire","collect_ruby","make_diamond_pickaxe","make_diamond_sword","make_iron_armour","make_diamond_armour","enter_gnomish_mines","enter_dungeon","defeat_gnome_warrior","defeat_gnome_archer","defeat_orc_soldier","defeat_orc_mage","eat_bat","eat_snail","find_bow","fire_bow","open_chest","drink_potion"}
+VERY_ADVANCED_ACHIEVEMENTS={"enter_fire_realm","enter_ice_realm","enter_graveyard","defeat_pigman","defeat_fire_elemental","defeat_frost_troll","defeat_ice_elemental","damage_necromancer","defeat_necromancer"}
+ACHIEVEMENT_REWARDS={name:(0 if name in {"trade","all_roles_alive","level_up"} else 1 if name in BASIC_ACHIEVEMENTS else 3 if name in INTERMEDIATE_ACHIEVEMENTS else 8 if name in VERY_ADVANCED_ACHIEVEMENTS else 5) for name in ACHIEVEMENTS}
 GLYPHS = {"grass": ".", "water": "~", "stone": "O", "tree": "T", "wood":"w", "path":"_", "coal": "c", "iron": "i", "diamond": "d", "ruby": "r", "sapphire": "s", "crafting_table":"C", "furnace":"F", "sand":":", "lava":"L", "plant":"p", "ripe_plant":"P", "wall":"#", "chest":"$", "fountain":"f", "fire_grass":";", "ice_grass":",", "fire_tree":"Y", "ice_shrub":"y", "enchantment_table_fire":"E", "enchantment_table_ice":"e", "necromancer":"N", "grave":"g", "stairs_down": ">", "stairs_up": "<", "boss": "B"}
 
 POTION_COLOURS = ("red", "green", "blue", "pink", "cyan", "yellow")
 FLOOR_MOBS = (
     ("cow", "zombie", "skeleton"),
-    ("bat", "gnome_warrior", "gnome_archer"),
     ("snail", "orc_soldier", "orc_mage"),
+    ("bat", "gnome_warrior", "gnome_archer"),
     ("bat", "lizard", "kobold"),
     (None, "knight", "archer"),
     (None, "troll", "deep_thing"),
@@ -71,7 +75,7 @@ FLOOR_MOBS = (
     (None, None, None),
 )
 MOB_HEALTH = (
-    (3, 5, 3), (4, 7, 5), (6, 9, 6), (8, 11, 8),
+    (3, 5, 3), (6, 9, 6), (4, 7, 5), (8, 11, 8),
     (0, 12, 12), (0, 20, 4), (0, 20, 14), (0, 24, 16), (0, 0, 0),
 )
 MOB_DAMAGE = {
@@ -90,7 +94,7 @@ PROJECTILE_KIND = {
     "fire_elemental": "fireball2", "ice_elemental": "iceball2",
 }
 LEVEL_ACHIEVEMENTS = (
-    None, "enter_gnomish_mines", "enter_dungeon", "enter_sewers", "enter_vault",
+    None, "enter_dungeon", "enter_gnomish_mines", "enter_sewers", "enter_vault",
     "enter_troll_mines", "enter_fire_realm", "enter_ice_realm", "enter_graveyard",
 )
 KILL_ACHIEVEMENTS = {

@@ -24,19 +24,21 @@ class Player:
     pickaxe: int = 0
     sword: int = 0
     armour: int = 0
+    armour_slots: list[int] = field(default_factory=lambda: [0] * 4)
     bow: int = 0
     arrows: int = 0
     torches: int = 0
     books: int = 0
     saplings: int = 0
     potions: dict[str, int] = field(default_factory=lambda: {colour: 0 for colour in ("red", "green", "blue", "pink", "cyan", "yellow")})
-    dexterity: int = 0
-    strength: int = 0
-    intelligence: int = 0
+    dexterity: int = 1
+    strength: int = 1
+    intelligence: int = 1
     xp: int = 0
     level_points: int = 0
     sword_enchantment: str | None = None
     armour_enchantment: str | None = None
+    armour_enchantments: list[str | None] = field(default_factory=lambda: [None] * 4)
     bow_enchantment: str | None = None
     learned_spell: bool = False
     sleeping: bool = False
@@ -93,16 +95,20 @@ class WorldState:
     players: list[Player]
     maps: list[list[list[str]]]
     monsters: list[Monster]
+    item_maps: list[list[list[str | None]]] = field(default_factory=list)
+    ladders_up: list[list[list[int]]] = field(default_factory=list)
+    ladders_down: list[list[list[int]]] = field(default_factory=list)
     projectiles: list[Projectile] = field(default_factory=list)
     plants: list[Plant] = field(default_factory=list)
-    boss_health: int = 24
+    boss_health: int = 8
     boss_progress: int = 0
-    boss_wave_timer: int = 0
-    chests_opened: list[bool] = field(default_factory=lambda: [False] * 9)
-    monsters_killed: list[int] = field(default_factory=lambda: [0] * 9)
+    boss_wave_timer: int = 7
+    chests_opened: list[list[bool]] = field(default_factory=list)
+    monsters_killed: list[int] = field(default_factory=lambda: [10] + [0] * 8)
     potion_mapping: list[str] = field(default_factory=lambda: ["health", "strength", "dexterity", "intelligence", "mana", "energy"])
     light_level: float = 1.0
     achievements: dict[str, bool] = field(default_factory=lambda: {a: False for a in ACHIEVEMENTS})
+    achievements_by_agent: dict[str, dict[str, bool]] = field(default_factory=dict)
     trade_count: int = 0
     food_trade_count: int = 0
     drink_trade_count: int = 0
@@ -120,7 +126,17 @@ class WorldState:
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> "WorldState":
         data = dict(raw)
+        data["achievements"]={name:bool(data.get("achievements",{}).get(name,False)) for name in ACHIEVEMENTS}
+        if not data.get("item_maps"):
+            size=len(data["maps"][0]);data["item_maps"]=[[[None for _ in range(size)] for _ in range(size)] for _ in data["maps"]]
+        count=len(data["players"])
+        data.setdefault("ladders_up",[[[2+i,2] for i in range(count)] for _ in data["maps"]])
+        data.setdefault("ladders_down",[[[len(data["maps"][0])-3-i,len(data["maps"][0])-3] for i in range(count)] for _ in data["maps"]])
+        if data.get("chests_opened") and isinstance(data["chests_opened"][0],bool):
+            count=len(data["players"]);data["chests_opened"]=[[value]*count for value in data["chests_opened"]]
         data["players"] = [Player(**p) for p in data["players"]]
+        data.setdefault("achievements_by_agent",{p.agent_id:dict(data["achievements"]) for p in data["players"]})
+        data["achievements_by_agent"]={agent:{name:bool(flags.get(name,False)) for name in ACHIEVEMENTS} for agent,flags in data["achievements_by_agent"].items()}
         data["monsters"] = [Monster(**monster) for monster in data["monsters"]]
         data["projectiles"] = [Projectile(**projectile) for projectile in data["projectiles"]]
         data["plants"] = [Plant(**plant) for plant in data["plants"]]

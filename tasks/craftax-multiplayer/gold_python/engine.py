@@ -5,8 +5,8 @@ import json
 from copy import deepcopy
 from typing import Any
 
-from .constants import BASE_ACTIONS, BOSS_HEALTH, DAY_LENGTH, FLOOR_MOBS, GLYPHS, KILL_ACHIEVEMENTS, LEVEL_ACHIEVEMENTS, MAP_SIZE, MAX_TIMESTEPS, MOB_DAMAGE, MOB_HEALTH, NUM_LEVELS, POTION_COLOURS, PROJECTILE_KIND, REQUEST_ACTIONS, REQUEST_DURATION, RESOURCES, ROLES
-from .state import Monster, Player, Projectile, WorldState
+from .constants import ACHIEVEMENT_REWARDS, BASE_ACTIONS, BOSS_HEALTH, DAY_LENGTH, FLOOR_MOBS, GLYPHS, KILL_ACHIEVEMENTS, LEVEL_ACHIEVEMENTS, MAP_SIZE, MAX_TIMESTEPS, MOB_DAMAGE, MOB_HEALTH, NUM_LEVELS, POTION_COLOURS, PROJECTILE_KIND, REQUEST_ACTIONS, REQUEST_DURATION, RESOURCES, ROLES
+from .state import Monster, Plant, Player, Projectile, WorldState
 
 
 class CraftaxCoopEnv:
@@ -25,36 +25,58 @@ class CraftaxCoopEnv:
     @staticmethod
     def _generate_maps(seed: int) -> list[list[list[str]]]:
         maps = []
-        resources = ("tree", "stone", "coal", "iron", "diamond", "ruby", "sapphire")
+        resources = ("coal", "iron", "diamond", "sapphire", "ruby")
+        biomes = (
+            ("grass","water","stone","tree"), ("path","water","stone","stalagmite"),
+            ("path","water","stone","stalagmite"), ("path","water","stone","stalagmite"),
+            ("path","water","stone","stalagmite"), ("path","water","stone","stalagmite"),
+            ("fire_grass","lava","stone","fire_tree"), ("ice_grass","water","stone","ice_shrub"),
+            ("path","wall","wall","grave"),
+        )
         for level in range(NUM_LEVELS):
             rng = (seed + 1) * 1_000_003 + level * 97
-            grid = [["grass" for _ in range(MAP_SIZE)] for _ in range(MAP_SIZE)]
+            base,liquid,mountain,vegetation=biomes[level]
+            grid = [[base for _ in range(MAP_SIZE)] for _ in range(MAP_SIZE)]
             for i in range(MAP_SIZE):
-                grid[0][i] = grid[-1][i] = grid[i][0] = grid[i][-1] = "stone"
+                grid[0][i] = grid[-1][i] = grid[i][0] = grid[i][-1] = mountain
             for y in range(1, MAP_SIZE - 1):
                 for x in range(1, MAP_SIZE - 1):
                     rng = (rng * 6_364_136_223_846_793_005 + 1) & ((1 << 64) - 1)
                     roll = ((rng >> 32) % 1000) / 1000
-                    if roll < .055: grid[y][x] = "water" if level < 6 else ("lava" if level == 6 else "ice_grass")
-                    elif roll < .18: grid[y][x] = resources[((rng >> 16) + level // 2) % len(resources)]
+                    if roll < .055: grid[y][x] = liquid
+                    elif roll < .11: grid[y][x] = mountain
+                    elif roll < .15: grid[y][x] = vegetation
+                    elif roll < .18: grid[y][x] = resources[((rng >> 16) + level) % len(resources)] if level else "tree"
                     elif roll < .19: grid[y][x] = "chest"
                     elif roll < .20 and level == 0: grid[y][x] = "plant"
             if level < NUM_LEVELS - 1: grid[MAP_SIZE - 3][MAP_SIZE - 3] = "stairs_down"
             if level > 0: grid[2][2] = "stairs_up"
-            if level == NUM_LEVELS - 1: grid[MAP_SIZE // 2][MAP_SIZE // 2] = "boss"
+            if level == 6:grid[10][10]="enchantment_table_fire"
+            if level == 7:grid[10][10]="enchantment_table_ice"
+            if level == NUM_LEVELS - 1:
+                grid[MAP_SIZE//2][MAP_SIZE//2]="necromancer"
+                for offset,tile in zip(range(-3,4),("grave","grave2","grave3","grave","grave3","grave2","grave")):grid[MAP_SIZE//2+3][MAP_SIZE//2+offset]=tile
             maps.append(grid)
         return maps
 
     def reset(self, seed: int = 0) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
         players = [Player(a, ROLES[i % len(ROLES)], 3 + i, 3) for i, a in enumerate(self.agent_ids)]
         maps = self._generate_maps(seed)
+        ladders_up=[[[2+i,2] for i in range(len(players))] for _ in range(NUM_LEVELS)]
+        ladders_down=[[[MAP_SIZE-3-i,MAP_SIZE-3] for i in range(len(players))] for _ in range(NUM_LEVELS)]
         for index in range(len(players)):
             maps[0][3][3 + index] = "grass"
         maps[0][5][5] = "fountain"
-        monsters = self._spawn_initial_monsters(seed, maps)
+        monsters: list[Monster] = []
+        items=[[[None for _ in range(MAP_SIZE)] for _ in range(MAP_SIZE)] for _ in range(NUM_LEVELS)]
+        for level in range(NUM_LEVELS):
+            if level<NUM_LEVELS-1:
+                for x,y in ladders_down[level]:maps[level][y][x]="stairs_down";items[level][y][x]="ladder_down"
+            if level>0:
+                for x,y in ladders_up[level]:maps[level][y][x]="stairs_up";items[level][y][x]="ladder_up"
         effects = ["health", "harm", "mana", "drain_mana", "energy", "exhaustion"]
-        effects.sort(key=lambda effect: hashlib.sha256(f"{seed}:{effect}".encode()).digest())
-        self.state = WorldState(seed, 0, self.max_timesteps, players, maps, monsters, boss_health=BOSS_HEALTH, potion_mapping=effects)
+        effects.sort(key=lambda effect: self._mix64(seed + sum(map(ord, effect))))
+        self.state = WorldState(seed, 0, self.max_timesteps, players, maps, monsters, item_maps=items, ladders_up=ladders_up, ladders_down=ladders_down, boss_health=BOSS_HEALTH, potion_mapping=effects, chests_opened=[[False] * len(players) for _ in range(NUM_LEVELS)], achievements_by_agent={p.agent_id:{name:False for name in ACHIEVEMENT_REWARDS} for p in players})
         self._event("game_started", task_id=self.env_family, seed=seed)
         return self.observations(), {"seed": seed, "state_hash": self.state_hash()}
 
@@ -85,6 +107,12 @@ class CraftaxCoopEnv:
         label = "".join(part.title() for part in kind.split("_"))
         self.state.legacy_nev.append(f"{label}({args})")
 
+    def _award(self,name:str,*players:Player)->None:
+        state=self._require_state()
+        state.achievements[name]=True
+        recipients=players or tuple(state.players)
+        for player in recipients:state.achievements_by_agent[player.agent_id][name]=True
+
     def legal_actions(self, agent_id: str) -> list[str]:
         actions = list(BASE_ACTIONS + REQUEST_ACTIONS)
         actions.extend(f"give_{resource}_to_{other}" for resource in RESOURCES for other in self.agent_ids if other != agent_id)
@@ -95,30 +123,75 @@ class CraftaxCoopEnv:
         if state.terminated: raise RuntimeError("step called after terminal state")
         if set(joint_action) != set(self.agent_ids): raise ValueError("joint_action must contain every agent exactly once")
         state.last_joint_event = []
-        before = sum(state.achievements.values())
+        before={agent:{name for name,earned in flags.items() if earned} for agent,flags in state.achievements_by_agent.items()};before_health=sum(p.health for p in state.players)
         normalized = {a: self._normalize_action(joint_action[a]) for a in self.agent_ids}
         for agent_id, action in normalized.items():
             if action["kind"] not in self.legal_actions(agent_id):
                 raise ValueError(f"illegal action for {agent_id}: {action['kind']}")
+        effective={agent_id:({"kind":"noop"} if not state.players[i].alive or state.players[i].sleeping or state.players[i].resting else normalized[agent_id]) for i,agent_id in enumerate(self.agent_ids)}
+        self._resolve_floor_actions(effective)
+        self._resolve_joint_do(effective)
+        for i, agent_id in enumerate(self.agent_ids):
+            if effective[agent_id]["kind"] not in ("do","attack"):self._apply_nonmovement(state.players[i], effective[agent_id])
         self._expire_requests()
-        # Requests are visible before trades in the same simultaneous turn.
-        for i, agent_id in enumerate(self.agent_ids): self._apply_request(state.players[i], normalized[agent_id])
-        self._resolve_movement(normalized)
-        for i, agent_id in enumerate(self.agent_ids): self._apply_nonmovement(state.players[i], normalized[agent_id])
+        for i, agent_id in enumerate(self.agent_ids): self._apply_request(state.players[i], effective[agent_id])
+        self._resolve_movement(effective)
         self._update_projectiles()
         self._update_monsters()
+        self._spawn_mobs()
+        self._update_boss()
         self._update_plants()
         self._world_tick()
+        self._calculate_inventory_achievements()
         state.timestep += 1
-        state.achievements["all_roles_alive"] = all(p.alive for p in state.players)
+        if all(p.alive for p in state.players):self._award("all_roles_alive")
         if not any(p.alive for p in state.players): self._terminate("death")
         elif state.boss_progress >= NUM_LEVELS - 1: self._terminate("boss")
         elif state.timestep >= state.max_timesteps: self._terminate("timestep")
-        gained = sum(state.achievements.values()) - before
-        reward = float(gained + (10 if state.termination_reason == "boss" else 0))
+        reward=float(sum(ACHIEVEMENT_REWARDS.get(name,1) for agent,flags in state.achievements_by_agent.items() for name,earned in flags.items() if earned and name not in before[agent])+.1*(sum(p.health for p in state.players)-before_health))
         rewards = {a: reward for a in self.agent_ids}
         dones = {a: state.terminated for a in self.agent_ids} | {"__all__": state.terminated}
         return self.observations(), rewards, dones, {"events": deepcopy(state.last_joint_event), "state_hash": self.state_hash(), "termination_reason": state.termination_reason}
+
+    def _resolve_joint_do(self,actions:dict[str,dict[str,Any]])->None:
+        state=self._require_state();groups:dict[tuple[int,int,int],list[Player]]={};delta={"left":(-1,0),"right":(1,0),"up":(0,-1),"down":(0,1)}
+        for player in state.players:
+            if actions[player.agent_id]["kind"] in ("do","attack"):
+                dx,dy=delta[player.facing];groups.setdefault((player.level,player.x+dx,player.y+dy),[]).append(player)
+        for (level,x,y),players in groups.items():
+            if len(players)==1:self._do(players[0]);continue
+            tile=state.maps[level][y][x]
+            target=next((p for p in state.players if p not in players and p.level==level and (p.x,p.y)==(x,y)),None)
+            if target:
+                if not target.alive:target.health=1;target.alive=True;state.revives+=1
+                else:
+                    damage=sum(round(self._player_attack_damage(p,target)*(3.5 if target.sleeping else 1)) for p in players);target.health-=damage;state.ff_damage_dealt+=damage
+                continue
+            mob=next((m for m in state.monsters if m.level==level and (m.x,m.y)==(x,y)),None)
+            if mob:
+                mob.health-=sum(self._mob_attack_damage(p,mob) for p in players)
+                if mob.health<=0:
+                    state.monsters.remove(mob)
+                    if mob.category!="passive":state.monsters_killed[level]+=1
+                    for player in players:
+                        if mob.category=="passive" and player.role=="forager":player.food=min(self._max_food(player),player.food+6);player.hunger=0
+                        if mob.category!="passive" or player.role=="forager":
+                            achievement=KILL_ACHIEVEMENTS.get(mob.kind)
+                            if achievement:self._award(achievement,player)
+                continue
+            mapping={"tree":("wood",0,"grass"),"fire_tree":("wood",0,"fire_grass"),"ice_shrub":("wood",0,"ice_grass"),"stone":("stone",1,"path"),"stalagmite":("stone",1,"path"),"coal":("coal",1,"path"),"iron":("iron",2,"path"),"diamond":("diamond",3,"path"),"ruby":("ruby",4,"path"),"sapphire":("sapphire",4,"path")}
+            if tile in mapping:
+                resource,tier,replacement=mapping[tile]
+                for player in players:
+                    if player.pickaxe>=tier:player.inventory[resource]=min(99,player.inventory[resource]+1);self._award(f"collect_{resource}",player)
+                state.maps[level][y][x]=replacement;continue
+            if tile=="chest":
+                for player in players:self._loot_chest(player);state.chests_opened[level][state.players.index(player)]=True;self._award("open_chest",player)
+                state.maps[level][y][x]="path";continue
+            if tile=="ripe_plant":
+                for player in players:player.food=min(self._max_food(player),player.food+4);player.hunger=0;self._award("eat_plant",player)
+                state.maps[level][y][x]="plant";continue
+            for player in players:self._do(player)
 
     @staticmethod
     def _normalize_action(action: Any) -> dict[str, Any]:
@@ -147,7 +220,7 @@ class CraftaxCoopEnv:
                 nx, ny = p.x + dx, p.y + dy
                 if state.maps[p.level][ny][nx] in ("grass", "path", "sand", "gravel", "fire_grass", "ice_grass", "stairs_down", "stairs_up", "crafting_table", "furnace", "enchantment_table_fire", "enchantment_table_ice"): desired[p.agent_id] = (nx, ny)
         counts = {pos: list(desired.values()).count(pos) for pos in desired.values()}
-        occupied = {(p.level, p.x, p.y) for p in state.players if p.alive}
+        occupied = {(p.level, p.x, p.y) for p in state.players if p.alive} | {(m.level,m.x,m.y) for m in state.monsters}
         for p in state.players:
             pos = desired.get(p.agent_id)
             if pos and counts[pos] == 1 and (p.level, *pos) not in occupied:
@@ -158,10 +231,9 @@ class CraftaxCoopEnv:
         kind = action["kind"]
         if kind.startswith("give_"): self._give(p, kind)
         elif kind in ("do", "attack"): self._do(p)
-        elif kind == "descend": self._change_level(p, 1)
-        elif kind == "ascend": self._change_level(p, -1)
-        elif kind == "rest": p.resting = p.health < 9 + 2 * p.strength
-        elif kind == "sleep": p.sleeping = True
+        elif kind in ("descend","ascend"): pass
+        elif kind == "rest": p.resting = p.health < self._max_health(p)
+        elif kind == "sleep": p.sleeping = p.energy < self._max_energy(p)
         elif kind == "shoot_arrow": self._shoot_arrow(p)
         elif kind == "cast_spell": self._cast_spell(p)
         elif kind.startswith("make_"): self._craft(p, kind)
@@ -179,15 +251,19 @@ class CraftaxCoopEnv:
         if target is None or target is giver or target.request_type != resource or target.request_duration <= 0: return
         if resource in ("food", "drink"):
             stock = getattr(giver, resource)
-            if stock <= 0 or getattr(target, resource) >= 9: return
-            setattr(giver, resource, stock - 1); setattr(target, resource, min(9, getattr(target, resource) + 1))
+            cap = self._max_food(target) if resource == "food" else self._max_drink(target)
+            if stock <= 0 or getattr(target, resource) >= cap: return
+            setattr(giver, resource, stock - 1); setattr(target, resource, min(cap, getattr(target, resource) + 1))
+            if resource=="food":target.hunger=0
+            else:target.thirst=0
         else:
             if giver.inventory[resource] <= 0 or target.inventory[resource] >= 99: return
             giver.inventory[resource] -= 1; target.inventory[resource] += 1
-        target.request_type, target.request_duration = None, 0
-        state = self._require_state(); state.trade_count += 1; state.achievements["trade"] = True
+        state = self._require_state(); state.trade_count += 1; self._award("trade",giver,target)
         if resource == "food": state.food_trade_count += 1
         if resource == "drink": state.drink_trade_count += 1
+        if resource=="food":self._award("collect_food",target)
+        if resource=="drink":self._award("collect_drink",target)
         self._event("trade_applied", giver=giver.agent_id, receiver=target.agent_id, resource=resource)
 
     def _do(self, p: Player) -> None:
@@ -200,7 +276,8 @@ class CraftaxCoopEnv:
                 teammate.health = 1; teammate.alive = True; state.revives += 1
                 self._event("player_revived", agent_id=teammate.agent_id, by=p.agent_id)
             else:
-                damage = self._melee_damage(p, teammate.armour)
+                damage = self._player_attack_damage(p,teammate)*(3.5 if teammate.sleeping else 1)
+                damage=round(damage)
                 teammate.health -= damage; state.ff_damage_dealt += damage
                 self._event("friendly_fire", attacker=p.agent_id, target=teammate.agent_id, damage=damage)
             return
@@ -210,129 +287,221 @@ class CraftaxCoopEnv:
             if p.pickaxe < required_pickaxe: return
             amount = 1
             p.inventory[resource] += amount; state.maps[p.level][y][x] = "grass"
-            if tile == "tree" and p.role == "forager" and (state.seed + state.timestep) % 2 == 0:
-                p.saplings += 1; state.achievements["collect_sapling"] = True
-            key = f"collect_{resource}"; state.achievements[key] = key in state.achievements
+            key = f"collect_{resource}"; self._award(key,p)
             self._event("resource_collected", agent_id=p.agent_id, resource=resource, amount=amount)
-        elif tile == "ripe_plant" and p.role == "forager":
-            p.food = min(9 + 2 * p.dexterity, p.food + 4); state.maps[p.level][y][x] = "plant"
-            state.achievements["eat_plant"] = True; self._event("plant_eaten", agent_id=p.agent_id)
+        elif tile == "grass" and p.role == "forager" and self._mix64(state.seed ^ state.timestep ^ state.players.index(p)) % 5 == 0:
+            p.saplings += 1; self._award("collect_sapling",p)
+        elif tile == "ripe_plant":
+            p.food = min(self._max_food(p), p.food + 4); p.hunger=0; state.maps[p.level][y][x] = "plant"
+            for plant in state.plants:
+                if (plant.level,plant.x,plant.y)==(p.level,x,y):plant.age=0;break
+            self._award("eat_plant",p); self._event("plant_eaten", agent_id=p.agent_id)
         elif tile == "fountain":
             if p.role != "forager": return
-            p.drink = min(9 + 2 * p.dexterity, p.drink + 5); self._event("fountain_used", agent_id=p.agent_id)
-            state.achievements["collect_drink"] = True
+            p.drink = min(self._max_drink(p), p.drink + 4); self._event("fountain_used", agent_id=p.agent_id)
+            self._award("collect_drink",p)
         elif tile == "water":
             if p.role != "forager": return
-            p.drink = min(9 + 2 * p.dexterity, p.drink + 4)
-            state.achievements["collect_drink"] = True; self._event("water_drunk", agent_id=p.agent_id)
+            p.drink = min(self._max_drink(p), p.drink + 4)
+            self._award("collect_drink",p); self._event("water_drunk", agent_id=p.agent_id)
         elif tile == "chest":
             state.maps[p.level][y][x] = "path"; self._loot_chest(p)
-            state.chests_opened[p.level] = True
-            state.achievements["open_chest"] = True; self._event("chest_opened", agent_id=p.agent_id)
+            state.chests_opened[p.level][state.players.index(p)] = True
+            self._award("open_chest",p); self._event("chest_opened", agent_id=p.agent_id)
         else:
             mob = next((m for m in state.monsters if m.level == p.level and m.x == x and m.y == y), None)
             if mob:
-                damage = self._melee_damage(p, 0)
+                damage = self._mob_attack_damage(p,mob)
                 mob.health -= damage; self._event("mob_damaged", agent_id=p.agent_id, mob_id=mob.id, damage=damage)
                 if mob.health <= 0:
-                    state.monsters.remove(mob); p.xp += 1; state.monsters_killed[p.level] += 1
-                    if mob.kind == "cow": p.food = min(9 + 2 * p.dexterity, p.food + 4)
-                    achievement = KILL_ACHIEVEMENTS.get(mob.kind)
-                    if achievement: state.achievements[achievement] = True
+                    state.monsters.remove(mob)
+                    if mob.category != "passive":state.monsters_killed[p.level] += 1
+                    if mob.category == "passive" and p.role == "forager":
+                        p.food=min(self._max_food(p),p.food+6);p.hunger=0
+                        achievement=KILL_ACHIEVEMENTS.get(mob.kind)
+                        if achievement:self._award(achievement,p)
+                    elif mob.category != "passive":
+                        achievement=KILL_ACHIEVEMENTS.get(mob.kind)
+                        if achievement:self._award(achievement,p)
                     self._event("mob_defeated", agent_id=p.agent_id, mob_id=mob.id)
-        if tile == "boss" and p.level == NUM_LEVELS - 1:
-            damage = 2 * (2 if p.role == "warrior" else 1) + p.sword
-            state.boss_health -= damage; state.achievements["damage_necromancer"] = True
-            self._event("boss_damaged", agent_id=p.agent_id, damage=damage, remaining=max(0,state.boss_health))
-            if state.boss_health <= 0:
-                state.boss_progress = NUM_LEVELS - 1; state.achievements["defeat_necromancer"] = True
+        if tile in ("boss","necromancer","necromancer_vulnerable") and p.level == NUM_LEVELS - 1 and state.boss_wave_timer <= 0 and not any(m.level==p.level for m in state.monsters):
+            state.boss_progress+=1;state.boss_health=max(0,NUM_LEVELS-1-state.boss_progress);state.boss_wave_timer=7
+            state.maps[p.level][y][x]="necromancer";self._award("damage_necromancer",p)
+            self._event("boss_damaged",agent_id=p.agent_id,damage=1,remaining=state.boss_health)
+            if state.boss_progress>=NUM_LEVELS-1:self._award("defeat_necromancer",p)
 
     def _change_level(self, p: Player, direction: int) -> None:
-        tile = self._require_state().maps[p.level][p.y][p.x]
+        state=self._require_state();tile = state.maps[p.level][p.y][p.x]
         required = "stairs_down" if direction > 0 else "stairs_up"
-        if tile == required and 0 <= p.level + direction < NUM_LEVELS:
-            p.level += direction; p.x = p.y = 45 if direction < 0 else 2
-            achievement = LEVEL_ACHIEVEMENTS[p.level]
-            if direction > 0 and achievement: self._require_state().achievements[achievement] = True
-            self._event("level_changed", agent_id=p.agent_id, level=p.level)
+        if tile != required or not 0 <= p.level + direction < NUM_LEVELS or (direction > 0 and state.monsters_killed[p.level] < 8): return
+        next_level=p.level+direction;first_entry=direction>0 and LEVEL_ACHIEVEMENTS[next_level] and not state.achievements[LEVEL_ACHIEVEMENTS[next_level]]
+        destinations=state.ladders_down[next_level] if direction<0 else state.ladders_up[next_level]
+        for index,player in enumerate(state.players):
+            player.level=next_level;player.x,player.y=destinations[index]
+            if first_entry:player.xp+=1
+        achievement=LEVEL_ACHIEVEMENTS[next_level]
+        if direction>0 and achievement:self._award(achievement,*state.players)
+        self._event("level_changed", agent_id=p.agent_id, level=next_level)
+
+    def _resolve_floor_actions(self,actions:dict[str,dict[str,Any]])->None:
+        for p in self._require_state().players:
+            if actions[p.agent_id]["kind"]=="descend":self._change_level(p,1);return
+        for p in self._require_state().players:
+            if actions[p.agent_id]["kind"]=="ascend":self._change_level(p,-1);return
 
     def _craft(self, p: Player, kind: str) -> None:
-        if kind == "make_arrow" and p.inventory["wood"] >= 1:
-            p.inventory["wood"] -= 1; p.arrows += 2; self._event("item_crafted", agent_id=p.agent_id, item="arrow", tier=1); return
-        if kind == "make_torch" and p.inventory["wood"] >= 1 and p.inventory["coal"] >= 1:
-            p.inventory["wood"] -= 1; p.inventory["coal"] -= 1; p.torches += 2; self._event("item_crafted", agent_id=p.agent_id, item="torch", tier=1); return
-        recipes = {"make_wood_pickaxe": ("wood",1,"pickaxe",1), "make_stone_pickaxe": ("stone",2,"pickaxe",2), "make_iron_pickaxe": ("iron",2,"pickaxe",3), "make_diamond_pickaxe": ("diamond",2,"pickaxe",4), "make_wood_sword": ("wood",1,"sword",1), "make_stone_sword": ("stone",2,"sword",2), "make_iron_sword": ("iron",2,"sword",3), "make_diamond_sword": ("diamond",2,"sword",4), "make_iron_armour": ("iron",3,"armour",1), "make_diamond_armour": ("diamond",3,"armour",2)}
-        recipe = recipes.get(kind)
-        if not recipe: return
-        resource, cost, item, tier = recipe
-        if p.inventory[resource] < cost: return
-        if resource in ("iron", "diamond") and p.role != "miner": return
-        p.inventory[resource] -= cost; setattr(p, item, max(getattr(p,item), tier))
-        achievement = kind.replace("make_", "make_")
-        if achievement in self._require_state().achievements: self._require_state().achievements[achievement] = True
-        self._event("item_crafted", agent_id=p.agent_id, item=item, tier=tier)
+        near_table=self._near(p,"crafting_table");near_furnace=self._near(p,"furnace")
+        specs={
+            "make_wood_pickaxe":({"wood":1},"pickaxe",1,"miner",False),
+            "make_stone_pickaxe":({"wood":1,"stone":1},"pickaxe",2,"miner",False),
+            "make_iron_pickaxe":({"wood":1,"stone":1,"iron":1,"coal":1},"pickaxe",3,"miner",True),
+            "make_diamond_pickaxe":({"wood":1,"diamond":3},"pickaxe",4,"miner",False),
+            "make_wood_sword":({"wood":1},"sword",1,None,False),
+            "make_stone_sword":({"wood":1,"stone":1},"sword",2,"warrior",False),
+            "make_iron_sword":({"wood":1,"stone":1,"iron":1,"coal":1},"sword",3,"warrior",True),
+            "make_diamond_sword":({"wood":1,"diamond":2},"sword",4,"warrior",False),
+        }
+        if kind=="make_arrow":
+            if p.role!="warrior" or not near_table or p.inventory["wood"]<1 or p.inventory["stone"]<1:return
+            p.inventory["wood"]-=1;p.inventory["stone"]-=1;p.arrows+=2
+        elif kind=="make_torch":
+            if p.role!="miner" or not near_table or p.inventory["wood"]<1 or p.inventory["coal"]<1:return
+            p.inventory["wood"]-=1;p.inventory["coal"]-=1;p.torches+=4
+        elif kind in ("make_iron_armour","make_diamond_armour"):
+            tier=1 if kind=="make_iron_armour" else 2;cost={"iron":3,"coal":3} if tier==1 else {"diamond":3}
+            if not near_table or (tier==1 and not near_furnace) or not any(slot<tier for slot in p.armour_slots) or any(p.inventory[r]<n for r,n in cost.items()):return
+            for resource,amount in cost.items():p.inventory[resource]-=amount
+            slot=next(i for i,value in enumerate(p.armour_slots) if value<tier);p.armour_slots[slot]=tier;p.armour=max(p.armour_slots)
+        else:
+            spec=specs.get(kind)
+            if not spec:return
+            cost,item,tier,role,needs_furnace=spec
+            if not near_table or (needs_furnace and not near_furnace) or (role and p.role!=role) or getattr(p,item)>=tier or any(p.inventory[r]<n for r,n in cost.items()):return
+            for resource,amount in cost.items():p.inventory[resource]-=amount
+            setattr(p,item,tier)
+        if kind in self._require_state().achievements:self._award(kind,p)
+        self._event("item_crafted",agent_id=p.agent_id,item=kind.removeprefix("make_"))
+
+    def _near(self,p:Player,tile:str)->bool:
+        state=self._require_state()
+        return any(0<=p.x+dx<MAP_SIZE and 0<=p.y+dy<MAP_SIZE and state.maps[p.level][p.y+dy][p.x+dx]==tile for dx in (-1,0,1) for dy in (-1,0,1) if (dx,dy)!=(0,0))
 
     def _place(self, p: Player, kind: str) -> None:
         state = self._require_state(); dx, dy = {"left":(-1,0),"right":(1,0),"up":(0,-1),"down":(0,1)}[p.facing]; x,y=p.x+dx,p.y+dy
-        recipes = {"place_stone":("stone",1,"stone"),"place_table":("wood",2,"crafting_table"),"place_furnace":("stone",4,"furnace"),"place_plant":("saplings",1,"plant"),"place_torch":("torches",1,"path")}
+        recipes = {"place_stone":("stone",1,"stone"),"place_table":("wood",2,"crafting_table"),"place_furnace":("stone",1,"furnace"),"place_plant":("saplings",1,"plant"),"place_torch":("torches",1,state.maps[p.level][y][x])}
         recipe=recipes.get(kind)
-        if not recipe or state.maps[p.level][y][x] not in ("grass","path","sand","gravel"): return
+        valid=("grass","path","sand","gravel","fire_grass","ice_grass")
+        if kind=="place_stone":valid+= ("water",)
+        if kind=="place_plant":valid=("grass",)
+        if not recipe or state.maps[p.level][y][x] not in valid or state.item_maps[p.level][y][x] is not None or any(q.alive and q.level==p.level and q.x==x and q.y==y for q in state.players) or any(m.level==p.level and m.x==x and m.y==y for m in state.monsters) or (kind=="place_stone" and p.role!="miner"): return
         resource,cost,tile=recipe; stock=p.saplings if resource=="saplings" else p.torches if resource=="torches" else p.inventory[resource]
         if stock<cost:return
-        if resource=="saplings":p.saplings-=cost
+        if resource=="saplings":
+            p.saplings-=cost
+            state.plants.append(Plant(p.level,x,y,0))
         elif resource=="torches":p.torches-=cost
         else:p.inventory[resource]-=cost
         state.maps[p.level][y][x]=tile
-        key={"place_table":"place_table","place_furnace":"place_furnace","place_plant":"place_plant"}.get(kind)
-        if key:state.achievements[key]=True
+        if kind=="place_torch":state.item_maps[p.level][y][x]="torch"
+        if kind in state.achievements:self._award(kind,p)
         self._event("block_placed",agent_id=p.agent_id,tile=tile,x=x,y=y)
 
     def _shoot_arrow(self,p:Player)->None:
         if p.arrows<=0 or p.bow<=0:return
         p.arrows-=1; dx,dy={"left":(-1,0),"right":(1,0),"up":(0,-1),"down":(0,1)}[p.facing]
         self._require_state().projectiles.append(Projectile(p.agent_id, p.level, p.x, p.y, dx, dy, 5+p.dexterity, 8, "arrow2", False))
-        self._require_state().achievements["fire_bow"]=True;self._event("arrow_shot",agent_id=p.agent_id)
+        self._award("fire_bow",p);self._event("arrow_shot",agent_id=p.agent_id)
 
     def _drink_potion(self,p:Player,colour:str)->None:
         if colour not in p.potions or p.potions[colour]<=0:return
         p.potions[colour]-=1
         effect=self._require_state().potion_mapping[POTION_COLOURS.index(colour)]
-        if effect=="health":p.health=min(9+2*p.strength,p.health+8)
+        if effect=="health":p.health=min(self._max_health(p),p.health+8)
         elif effect=="harm":p.health-=3
-        elif effect=="mana":p.mana=min(9+2*p.intelligence,p.mana+8)
+        elif effect=="mana":p.mana=min(self._max_mana(p),p.mana+8)
         elif effect=="drain_mana":p.mana=max(0,p.mana-3)
         elif effect=="energy":p.energy=min(9,p.energy+8)
         else:p.energy=max(0,p.energy-3)
-        self._require_state().achievements["drink_potion"]=True;self._event("potion_drunk",agent_id=p.agent_id,colour=colour)
+        self._award("drink_potion",p);self._event("potion_drunk",agent_id=p.agent_id,colour=colour)
 
     def _read_book(self,p:Player)->None:
         if p.books<=0:return
         p.books-=1;p.learned_spell=True
-        self._require_state().achievements["learn_spell"]=True;self._event("book_read",agent_id=p.agent_id)
+        self._award("learn_spell",p);self._event("book_read",agent_id=p.agent_id)
 
     def _enchant(self,p:Player,item:str)->None:
         state=self._require_state();dx,dy={"left":(-1,0),"right":(1,0),"up":(0,-1),"down":(0,1)}[p.facing];table=state.maps[p.level][p.y+dy][p.x+dx]
         if table not in ("enchantment_table_fire","enchantment_table_ice") or p.mana<9 or item not in ("sword","armour","bow"):return
         element="fire" if table.endswith("fire") else "ice";gem="ruby" if element=="fire" else "sapphire"
         if p.inventory[gem]<1 or (item in ("sword","bow") and p.role!="warrior") or getattr(p,item)<=0:return
-        p.inventory[gem]-=1;p.mana-=9;setattr(p,f"{item}_enchantment",element)
+        p.inventory[gem]-=1;p.mana-=9
+        if item=="armour":
+            candidates=[i for i,value in enumerate(p.armour_enchantments) if value is None] or [i for i,value in enumerate(p.armour_enchantments) if value!=element]
+            if not candidates:return
+            p.armour_enchantments[candidates[0]]=element;p.armour_enchantment=element
+        else:setattr(p,f"{item}_enchantment",element)
         key="enchant_sword" if item=="sword" else "enchant_armour" if item=="armour" else None
-        if key:state.achievements[key]=True
+        if key:self._award(key,p)
         self._event("item_enchanted",agent_id=p.agent_id,item=item,element=element)
 
     def _level_up(self,p:Player,attribute:str)->None:
         if p.xp<=0 or attribute not in ("dexterity","strength","intelligence") or getattr(p,attribute)>=5:return
-        p.xp-=1;setattr(p,attribute,getattr(p,attribute)+1);self._require_state().achievements["level_up"]=True;self._event("attribute_leveled",agent_id=p.agent_id,attribute=attribute)
+        p.xp-=1;setattr(p,attribute,getattr(p,attribute)+1);self._award("level_up",p);self._event("attribute_leveled",agent_id=p.agent_id,attribute=attribute)
 
     @staticmethod
     def _melee_damage(player: Player, armour: int) -> int:
-        base = 1 + player.sword * 2
+        base = (1, 2, 3, 5, 8)[player.sword] * (2 if player.role == "warrior" else 1)
         coefficient = 1 + 0.25 * (player.strength - 1)
         return max(0, round(base * coefficient) - armour)
 
+    def _player_damage_vector(self,player:Player)->tuple[float,float,float]:
+        base=(1,2,3,5,8)[player.sword]*(2 if player.role=="warrior" else 1)
+        physical=base*(1+.25*(player.strength-1));element=base*.5*(1+.05*(player.intelligence-1))
+        return physical,element if player.sword_enchantment=="fire" else 0,element if player.sword_enchantment=="ice" else 0
+    @staticmethod
+    def _defense_vector(player:Player)->tuple[float,float,float]:
+        return sum(player.armour_slots)*.1,sum(value=="fire" for value in player.armour_enchantments)*.2,sum(value=="ice" for value in player.armour_enchantments)*.2
+    def _player_attack_damage(self,attacker:Player,target:Player)->float:
+        return sum((1-defense)*damage for damage,defense in zip(self._player_damage_vector(attacker),self._defense_vector(target)))
+    def _mob_attack_damage(self,player:Player,mob:Monster)->int:
+        return self._vector_damage_to_mob(self._player_damage_vector(player),mob)
+    @staticmethod
+    def _vector_damage_to_mob(vector:tuple[float,float,float],mob:Monster)->int:
+        physical=0
+        if mob.level==4:physical=.5
+        elif mob.level==5 and mob.category=="melee":physical=.2
+        elif mob.level in (6,7):physical=.9
+        defenses=(physical,1.0 if mob.level==6 else 0,1.0 if mob.level==7 else 0)
+        return max(0,round(sum((1-defense)*damage for damage,defense in zip(vector,defenses))))
+    def _incoming_damage(self,vector:tuple[int,int,int],target:Player,boss:bool=False)->int:
+        amount=sum((1-defense)*damage for damage,defense in zip(vector,self._defense_vector(target)))
+        return max(0,round(amount*(1.5 if boss else 1)))
+    @staticmethod
+    def _projectile_vector(kind:str)->tuple[int,int,int]:
+        return {"arrow":(2,0,0),"dagger":(4,0,0),"fireball":(0,3,0),"iceball":(0,0,3),"arrow2":(5,0,0),"slimeball":(4,3,3),"fireball2":(3,5,0),"iceball2":(4,0,5)}.get(kind,(1,0,0))
+    def _player_projectile_vector(self,projectile:Projectile)->tuple[float,float,float]:
+        owner=next((p for p in self._require_state().players if p.agent_id==projectile.owner),None)
+        if owner is None:return self._projectile_vector(projectile.kind)
+        if projectile.kind=="arrow2":
+            physical=5*(1+.2*(owner.dexterity-1));element=2.5
+            return physical,element if owner.bow_enchantment=="fire" else 0,element if owner.bow_enchantment=="ice" else 0
+        if projectile.kind=="fireball":return 0,3*(1+.5*(owner.intelligence-1)),0
+        return self._projectile_vector(projectile.kind)
+
+    @staticmethod
+    def _max_health(player: Player) -> int: return 8 + player.strength
+    @staticmethod
+    def _max_food(player: Player) -> int: return (7 + 2 * player.dexterity) * (3 if player.role == "forager" else 1)
+    @staticmethod
+    def _max_drink(player: Player) -> int: return (7 + 2 * player.dexterity) * (3 if player.role == "forager" else 1)
+    @staticmethod
+    def _max_energy(player: Player) -> int: return 7 + 2 * player.dexterity
+    @staticmethod
+    def _max_mana(player: Player) -> int: return 6 + 3 * player.intelligence
+
     def _loot_chest(self, player: Player) -> None:
         state = self._require_state()
-        value = int.from_bytes(hashlib.sha256(f"{state.seed}:{state.timestep}:{player.agent_id}:{player.level}".encode()).digest()[:8], "big")
+        value = self._mix64(state.seed ^ (state.timestep << 17) ^ (player.level << 9) ^ sum(map(ord, player.agent_id)))
         if player.role == "miner" and value % 10 < 6:
             player.inventory["wood"] += 1 + value % 5
             player.torches += 4 + (value // 7) % 4
@@ -342,12 +511,20 @@ class CraftaxCoopEnv:
         colour = POTION_COLOURS[(value // 19) % 6]
         if (value // 23) % 2 == 0:
             player.potions[colour] += 1 + (value // 29) % 2
+        player_index=state.players.index(player);opened=state.chests_opened[player.level][player_index]
         if player.role == "warrior":
             if (value // 31) % 2 == 0: player.arrows += 4 + (value // 37) % 5
-            if player.level == 1 and not state.chests_opened[player.level]:
-                player.bow = max(1, player.bow); state.achievements["find_bow"] = True
-        if player.level in (3, 4) and not state.chests_opened[player.level]:
+            if player.level == 1 and not opened:
+                player.bow = max(1, player.bow); self._award("find_bow",player)
+        if player.level in (3, 4) and not opened:
             player.books += 1
+
+    @staticmethod
+    def _mix64(value: int) -> int:
+        value = (value + 0x9E3779B97F4A7C15) & ((1 << 64) - 1)
+        value = ((value ^ (value >> 30)) * 0xBF58476D1CE4E5B9) & ((1 << 64) - 1)
+        value = ((value ^ (value >> 27)) * 0x94D049BB133111EB) & ((1 << 64) - 1)
+        return value ^ (value >> 31)
 
     def _cast_spell(self, player: Player) -> None:
         if not player.learned_spell:
@@ -356,15 +533,15 @@ class CraftaxCoopEnv:
         if player.role == "forager" and player.mana >= 6:
             player.mana -= 6
             for ally in state.players:
-                if ally.alive: ally.health = min(9 + 2 * ally.strength, ally.health + 2)
-            state.achievements["cast_spell"] = True
+                if ally.alive: ally.health = min(self._max_health(ally), ally.health + 2)
+            self._award("cast_spell",player)
             self._event("spell_cast", agent_id=player.agent_id, spell="heal")
         elif player.role in ("warrior", "miner") and player.mana >= 2:
             player.mana -= 2
             dx,dy={"left":(-1,0),"right":(1,0),"up":(0,-1),"down":(0,1)}[player.facing]
             damage = max(1, round(3 * (1 + .5 * (player.intelligence - 1))))
             state.projectiles.append(Projectile(player.agent_id, player.level, player.x, player.y, dx, dy, damage, 8, "fireball", False))
-            state.achievements["cast_spell"] = True
+            self._award("cast_spell",player)
             self._event("spell_cast", agent_id=player.agent_id, spell="fireball")
 
     def _world_tick(self) -> None:
@@ -375,44 +552,45 @@ class CraftaxCoopEnv:
             decay = 1.0 - .125 * (p.dexterity - 1)
             p.hunger += (.5 if p.sleeping else 1.0) * decay
             p.thirst += (.5 if p.sleeping else 1.0) * decay
-            if p.hunger > 25: p.food = max(0, p.food - 1); p.hunger = 0
-            if p.thirst > 20: p.drink = max(0, p.drink - 1); p.thirst = 0
+            if p.hunger > 25: p.food = max(0, p.food - (0 if p.level==NUM_LEVELS-1 else 1)); p.hunger = 0
+            if p.thirst > 20: p.drink = max(0, p.drink - (0 if p.level==NUM_LEVELS-1 else 1)); p.thirst = 0
             p.fatigue += -1 if p.sleeping else decay
             if p.fatigue > 30: p.energy = max(0, p.energy - 1); p.fatigue = 0
-            if p.fatigue < -10: p.energy = min(9, p.energy + 1); p.fatigue = 0
+            if p.fatigue < -10: p.energy = min(self._max_energy(p), p.energy + 1); p.fatigue = 0
             necessities = p.food > 0 and p.drink > 0 and (p.energy > 0 or p.sleeping)
             p.recover += (2 if p.sleeping else 1) if necessities else (-.5 if p.sleeping else -1)
-            if p.recover > 25: p.health = min(9 + 2*p.strength, p.health + 2); p.recover = 0
-            if p.recover < -15: p.health -= 1; p.recover = 0
-            p.recover_mana += (2 if p.sleeping else 1) * (1 + .25 * (p.intelligence - 1))
-            if p.recover_mana > 30: p.mana = min(9 + 2*p.intelligence, p.mana + 1); p.recover_mana = 0
-            if p.sleeping and p.energy >= 9: p.sleeping = False; state.achievements["wake_up"] = True
-            if p.resting and (p.health >= 9 + 2*p.strength or p.food <= 0 or p.drink <= 0): p.resting = False
-            if p.level == NUM_LEVELS - 1 and state.boss_health > 0: p.health -= max(0, 2 - p.armour)
+            if p.recover > 25: p.health = min(self._max_health(p), p.health + 2); p.recover = 0
+            if p.recover < -15: p.health -= 0 if p.level==NUM_LEVELS-1 else 1; p.recover = 0
+            p.recover_mana = (p.recover_mana + (2 if p.sleeping else 1)) * (1 + .25 * (p.intelligence - 1))
+            if p.recover_mana > 30: p.mana = min(self._max_mana(p), p.mana + 1); p.recover_mana = 0
+            if p.sleeping and p.energy >= self._max_energy(p): p.sleeping = False; self._award("wake_up",p)
+            if p.resting and (p.health >= self._max_health(p) or p.food <= 0 or p.drink <= 0): p.resting = False
             if p.health <= 0: p.health = 0; p.alive = False; self._event("player_died", agent_id=p.agent_id)
 
     def _update_projectiles(self) -> None:
         state=self._require_state();remaining=[]
         for projectile in state.projectiles:
             projectile.x+=projectile.dx;projectile.y+=projectile.dy;projectile.ttl-=1
-            if projectile.ttl<=0 or state.maps[projectile.level][projectile.y][projectile.x] in ("stone","wall","water"):continue
+            if projectile.ttl<=0 or not (0<=projectile.x<MAP_SIZE and 0<=projectile.y<MAP_SIZE) or state.maps[projectile.level][projectile.y][projectile.x] in ("stone","wall","water"):continue
             if projectile.hostile:
                 target=next((p for p in state.players if p.alive and p.level==projectile.level and p.x==projectile.x and p.y==projectile.y),None)
                 if target:
-                    target.health-=max(0,projectile.damage-target.armour);target.sleeping=False;target.resting=False
+                    target.health-=self._incoming_damage(self._projectile_vector(projectile.kind),target,target.level==NUM_LEVELS-1);target.sleeping=False;target.resting=False
                     continue
             else:
                 target=next((p for p in state.players if p.agent_id!=projectile.owner and p.alive and p.level==projectile.level and p.x==projectile.x and p.y==projectile.y),None)
                 if target:
-                    damage=max(0,projectile.damage-target.armour);target.health-=damage;state.ff_damage_dealt+=damage
+                    damage=self._incoming_damage(self._player_projectile_vector(projectile),target);target.health-=damage;state.ff_damage_dealt+=damage
                     continue
             mob=next((m for m in state.monsters if not projectile.hostile and m.level==projectile.level and m.x==projectile.x and m.y==projectile.y),None)
             if mob:
-                mob.health-=projectile.damage
+                mob.health-=self._vector_damage_to_mob(self._player_projectile_vector(projectile),mob)
                 if mob.health<=0:
-                    state.monsters.remove(mob);state.monsters_killed[mob.level]+=1
+                    state.monsters.remove(mob)
+                    if mob.category!="passive":state.monsters_killed[mob.level]+=1
                     achievement=KILL_ACHIEVEMENTS.get(mob.kind)
-                    if achievement:state.achievements[achievement]=True
+                    owner=next((p for p in state.players if p.agent_id==projectile.owner),None)
+                    if achievement and owner:self._award(achievement,owner)
                 continue
             remaining.append(projectile)
         state.projectiles=remaining
@@ -433,9 +611,20 @@ class CraftaxCoopEnv:
                 if abs(target.x-mob.x)>=abs(target.y-mob.y):dy=0
                 else:dx=0
                 kind=PROJECTILE_KIND[mob.kind];damage=sum(MOB_DAMAGE.get(mob.kind,(1,0,0)))
-                state.projectiles.append(Projectile(mob.id,mob.level,mob.x,mob.y,dx,dy,damage,8,kind,True));mob.attack_cooldown=4
-            elif distance<=1:
-                damage=max(0,mob.damage-(target.armour+target.strength//2));target.health-=damage
+                state.projectiles.append(Projectile(mob.id,mob.level,mob.x,mob.y,dx,dy,damage,8,kind,True));mob.attack_cooldown=5
+            elif mob.category=="ranged":
+                toward_x=0 if target.x==mob.x else (1 if target.x>mob.x else -1);toward_y=0 if target.y==mob.y else (1 if target.y>mob.y else -1)
+                if abs(target.x-mob.x)>=abs(target.y-mob.y):toward_y=0
+                else:toward_x=0
+                if distance<=3:self._move_mob(mob,-toward_x,-toward_y)
+                elif distance>=6:self._move_mob(mob,toward_x,toward_y)
+                else:
+                    directions=((-1,0),(1,0),(0,-1),(0,1));self._move_mob(mob,*directions[self._mix64(state.seed^state.timestep^sum(map(ord,mob.id)))%4])
+            elif distance<=1 and mob.attack_cooldown<=0:
+                was_sleeping=target.sleeping;damage=self._incoming_damage(MOB_DAMAGE.get(mob.kind,(mob.damage,0,0)),target,target.level==NUM_LEVELS-1)*(3.5 if was_sleeping else 1);target.health-=damage
+                target.sleeping=False;target.resting=False
+                if was_sleeping:self._award("wake_up",target)
+                mob.attack_cooldown=5
                 if damage:self._event("player_damaged",agent_id=target.agent_id,mob_id=mob.id,damage=damage)
             elif distance<=8:
                 dx=0 if target.x==mob.x else (1 if target.x>mob.x else -1);dy=0 if target.y==mob.y else (1 if target.y>mob.y else -1)
@@ -450,11 +639,60 @@ class CraftaxCoopEnv:
 
     def _update_plants(self) -> None:
         state=self._require_state()
-        if state.timestep and state.timestep%50==0:
-            for level in range(NUM_LEVELS):
-                for y in range(MAP_SIZE):
-                    for x in range(MAP_SIZE):
-                        if state.maps[level][y][x]=="plant":state.maps[level][y][x]="ripe_plant"
+        for plant in state.plants:
+            plant.age=min(500,plant.age+1)
+            if plant.age>=500 and state.maps[plant.level][plant.y][plant.x]=="plant":
+                state.maps[plant.level][plant.y][plant.x]="ripe_plant"
+
+    def _calculate_inventory_achievements(self)->None:
+        state=self._require_state()
+        for p in state.players:
+            for resource in ("wood","stone","coal","iron","diamond","ruby","sapphire"):
+                if p.inventory[resource]>0:self._award(f"collect_{resource}",p)
+            if p.saplings>0:self._award("collect_sapling",p)
+            if p.bow>0:self._award("find_bow",p)
+            if p.arrows>0:self._award("make_arrow",p)
+            if p.torches>0:self._award("make_torch",p)
+            for item in ("pickaxe","sword"):
+                value=getattr(p,item)
+                for tier,name in enumerate(("wood","stone","iron","diamond"),1):
+                    if value>=tier:self._award(f"make_{name}_{item}",p)
+
+    def _spawn_mobs(self)->None:
+        state=self._require_state();alive=[p for p in state.players if p.alive]
+        if not alive:return
+        level=alive[0].level
+        if level==NUM_LEVELS-1:return
+        state.monsters[:]=[m for m in state.monsters if m.level!=level or min((abs(m.x-p.x)+abs(m.y-p.y) for p in alive),default=0)<14]
+        caps=(len(state.players)*3,len(state.players)*3,len(state.players)*2)
+        if level in (1,3,4):caps=(3,3,2)
+        chances=(.1,.02+.1*(1-state.light_level)**2,.05) if level==0 else ((0 if level==7 else .1),.06,.05)
+        for category,(kind,health,chance,cap) in enumerate(zip(FLOOR_MOBS[level],MOB_HEALTH[level],chances,caps)):
+            if kind is None or sum(m.level==level and m.category==("passive","melee","ranged")[category] for m in state.monsters)>=cap:continue
+            roll=(self._mix64(state.seed^state.timestep^(level<<8)^(category<<16))%10_000)/10_000
+            if roll>=chance:continue
+            start=self._mix64(state.seed^(state.timestep<<11)^(category<<25))%(MAP_SIZE*MAP_SIZE)
+            for offset in range(MAP_SIZE*MAP_SIZE):
+                cell=(start+offset)%(MAP_SIZE*MAP_SIZE);x,y=cell%MAP_SIZE,cell//MAP_SIZE
+                distances=[abs(x-p.x)+abs(y-p.y) for p in alive]
+                if min(distances)<=9 or min(distances)>=14 or state.maps[level][y][x] not in ("grass","path","sand","gravel","fire_grass","ice_grass") or any(m.level==level and m.x==x and m.y==y for m in state.monsters):continue
+                state.monsters.append(Monster(f"spawn_{level}_{state.timestep}_{category}",kind,level,x,y,health,sum(MOB_DAMAGE.get(kind,(0,0,0))),("passive","melee","ranged")[category]));break
+
+    def _update_boss(self)->None:
+        state=self._require_state()
+        if not any(p.alive and p.level==NUM_LEVELS-1 for p in state.players):return
+        if state.boss_wave_timer>0:
+            state.boss_wave_timer-=1
+            category=1+(state.boss_wave_timer%2);kind=FLOOR_MOBS[min(7,state.boss_progress)][category]
+            if kind and sum(m.level==NUM_LEVELS-1 for m in state.monsters)<6:
+                graves=[(x,y) for y,row in enumerate(state.maps[-1]) for x,tile in enumerate(row) if tile in ("grave","grave2","grave3")]
+                if graves:
+                    x,y=graves[self._mix64(state.seed^state.timestep^state.boss_progress)%len(graves)]
+                    state.monsters.append(Monster(f"boss_{state.boss_progress}_{state.timestep}_{category}",kind,NUM_LEVELS-1,x,y,MOB_HEALTH[min(7,state.boss_progress)][category],sum(MOB_DAMAGE.get(kind,(0,0,0))),("passive","melee","ranged")[category]))
+        if state.boss_wave_timer<=0 and not any(m.level==NUM_LEVELS-1 for m in state.monsters):
+            for y,row in enumerate(state.maps[-1]):
+                for x,tile in enumerate(row):
+                    if tile=="necromancer":state.maps[-1][y][x]="necromancer_vulnerable"
 
     def _terminate(self, reason: str) -> None:
         state = self._require_state(); state.terminated = True; state.termination_reason = reason
@@ -462,11 +700,11 @@ class CraftaxCoopEnv:
 
     def observations(self) -> dict[str, dict[str, Any]]:
         state = self._require_state(); dashboard = [self._player_summary(p) for p in state.players]
-        return {p.agent_id: {"agent_id":p.agent_id,"agent_index":i,"role":p.role,"legal_agent_ids":list(self.agent_ids),"legal_actions":self.legal_actions(p.agent_id),"self":self._player_summary(p),"teammate_dashboard":deepcopy(dashboard),"level":p.level,"map_size":[MAP_SIZE,MAP_SIZE],"num_levels":NUM_LEVELS,"local_view":self._local_view(p),"ascii":self.render_ascii(p.agent_id),"visible_monsters":[deepcopy(m.__dict__) for m in state.monsters if m.level==p.level and abs(m.x-p.x)<=self.view_radius and abs(m.y-p.y)<=self.view_radius],"shared":{"timestep":state.timestep,"light_level":state.light_level,"boss_health":state.boss_health,"boss_progress":state.boss_progress,"trade_count":state.trade_count,"food_trade_count":state.food_trade_count,"drink_trade_count":state.drink_trade_count,"revives":state.revives,"friendly_fire_damage":state.ff_damage_dealt,"chests_opened":deepcopy(state.chests_opened),"monsters_killed":deepcopy(state.monsters_killed),"achievements":deepcopy(state.achievements)},"last_joint_event":deepcopy(state.last_joint_event)} for i,p in enumerate(state.players)}
+        return {p.agent_id: {"agent_id":p.agent_id,"agent_index":i,"role":p.role,"legal_agent_ids":list(self.agent_ids),"legal_actions":self.legal_actions(p.agent_id),"self":self._player_summary(p),"achievements":deepcopy(state.achievements_by_agent[p.agent_id]),"teammate_dashboard":deepcopy(dashboard),"level":p.level,"map_size":[MAP_SIZE,MAP_SIZE],"num_levels":NUM_LEVELS,"local_view":self._local_view(p),"ascii":self.render_ascii(p.agent_id),"visible_monsters":[deepcopy(m.__dict__) for m in state.monsters if m.level==p.level and abs(m.x-p.x)<=self.view_radius and abs(m.y-p.y)<=self.view_radius],"shared":{"timestep":state.timestep,"light_level":state.light_level,"boss_health":state.boss_health,"boss_progress":state.boss_progress,"trade_count":state.trade_count,"food_trade_count":state.food_trade_count,"drink_trade_count":state.drink_trade_count,"revives":state.revives,"friendly_fire_damage":state.ff_damage_dealt,"chests_opened":deepcopy(state.chests_opened),"monsters_killed":deepcopy(state.monsters_killed),"achievements":deepcopy(state.achievements)},"last_joint_event":deepcopy(state.last_joint_event)} for i,p in enumerate(state.players)}
 
     @staticmethod
     def _player_summary(p: Player) -> dict[str, Any]:
-        return {"agent_id":p.agent_id,"role":p.role,"position":[p.x,p.y],"level":p.level,"facing":p.facing,"health":p.health,"food":p.food,"drink":p.drink,"energy":p.energy,"mana":p.mana,"alive":p.alive,"sleeping":p.sleeping,"resting":p.resting,"inventory":deepcopy(p.inventory),"equipment":{"pickaxe":p.pickaxe,"sword":p.sword,"armour":p.armour,"bow":p.bow,"arrows":p.arrows,"torches":p.torches,"books":p.books,"saplings":p.saplings,"potions":deepcopy(p.potions),"learned_spell":p.learned_spell,"enchantments":{"sword":p.sword_enchantment,"armour":p.armour_enchantment,"bow":p.bow_enchantment}},"attributes":{"dexterity":p.dexterity,"strength":p.strength,"intelligence":p.intelligence,"xp":p.xp,"level_points":p.level_points},"intrinsics":{"recover":p.recover,"hunger":p.hunger,"thirst":p.thirst,"fatigue":p.fatigue,"recover_mana":p.recover_mana},"request":{"resource":p.request_type,"remaining":p.request_duration}}
+        return {"agent_id":p.agent_id,"role":p.role,"position":[p.x,p.y],"level":p.level,"facing":p.facing,"health":p.health,"food":p.food,"drink":p.drink,"energy":p.energy,"mana":p.mana,"alive":p.alive,"sleeping":p.sleeping,"resting":p.resting,"inventory":deepcopy(p.inventory),"equipment":{"pickaxe":p.pickaxe,"sword":p.sword,"armour":p.armour,"armour_slots":deepcopy(p.armour_slots),"bow":p.bow,"arrows":p.arrows,"torches":p.torches,"books":p.books,"saplings":p.saplings,"potions":deepcopy(p.potions),"learned_spell":p.learned_spell,"enchantments":{"sword":p.sword_enchantment,"armour":p.armour_enchantment,"armour_slots":deepcopy(p.armour_enchantments),"bow":p.bow_enchantment}},"attributes":{"dexterity":p.dexterity,"strength":p.strength,"intelligence":p.intelligence,"xp":p.xp,"level_points":p.level_points},"intrinsics":{"recover":p.recover,"hunger":p.hunger,"thirst":p.thirst,"fatigue":p.fatigue,"recover_mana":p.recover_mana},"request":{"resource":p.request_type,"remaining":p.request_duration}}
 
     def _local_view(self, p: Player) -> list[list[dict[str, Any]]]:
         state=self._require_state(); out=[]
@@ -476,7 +714,8 @@ class CraftaxCoopEnv:
                 terrain = "out_of_bounds" if not (0<=x<MAP_SIZE and 0<=y<MAP_SIZE) else state.maps[p.level][y][x]
                 agents=[q.agent_id for q in state.players if q.alive and q.level==p.level and q.x==x and q.y==y]
                 mobs=[m.id for m in state.monsters if m.level==p.level and m.x==x and m.y==y]
-                row.append({"x":x,"y":y,"terrain":terrain,"agents":agents,"mobs":mobs})
+                item=None if not (0<=x<MAP_SIZE and 0<=y<MAP_SIZE) else state.item_maps[p.level][y][x]
+                row.append({"x":x,"y":y,"terrain":terrain,"item":item,"agents":agents,"mobs":mobs})
             out.append(row)
         return out
 
