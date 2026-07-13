@@ -91,6 +91,7 @@ struct EpisodeEvidence {
     message_action_aligned: bool,
     invalid_action_count: usize,
     hazard_event_count: usize,
+    action_count: usize,
     message_count: usize,
     message_chars: usize,
     redundant_message_count: usize,
@@ -112,6 +113,7 @@ struct Aggregate {
     aligned: usize,
     invalid: usize,
     hazards: usize,
+    actions: usize,
     messages: usize,
     message_chars: usize,
     redundant: usize,
@@ -183,6 +185,7 @@ fn main() -> Result<(), String> {
     }
 
     let aggregates = aggregate_evidence(&evidence);
+    let paired_communication_gaps = paired_communication_gaps(&aggregates)?;
     let dataset_digest = digest_json(&serde_json::to_value(&dataset).map_err(string_error)?)?;
     let candidates_digest =
         digest_json(&serde_json::to_value(&candidate_file.candidates).map_err(string_error)?)?;
@@ -220,6 +223,7 @@ fn main() -> Result<(), String> {
             "definitions": candidate_file.candidates,
         },
         "summary": aggregates,
+        "paired_communication_gaps": paired_communication_gaps,
         "qualitative_evaluation": {
             "evaluator": "deterministic_trace_rubric.v1",
             "blinded_external_judge_run": false,
@@ -324,6 +328,7 @@ fn validate_config(dataset: &DatasetConfig, candidates: &CandidateFile) -> Resul
             candidate.executor_profile.as_str(),
             "no_message"
                 | "verbose_baseline"
+                | "verbose_channel_masked"
                 | "compact_message_only"
                 | "silent_structured_actions"
                 | "event_triggered_compact"
@@ -693,14 +698,16 @@ fn run_probe(
         DungeonGridSession::restore_from_checkpoint_value(context.checkpoint.clone())?;
     let event_start = session.event_log.len();
     let actions = actions_for(candidate, context)?;
+    let mut action_count = 0;
     for action in actions {
-        if candidate.executor_profile == "event_triggered_channel_masked"
+        if is_channel_masked(&candidate.executor_profile)
             && matches!(action, DungeonGridAction::Message { .. })
         {
             continue;
         }
         let action = gate_load_bearing_action(candidate, context, &session, action);
         session.step(action);
+        action_count += 1;
         if session.done {
             break;
         }
@@ -765,6 +772,7 @@ fn run_probe(
         message_action_aligned,
         invalid_action_count,
         hazard_event_count,
+        action_count,
         message_count: messages.len(),
         message_chars,
         redundant_message_count,
@@ -801,10 +809,10 @@ fn actions_for(
         },
     };
     let end = || DungeonGridAction::EndTurn;
-    let executor_profile = if candidate.executor_profile == "event_triggered_channel_masked" {
-        "event_triggered_compact"
-    } else {
-        candidate.executor_profile.as_str()
+    let executor_profile = match candidate.executor_profile.as_str() {
+        "event_triggered_channel_masked" => "event_triggered_compact",
+        "verbose_channel_masked" => "verbose_baseline",
+        profile => profile,
     };
     let actions = match (executor_profile, context.kind) {
         ("no_message", ProbeKind::PreBreach) => vec![
@@ -980,6 +988,13 @@ fn actions_for(
         }
     };
     Ok(actions)
+}
+
+fn is_channel_masked(profile: &str) -> bool {
+    matches!(
+        profile,
+        "verbose_channel_masked" | "event_triggered_channel_masked"
+    )
 }
 
 fn gate_load_bearing_action(
@@ -1191,6 +1206,7 @@ fn aggregate_evidence(evidence: &[EpisodeEvidence]) -> Value {
         aggregate.aligned += usize::from(episode.message_action_aligned);
         aggregate.invalid += episode.invalid_action_count;
         aggregate.hazards += episode.hazard_event_count;
+        aggregate.actions += episode.action_count;
         aggregate.messages += episode.message_count;
         aggregate.message_chars += episode.message_chars;
         aggregate.redundant += episode.redundant_message_count;
@@ -1219,6 +1235,7 @@ fn aggregate_evidence(evidence: &[EpisodeEvidence]) -> Value {
                     "message_action_alignment_rate": aggregate.aligned as f64 / denominator,
                     "invalid_action_count": aggregate.invalid,
                     "hazard_event_count": aggregate.hazards,
+                    "mean_action_count": aggregate.actions as f64 / denominator,
                     "message_count": aggregate.messages,
                     "message_chars": aggregate.message_chars,
                     "redundant_message_count": aggregate.redundant,
@@ -1231,6 +1248,75 @@ fn aggregate_evidence(evidence: &[EpisodeEvidence]) -> Value {
         output.insert(split, Value::Object(candidate_values));
     }
     Value::Object(output)
+}
+
+fn paired_communication_gaps(summary: &Value) -> Result<Value, String> {
+    let mut splits = serde_json::Map::new();
+    for split in ["train", "selection", "heldout"] {
+        let pre = communication_pair(summary, split, "verbose_baseline", "verbose_channel_masked")?;
+        let post = communication_pair(
+            summary,
+            split,
+            "event_triggered_compact",
+            "event_triggered_channel_masked",
+        )?;
+        let outcome_difference_in_differences_pp =
+            metric(&post, "outcome_gap_pp")? - metric(&pre, "outcome_gap_pp")?;
+        let coordination_difference_in_differences_pp =
+            metric(&post, "coordination_gap_pp")? - metric(&pre, "coordination_gap_pp")?;
+        let qualitative_difference_in_differences =
+            metric(&post, "qualitative_gap")? - metric(&pre, "qualitative_gap")?;
+        splits.insert(
+            split.to_string(),
+            json!({
+                "pre_opt": pre,
+                "post_opt": post,
+                "difference_in_differences": {
+                    "outcome_pp": outcome_difference_in_differences_pp,
+                    "coordination_pp": coordination_difference_in_differences_pp,
+                    "qualitative_score": qualitative_difference_in_differences,
+                }
+            }),
+        );
+    }
+    Ok(json!({
+        "design": "paired_2x2_same_checkpoint_reference_executor",
+        "gap_definition": "communication_enabled_minus_channel_masked",
+        "reward_warning": "DungeonGrid awards a direct message reward, so reward gaps are reported diagnostically and are not causal outcome evidence.",
+        "splits": splits,
+    }))
+}
+
+fn communication_pair(
+    summary: &Value,
+    split: &str,
+    enabled_candidate: &str,
+    masked_candidate: &str,
+) -> Result<Value, String> {
+    let enabled = summary
+        .pointer(&format!("/{split}/{enabled_candidate}"))
+        .ok_or_else(|| format!("summary missing {split}/{enabled_candidate}"))?;
+    let masked = summary
+        .pointer(&format!("/{split}/{masked_candidate}"))
+        .ok_or_else(|| format!("summary missing {split}/{masked_candidate}"))?;
+    Ok(json!({
+        "communication_enabled_candidate": enabled_candidate,
+        "channel_masked_candidate": masked_candidate,
+        "outcome_gap_pp": 100.0 * (metric(enabled, "outcome_success_rate")? - metric(masked, "outcome_success_rate")?),
+        "coordination_gap_pp": 100.0 * (metric(enabled, "coordination_success_rate")? - metric(masked, "coordination_success_rate")?),
+        "qualitative_gap": metric(enabled, "mean_qualitative_score")? - metric(masked, "mean_qualitative_score")?,
+        "mean_action_count_gap": metric(enabled, "mean_action_count")? - metric(masked, "mean_action_count")?,
+        "message_count_gap": metric(enabled, "message_count")? - metric(masked, "message_count")?,
+        "message_chars_gap": metric(enabled, "message_chars")? - metric(masked, "message_chars")?,
+        "diagnostic_reward_gap": metric(enabled, "mean_total_reward")? - metric(masked, "mean_total_reward")?,
+    }))
+}
+
+fn metric(value: &Value, field: &str) -> Result<f64, String> {
+    value
+        .get(field)
+        .and_then(Value::as_f64)
+        .ok_or_else(|| format!("metric {field:?} missing or non-numeric"))
 }
 
 fn digest_json(value: &Value) -> Result<String, String> {

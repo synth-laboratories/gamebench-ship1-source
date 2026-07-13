@@ -32,6 +32,22 @@
       }
     },
     {
+      "id": "verbose_channel_masked",
+      "executor_profile": "verbose_channel_masked",
+      "shared_prompt": "Use the same verbose pre-optimization policy, but evaluate it without access to the communication action.",
+      "role_prompts": {
+        "barbarian": "Follow the same underlying action policy without acknowledgements or narration.",
+        "wizard": "Follow the same underlying action policy without planning broadcasts."
+      },
+      "protocol": {
+        "speak_gate": "always",
+        "authority_policy": "decentralized",
+        "role_policy": "fixed",
+        "channel_masked": true,
+        "max_chars": 240
+      }
+    },
+    {
       "id": "compact_message_only",
       "executor_profile": "compact_message_only",
       "shared_prompt": "Send one compact event-specific assignment, but do not change the underlying action policy.",

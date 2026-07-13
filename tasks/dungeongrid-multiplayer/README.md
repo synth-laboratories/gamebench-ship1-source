@@ -22,4 +22,4 @@ The optional top-level `observation` object controls the agent information bound
 
 `rich_state()` remains an authoritative verifier/admin surface. Policies should consume `observation` and must not receive `rich_state()` out of band.
 
-The MAPO dataset in `defaults/mapo_coordination/dataset_v1.json` turns on four-agent local visibility and communication. Its matched `event_triggered_channel_masked` arm executes the same inbox-conditioned policy while dropping message delivery, separating communication effects from a different action policy.
+The MAPO dataset in `defaults/mapo_coordination/dataset_v1.json` turns on four-agent local visibility and communication. The report contains a paired 2x2: verbose pre-optimization and compact post-optimization policies, each with communication enabled and channel masked. This measures the enabled-minus-masked communication gap before and after optimization on identical checkpoints. The silent structured policy remains an oracle bound, not a causal communication control.
