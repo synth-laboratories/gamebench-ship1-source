@@ -1,0 +1,32 @@
+{
+  "schema_version": "gamebench.craftax_coop.parity_receipt.v1",
+  "seed": 101,
+  "steps": 100,
+  "action_sha256": "10060d5bc857da1776f065726337ed30d561a759b340c1b1df2cd7cf51ffcb7a",
+  "python": {
+    "shared_reward": 11.0,
+    "structured_event_count": 407,
+    "legacy_event_count": 407,
+    "terminated": false
+  },
+  "rust": {
+    "shared_reward": 11.0,
+    "structured_event_count": 407,
+    "legacy_event_count": 407,
+    "terminated": false
+  },
+  "normalized_trace_equal": true,
+  "final_observations_equal": true,
+  "events_equal": true,
+  "achievements": [
+    "all_roles_alive",
+    "collect_drink",
+    "collect_iron",
+    "collect_wood",
+    "make_iron_pickaxe",
+    "make_stone_pickaxe",
+    "make_torch",
+    "make_wood_pickaxe",
+    "open_chest"
+  ]
+}

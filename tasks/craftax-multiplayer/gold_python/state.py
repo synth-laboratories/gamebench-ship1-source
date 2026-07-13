@@ -51,6 +51,9 @@ class Player:
     request_type: str | None = None
     request_duration: int = 0
 
+    def __post_init__(self) -> None:
+        self.health=float(self.health)
+
 
 @dataclass
 class Monster:
@@ -63,6 +66,9 @@ class Monster:
     damage: int
     category: str = "melee"
     attack_cooldown: int = 0
+
+    def __post_init__(self) -> None:
+        self.health=float(self.health)
 
 
 @dataclass
