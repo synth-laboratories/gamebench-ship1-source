@@ -356,9 +356,15 @@ fn handle(stream: &mut TcpStream, service: &mut Service) {
 }
 
 fn main() {
-    let address = std::env::args()
-        .nth(1)
-        .unwrap_or_else(|| "127.0.0.1:8081".into());
+    let argument = std::env::args().nth(1);
+    if argument
+        .as_deref()
+        .is_some_and(|value| ["-h", "--help"].contains(&value))
+    {
+        println!("Usage: service [HOST:PORT]\nDefault: 127.0.0.1:8081");
+        return;
+    }
+    let address = argument.unwrap_or_else(|| "127.0.0.1:8081".into());
     let listener =
         TcpListener::bind(&address).unwrap_or_else(|error| panic!("bind {address}: {error}"));
     let mut service = Service::new();
