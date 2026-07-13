@@ -151,8 +151,10 @@ class CraftaxCoopEnv:
         elif kind == "rest": p.energy = min(9, p.energy + (4 if p.role == "forager" else 2))
         elif kind == "sleep": p.sleeping = True
         elif kind == "shoot_arrow": self._shoot_arrow(p)
-        elif kind == "cast_spell" and p.role == "forager":
+        elif kind == "cast_spell" and p.role == "forager" and p.mana >= 2:
+            p.mana -= 2
             for ally in self._require_state().players: ally.health = min(9, ally.health + 2)
+            self._require_state().achievements["cast_spell"] = True
             self._event("role_ability", agent_id=p.agent_id, ability="team_heal")
         elif kind.startswith("make_"): self._craft(p, kind)
         elif kind.startswith("place_"): self._place(p, kind)
