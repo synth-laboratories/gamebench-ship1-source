@@ -397,6 +397,7 @@ class IsolatedPolicyProcess:
             self._stdin.flush()
             response_line = self._stdout.readline(_MAX_IPC_LINE_CHARS + 1)
         if not response_line:
+            self._stderr_thread.join(timeout=0.25)
             detail = self._stderr_tail.strip()
             raise RuntimeError(
                 "isolated policy process returned no response"
