@@ -5,12 +5,14 @@ Symbolic **multi-agent simultaneous MARL** kitchen gold with **full JaxMARL Over
 ## Layout
 
 - `gold_python/` — joint-step engine, NEV, checkpoints, observations, pixel render, FastAPI service
+- `gold_rust/` — pure-Rust symbolic authority, self-contained checkpoints, HTTP service, and MAPO checkpoint replay
 - `shared/` — ASCII layout parser, ingredient model, task resolver
 - `fixtures/gold/` — **29** scripted scenarios + NEV eventlogs
 - `defaults/layouts/` — **30** ASCII layouts (21 JaxMARL catalog + 9 task-specific); see `index.json`
 - `scripts/` — verify, spectrum eval, hillclimb, HTTP service
 - `policies/` — greedy cooperative heuristic baseline + `kitchen_nav.py` shared MARL logic
 - `containers/codepolicy/` — in-process `choose_joint_actions` rollout
+- `defaults/mapo_promptopt/` — disjoint train/selection/heldout layout-family + seed manifest
 
 ## Engine features (full scope)
 
@@ -31,6 +33,42 @@ Symbolic **multi-agent simultaneous MARL** kitchen gold with **full JaxMARL Over
 | Shaped rewards (optional rules flag) | Yes |
 | Manual cook start (`start_cooking_interaction`) | Yes |
 | Ingredient permutations in obs | Yes |
+
+## Rust authority and MAPO checkpoint substrate
+
+The Rust lane is independent of Python at runtime and accepts the existing
+inline or `defaults/layouts/*.json` ASCII layout shape plus the existing rules
+objects/profiles. It owns simultaneous joint steps, movement conflicts,
+counters, ingredient/pot/cook/plate/delivery transitions, grounded `L` button
+activation, partial per-agent symbolic observations, NEV-compatible events,
+terminal metrics, and deterministic JSON checkpoint/restore. Checkpoints embed
+the resolved task, parsed layout, deterministic RNG state, all dynamic state,
+metrics, and the complete event trace; restore does not read defaults files.
+
+Run the service:
+
+```bash
+cargo run --manifest-path tasks/overcooked-v2-multiplayer/gold_rust/Cargo.toml \
+  --bin service -- 127.0.0.1:8081
+```
+
+Run all MAPO prompt-optimization rows and emit deterministic checkpoint receipts:
+
+```bash
+cargo run --manifest-path tasks/overcooked-v2-multiplayer/gold_rust/Cargo.toml \
+  --example mapo_checkpoint_replay
+```
+
+The example executes every train, selection, and heldout row from
+`defaults/mapo_promptopt/dataset_v1.json`. Its bundled executors are explicitly
+typed substrate/reference protocols; they do not execute arbitrary
+natural-language prompts. A model-backed policy adapter must consume the same
+per-agent observation and joint-action contracts for an optimizer efficacy run.
+
+Initial Rust observation authority is intentionally limited to
+`symbolic_compact`. `spatial_tensor`, `featurized`, `pixel_rgb`, and aliases
+`jaxmarl_default` / `jaxmarl_featurized` remain Python-only; Rust rejects these
+profiles at task resolution instead of silently substituting symbolic data.
 
 ## Rules profiles (`defaults/rules/`)
 
