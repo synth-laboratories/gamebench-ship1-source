@@ -1,0 +1,1 @@
+"""Craftax-Coop evaluation containers."""

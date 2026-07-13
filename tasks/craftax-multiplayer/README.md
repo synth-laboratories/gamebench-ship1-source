@@ -23,3 +23,11 @@ The Python and Rust lanes share dimensions, roles, simultaneous movement conflic
 `python scripts/run_service.py --port 8080`
 
 `cargo run --manifest-path gold_rust/Cargo.toml --example smoke`
+
+Code-policy rollout:
+
+`python containers/codepolicy/rollout_code_policy.py --policy policies/heuristic_baseline.py --seed 101 --steps 100 --output reports/codepolicy/heuristic_seed101.json`
+
+Three-agent Gemini 3.1 Flash Lite ReAct rollout (requires `GEMINI_API_KEY` or `GOOGLE_API_KEY`):
+
+`python containers/react/run_react_policy.py --model gemini-3.1-flash-lite --seed 101 --steps 30 --output reports/react/gemini_3_1_flash_lite_seed101.json`
