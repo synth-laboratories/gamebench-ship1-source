@@ -1,0 +1,12 @@
+schema_version: gamebench.task.v1
+task_id: craftax-coop
+env_family: craftax-multiplayer
+agent_count: 3
+map_size: [48, 48]
+levels: 9
+joint_action: simultaneous
+reward: shared
+python_entrypoint: gold_python.engine:CraftaxCoopEnv
+rust_crate: gold_rust
+service_entrypoint: scripts/run_service.py
+policy_runner: scripts/run_policy.py

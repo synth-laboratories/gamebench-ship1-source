@@ -1,0 +1,1 @@
+{"schema_version":"gamebench.task.v1","task_id":"craftax_coop_coordination_smoke","env_family":"craftax-multiplayer","seed":101,"max_steps":32,"agents":["agent_0","agent_1","agent_2"],"roles":{"agent_0":"warrior","agent_1":"forager","agent_2":"miner"}}
