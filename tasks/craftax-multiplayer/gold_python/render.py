@@ -108,13 +108,25 @@ class Canvas:
             if cursor >= max_x:
                 break
 
-    def blit(self, rgba: tuple[int, int, tuple[RGBA, ...]], x: int, y: int) -> None:
+    def blit(
+        self,
+        rgba: tuple[int, int, tuple[RGBA, ...]],
+        x: int,
+        y: int,
+        tint: RGB | None = None,
+    ) -> None:
         width, height, pixels = rgba
         for sy in range(height):
             for sx in range(width):
                 red, green, blue, alpha = pixels[sy * width + sx]
                 if alpha == 0:
                     continue
+                if tint is not None:
+                    brightness = max(red, green, blue)
+                    red, green, blue = tuple(
+                        (source + brightness * target // 255 * 2) // 3
+                        for source, target in zip((red, green, blue), tint)
+                    )
                 if alpha == 255:
                     self.put(x + sx, y + sy, (red, green, blue))
                     continue
@@ -161,6 +173,28 @@ def _entity(canvas: Canvas, x: int, y: int, name: str, color: RGB, mode: RenderM
     canvas.fill(x + 2, y + 1, TILE_SIZE - 4, TILE_SIZE - 2, color)
 
 
+def _player_entity(
+    canvas: Canvas,
+    x: int,
+    y: int,
+    player: object,
+    color: RGB,
+    mode: RenderMode,
+) -> None:
+    if not bool(getattr(player, "alive", True)):
+        _entity(canvas, x, y, "player-dead", color, mode)
+        return
+    sprite_name = (
+        "player-sleep"
+        if bool(getattr(player, "sleeping", False))
+        else f"player-{getattr(player, 'facing', 'down')}"
+    )
+    if mode == "sprites" and (sprite := _sprite(sprite_name)) is not None:
+        canvas.blit(sprite, x, y, tint=color)
+        return
+    canvas.fill(x + 2, y + 1, TILE_SIZE - 4, TILE_SIZE - 2, color)
+
+
 def _dim(canvas: Canvas, x: int, y: int, light: float) -> None:
     factor = max(0.12, min(1.0, 0.22 + 0.78 * light))
     for py in range(y, y + TILE_SIZE):
@@ -189,7 +223,7 @@ def render_rgb(env: CraftaxCoopEnv, render_mode: RenderMode = "auto") -> RGBFram
         teammates = [(index, player) for index, player in enumerate(players) if player.agent_id != focus.agent_id][:TEAMMATE_ROWS]
         for row, (index, teammate) in enumerate(teammates):
             y = row * TILE_SIZE
-            _entity(canvas, ox, y, teammate.role if teammate.alive else "player-dead", colors[index % len(colors)], mode)
+            _player_entity(canvas, ox, y, teammate, colors[index % len(colors)], mode)
             canvas.text(ox + 18, y + 1, f"{teammate.agent_id} {teammate.role} L{teammate.level}", (226, 231, 236), panel_right)
             canvas.text(ox + 18, y + 9, f"H{int(max(0, teammate.health))} F{teammate.food} D{teammate.drink} E{teammate.energy} R{teammate.request_duration}", (177, 192, 205), panel_right)
         map_y = TEAMMATE_ROWS * TILE_SIZE
@@ -210,8 +244,7 @@ def render_rgb(env: CraftaxCoopEnv, render_mode: RenderMode = "auto") -> RGBFram
                     _entity(canvas, px, py, "plant-ripe" if plant.age >= 500 else "plant", (82, 190, 73), mode)
                 for index, player in enumerate(players):
                     if player.level == focus.level and (player.x, player.y) == (world_x, world_y):
-                        facing = "player-dead" if not player.alive else "player-sleep" if player.sleeping else f"player-{player.facing}"
-                        _entity(canvas, px, py, facing, colors[index % len(colors)], mode)
+                        _player_entity(canvas, px, py, player, colors[index % len(colors)], mode)
                 for monster in state.monsters:
                     if monster.level == focus.level and (monster.x, monster.y) == (world_x, world_y):
                         _entity(canvas, px, py, monster.kind, (210, 68, 68), mode)
