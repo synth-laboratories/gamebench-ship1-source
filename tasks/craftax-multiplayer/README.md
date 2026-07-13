@@ -18,6 +18,8 @@ Python and Rust are independent runtime authorities with the same deterministic 
 
 This is a pure-language semantic port, not a byte-for-byte execution of the authors' JAX program. Consequently JAX PRNG bitstreams and vectorized update ordering are not reproduced. The GameBench task provides symbolic JSON/ASCII rather than the author repository's pixel asset renderer, and represents the long-tail mob/projectile taxonomy through the same shared combat model instead of importing JAX array layouts. These are explicit representation boundaries; none falls back to `craftax-singleplayer` or removes the requested cooperative mechanics.
 
+Python and Rust emit the same structured and legacy NEV contracts, but internal event granularity is not byte-for-byte identical: Rust records some simultaneous resolution details as separate events. The deterministic HTTP policy fixture therefore requires identical terminal state, reward, achievements, trades, and observation fields while reporting each runtime's event counts independently.
+
 ## Usage
 
 `python scripts/run_policy.py --seed 101 --steps 100`
@@ -29,6 +31,10 @@ This is a pure-language semantic port, not a byte-for-byte execution of the auth
 `cargo run --manifest-path gold_rust/Cargo.toml --bin service -- 127.0.0.1:8081`
 
 `python scripts/verify_python_rust_parity.py`
+
+Shared HTTP policy runner (works against either service):
+
+`python scripts/run_http_policy.py --base-url http://127.0.0.1:8080 --runtime python --seed 404 --steps 300 --output reports/http_e2e/python_seed404.json`
 
 Code-policy rollout:
 

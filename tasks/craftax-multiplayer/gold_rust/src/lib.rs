@@ -130,6 +130,7 @@ pub struct State {
     pub trade_count: u64,
     pub terminated: bool,
     pub termination_reason: Option<String>,
+    pub last_joint_event: Vec<Event>,
     pub nev: Vec<Event>,
     pub legacy_nev: Vec<String>,
 }
@@ -309,6 +310,7 @@ impl CraftaxCoopEnv {
                 trade_count: 0,
                 terminated: false,
                 termination_reason: None,
+                last_joint_event: vec![],
                 nev: vec![],
                 legacy_nev: vec![],
             },
@@ -336,6 +338,7 @@ impl CraftaxCoopEnv {
                 return Err(format!("illegal action for {}: {action}", player.agent_id));
             }
         }
+        self.state.last_joint_event.clear();
         let start = self.state.nev.len();
         let before = self.state.achievements.len();
         for player in &self.state.players {
@@ -343,11 +346,13 @@ impl CraftaxCoopEnv {
                 ("agent_id".to_string(), json!(player.agent_id)),
                 ("action".to_string(), json!(actions[&player.agent_id])),
             ]);
-            self.state.nev.push(Event {
+            let event = Event {
                 timestep: self.state.timestep,
                 kind: "joint_action".into(),
                 fields: fields.clone(),
-            });
+            };
+            self.state.nev.push(event.clone());
+            self.state.last_joint_event.push(event);
             self.state.legacy_nev.push(format!(
                 "JointAction({},{})",
                 event_field_text(&fields["agent_id"]),
@@ -1067,11 +1072,13 @@ impl CraftaxCoopEnv {
             .into_iter()
             .map(|(k, v)| (k.into(), json!(v)))
             .collect();
-        self.state.nev.push(Event {
+        let event = Event {
             timestep: self.state.timestep,
             kind: kind.into(),
             fields,
-        });
+        };
+        self.state.nev.push(event.clone());
+        self.state.last_joint_event.push(event);
         self.state.legacy_nev.push(format!(
             "{}({})",
             kind.split('_')
@@ -1208,8 +1215,57 @@ impl CraftaxCoopEnv {
                 row.push(json!({"x":x,"y":y,"terrain":terrain,"agents":agents,"mobs":mobs}));
             } view.push(Value::Array(row)); }
             let visible=self.state.monsters.iter().filter(|m|m.level==p.level&&m.x.abs_diff(p.x)<=radius as usize&&m.y.abs_diff(p.y)<=radius as usize).collect::<Vec<_>>();
-            (p.agent_id.clone(),json!({"agent_id":p.agent_id,"agent_index":index,"role":p.role,"legal_agent_ids":self.state.players.iter().map(|q|q.agent_id.clone()).collect::<Vec<_>>(),"legal_actions":self.legal_actions(&p.agent_id),"self":Self::player_json(p),"teammate_dashboard":dashboard,"level":p.level,"map_size":[MAP_SIZE,MAP_SIZE],"num_levels":NUM_LEVELS,"local_view":view,"visible_monsters":visible,"shared":{"timestep":self.state.timestep,"light_level":self.state.light_level,"boss_health":self.state.boss_health,"boss_progress":self.state.boss_progress,"trade_count":self.state.trade_count,"achievements":self.state.achievements}}))
+            let achievements=self.state.achievements.iter().map(|name|(name.clone(),true)).collect::<BTreeMap<_,_>>();
+            (p.agent_id.clone(),json!({"agent_id":p.agent_id,"agent_index":index,"role":p.role,"legal_agent_ids":self.state.players.iter().map(|q|q.agent_id.clone()).collect::<Vec<_>>(),"legal_actions":self.legal_actions(&p.agent_id),"self":Self::player_json(p),"teammate_dashboard":dashboard,"level":p.level,"map_size":[MAP_SIZE,MAP_SIZE],"num_levels":NUM_LEVELS,"local_view":view,"ascii":self.render_ascii(p,radius),"visible_monsters":visible,"last_joint_event":self.state.last_joint_event,"shared":{"timestep":self.state.timestep,"light_level":self.state.light_level,"boss_health":self.state.boss_health,"boss_progress":self.state.boss_progress,"trade_count":self.state.trade_count,"achievements":achievements}}))
         }).collect()
+    }
+
+    fn render_ascii(&self, player: &Player, radius: isize) -> String {
+        (player.y as isize - radius..=player.y as isize + radius)
+            .map(|y| {
+                (player.x as isize - radius..=player.x as isize + radius)
+                    .map(|x| {
+                        if let Some((index, _)) =
+                            self.state.players.iter().enumerate().find(|(_, p)| {
+                                p.alive
+                                    && p.level == player.level
+                                    && p.x as isize == x
+                                    && p.y as isize == y
+                            })
+                        {
+                            return char::from_digit(index as u32, 10).unwrap_or('@');
+                        }
+                        if self.state.monsters.iter().any(|m| {
+                            m.level == player.level && m.x as isize == x && m.y as isize == y
+                        }) {
+                            return 'M';
+                        }
+                        if x < 0 || y < 0 || x >= MAP_SIZE as isize || y >= MAP_SIZE as isize {
+                            return ' ';
+                        }
+                        match self.state.maps[player.level][y as usize][x as usize].as_str() {
+                            "grass" | "path" => '.',
+                            "water" | "fountain" => '~',
+                            "tree" => 'T',
+                            "stone" => '#',
+                            "coal" => 'c',
+                            "iron" => 'i',
+                            "diamond" => 'd',
+                            "ruby" => 'r',
+                            "sapphire" => 's',
+                            "chest" => 'C',
+                            "boss" => 'B',
+                            "stairs_down" => '>',
+                            "stairs_up" => '<',
+                            "sand" => ':',
+                            "ice_grass" => '*',
+                            _ => '?',
+                        }
+                    })
+                    .collect::<String>()
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 
     fn player_json(p: &Player) -> Value {

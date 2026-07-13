@@ -47,8 +47,6 @@ def verify_cross_language_checkpoint(environment: CraftaxCoopEnv) -> str:
     restored.restore(rust_checkpoint)
     source = environment._require_state().to_dict()
     returned = restored._require_state().to_dict()
-    source.pop("last_joint_event")
-    returned.pop("last_joint_event")
     source["achievements"] = {key: value for key, value in source["achievements"].items() if value}
     returned["achievements"] = {key: value for key, value in returned["achievements"].items() if value}
     if source != returned:
