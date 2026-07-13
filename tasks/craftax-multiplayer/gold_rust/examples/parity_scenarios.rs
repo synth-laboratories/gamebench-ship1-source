@@ -15,7 +15,11 @@ fn noop() -> BTreeMap<String, String> {
 fn main() {
     let mut out = serde_json::Map::new();
     let mut env = CraftaxCoopEnv::reset(17, 3, 100);
-    out.insert("reset".into(),json!({"maps":[env.state.maps[0][10][10],env.state.maps[6][10][10],env.state.maps[8][24][24]],"monsters":env.state.monsters.iter().take(5).collect::<Vec<_>>() }));
+    out.insert("reset".into(),json!({"maps":[env.state.maps[0][10][10],env.state.maps[6][10][10],env.state.maps[8][24][24]],"spawn":[env.state.maps[0][3][3].clone(),env.state.maps[0][3][4].clone(),env.state.maps[0][3][5].clone()],"fountain":env.state.maps[0][5][5],"monsters":env.state.monsters.iter().take(5).collect::<Vec<_>>() }));
+    out.insert(
+        "strict_action".into(),
+        json!(env.step(&joint("invalid_action", "noop", "noop")).is_err()),
+    );
     env.step(&joint("request_ruby", "noop", "noop")).unwrap();
     for _ in 0..10 {
         env.step(&noop()).unwrap();
@@ -79,6 +83,53 @@ fn main() {
     env.state.maps[0][8][8] = "plant".into();
     env.step(&noop()).unwrap();
     out.insert("plant_light".into(),json!({"tile":env.state.maps[0][8][8],"timestep":env.state.timestep,"light":env.state.light_level}));
+    let mut floor_env = CraftaxCoopEnv::reset(17, 3, 100);
+    floor_env.state.monsters.clear();
+    floor_env.state.players[0].x = 45;
+    floor_env.state.players[0].y = 45;
+    floor_env.step(&joint("descend", "noop", "noop")).unwrap();
+    let descended = [
+        floor_env.state.players[0].level,
+        floor_env.state.players[0].x,
+        floor_env.state.players[0].y,
+    ];
+    floor_env.step(&joint("ascend", "noop", "noop")).unwrap();
+    out.insert("floor_landing".into(), json!({"descended":descended,"ascended":[floor_env.state.players[0].level,floor_env.state.players[0].x,floor_env.state.players[0].y]}));
+    let mut trade_env = CraftaxCoopEnv::reset(17, 3, 100);
+    trade_env.state.monsters.clear();
+    trade_env.state.players[0].request_type = Some("wood".into());
+    trade_env.state.players[0].request_duration = 10;
+    *trade_env.state.players[0]
+        .inventory
+        .get_mut("wood")
+        .unwrap() = 99;
+    *trade_env.state.players[2]
+        .inventory
+        .get_mut("wood")
+        .unwrap() = 1;
+    trade_env
+        .step(&joint("noop", "noop", "give_wood_to_agent_0"))
+        .unwrap();
+    out.insert("full_transfer".into(),json!({"giver":trade_env.state.players[2].inventory["wood"],"receiver":trade_env.state.players[0].inventory["wood"],"trades":trade_env.state.trade_count,"request":trade_env.state.players[0].request_type}));
+    let mut survival_env = CraftaxCoopEnv::reset(18, 3, 100);
+    survival_env.state.monsters.clear();
+    survival_env.state.maps[0][4][4] = "tree".into();
+    survival_env.step(&joint("noop", "do", "noop")).unwrap();
+    survival_env.state.maps[0][4][4] = "water".into();
+    survival_env.state.players[1].drink = 2;
+    survival_env.step(&joint("noop", "do", "noop")).unwrap();
+    survival_env.state.players[0].food = 4;
+    survival_env.state.monsters = vec![Monster {
+        id: "cow_fixture".into(),
+        kind: "cow".into(),
+        level: 0,
+        x: 3,
+        y: 4,
+        health: 2,
+        damage: 0,
+    }];
+    survival_env.step(&joint("do", "noop", "noop")).unwrap();
+    out.insert("survival".into(),json!({"saplings":survival_env.state.players[1].saplings,"drink":survival_env.state.players[1].drink,"food":survival_env.state.players[0].food,"achievements":survival_env.state.achievements}));
     let restored = CraftaxCoopEnv::restore_json(&env.checkpoint_json()).unwrap();
     out.insert(
         "checkpoint".into(),

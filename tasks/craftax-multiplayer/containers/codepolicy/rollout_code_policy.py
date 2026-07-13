@@ -44,7 +44,7 @@ def rollout(policy_path: Path, seed: int, max_steps: int) -> dict[str, Any]:
         "env_family": env.env_family,
         "lane": "python",
         "policy_kind": "code",
-        "policy_path": str(policy_path.resolve()),
+        "policy_path": str(policy_path),
         "seed": seed,
         "steps": state.timestep,
         "shared_reward": shared_reward,

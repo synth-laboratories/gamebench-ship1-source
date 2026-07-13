@@ -203,6 +203,10 @@ impl CraftaxCoopEnv {
             }
         }
         maps[NUM_LEVELS - 1][MAP_SIZE / 2][MAP_SIZE / 2] = "boss".into();
+        for index in 0..agent_count {
+            maps[0][3][3 + index] = "grass".into();
+        }
+        maps[0][5][5] = "fountain".into();
         let mut monsters = Vec::new();
         let kinds = [
             "cow",
@@ -287,6 +291,12 @@ impl CraftaxCoopEnv {
                 .any(|p| !actions.contains_key(&p.agent_id))
         {
             return Err("joint action must contain every agent".into());
+        }
+        for player in &self.state.players {
+            let action = &actions[&player.agent_id];
+            if !self.legal_actions(&player.agent_id).contains(action) {
+                return Err(format!("illegal action for {}: {action}", player.agent_id));
+            }
         }
         let start = self.state.nev.len();
         let before = self.state.achievements.len();
@@ -451,7 +461,8 @@ impl CraftaxCoopEnv {
             "left" => (-1, 0),
             "right" => (1, 0),
             "up" => (0, -1),
-            _ => (0, 1),
+            "down" => (0, 1),
+            other => panic!("invalid player facing: {other}"),
         };
         ((p.x as isize + dx) as usize, (p.y as isize + dy) as usize)
     }
@@ -486,6 +497,13 @@ impl CraftaxCoopEnv {
                 .get_mut(resource)
                 .unwrap() += amount;
             self.state.maps[level][y][x] = "grass".into();
+            if tile == "tree"
+                && self.state.players[index].role == "forager"
+                && (self.state.seed + self.state.timestep) % 2 == 0
+            {
+                self.state.players[index].saplings += 1;
+                self.state.achievements.insert("collect_sapling".into());
+            }
             self.state
                 .achievements
                 .insert(format!("collect_{resource}"));
@@ -496,6 +514,17 @@ impl CraftaxCoopEnv {
                 .min(9 + 2 * self.state.players[index].dexterity as i16);
             self.state.maps[level][y][x] = "plant".into();
             self.state.achievements.insert("eat_plant".into());
+            return;
+        }
+        if tile == "fountain" || tile == "water" {
+            let amount = if self.state.players[index].role == "forager" {
+                5
+            } else {
+                3
+            };
+            self.state.players[index].drink = (self.state.players[index].drink + amount)
+                .min(9 + 2 * self.state.players[index].dexterity as i16);
+            self.state.achievements.insert("drink_water".into());
             return;
         }
         if tile == "chest" {
@@ -523,8 +552,13 @@ impl CraftaxCoopEnv {
             }
             self.state.monsters[mi].health -= damage;
             if self.state.monsters[mi].health <= 0 {
+                let kind = self.state.monsters[mi].kind.clone();
                 self.state.monsters.remove(mi);
                 self.state.players[index].xp += 1;
+                if kind == "cow" {
+                    self.state.players[index].food = (self.state.players[index].food + 4)
+                        .min(9 + 2 * self.state.players[index].dexterity as i16);
+                }
                 self.state.achievements.insert("defeat_monster".into());
             }
             return;
@@ -692,7 +726,8 @@ impl CraftaxCoopEnv {
             "left" => (-1, 0),
             "right" => (1, 0),
             "up" => (0, -1),
-            _ => (0, 1),
+            "down" => (0, 1),
+            other => panic!("invalid player facing: {other}"),
         };
         self.state.projectiles.push(Projectile {
             owner: p.agent_id.clone(),
@@ -795,7 +830,7 @@ impl CraftaxCoopEnv {
             return;
         }
         self.state.players[i].level = next as usize;
-        self.state.players[i].x = if direction > 0 { 3 } else { 2 };
+        self.state.players[i].x = if direction > 0 { 2 } else { 45 };
         self.state.players[i].y = self.state.players[i].x;
         if direction > 0 {
             self.state.achievements.insert("descend".into());
@@ -924,7 +959,12 @@ impl CraftaxCoopEnv {
             } else {
                 self.state.players[giver].drink
             };
-            if stock <= 0 {
+            let target_stock = if resource == "food" {
+                self.state.players[target].food
+            } else {
+                self.state.players[target].drink
+            };
+            if stock <= 0 || target_stock >= 9 {
                 return;
             }
             if resource == "food" {
@@ -944,7 +984,7 @@ impl CraftaxCoopEnv {
             .inventory
             .get(resource)
             .unwrap_or(&0);
-        if stock == 0 {
+        if stock == 0 || self.state.players[target].inventory[resource] >= 99 {
             return;
         }
         *self.state.players[giver]
@@ -1008,6 +1048,26 @@ impl CraftaxCoopEnv {
         if checkpoint.schema_version != "craftax-coop.checkpoint.v1" {
             return Err(<serde_json::Error as serde::de::Error>::custom(
                 "unsupported checkpoint schema",
+            ));
+        }
+        if checkpoint
+            .state
+            .players
+            .iter()
+            .any(|player| !["warrior", "forager", "miner"].contains(&player.role.as_str()))
+        {
+            return Err(<serde_json::Error as serde::de::Error>::custom(
+                "invalid player role in checkpoint",
+            ));
+        }
+        if checkpoint
+            .state
+            .players
+            .iter()
+            .any(|player| !["left", "right", "up", "down"].contains(&player.facing.as_str()))
+        {
+            return Err(<serde_json::Error as serde::de::Error>::custom(
+                "invalid player facing in checkpoint",
             ));
         }
         Ok(Self {

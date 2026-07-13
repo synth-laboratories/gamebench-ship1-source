@@ -33,7 +33,10 @@ def main()->None:
     print(json.dumps({"status":"pass","projection":python,"scenarios":scenarios},sort_keys=True))
 
 def python_scenarios()->dict:
-    out={};env=CraftaxCoopEnv(max_timesteps=100);env.reset(17);out["reset"]={"maps":[env.state.maps[0][10][10],env.state.maps[6][10][10],env.state.maps[8][24][24]],"monsters":[asdict(monster) for monster in env.state.monsters[:5]]}
+    out={};env=CraftaxCoopEnv(max_timesteps=100);env.reset(17);out["reset"]={"maps":[env.state.maps[0][10][10],env.state.maps[6][10][10],env.state.maps[8][24][24]],"spawn":[env.state.maps[0][3][3],env.state.maps[0][3][4],env.state.maps[0][3][5]],"fountain":env.state.maps[0][5][5],"monsters":[asdict(monster) for monster in env.state.monsters[:5]]}
+    try:env.step({"agent_0":"invalid_action","agent_1":"noop","agent_2":"noop"})
+    except ValueError:out["strict_action"]=True
+    else:out["strict_action"]=False
     env.step({a:("request_ruby" if a=="agent_0" else "noop") for a in env.agent_ids})
     for _ in range(10):env.step({a:"noop" for a in env.agent_ids})
     out["request_expiry"]=[env.state.players[0].request_type,env.state.players[0].request_duration]
@@ -48,6 +51,10 @@ def python_scenarios()->dict:
     for p in env.state.players:p.health=1;p.food=0;p.drink=0
     env.step({a:"noop" for a in env.agent_ids});out["death"]={"health":[p.health for p in env.state.players],"terminated":env.state.terminated,"reason":env.state.termination_reason}
     env=CraftaxCoopEnv(max_timesteps=1);env.reset(17);env.state.monsters=[];env.step({a:"noop" for a in env.agent_ids});out["timestep"]={"timestep":env.state.timestep,"terminated":env.state.terminated,"reason":env.state.termination_reason}
-    env=CraftaxCoopEnv(max_timesteps=100);env.reset(17);env.state.monsters=[];env.state.timestep=50;env.state.maps[0][8][8]="plant";env.step({a:"noop" for a in env.agent_ids});out["plant_light"]={"tile":env.state.maps[0][8][8],"timestep":env.state.timestep,"light":env.state.light_level};restored=CraftaxCoopEnv();restored.restore(env.checkpoint());out["checkpoint"]=env.state.to_dict()==restored.state.to_dict();return out
+    env=CraftaxCoopEnv(max_timesteps=100);env.reset(17);env.state.monsters=[];env.state.timestep=50;env.state.maps[0][8][8]="plant";env.step({a:"noop" for a in env.agent_ids});out["plant_light"]={"tile":env.state.maps[0][8][8],"timestep":env.state.timestep,"light":env.state.light_level}
+    floor_env=CraftaxCoopEnv(max_timesteps=100);floor_env.reset(17);floor_env.state.monsters=[];floor_env.state.players[0].x=floor_env.state.players[0].y=45;floor_env.step({"agent_0":"descend","agent_1":"noop","agent_2":"noop"});descended=[floor_env.state.players[0].level,floor_env.state.players[0].x,floor_env.state.players[0].y];floor_env.step({"agent_0":"ascend","agent_1":"noop","agent_2":"noop"});out["floor_landing"]={"descended":descended,"ascended":[floor_env.state.players[0].level,floor_env.state.players[0].x,floor_env.state.players[0].y]}
+    trade_env=CraftaxCoopEnv(max_timesteps=100);trade_env.reset(17);trade_env.state.monsters=[];trade_env.state.players[0].request_type="wood";trade_env.state.players[0].request_duration=10;trade_env.state.players[0].inventory["wood"]=99;trade_env.state.players[2].inventory["wood"]=1;trade_env.step({"agent_0":"noop","agent_1":"noop","agent_2":"give_wood_to_agent_0"});out["full_transfer"]={"giver":trade_env.state.players[2].inventory["wood"],"receiver":trade_env.state.players[0].inventory["wood"],"trades":trade_env.state.trade_count,"request":trade_env.state.players[0].request_type}
+    survival_env=CraftaxCoopEnv(max_timesteps=100);survival_env.reset(18);survival_env.state.monsters=[];survival_env.state.maps[0][4][4]="tree";survival_env.step({"agent_0":"noop","agent_1":"do","agent_2":"noop"});survival_env.state.maps[0][4][4]="water";survival_env.state.players[1].drink=2;survival_env.step({"agent_0":"noop","agent_1":"do","agent_2":"noop"});survival_env.state.players[0].food=4;survival_env.state.monsters=[Monster("cow_fixture","cow",0,3,4,2,0)];survival_env.step({"agent_0":"do","agent_1":"noop","agent_2":"noop"});out["survival"]={"saplings":survival_env.state.players[1].saplings,"drink":survival_env.state.players[1].drink,"food":survival_env.state.players[0].food,"achievements":sorted(k for k,v in survival_env.state.achievements.items() if v)}
+    restored=CraftaxCoopEnv();restored.restore(env.checkpoint());out["checkpoint"]=env.state.to_dict()==restored.state.to_dict();return out
 
 if __name__=="__main__":main()

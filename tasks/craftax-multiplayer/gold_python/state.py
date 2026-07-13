@@ -103,6 +103,10 @@ class WorldState:
         data = dict(raw)
         data["players"] = [Player(**p) for p in data["players"]]
         data["monsters"] = [Monster(**monster) for monster in data["monsters"]]
-        data["projectiles"] = [Projectile(**projectile) for projectile in data.get("projectiles", [])]
-        data["plants"] = [Plant(**plant) for plant in data.get("plants", [])]
+        data["projectiles"] = [Projectile(**projectile) for projectile in data["projectiles"]]
+        data["plants"] = [Plant(**plant) for plant in data["plants"]]
+        if any(player.role not in ("warrior", "forager", "miner") for player in data["players"]):
+            raise ValueError("invalid player role in checkpoint")
+        if any(player.facing not in ("left", "right", "up", "down") for player in data["players"]):
+            raise ValueError("invalid player facing in checkpoint")
         return cls(**data)

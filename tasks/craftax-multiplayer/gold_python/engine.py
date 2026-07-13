@@ -48,6 +48,9 @@ class CraftaxCoopEnv:
     def reset(self, seed: int = 0) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
         players = [Player(a, ROLES[i % len(ROLES)], 3 + i, 3) for i, a in enumerate(self.agent_ids)]
         maps = self._generate_maps(seed)
+        for index in range(len(players)):
+            maps[0][3][3 + index] = "grass"
+        maps[0][5][5] = "fountain"
         monsters = self._spawn_initial_monsters(seed, maps)
         self.state = WorldState(seed, 0, self.max_timesteps, players, maps, monsters, boss_health=BOSS_HEALTH)
         self._event("game_started", task_id=self.env_family, seed=seed)
@@ -88,6 +91,9 @@ class CraftaxCoopEnv:
         state.last_joint_event = []
         before = sum(state.achievements.values())
         normalized = {a: self._normalize_action(joint_action[a]) for a in self.agent_ids}
+        for agent_id, action in normalized.items():
+            if action["kind"] not in self.legal_actions(agent_id):
+                raise ValueError(f"illegal action for {agent_id}: {action['kind']}")
         self._expire_requests()
         # Requests are visible before trades in the same simultaneous turn.
         for i, agent_id in enumerate(self.agent_ids): self._apply_request(state.players[i], normalized[agent_id])
@@ -171,10 +177,10 @@ class CraftaxCoopEnv:
         if target is None or target is giver or target.request_type != resource or target.request_duration <= 0: return
         if resource in ("food", "drink"):
             stock = getattr(giver, resource)
-            if stock <= 0: return
+            if stock <= 0 or getattr(target, resource) >= 9: return
             setattr(giver, resource, stock - 1); setattr(target, resource, min(9, getattr(target, resource) + 1))
         else:
-            if giver.inventory[resource] <= 0: return
+            if giver.inventory[resource] <= 0 or target.inventory[resource] >= 99: return
             giver.inventory[resource] -= 1; target.inventory[resource] += 1
         target.request_type, target.request_duration = None, 0
         state = self._require_state(); state.trade_count += 1; state.achievements["trade"] = True
@@ -189,6 +195,8 @@ class CraftaxCoopEnv:
             if resource in ("iron", "coal", "diamond", "ruby", "sapphire") and p.role != "miner": return
             amount = 2 if p.role == "miner" and resource not in ("wood",) else 1
             p.inventory[resource] += amount; state.maps[p.level][y][x] = "grass"
+            if tile == "tree" and p.role == "forager" and (state.seed + state.timestep) % 2 == 0:
+                p.saplings += 1; state.achievements["collect_sapling"] = True
             key = f"collect_{resource}"; state.achievements[key] = key in state.achievements
             self._event("resource_collected", agent_id=p.agent_id, resource=resource, amount=amount)
         elif tile == "ripe_plant" and p.role == "forager":
@@ -196,6 +204,10 @@ class CraftaxCoopEnv:
             state.achievements["eat_plant"] = True; self._event("plant_eaten", agent_id=p.agent_id)
         elif tile == "fountain":
             p.drink = min(9 + 2 * p.dexterity, p.drink + 5); self._event("fountain_used", agent_id=p.agent_id)
+            state.achievements["drink_water"] = True
+        elif tile == "water":
+            p.drink = min(9 + 2 * p.dexterity, p.drink + (5 if p.role == "forager" else 3))
+            state.achievements["drink_water"] = True; self._event("water_drunk", agent_id=p.agent_id)
         elif tile == "chest":
             state.maps[p.level][y][x] = "grass"; p.books += 1; p.arrows += 2
             colour = POTION_COLOURS[(state.seed + state.timestep + p.level) % len(POTION_COLOURS)]; p.potions[colour] += 1
@@ -209,6 +221,7 @@ class CraftaxCoopEnv:
                 mob.health -= damage; self._event("mob_damaged", agent_id=p.agent_id, mob_id=mob.id, damage=damage)
                 if mob.health <= 0:
                     state.monsters.remove(mob); p.xp += 1; p.level_points += int(p.xp in (3, 7, 12, 18))
+                    if mob.kind == "cow": p.food = min(9 + 2 * p.dexterity, p.food + 4)
                     state.achievements["defeat_monster"] = True; self._event("mob_defeated", agent_id=p.agent_id, mob_id=mob.id)
         if tile == "boss" and p.level == NUM_LEVELS - 1:
             damage = 2 * (2 if p.role == "warrior" else 1) + p.sword
@@ -221,7 +234,7 @@ class CraftaxCoopEnv:
         tile = self._require_state().maps[p.level][p.y][p.x]
         required = "stairs_down" if direction > 0 else "stairs_up"
         if tile == required and 0 <= p.level + direction < NUM_LEVELS:
-            p.level += direction; p.x = p.y = 2 if direction < 0 else 3
+            p.level += direction; p.x = p.y = 45 if direction < 0 else 2
             self._require_state().achievements["descend"] |= direction > 0
             self._event("level_changed", agent_id=p.agent_id, level=p.level)
 
