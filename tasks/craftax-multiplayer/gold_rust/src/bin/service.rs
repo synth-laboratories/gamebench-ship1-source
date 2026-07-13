@@ -193,12 +193,12 @@ impl Service {
             .get("task")
             .filter(|value| value.is_object())
             .unwrap_or(body);
-        let visual = task
-            .get("readouts")
+        let readouts = task.get("readouts");
+        let visual = readouts
             .and_then(|value| value.get("visual"))
             .and_then(Value::as_bool)
             .unwrap_or(false);
-        let stream = task.get("stream");
+        let stream = readouts.and_then(|value| value.get("stream"));
         let capture = visual
             || stream
                 .and_then(|value| value.get("enabled"))
@@ -489,6 +489,23 @@ fn handle(stream: &mut TcpStream, service: &mut Service) {
                 return;
             }
         };
+        if result.is_ok() && operation == "restore" {
+            let timestep = service.rollouts[rollout_id].state.timestep;
+            if let Some(frames) = service.frames.get_mut(rollout_id) {
+                frames.retain(|step, _| *step <= timestep);
+            }
+            if service
+                .capture_frames
+                .get(rollout_id)
+                .copied()
+                .unwrap_or(false)
+            {
+                if let Err(error) = service.store_frame(rollout_id) {
+                    response(stream, 400, json!({"error":error}));
+                    return;
+                }
+            }
+        }
         if result.is_ok()
             && operation == "step"
             && service
@@ -511,7 +528,7 @@ fn handle(stream: &mut TcpStream, service: &mut Service) {
 
     let result: Result<Value, String> = match (method, path) {
         ("GET", "/health") => Ok(json!({"ok":true,"env_family":"craftax-multiplayer","runtime":"rust","sessions":service.rollouts.len()})),
-        ("GET", "/info") => Ok(json!({"env_family":"craftax-multiplayer","runtime":"rust","capabilities":["rollout","checkpoint","nev_log","symbolic_readout","render_png","frame_manifest","replay_gif"]})),
+        ("GET", "/info") => Ok(json!({"env_family":"craftax-multiplayer","runtime":"rust","capabilities":["rollout","checkpoint","nev_log","symbolic_readout","render_png","frame_manifest","frame_png","replay_gif"]})),
         ("GET", "/agents") => Ok(json!(Service::agent_ids(&service.env))),
         ("POST", "/run_scenario") => Service::run_scenario(&body),
         ("POST", "/rollouts") => Service::new_env(&body).and_then(|env| {

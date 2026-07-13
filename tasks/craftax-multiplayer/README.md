@@ -2,7 +2,7 @@
 
 This is a distinct, self-contained GameBench multiplayer task based on the semantics of Multi-Agent Craftax (arXiv:2511.04904) and the authors' `MA-Craftax` reference. It has no runtime dependency on JAX, Flax, JaxMARL, or `craftax-singleplayer`.
 
-The default game uses three simultaneous agents (`agent_0` Warrior, `agent_1` Forager, `agent_2` Miner), nine deterministic 48×48 levels, shared rewards and achievements, common world/resources/combat, requests and directed giving, and boss/death/timestep endings. Observations are per-agent symbolic JSON with an 11×11 ASCII view and a shared teammate dashboard.
+The default game uses three simultaneous agents (`agent_0` Warrior, `agent_1` Forager, `agent_2` Miner), nine deterministic 48×48 levels, shared rewards and achievements, common world/resources/combat, requests and directed giving, and boss/death/timestep endings. Observations are per-agent symbolic JSON with an 11×11 ASCII view and a shared teammate dashboard. Visual readouts combine the three private 11×11 sprite perspectives and their dashboards into one deterministic team frame; they never expose an omniscient map.
 
 Actions are objects such as `{"kind":"left"}`, `{"kind":"request_iron"}`, or `{"kind":"give_iron_to_agent_2"}`. All joint steps must name every agent. Requests remain active for 10 turns and can receive repeated gifts. Version-2 checkpoints serialize all authoritative state; structured and legacy NEV are both retained.
 
@@ -16,7 +16,7 @@ Actions are objects such as `{"kind":"left"}`, `{"kind":"request_iron"}`, or `{"
 
 Python and Rust are independent runtime authorities with the same deterministic map generator, world/player state, simultaneous conflict rules, role abilities, requests/trades, collection and crafting, mobs and projectiles, plants/chests/potions/books/enchantments, attributes, traversal, boss progression, rewards, checkpoints, observations, NEV, and terminal conditions. `scripts/verify_python_rust_parity.py` compares canonical cooperative, combat, collection, expiry, plant/time, boss, death, timestep, and checkpoint scenarios.
 
-This is a pure-language semantic port, not a byte-for-byte execution of the authors' JAX program. Consequently JAX PRNG bitstreams are not reproduced. The two runtimes instead share a specified integer mixer, room/smooth-biome generator, and deterministic spawn selection. Dungeon topology, biome/resource constraints, local light maps, simultaneous shared-target resolution, mob classes, elemental damage, projectile capacities, plants, floor gates, and boss rounds are preserved semantically, but a seed does not produce the same individual tiles or random draws as JAX. The GameBench task provides symbolic JSON/ASCII rather than the author repository's pixel asset renderer. These are representation and PRNG boundaries; none falls back to `craftax-singleplayer` or removes a cooperative action/dynamic.
+This is a pure-language semantic port, not a byte-for-byte execution of the authors' JAX program. Consequently JAX PRNG bitstreams are not reproduced. The two runtimes instead share a specified integer mixer, room/smooth-biome generator, and deterministic spawn selection. Dungeon topology, biome/resource constraints, local light maps, simultaneous shared-target resolution, mob classes, elemental damage, projectile capacities, plants, floor gates, and boss rounds are preserved semantically, but a seed does not produce the same individual tiles or random draws as JAX. GameBench uses independent pure-Python and Rust renderers over the authors' MIT-licensed cooperative sprite assets rather than executing their JAX pixel renderer. This PRNG boundary does not fall back to `craftax-singleplayer` or remove a cooperative action/dynamic.
 
 Python and Rust emit the same canonical structured and legacy NEV records for parity traces. The parity verifier compares the full logs for reset, joint actions, requests, movement, and resource collection, in addition to semantic scenario projections and cross-language checkpoint restoration. The fixture bundle pins broader canonical Python event/state artifacts, while HTTP action-tape replay proves both services consume the same policy trace.
 
@@ -66,3 +66,29 @@ Three-agent Gemini 3.1 Flash Lite ReAct HTTP rollout (requires `GEMINI_API_KEY`)
 `python3 containers/react/run_react_policy.py --base-url http://127.0.0.1:8081 --runtime rust --seed 101 --steps 30 --replay-actions reports/react/gemini_3_1_flash_lite_seed101.actions.json --output reports/react/gemini_3_1_flash_lite_seed101.rust.json`
 
 Both runners emit the same report schema with per-step joint actions, rewards, events, dones, and per-agent/team dashboard snapshots. Action tapes are runtime-neutral and validate the seed and complete agent set before replay.
+
+## PNG frames and GIF replays
+
+Python and Rust expose the same rollout-scoped media contract:
+
+- `GET /rollouts/{rollout_id}/render.png` renders the current team frame.
+- `GET /rollouts/{rollout_id}/frames/manifest` lists captured frames and hashes.
+- `GET /rollouts/{rollout_id}/frames/{step}.png` returns one captured frame.
+- `GET /rollouts/{rollout_id}/replay.gif?through_step=N` returns the inclusive replay through step `N`.
+
+Create a rollout with `task.readouts.visual=true` (or an enabled/persisted
+`task.readouts.stream`) to retain every step for replay. Direct current-state PNG
+rendering remains available without frame retention. Python GIF encoding uses
+`ffmpeg`, while Rust uses its native encoder; PNG rendering has no process-level
+runtime dependency in either lane.
+
+The default three-agent sprite canvas is 528×272: three 176×272 private panels
+ordered by agent id. Each panel contains teammate health/role/request information,
+the agent's lit 11×11 local map, and a four-row status/inventory dashboard.
+
+Visual parity is semantic rather than byte-level: both lanes use the same canvas
+geometry, panel order, state layers, sprite assets, and media routes, but their
+independent text rasterizers, PNG compressors, and GIF encoders can produce
+different pixels or bytes around dashboard text and encoding. Frame hashes are
+therefore runtime-local. Authoritative state, actions, rewards, checkpoints, and
+NEV remain exact across Python and Rust.

@@ -1,9 +1,9 @@
 //! Deterministic composite renderer for Craftax-Coop.
 //!
-//! Each player receives a full-map panel for their current level. This deliberately
-//! keeps split-level teams visible in one frame and appends a shared/per-player
-//! dashboard. Sprite mode consumes the separately licensed shared asset bundle;
-//! symbolic mode has no asset dependency.
+//! Each player receives a private 11×11 panel for their current level, followed by
+//! teammate and inventory dashboards. The horizontal team strip keeps split-level
+//! agents inspectable without revealing an omniscient map. Sprite mode consumes the
+//! separately licensed shared asset bundle; symbolic mode has no asset dependency.
 
 use crate::{CraftaxCoopEnv, MAP_SIZE};
 use font8x8::{UnicodeFonts, BASIC_FONTS};
@@ -114,8 +114,14 @@ fn asset_name(name: &str) -> &str {
         "stairs_up" => "ladder_up",
         "stairs_down" => "ladder_down",
         "grave2" | "grave3" => "grave",
-        "fire_tree" => "tree",
         "necromancer" | "boss" => "necromancer",
+        "crafting_table" => "table",
+        "ripe_plant" => "plant-ripe",
+        "torch" => "torch_on_path",
+        "archer" => "knight_archer",
+        "arrow2" => "arrow",
+        "fireball2" => "fireball",
+        "iceball2" => "iceball",
         other => other,
     }
 }
@@ -158,13 +164,21 @@ fn blit_rgb(image: &mut RgbImage, sprite: &RgbaImage, x: u32, y: u32, light: f64
     }
 }
 
-fn text(image: &mut RgbImage, x: u32, y: u32, value: &str, color: Rgb<u8>, scale: u32) {
+fn text(
+    image: &mut RgbImage,
+    x: u32,
+    y: u32,
+    value: &str,
+    color: Rgb<u8>,
+    scale: u32,
+    max_x: u32,
+) {
     let mut cursor = x;
     for character in value.to_ascii_uppercase().chars() {
         if let Some(glyph) = BASIC_FONTS.get(character) {
             for (row, bits) in glyph.iter().enumerate() {
                 for column in 0..8 {
-                    if bits & (1 << column) != 0 {
+                    if bits & (1 << column) != 0 && cursor + column * scale < max_x {
                         fill(
                             image,
                             cursor + column * scale,
@@ -317,6 +331,7 @@ pub fn render_rgb(env: &CraftaxCoopEnv, requested_mode: RenderMode) -> Result<Rg
                 ),
                 Rgb([226, 231, 236]),
                 1,
+                ox + PANEL_WIDTH,
             );
             text(
                 &mut canvas,
@@ -332,6 +347,7 @@ pub fn render_rgb(env: &CraftaxCoopEnv, requested_mode: RenderMode) -> Result<Rg
                 ),
                 Rgb([177, 192, 205]),
                 1,
+                ox + PANEL_WIDTH,
             );
         }
         let map_origin_y = TEAMMATE_ROWS * TILE_SIZE;
@@ -468,6 +484,7 @@ pub fn render_rgb(env: &CraftaxCoopEnv, requested_mode: RenderMode) -> Result<Rg
             ),
             Rgb([231, 235, 239]),
             1,
+            ox + PANEL_WIDTH,
         );
         text(
             &mut canvas,
@@ -484,6 +501,7 @@ pub fn render_rgb(env: &CraftaxCoopEnv, requested_mode: RenderMode) -> Result<Rg
             ),
             Rgb([205, 215, 224]),
             1,
+            ox + PANEL_WIDTH,
         );
         text(
             &mut canvas,
@@ -495,6 +513,7 @@ pub fn render_rgb(env: &CraftaxCoopEnv, requested_mode: RenderMode) -> Result<Rg
             ),
             Rgb([205, 215, 224]),
             1,
+            ox + PANEL_WIDTH,
         );
         let inventory = crate::RESOURCES
             .iter()
@@ -522,6 +541,7 @@ pub fn render_rgb(env: &CraftaxCoopEnv, requested_mode: RenderMode) -> Result<Rg
             ),
             Rgb([255, 207, 93]),
             1,
+            ox + PANEL_WIDTH,
         );
     }
     Ok(RgbFrame {
