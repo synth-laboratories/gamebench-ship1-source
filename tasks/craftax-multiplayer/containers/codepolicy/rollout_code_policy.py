@@ -1,19 +1,20 @@
-"""In-process joint code-policy rollouts for Craftax-Coop."""
+"""Run a joint code policy through either Craftax-Coop HTTP runtime."""
 
 from __future__ import annotations
 
+import argparse
 import importlib.util
-import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 TASK_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(TASK_ROOT))
-from gold_python.engine import CraftaxCoopEnv
+
+from containers.http_rollout import read_action_tape, run_http_rollout, write_action_tape, write_report
 
 
-def load_policy(path: Path):
+def load_policy(path: Path) -> Callable[[dict[str, Any]], Any]:
     spec = importlib.util.spec_from_file_location("craftax_coop_candidate", path.resolve())
     if spec is None or spec.loader is None:
         raise ValueError(f"cannot load policy: {path}")
@@ -25,51 +26,60 @@ def load_policy(path: Path):
     return function
 
 
-def rollout(policy_path: Path, seed: int, max_steps: int) -> dict[str, Any]:
-    policy = load_policy(policy_path)
-    env = CraftaxCoopEnv()
-    observations, _ = env.reset(seed)
-    shared_reward = 0.0
-    trace = []
-    for ply in range(max_steps):
-        joint_action = {agent: policy(observations[agent]) for agent in env.agent_ids}
-        observations, rewards, dones, info = env.step(joint_action)
-        shared_reward += rewards[env.agent_ids[0]]
-        trace.append({"ply": ply, "joint_action": joint_action, "reward": rewards[env.agent_ids[0]], "events": info["events"]})
-        if dones["__all__"]:
-            break
-    state = env._require_state()
-    return {
-        "schema_version": "gamebench.rollout.v1",
-        "env_family": env.env_family,
-        "lane": "python",
-        "policy_kind": "code",
-        "policy_path": str(policy_path),
-        "seed": seed,
-        "steps": state.timestep,
-        "shared_reward": shared_reward,
-        "achievements": sorted(name for name, value in state.achievements.items() if value),
-        "trades": state.trade_count,
-        "termination_reason": state.termination_reason,
-        "state_hash": env.state_hash(),
-        "trace": trace,
-    }
-
-
 def main() -> None:
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--policy", type=Path, required=True)
-    parser.add_argument("--seed", type=int, default=101)
-    parser.add_argument("--steps", type=int, default=100)
+    parser = argparse.ArgumentParser(
+        description="Run or replay a Craftax-Coop code policy through Python or Rust HTTP."
+    )
+    parser.add_argument("--base-url", required=True, help="Craftax-Coop service URL")
+    parser.add_argument("--runtime", choices=("python", "rust"), required=True)
+    parser.add_argument("--policy", type=Path, help="Python file exporting act(observation)")
+    parser.add_argument("--seed", type=int, help="Defaults to tape seed when replaying, otherwise 101")
+    parser.add_argument("--steps", type=int, help="Defaults to tape length when replaying, otherwise 100")
+    parser.add_argument("--capture-actions", type=Path, help="Write the executed joint-action tape")
+    parser.add_argument("--replay-actions", type=Path, help="Replay a previously captured joint-action tape")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
-    result = rollout(args.policy, args.seed, args.steps)
-    encoded = json.dumps(result, indent=2, sort_keys=True)
-    if args.output:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(encoded + "\n")
-    print(encoded)
+
+    if args.replay_actions and args.policy:
+        parser.error("--policy and --replay-actions are mutually exclusive")
+    if not args.replay_actions and not args.policy:
+        parser.error("--policy is required unless --replay-actions is used")
+
+    tape = read_action_tape(args.replay_actions) if args.replay_actions else None
+    seed = args.seed if args.seed is not None else int(tape["seed"]) if tape else 101
+    max_steps = args.steps if args.steps is not None else len(tape["actions"]) if tape else 100
+    policy = load_policy(args.policy) if args.policy else None
+    policy_metadata = (
+        {"policy_path": str(args.policy.resolve())}
+        if args.policy
+        else dict(tape.get("policy_metadata", {}))
+    )
+
+    def choose(observations: dict[str, Any], _: int) -> tuple[dict[str, Any], dict[str, Any]]:
+        assert policy is not None
+        return {agent: policy(observation) for agent, observation in observations.items()}, {}
+
+    report, actions = run_http_rollout(
+        base_url=args.base_url,
+        runtime=args.runtime,
+        seed=seed,
+        max_steps=max_steps,
+        policy_kind="code",
+        choose_action=choose if policy else None,
+        replay_tape=tape,
+        policy_metadata=policy_metadata,
+    )
+    if args.capture_actions:
+        write_action_tape(
+            args.capture_actions,
+            seed=seed,
+            agent_ids=report["agent_ids"],
+            actions=actions,
+            policy_kind="code",
+            policy_metadata=policy_metadata,
+        )
+        report["action_tape"] = str(args.capture_actions)
+    print(write_report(args.output, report))
 
 
 if __name__ == "__main__":

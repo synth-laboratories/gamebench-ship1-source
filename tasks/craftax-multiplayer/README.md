@@ -36,10 +36,18 @@ Shared HTTP policy runner (works against either service):
 
 `python scripts/run_http_policy.py --base-url http://127.0.0.1:8080 --runtime python --seed 404 --steps 300 --output reports/http_e2e/python_seed404.json`
 
-Code-policy rollout:
+Code-policy HTTP rollout, capturing one deterministic joint-action tape:
 
-`python containers/codepolicy/rollout_code_policy.py --policy policies/heuristic_baseline.py --seed 101 --steps 100 --output reports/codepolicy/heuristic_seed101.json`
+`python3 containers/codepolicy/rollout_code_policy.py --base-url http://127.0.0.1:8080 --runtime python --policy policies/heuristic_baseline.py --seed 101 --steps 100 --capture-actions reports/codepolicy/heuristic_seed101.actions.json --output reports/codepolicy/heuristic_seed101.python.json`
 
-Three-agent Gemini 3.1 Flash Lite ReAct rollout (requires `GEMINI_API_KEY`):
+Replay those exact actions against the Rust HTTP service:
 
-`python containers/react/run_react_policy.py --model gemini-3.1-flash-lite --seed 101 --steps 30 --output reports/react/gemini_3_1_flash_lite_seed101.json`
+`python3 containers/codepolicy/rollout_code_policy.py --base-url http://127.0.0.1:8081 --runtime rust --seed 101 --steps 100 --replay-actions reports/codepolicy/heuristic_seed101.actions.json --output reports/codepolicy/heuristic_seed101.rust.json`
+
+Three-agent Gemini 3.1 Flash Lite ReAct HTTP rollout (requires `GEMINI_API_KEY`), followed by a no-cost Rust replay:
+
+`python3 containers/react/run_react_policy.py --base-url http://127.0.0.1:8080 --runtime python --model gemini-3.1-flash-lite --seed 101 --steps 30 --capture-actions reports/react/gemini_3_1_flash_lite_seed101.actions.json --output reports/react/gemini_3_1_flash_lite_seed101.python.json`
+
+`python3 containers/react/run_react_policy.py --base-url http://127.0.0.1:8081 --runtime rust --seed 101 --steps 30 --replay-actions reports/react/gemini_3_1_flash_lite_seed101.actions.json --output reports/react/gemini_3_1_flash_lite_seed101.rust.json`
+
+Both runners emit the same report schema with per-step joint actions, rewards, events, dones, and per-agent/team dashboard snapshots. Action tapes are runtime-neutral and validate the seed and complete agent set before replay.
