@@ -137,7 +137,7 @@ def _rust_rollout_job(payload: tuple[str, int, str, int, bool]) -> dict[str, Any
     policy_path_s, seed, task_path, max_steps, include_trace = payload
     policy_path = Path(policy_path_s)
     candidate_fn = _load_worker_policy(policy_path_s, policy_path, isolated=True)
-    return rollout_code_policy_rust_repl(
+    result = rollout_code_policy_rust_repl(
         policy_path=policy_path,
         seed=seed,
         task_path=task_path,
@@ -146,6 +146,8 @@ def _rust_rollout_job(payload: tuple[str, int, str, int, bool]) -> dict[str, Any
         candidate_fn=candidate_fn,
         repl=_WORKER_RUST_REPL,
     )
+    result["benchmark_isolation"] = dict(candidate_fn.isolation_receipt)
+    return result
 
 
 def _load_worker_policy(
@@ -484,6 +486,16 @@ def run_policy_sweep(
                     results[seed_index[seed]] = future.result()
                     emit_progress(seed)
     rewards = [float(item["reward_info"]["outcome_reward"]) for item in results]
+    isolation_receipts = [item.get("benchmark_isolation") for item in results]
+    if lane == "rust" and any(
+        not isinstance(receipt, Mapping)
+        or receipt.get("contract") != "os_sandbox_observation_action.v2"
+        or receipt.get("suite_visible") is not False
+        or receipt.get("output_visible") is not False
+        or receipt.get("evaluator_visible") is not False
+        for receipt in isolation_receipts
+    ):
+        raise RuntimeError("Rust candidate isolation receipt missing or invalid")
     achievement_counts = [
         int(item["reward_info"]["details"].get("achievement_count", 0)) for item in results
     ]
@@ -508,7 +520,7 @@ def run_policy_sweep(
         "lane": lane,
         "engine_mode": "rust_repl" if lane == "rust" else "rust_http" if lane == "rust_http" else "python",
         "policy_isolation": (
-            "subprocess_observation_action_v1" if lane == "rust" else "in_process"
+            "os_sandbox_observation_action.v2" if lane == "rust" else "in_process"
         ),
         "episode_timeout_seconds": episode_timeout_seconds,
         "base_url": base_url if lane == "rust_http" else None,
@@ -527,6 +539,7 @@ def run_policy_sweep(
                 "achievement_count": int(item["reward_info"]["details"].get("achievement_count", 0)),
                 "achievements": sorted(item["reward_info"]["details"].get("achievements", [])),
                 "supervision": item.get("benchmark_supervision"),
+                "policy_isolation": item.get("benchmark_isolation"),
             }
             for index, item in enumerate(results)
         ],

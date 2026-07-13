@@ -6,6 +6,8 @@ import contextlib
 import importlib.util
 import json
 import os
+import signal
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -14,18 +16,199 @@ from pathlib import Path
 from typing import Any
 
 
-_POLICY_ENV_ALLOWLIST = frozenset(
-    {
-        "LANG",
-        "LC_ALL",
-        "PATH",
-        "PYTHONHOME",
-        "PYTHONPATH",
-        "SYSTEMROOT",
-        "TMPDIR",
-        "VIRTUAL_ENV",
+_POLICY_ENV_ALLOWLIST = frozenset({"LANG", "LC_ALL", "SYSTEMROOT"})
+_MAX_IPC_LINE_CHARS = 2 * 1024 * 1024
+_LINUX_SANDBOX_UID = 65534
+_LINUX_SANDBOX_GID = 65534
+
+
+def _candidate_environment(*, home: str, path: str) -> dict[str, str]:
+    env = {
+        key: value
+        for key, value in os.environ.items()
+        if key in _POLICY_ENV_ALLOWLIST
     }
-)
+    env.update(
+        {
+            "HOME": home,
+            "PATH": path,
+            "PYTHONDONTWRITEBYTECODE": "1",
+            "PYTHONNOUSERSITE": "1",
+            "TMPDIR": "/tmp",
+        }
+    )
+    return env
+
+
+def _linux_sandbox_command(*, root: Path, executable: Path) -> tuple[list[str], dict[str, str]]:
+    bwrap = shutil.which("bwrap")
+    if not bwrap:
+        raise RuntimeError(
+            "FactoryBench candidate isolation requires bubblewrap (bwrap) on Linux"
+        )
+    command = [
+        bwrap,
+        "--unshare-all",
+        "--die-with-parent",
+        "--new-session",
+        "--uid",
+        str(_LINUX_SANDBOX_UID),
+        "--gid",
+        str(_LINUX_SANDBOX_GID),
+        "--ro-bind",
+        "/usr",
+        "/usr",
+    ]
+    for system_path in (Path("/bin"), Path("/lib"), Path("/lib64")):
+        if system_path.is_symlink():
+            command.extend(
+                ("--symlink", os.readlink(system_path), str(system_path))
+            )
+        elif system_path.exists():
+            command.extend(("--ro-bind", str(system_path), str(system_path)))
+    base_prefix = Path(sys.base_prefix).resolve()
+    if not base_prefix.is_relative_to(Path("/usr")):
+        command.extend(("--ro-bind", str(base_prefix), str(base_prefix)))
+    command.extend(
+        (
+            "--proc",
+            "/proc",
+            "--dev",
+            "/dev",
+            "--tmpfs",
+            "/tmp",
+            "--dir",
+            "/home",
+            "--dir",
+            "/home/candidate",
+            "--ro-bind",
+            str(root),
+            "/workspace",
+            "--chdir",
+            "/workspace",
+            str(executable),
+            "/workspace/policy_subprocess.py",
+            "--serve",
+            "/workspace/policy.py",
+        )
+    )
+    return command, _candidate_environment(
+        home="/home/candidate",
+        path=f"{base_prefix / 'bin'}:/usr/bin:/bin",
+    )
+
+
+def _darwin_sandbox_command(
+    *, root: Path, executable: Path, protected_source_parent: Path
+) -> tuple[list[str], dict[str, str]]:
+    sandbox_exec = Path("/usr/bin/sandbox-exec")
+    if not sandbox_exec.is_file():
+        raise RuntimeError(
+            "FactoryBench candidate isolation requires sandbox-exec on Darwin"
+        )
+    home = root / "home"
+    tmp = root / "tmp"
+    home.mkdir()
+    tmp.mkdir()
+    profile = " ".join(
+        (
+            "(version 1)",
+            "(deny default)",
+            "(allow process-exec (literal " + json.dumps(str(executable)) + "))",
+            "(deny process-fork)",
+            "(allow file-read*)",
+            "(deny file-read* (subpath "
+            + json.dumps(str(protected_source_parent))
+            + ") (subpath \"/Users\"))",
+            "(allow file-write* (subpath " + json.dumps(str(home)) + ") (subpath " + json.dumps(str(tmp)) + "))",
+            "(allow mach-lookup)",
+            "(allow sysctl-read)",
+            "(deny network*)",
+        )
+    )
+    command = [
+        str(sandbox_exec),
+        "-p",
+        profile,
+        str(executable),
+        str(root / "policy_subprocess.py"),
+        "--serve",
+        str(root / "policy.py"),
+    ]
+    env = _candidate_environment(
+        home=str(home),
+        path=f"{Path(sys.base_prefix).resolve() / 'bin'}:/usr/bin:/bin",
+    )
+    env["TMPDIR"] = str(tmp)
+    return command, env
+
+
+def _sandbox_command(
+    *, root: Path, protected_source_parent: Path
+) -> tuple[list[str], dict[str, str]]:
+    if sys.platform == "darwin":
+        executable = next(
+            (
+                path.resolve()
+                for path in (
+                    Path("/opt/homebrew/bin/python3"),
+                    Path("/usr/local/bin/python3"),
+                    Path("/usr/bin/python3"),
+                )
+                if path.is_file()
+                and not path.resolve().is_relative_to(Path("/Users"))
+            ),
+            None,
+        )
+        if executable is None:
+            raise RuntimeError("FactoryBench candidate isolation requires python3")
+        framework_executable = (
+            executable.parent.parent
+            / "Resources"
+            / "Python.app"
+            / "Contents"
+            / "MacOS"
+            / "Python"
+        )
+        if framework_executable.is_file():
+            executable = framework_executable.resolve()
+    else:
+        executable = Path(
+            str(getattr(sys, "_base_executable", "") or sys.executable)
+        ).resolve()
+    if sys.platform.startswith("linux"):
+        return _linux_sandbox_command(root=root, executable=executable)
+    if sys.platform == "darwin":
+        return _darwin_sandbox_command(
+            root=root,
+            executable=executable,
+            protected_source_parent=protected_source_parent,
+        )
+    raise RuntimeError(
+        f"FactoryBench candidate isolation unsupported on platform {sys.platform!r}"
+    )
+
+
+def _apply_candidate_resource_limits() -> None:
+    """Bound damage inside the OS sandbox without weakening the parent grader."""
+    if os.name != "posix":
+        return
+    import resource
+
+    limits = (
+        (resource.RLIMIT_FSIZE, 1024 * 1024),
+        (resource.RLIMIT_NOFILE, 64),
+    )
+    if sys.platform.startswith("linux"):
+        limits += (
+            (resource.RLIMIT_AS, 512 * 1024 * 1024),
+            (resource.RLIMIT_NPROC, 32),
+        )
+    for kind, ceiling in limits:
+        soft, hard = resource.getrlimit(kind)
+        target = min(ceiling, hard) if hard != resource.RLIM_INFINITY else ceiling
+        if soft == resource.RLIM_INFINITY or soft > target:
+            resource.setrlimit(kind, (target, hard))
 
 
 def _load_policy(policy_path: Path) -> Any:
@@ -49,9 +232,12 @@ def _load_policy(policy_path: Path) -> Any:
 
 
 def _serve(policy_path: Path) -> int:
+    _apply_candidate_resource_limits()
     protocol_out = sys.stdout
     candidate = _load_policy(policy_path)
     for line in sys.stdin:
+        if len(line) > _MAX_IPC_LINE_CHARS:
+            raise ValueError("isolated policy request exceeds IPC limit")
         request = json.loads(line)
         request_id = request.get("id")
         if request.get("op") == "close":
@@ -82,7 +268,10 @@ def _serve(policy_path: Path) -> int:
                 "policy_reason": str(decision.get("policy_reason") or ""),
             },
         }
-        protocol_out.write(json.dumps(response, separators=(",", ":")) + "\n")
+        encoded = json.dumps(response, separators=(",", ":"))
+        if len(encoded) > _MAX_IPC_LINE_CHARS:
+            raise ValueError("isolated policy response exceeds IPC limit")
+        protocol_out.write(encoded + "\n")
         protocol_out.flush()
     return 0
 
@@ -91,30 +280,88 @@ class IsolatedPolicyProcess:
     """Callable policy proxy; the child never receives suite paths or seed IDs."""
 
     def __init__(self, policy_path: Path) -> None:
-        self._home = tempfile.TemporaryDirectory(prefix="craftax-policy-home-")
-        env = {
-            key: value
-            for key, value in os.environ.items()
-            if key in _POLICY_ENV_ALLOWLIST
-        }
-        env["HOME"] = self._home.name
+        source_path = policy_path.expanduser().resolve()
+        if not source_path.is_file():
+            raise ValueError(f"policy file not found: {source_path}")
+        sandbox_parent: str | None = None
+        if sys.platform == "darwin":
+            sandbox_parent_path = next(
+                (
+                    path.resolve()
+                    for path in (Path("/private/var/tmp"), Path("/private/tmp"))
+                    if path.is_dir()
+                    and not path.resolve().is_relative_to(source_path.parent)
+                ),
+                None,
+            )
+            if sandbox_parent_path is None:
+                raise RuntimeError(
+                    "FactoryBench cannot place the Darwin policy sandbox outside "
+                    "the protected source parent"
+                )
+            sandbox_parent = str(sandbox_parent_path)
+        self._sandbox = tempfile.TemporaryDirectory(
+            prefix="craftax-policy-sandbox-",
+            dir=sandbox_parent,
+        )
+        sandbox_root = Path(self._sandbox.name)
+        sandbox_root.chmod(0o755)
+        policy_copy = sandbox_root / "policy.py"
+        server_copy = sandbox_root / "policy_subprocess.py"
+        policy_copy.write_bytes(source_path.read_bytes())
+        server_copy.write_bytes(Path(__file__).resolve().read_bytes())
+        policy_copy.chmod(0o444)
+        server_copy.chmod(0o444)
+        command, env = _sandbox_command(
+            root=sandbox_root,
+            protected_source_parent=source_path.parent,
+        )
         self._proc = subprocess.Popen(
-            [sys.executable, str(Path(__file__).resolve()), "--serve", str(policy_path)],
+            command,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
             text=True,
             bufsize=1,
-            cwd=policy_path.expanduser().resolve().parent,
+            cwd=sandbox_root,
             env=env,
             close_fds=True,
         )
         if self._proc.stdin is None or self._proc.stdout is None:
             raise RuntimeError("isolated policy process pipes unavailable")
+        if self._proc.stderr is None:
+            raise RuntimeError("isolated policy process diagnostic pipe unavailable")
         self._stdin = self._proc.stdin
         self._stdout = self._proc.stdout
         self._lock = threading.Lock()
         self._request_id = 0
+        self._stderr_tail = ""
+        self._stderr_thread = threading.Thread(
+            target=self._drain_stderr,
+            name=f"craftax-policy-stderr-{self._proc.pid}",
+            daemon=True,
+        )
+        self._stderr_thread.start()
+        self.isolation_receipt = {
+            "contract": "os_sandbox_observation_action.v2",
+            "platform": sys.platform,
+            "sandbox": "bubblewrap" if sys.platform.startswith("linux") else "sandbox-exec",
+            "network": "unshared" if sys.platform.startswith("linux") else "denied",
+            "filesystem": "policy_only_read_only",
+            "policy_uid": _LINUX_SANDBOX_UID if sys.platform.startswith("linux") else os.getuid(),
+            "suite_visible": False,
+            "output_visible": False,
+            "evaluator_visible": False,
+            "forking": "pid_namespace_bounded" if sys.platform.startswith("linux") else "denied",
+        }
+
+    def _drain_stderr(self) -> None:
+        assert self._proc.stderr is not None
+        while True:
+            chunk = self._proc.stderr.read(4096)
+            if not chunk:
+                return
+            self._stderr_tail = (self._stderr_tail + chunk)[-8192:]
 
     def __call__(self, **kwargs: Any) -> dict[str, Any]:
         session = dict(kwargs.get("session") or {})
@@ -140,11 +387,21 @@ class IsolatedPolicyProcess:
             self._request_id += 1
             request_id = self._request_id
             request["id"] = request_id
-            self._stdin.write(json.dumps(request, separators=(",", ":")) + "\n")
+            encoded_request = json.dumps(request, separators=(",", ":"))
+            if len(encoded_request) > _MAX_IPC_LINE_CHARS:
+                raise ValueError("isolated policy request exceeds IPC limit")
+            self._stdin.write(encoded_request + "\n")
             self._stdin.flush()
-            response_line = self._stdout.readline()
+            response_line = self._stdout.readline(_MAX_IPC_LINE_CHARS + 1)
         if not response_line:
-            raise RuntimeError("isolated policy process returned no response")
+            detail = self._stderr_tail.strip()
+            raise RuntimeError(
+                "isolated policy process returned no response"
+                + (f": {detail}" if detail else "")
+            )
+        if len(response_line) > _MAX_IPC_LINE_CHARS or not response_line.endswith("\n"):
+            self._terminate()
+            raise RuntimeError("isolated policy process exceeded IPC response limit")
         response = json.loads(response_line)
         if (
             not isinstance(response, dict)
@@ -154,6 +411,20 @@ class IsolatedPolicyProcess:
         ):
             raise RuntimeError("isolated policy process returned an invalid response")
         return dict(response["decision"])
+
+    def _terminate(self) -> None:
+        if self._proc.poll() is not None:
+            return
+        try:
+            if os.name == "posix":
+                os.kill(self._proc.pid, signal.SIGTERM)
+            else:
+                self._proc.terminate()
+            self._proc.wait(timeout=1)
+        except (ProcessLookupError, subprocess.TimeoutExpired):
+            if self._proc.poll() is None:
+                self._proc.kill()
+                self._proc.wait(timeout=2)
 
     def close(self) -> None:
         with self._lock:
@@ -170,9 +441,8 @@ class IsolatedPolicyProcess:
                     self._stdin.flush()
                     self._proc.wait(timeout=2)
                 except (BrokenPipeError, OSError, subprocess.TimeoutExpired):
-                    self._proc.kill()
-                    self._proc.wait(timeout=2)
-            self._home.cleanup()
+                    self._terminate()
+            self._sandbox.cleanup()
 
 
 def main() -> int:
