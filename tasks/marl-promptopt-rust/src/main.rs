@@ -2,6 +2,7 @@ mod backend;
 mod craftax;
 mod dungeongrid;
 mod model;
+mod overcooked;
 mod protocol;
 
 use std::net::IpAddr;
@@ -30,6 +31,7 @@ const GEPA_CONTRACT_VERSION: &str = "gepa_optimizer_contract.v1";
 enum Environment {
     Craftax,
     Dungeongrid,
+    Overcooked,
 }
 
 #[derive(Debug, Parser)]
@@ -122,6 +124,7 @@ async fn main() -> Result<(), String> {
     let backend = match args.environment {
         Environment::Craftax => Backend::craftax(tasks_root)?,
         Environment::Dungeongrid => Backend::dungeongrid(tasks_root)?,
+        Environment::Overcooked => Backend::overcooked(tasks_root)?,
     };
     let environment = backend.environment_id();
     let state = AppState {
@@ -337,8 +340,11 @@ fn run_rollout(backend: &Backend, request: RolloutRequest) -> Result<Value, ApiE
     let candidate =
         CandidateProgram::from_candidate_maps(&request.candidate, &request.candidate_overlay)
             .map_err(ApiError::bad_request)?;
-    let execution = execution_spec(&candidate, &request.metadata, &backend.valid_roles())
-        .map_err(ApiError::bad_request)?;
+    let roles = backend
+        .task_roles(row_task_id)
+        .ok_or_else(|| ApiError::bad_request(format!("unknown task id {row_task_id:?}")))?;
+    let execution =
+        execution_spec(&candidate, &request.metadata, &roles).map_err(ApiError::bad_request)?;
     let evidence = backend
         .rollout(row_task_id, &execution)
         .map_err(ApiError::internal)?;

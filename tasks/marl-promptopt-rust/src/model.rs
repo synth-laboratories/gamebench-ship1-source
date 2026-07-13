@@ -8,6 +8,24 @@ use crate::protocol::ParsedProtocol;
 pub const ROW_SCHEMA: &str = "gamebench.marl_promptopt_task.v1";
 pub const TRACE_SCHEMA: &str = "gamebench.marl_promptopt_trace.v1";
 
+pub fn public_split(dataset_split: &str) -> Option<&'static str> {
+    match dataset_split {
+        "train" | "selection" => Some("train"),
+        "heldout" => Some("heldout"),
+        _ => None,
+    }
+}
+
+pub fn validate_public_split(split: &str) -> Result<(), String> {
+    if matches!(split, "train" | "heldout") {
+        Ok(())
+    } else {
+        Err(format!(
+            "unsupported public split {split:?}; expected train or heldout"
+        ))
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct DiagnosticArm {
     pub id: String,

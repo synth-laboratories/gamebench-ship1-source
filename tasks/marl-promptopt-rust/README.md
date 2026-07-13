@@ -1,45 +1,66 @@
 # GameBench MARL prompt optimization Rust adapter
 
 This standalone binary exposes public `synth_gepa`'s
-`gepa_optimizer_contract.v1` over the committed Craftax Multiplayer and
-DungeonGrid Rust authorities. It has no model or Python dependency: candidate
-strings are interpreted by a strict bounded semantic layer and executed as
-real Rust-engine continuations from deterministic MAPO checkpoints.
+`gepa_optimizer_contract.v1` over the committed Craftax Multiplayer,
+DungeonGrid, and Overcooked V2 Rust authorities. It has no model or Python
+dependency: candidate strings are interpreted by a strict bounded semantic
+layer and executed as real Rust-engine continuations from deterministic MAPO
+checkpoints.
 
 ## Run
 
 ```bash
 cargo run -- --environment craftax --port 8788
 cargo run -- --environment dungeongrid --port 8789
+cargo run -- --environment overcooked --port 8790
 ```
 
 The required routes are `GET /health`, `GET /metadata`, `GET /task_info`,
 `GET /program`, `GET /taskset`, `POST /taskset/tasks`, and `POST /rollout`.
 `GET /info` aliases `/metadata` for generic container tooling.
 
-The catalogs are generated only from the committed v1 MAPO datasets:
+The catalogs are generated only from the committed v1 MAPO datasets. Internal
+dataset partitions remain disjoint:
 
 | Environment | Train | Selection | Heldout | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Craftax Multiplayer | 256 | 96 | 160 | 512 |
 | DungeonGrid | 168 | 48 | 72 | 288 |
+| Overcooked V2 | 48 | 24 | 24 | 96 |
 
 Craftax rows are `64/24/40` disjoint seeds crossed with four frozen probes.
 DungeonGrid rows are `7/2/3` disjoint base scenarios crossed with four map
 transforms, two role orders, and three frozen probes.
+Overcooked uses the committed three templates per internal split and expands
+each template with `16/8/8` deterministic seed replicas. This yields exactly
+`48/24/24` rows while preserving split-disjoint layout families and seeds.
 
-`/taskset` exposes counts only. `/taskset/tasks` resolves every requested id
-inside the supplied split and returns a generic error for a cross-split id. It
-never returns labels or checkpoint contents. Example train ids are:
+Public GEPA has only train and heldout taskset surfaces. The adapter therefore
+maps both internal train and internal selection IDs through requested
+`split="train"`, while retaining `selection` in the task ID and returning
+`dataset_split="selection"`. Internal heldout IDs require
+`split="heldout"`. `/taskset` consequently advertises only:
+
+| Environment | Public train | Public heldout |
+| --- | ---: | ---: |
+| Craftax Multiplayer | 352 | 160 |
+| DungeonGrid | 216 | 72 |
+| Overcooked V2 | 72 | 24 |
+
+`/taskset` exposes public counts only. `/taskset/tasks` resolves every requested
+ID inside the supplied public split and returns a generic error for a
+cross-split ID. It never returns labels or checkpoint contents. Every returned
+row includes a `roles` string array for exact role arms. Example train IDs are:
 
 ```text
 craftax_coordination_v1:train:1001:iron_handoff
 dungeongrid_coordination_v1:train:blackwater_bell_breach:identity:original:pre_breach
+overcooked_v2_coordination_v1:train:train_hidden_1101:r01:hidden_recipe_reveal
 ```
 
 ## Mutable program and semantic directives
 
-Both environments return the identical three-field string program:
+All three environments return the identical three-field string program:
 
 - `shared_instruction`
 - `communication_policy`
@@ -66,9 +87,16 @@ role_prompts:
 ```
 
 For Craftax, the load-bearing priority is `DELIVERY`; for DungeonGrid it is
-`EXTRACTION`. A compact specialist candidate can pair that priority with
-`SPEAK=EVENT_TRIGGERED`, `REQUEST=REQUEST_THEN_ACT`, `HANDOFF=REQUIRED`,
-`FOLLOWER_REPLY=SILENT`, and `ROLE_ASSIGNMENT=SPECIALISTS`.
+`EXTRACTION`; for Overcooked it is `DELIVERY`. A compact specialist candidate
+can pair that priority with `SPEAK=EVENT_TRIGGERED`,
+`REQUEST=REQUEST_THEN_ACT`, `HANDOFF=REQUIRED`, `FOLLOWER_REPLY=SILENT`, and
+`ROLE_ASSIGNMENT=SPECIALISTS`.
+
+Craftax rows expose `warrior`, `forager`, and `miner`; DungeonGrid rows expose
+the committed party roles. Overcooked roles are probe- and agent-count-specific:
+hidden-recipe rows expose `cook` and `ingredient_0`, three-chef assignment rows
+expose `ingredient_0`, `ingredient_1`, and `cook`, four-chef assignment rows
+also expose `delivery`, and handoff rows expose `cook` and `delivery`.
 
 ## Requests and matched diagnostics
 
@@ -80,10 +108,13 @@ primary arm. Accepted ids are:
 - `role_permuted`
 - `role_ablation::<role>`
 
-`channel_masked` executes and records the same send actions/events, then drops
-only recipient inbox/request delivery before dependent actions. `role_permuted`
-changes only specialist assignment. A role ablation replaces only the named
-role's parsed role prompt with `metadata.ablation_baseline`; aliases
+`channel_masked` executes and records the same send or grounded-signal
+actions/events, then drops only delivery to the dependent choice. Overcooked
+uses real recipe-button, pot-state, and counter-handoff actions/events; it does
+not claim free-text engine messaging, and reports zero message characters.
+`role_permuted` changes only specialist assignment. A role ablation replaces
+only the named row-valid role's parsed role prompt with
+`metadata.ablation_baseline`; aliases
 `parent_candidate`, `seed_candidate`, `parent_behavior`, and `seed_behavior`
 are accepted. The baseline may be a `role_prompts` string or a candidate object.
 
@@ -110,5 +141,5 @@ matched diagnostic evidence for COMA, IC3Net, and RODE.
 
 This is a controlled prompt-to-protocol experiment, not a natural-language or
 model-backed policy. The executor intentionally recognizes only the documented
-directives and the frozen MAPO continuation families. Overcooked is not linked;
-it can be added behind the environment backend once its Rust authority lands.
+directives and the frozen MAPO continuation families. Unknown text retains seed
+behavior rather than selecting an oracle continuation.

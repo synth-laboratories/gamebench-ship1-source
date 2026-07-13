@@ -5,12 +5,14 @@ use serde_json::{json, Map, Value};
 
 use crate::craftax::CraftaxBackend;
 use crate::dungeongrid::DungeonGridBackend;
-use crate::model::{EpisodeEvidence, ExecutionSpec};
+use crate::model::{public_split, EpisodeEvidence, ExecutionSpec};
+use crate::overcooked::OvercookedBackend;
 use crate::protocol::SEMANTICS_VERSION;
 
 pub enum Backend {
     Craftax(CraftaxBackend),
     DungeonGrid(DungeonGridBackend),
+    Overcooked(OvercookedBackend),
 }
 
 impl Backend {
@@ -22,10 +24,15 @@ impl Backend {
         Ok(Self::DungeonGrid(DungeonGridBackend::load(tasks_root)?))
     }
 
+    pub fn overcooked(tasks_root: &Path) -> Result<Self, String> {
+        Ok(Self::Overcooked(OvercookedBackend::load(tasks_root)?))
+    }
+
     pub fn environment_id(&self) -> &'static str {
         match self {
             Self::Craftax(backend) => backend.environment_id(),
             Self::DungeonGrid(backend) => backend.environment_id(),
+            Self::Overcooked(backend) => backend.environment_id(),
         }
     }
 
@@ -33,6 +40,7 @@ impl Backend {
         match self {
             Self::Craftax(backend) => backend.dataset_id(),
             Self::DungeonGrid(backend) => backend.dataset_id(),
+            Self::Overcooked(backend) => backend.dataset_id(),
         }
     }
 
@@ -40,6 +48,15 @@ impl Backend {
         match self {
             Self::Craftax(backend) => backend.valid_roles(),
             Self::DungeonGrid(backend) => backend.valid_roles(),
+            Self::Overcooked(backend) => backend.valid_roles(),
+        }
+    }
+
+    pub fn task_roles(&self, task_id: &str) -> Option<Vec<String>> {
+        match self {
+            Self::Craftax(backend) => backend.task_roles(task_id),
+            Self::DungeonGrid(backend) => backend.task_roles(task_id),
+            Self::Overcooked(backend) => backend.task_roles(task_id),
         }
     }
 
@@ -47,6 +64,7 @@ impl Backend {
         match self {
             Self::Craftax(backend) => backend.split_counts(),
             Self::DungeonGrid(backend) => backend.split_counts(),
+            Self::Overcooked(backend) => backend.split_counts(),
         }
     }
 
@@ -54,24 +72,29 @@ impl Backend {
         match self {
             Self::Craftax(backend) => backend.task_rows(split, task_ids),
             Self::DungeonGrid(backend) => backend.task_rows(split, task_ids),
+            Self::Overcooked(backend) => backend.task_rows(split, task_ids),
         }
     }
 
-    pub fn task_split<'a>(&self, task_id: &'a str) -> Option<&'a str> {
+    pub fn task_split(&self, task_id: &str) -> Option<&'static str> {
         let mut parts = task_id.split(':');
         let prefix = parts.next()?;
-        let split = parts.next()?;
+        let dataset_split = parts.next()?;
         let expected = match self {
             Self::Craftax(_) => "craftax_coordination_v1",
             Self::DungeonGrid(_) => "dungeongrid_coordination_v1",
+            Self::Overcooked(_) => "overcooked_v2_coordination_v1",
         };
-        (prefix == expected && matches!(split, "train" | "selection" | "heldout")).then_some(split)
+        (prefix == expected)
+            .then(|| public_split(dataset_split))
+            .flatten()
     }
 
     pub fn has_task(&self, task_id: &str) -> bool {
         match self {
             Self::Craftax(backend) => backend.has_task(task_id),
             Self::DungeonGrid(backend) => backend.has_task(task_id),
+            Self::Overcooked(backend) => backend.has_task(task_id),
         }
     }
 
@@ -83,15 +106,19 @@ impl Backend {
         match self {
             Self::Craftax(backend) => backend.rollout(task_id, execution),
             Self::DungeonGrid(backend) => backend.rollout(task_id, execution),
+            Self::Overcooked(backend) => backend.rollout(task_id, execution),
         }
     }
 
     pub fn taskset(&self) -> Value {
-        let splits = self
-            .split_counts()
-            .iter()
-            .map(|(split, count)| (split.clone(), json!({"num_tasks": count})))
-            .collect::<Map<_, _>>();
+        let counts = self.split_counts();
+        let train_count = counts.get("train").copied().unwrap_or_default()
+            + counts.get("selection").copied().unwrap_or_default();
+        let heldout_count = counts.get("heldout").copied().unwrap_or_default();
+        let splits = Map::from_iter([
+            ("train".to_string(), json!({"num_tasks": train_count})),
+            ("heldout".to_string(), json!({"num_tasks": heldout_count})),
+        ]);
         json!({
             "taskset_id": self.dataset_id(),
             "splits": splits,
@@ -100,7 +127,8 @@ impl Backend {
             "metadata": {
                 "environment": self.environment_id(),
                 "row_version": "v1",
-                "split_isolation": "Task ids are resolved only within the explicitly requested split. This response never exposes heldout rows, ids, checkpoints, or labels.",
+                "public_split_mapping": "Internal train and selection rows are both fetched through public split=train; internal heldout rows require public split=heldout.",
+                "split_isolation": "Task ids are resolved only within the matching public split. This response never exposes heldout rows, ids, checkpoints, or labels through train.",
             },
         })
     }
@@ -120,6 +148,14 @@ impl Backend {
                 "communication_surface": "Engine Message actions deliver bounded text to party inboxes before role-specialized actions.",
                 "load_bearing_events": ["counterplay_revealed", "door_opened", "objective_taken", "item_given", "objective_escaped"],
                 "priority_value": "EXTRACTION",
+            }),
+            Self::Overcooked(_) => json!({
+                "authority": "overcooked-v2-gold",
+                "actors": self.valid_roles(),
+                "communication_surface": "Grounded button activation, visible pot-state changes, and counter handoffs are the only communication signals. The adapter emits no free-text engine messages.",
+                "load_bearing_events": ["ButtonActivated", "PotIngredientAdded", "CookStart", "ItemPicked(...,counter)", "Delivery"],
+                "priority_value": "DELIVERY",
+                "row_roles": "Use each task row's roles array for exact role_ablation::<role> arms; roles are restricted by probe and active agent count.",
             }),
         };
         json!({
@@ -174,7 +210,7 @@ impl Backend {
             "diagnostic_interventions": {
                 "required_metadata": "metadata.evaluation_arm is mandatory for every rollout, including primary.",
                 "arm_ids": ["primary", "channel_masked", "role_permuted", "role_ablation::<role>"],
-                "channel_masked": "Preserves real send actions/events and counters, then drops only recipient inbox/request delivery on the same checkpoint.",
+                "channel_masked": "Preserves real send or grounded-signal actions/events and counters, then suppresses only the recipient/request/inbox delivery or the executor's downstream use of that information on the same checkpoint.",
                 "role_permuted": "Changes only which frozen-checkpoint actor receives each specialist assignment.",
                 "role_ablation": {
                     "baseline_key": "metadata.ablation_baseline",
@@ -185,7 +221,7 @@ impl Backend {
                 "primary_metric_policy": "IMAC comparisons use primary-arm metrics only. Other arms are diagnostic matched evidence for COMA, IC3Net, and RODE.",
             },
             "data_isolation": {
-                "proposer_visible": "Training task rows and train-side rollout evidence only.",
+                "proposer_visible": "Internal train and selection task rows are available only through public split=train; train-side rollout evidence never crosses into heldout.",
                 "heldout_policy": "Heldout rows, task ids, checkpoints, labels, and answers are absent from task_info, program, metadata, and train task requests.",
                 "overfitting_warning": "Propose general protocol directives, never task-id tables or exact continuation answers.",
             },

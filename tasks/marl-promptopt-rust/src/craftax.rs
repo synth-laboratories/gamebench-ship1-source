@@ -8,8 +8,8 @@ use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 
 use crate::model::{
-    contribution_coverage, AgentContribution, EpisodeEvidence, EpisodeMetrics, ExecutionSpec,
-    ROW_SCHEMA,
+    contribution_coverage, public_split, validate_public_split, AgentContribution, EpisodeEvidence,
+    EpisodeMetrics, ExecutionSpec, ROW_SCHEMA,
 };
 use crate::protocol::{
     FollowerReply, HandoffPolicy, Priority, RequestPolicy, RoleMode, SpeakPolicy,
@@ -174,6 +174,10 @@ impl CraftaxBackend {
             .collect()
     }
 
+    pub fn task_roles(&self, task_id: &str) -> Option<Vec<String>> {
+        self.tasks.contains_key(task_id).then(|| self.valid_roles())
+    }
+
     pub fn split_counts(&self) -> &BTreeMap<String, usize> {
         &self.split_counts
     }
@@ -183,27 +187,29 @@ impl CraftaxBackend {
     }
 
     pub fn task_rows(&self, split: &str, task_ids: &[String]) -> Result<Vec<Value>, String> {
-        validate_split(split)?;
+        validate_public_split(split)?;
         task_ids
             .iter()
             .map(|task_id| {
                 let task = self
                     .tasks
                     .get(task_id)
-                    .filter(|task| task.split == split)
+                    .filter(|task| public_split(&task.split) == Some(split))
                     .ok_or_else(|| {
                         format!("task id {task_id:?} is not available in requested split {split:?}")
                     })?;
                 Ok(json!({
                     "task_id": task.task_id,
                     "example_id": task.task_id,
-                    "split": task.split,
+                    "split": split,
+                    "dataset_split": task.split,
                     "objective": "outcome_reward",
                     "row_schema": ROW_SCHEMA,
                     "dataset_id": self.dataset_id,
                     "dataset_version": "v1",
                     "environment": ENVIRONMENT_ID,
                     "checkpoint_key": task.checkpoint_key,
+                    "roles": self.valid_roles(),
                 }))
             })
             .collect()
@@ -434,6 +440,7 @@ fn run_probe(
     }
     let summary_fields = BTreeMap::from([
         ("coordination_case".to_string(), json!(task.probe)),
+        ("dataset_split".to_string(), json!(task.split)),
         ("seed".to_string(), json!(task.seed)),
         (
             "successful_trade_count".to_string(),
@@ -448,7 +455,9 @@ fn run_probe(
     ]);
     Ok(EpisodeEvidence {
         task_id: task.task_id.clone(),
-        split: task.split.clone(),
+        split: public_split(&task.split)
+            .ok_or_else(|| format!("invalid Craftax dataset split {:?}", task.split))?
+            .to_string(),
         environment: ENVIRONMENT_ID.to_string(),
         checkpoint_digest: context.checkpoint_digest.clone(),
         final_state_digest: digest_text(&env.checkpoint_json()),
