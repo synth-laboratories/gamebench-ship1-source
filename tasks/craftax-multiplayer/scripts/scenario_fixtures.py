@@ -58,7 +58,7 @@ def run_scenario(entry: dict[str, Any]) -> dict[str, Any]:
     initial_observations, reset_info = env.reset(entry["seed"])
     initial_projection = observation_projection(initial_observations)
     checkpoint_after = entry.get("checkpoint_after")
-    checkpoint_equivalent = checkpoint_after is None
+    checkpoint_equivalent = True
     step_records: list[dict[str, Any]] = []
 
     for index, joint_action in enumerate(entry["joint_actions"]):
@@ -84,6 +84,13 @@ def run_scenario(entry: dict[str, Any]) -> dict[str, Any]:
             env = restored
 
     state = env._require_state()
+    final_checkpoint = env.checkpoint()
+    final_restored = CraftaxCoopEnv()
+    final_observations = final_restored.restore(deepcopy(final_checkpoint))
+    checkpoint_equivalent = checkpoint_equivalent and (
+        final_restored._require_state().to_dict() == state.to_dict()
+        and observation_projection(final_observations) == observation_projection(env.observations())
+    )
     outcome = {
         "scenario_id": entry["scenario_id"],
         "initial_state_hash": reset_info["state_hash"],

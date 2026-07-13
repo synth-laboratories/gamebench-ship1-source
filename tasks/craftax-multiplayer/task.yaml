@@ -29,7 +29,8 @@ fixture_generator: scripts/generate_gold_fixtures.py
 fixture_verifier: scripts/verify_gold_fixtures.py
 oracle:
   type: canonical_joint_nev_and_state
-  structured_nev: fixtures/gold/eventlogs/eventlogs.json
+  eventlogs: fixtures/gold/eventlogs/eventlogs.json
+  nev_formats: [structured, legacy]
   state_projections: fixtures/gold/states/states.json
 status:
   reference_engine_python: tasks/craftax-multiplayer/gold_python/
