@@ -85,6 +85,8 @@ runtime dependency in either lane.
 The default three-agent sprite canvas is 528×272: three 176×272 private panels
 ordered by agent id. Each panel contains teammate health/role/request information,
 the agent's lit 11×11 local map, and a four-row status/inventory dashboard.
+Live agents use stable identity skins—blue for `agent_0`, amber for `agent_1`,
+and violet for `agent_2`—while retaining directional, sleeping, and dead poses.
 
 Visual parity is semantic rather than byte-level: both lanes use the same canvas
 geometry, panel order, state layers, sprite assets, and media routes, but their

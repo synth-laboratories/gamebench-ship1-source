@@ -164,15 +164,28 @@ fn blit_rgb(image: &mut RgbImage, sprite: &RgbaImage, x: u32, y: u32, light: f64
     }
 }
 
-fn text(
-    image: &mut RgbImage,
-    x: u32,
-    y: u32,
-    value: &str,
-    color: Rgb<u8>,
-    scale: u32,
-    max_x: u32,
-) {
+fn blit_tinted_rgb(image: &mut RgbImage, sprite: &RgbaImage, x: u32, y: u32, tint: Rgb<u8>) {
+    for sy in 0..sprite.height() {
+        for sx in 0..sprite.width() {
+            let pixel = sprite.get_pixel(sx, sy).0;
+            if pixel[3] == 0 {
+                continue;
+            }
+            let brightness = pixel[0].max(pixel[1]).max(pixel[2]) as u16;
+            image.put_pixel(
+                x + sx,
+                y + sy,
+                Rgb([
+                    ((pixel[0] as u16 + brightness * tint[0] as u16 / 255 * 2) / 3) as u8,
+                    ((pixel[1] as u16 + brightness * tint[1] as u16 / 255 * 2) / 3) as u8,
+                    ((pixel[2] as u16 + brightness * tint[2] as u16 / 255 * 2) / 3) as u8,
+                ]),
+            );
+        }
+    }
+}
+
+fn text(image: &mut RgbImage, x: u32, y: u32, value: &str, color: Rgb<u8>, scale: u32, max_x: u32) {
     let mut cursor = x;
     for character in value.to_ascii_uppercase().chars() {
         if let Some(glyph) = BASIC_FONTS.get(character) {
@@ -276,6 +289,35 @@ fn entity(
     marker(image, x, y, color);
 }
 
+fn player_entity(
+    image: &mut RgbImage,
+    x: u32,
+    y: u32,
+    alive: bool,
+    sleeping: bool,
+    facing: &str,
+    color: Rgb<u8>,
+    mode: RenderMode,
+    cache: &mut BTreeMap<String, RgbaImage>,
+) {
+    if !alive {
+        entity(image, x, y, "player-dead", color, mode, cache);
+        return;
+    }
+    let sprite_name = if sleeping {
+        "player-sleep".to_string()
+    } else {
+        format!("player-{facing}")
+    };
+    if mode == RenderMode::Sprites {
+        if let Some(sprite) = sprite(&sprite_name, cache) {
+            blit_tinted_rgb(image, &sprite, x, y, color);
+            return;
+        }
+    }
+    marker(image, x, y, color);
+}
+
 pub fn render_rgb(env: &CraftaxCoopEnv, requested_mode: RenderMode) -> Result<RgbFrame, String> {
     let mode = resolved_mode(requested_mode)?;
     let count = env.state.players.len().max(1) as u32;
@@ -308,15 +350,13 @@ pub fn render_rgb(env: &CraftaxCoopEnv, requested_mode: RenderMode) -> Result<Rg
                 Rgb([180, 94, 235]),
                 Rgb([72, 220, 141]),
             ];
-            entity(
+            player_entity(
                 &mut canvas,
                 ox,
                 y,
-                if teammate.alive {
-                    teammate.role.as_str()
-                } else {
-                    "player-dead"
-                },
+                teammate.alive,
+                teammate.sleeping,
+                &teammate.facing,
                 colors[index % colors.len()],
                 mode,
                 &mut cache,
@@ -418,15 +458,13 @@ pub fn render_rgb(env: &CraftaxCoopEnv, requested_mode: RenderMode) -> Result<Rg
                         Rgb([180, 94, 235]),
                         Rgb([72, 220, 141]),
                     ];
-                    entity(
+                    player_entity(
                         &mut canvas,
                         px,
                         py,
-                        if player.alive {
-                            player.role.as_str()
-                        } else {
-                            "player-dead"
-                        },
+                        player.alive,
+                        player.sleeping,
+                        &player.facing,
                         colors[index % colors.len()],
                         mode,
                         &mut cache,
