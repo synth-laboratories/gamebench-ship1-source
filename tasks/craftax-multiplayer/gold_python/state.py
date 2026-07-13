@@ -24,6 +24,7 @@ class Player:
     pickaxe: int = 0
     sword: int = 0
     armour: int = 0
+    bow: int = 0
     arrows: int = 0
     torches: int = 0
     books: int = 0
@@ -37,7 +38,14 @@ class Player:
     sword_enchantment: str | None = None
     armour_enchantment: str | None = None
     bow_enchantment: str | None = None
+    learned_spell: bool = False
     sleeping: bool = False
+    resting: bool = False
+    recover: float = 0.0
+    hunger: float = 0.0
+    thirst: float = 0.0
+    fatigue: float = 0.0
+    recover_mana: float = 0.0
     request_type: str | None = None
     request_duration: int = 0
 
@@ -51,6 +59,8 @@ class Monster:
     y: int
     health: int
     damage: int
+    category: str = "melee"
+    attack_cooldown: int = 0
 
 
 @dataclass
@@ -63,6 +73,8 @@ class Projectile:
     dy: int
     damage: int
     ttl: int
+    kind: str = "arrow"
+    hostile: bool = False
 
 
 @dataclass
@@ -86,9 +98,16 @@ class WorldState:
     boss_health: int = 24
     boss_progress: int = 0
     boss_wave_timer: int = 0
+    chests_opened: list[bool] = field(default_factory=lambda: [False] * 9)
+    monsters_killed: list[int] = field(default_factory=lambda: [0] * 9)
+    potion_mapping: list[str] = field(default_factory=lambda: ["health", "strength", "dexterity", "intelligence", "mana", "energy"])
     light_level: float = 1.0
     achievements: dict[str, bool] = field(default_factory=lambda: {a: False for a in ACHIEVEMENTS})
     trade_count: int = 0
+    food_trade_count: int = 0
+    drink_trade_count: int = 0
+    revives: int = 0
+    ff_damage_dealt: float = 0.0
     terminated: bool = False
     termination_reason: str | None = None
     nev: list[dict[str, Any]] = field(default_factory=list)
