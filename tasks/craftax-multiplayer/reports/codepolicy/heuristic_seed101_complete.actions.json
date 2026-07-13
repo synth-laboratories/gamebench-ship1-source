@@ -1,0 +1,1116 @@
+{
+  "actions": [
+    {
+      "agent_0": {
+        "kind": "left"
+      },
+      "agent_1": {
+        "kind": "down"
+      },
+      "agent_2": {
+        "kind": "right"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "do"
+      },
+      "agent_1": {
+        "kind": "right"
+      },
+      "agent_2": {
+        "kind": "right"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "down"
+      },
+      "agent_2": {
+        "kind": "right"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "right"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "right"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "do"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    },
+    {
+      "agent_0": {
+        "kind": "make_wood_sword"
+      },
+      "agent_1": {
+        "kind": "do"
+      },
+      "agent_2": {
+        "kind": "make_wood_sword"
+      }
+    }
+  ],
+  "agent_ids": [
+    "agent_0",
+    "agent_1",
+    "agent_2"
+  ],
+  "env_family": "craftax-multiplayer",
+  "policy_kind": "code",
+  "policy_metadata": {
+    "policy_path": "/Users/joshpurtell/Documents/GitHub/gamebench-craftax-complete/tasks/craftax-multiplayer/policies/heuristic_baseline.py"
+  },
+  "schema_version": "gamebench.craftax_coop.action_tape.v1",
+  "seed": 101
+}

@@ -1,0 +1,17 @@
+{
+  "schema_version": "gamebench.task.v1",
+  "task_id": "craftax_coop_coordination_smoke",
+  "env_family": "craftax-multiplayer",
+  "scenario_id": "coordination_smoke",
+  "seed": 101,
+  "max_timesteps": 32,
+  "agents": ["agent_0", "agent_1", "agent_2"],
+  "roles": {"agent_0": "warrior", "agent_1": "forager", "agent_2": "miner"},
+  "joint_actions": [
+    {"agent_0": "down", "agent_1": "down", "agent_2": "down"},
+    {"agent_0": "right", "agent_1": "noop", "agent_2": "left"},
+    {"agent_0": "request_stone", "agent_1": "request_food", "agent_2": "request_wood"},
+    {"agent_0": "noop", "agent_1": "noop", "agent_2": "noop"}
+  ],
+  "expect": {"timestep": 4, "terminated": false, "trade_count": 0, "request_remaining": 9}
+}

@@ -4,21 +4,21 @@ This is a distinct, self-contained GameBench multiplayer task based on the seman
 
 The default game uses three simultaneous agents (`agent_0` Warrior, `agent_1` Forager, `agent_2` Miner), nine deterministic 48×48 levels, shared rewards and achievements, common world/resources/combat, requests and directed giving, and boss/death/timestep endings. Observations are per-agent symbolic JSON with an 11×11 ASCII view and a shared teammate dashboard.
 
-Actions are objects such as `{"kind":"left"}`, `{"kind":"request_iron"}`, or `{"kind":"give_iron_to_agent_2"}`. All joint steps must name every agent. Requests last 10 turns unless fulfilled. Checkpoints serialize all authoritative state; structured and legacy NEV are both retained.
+Actions are objects such as `{"kind":"left"}`, `{"kind":"request_iron"}`, or `{"kind":"give_iron_to_agent_2"}`. All joint steps must name every agent. Requests remain active for 10 turns and can receive repeated gifts. Version-2 checkpoints serialize all authoritative state; structured and legacy NEV are both retained.
 
 ## Role semantics
 
-- Warrior deals double base combat damage.
-- Forager can team-heal and rests more efficiently.
-- Miner alone gathers advanced ores, receives double ore yield, and crafts advanced equipment.
+- Warrior deals double base combat damage, crafts advanced swords/arrows, uses bows, and enchants weapons.
+- Forager has triple food/drink capacity, gathers saplings, gains food from passive mobs, and casts the team-heal spell.
+- Miner crafts pickaxes and torches and alone places stone bridges; both Miner and Warrior can cast the learned fireball spell.
 
 ## Parity and author-reference boundaries
 
 Python and Rust are independent runtime authorities with the same deterministic map generator, world/player state, simultaneous conflict rules, role abilities, requests/trades, collection and crafting, mobs and projectiles, plants/chests/potions/books/enchantments, attributes, traversal, boss progression, rewards, checkpoints, observations, NEV, and terminal conditions. `scripts/verify_python_rust_parity.py` compares canonical cooperative, combat, collection, expiry, plant/time, boss, death, timestep, and checkpoint scenarios.
 
-This is a pure-language semantic port, not a byte-for-byte execution of the authors' JAX program. Consequently JAX PRNG bitstreams and vectorized update ordering are not reproduced. The GameBench task provides symbolic JSON/ASCII rather than the author repository's pixel asset renderer, and represents the long-tail mob/projectile taxonomy through the same shared combat model instead of importing JAX array layouts. These are explicit representation boundaries; none falls back to `craftax-singleplayer` or removes the requested cooperative mechanics.
+This is a pure-language semantic port, not a byte-for-byte execution of the authors' JAX program. Consequently JAX PRNG bitstreams are not reproduced. The two runtimes instead share a specified integer mixer, room/smooth-biome generator, and deterministic spawn selection. Dungeon topology, biome/resource constraints, local light maps, simultaneous shared-target resolution, mob classes, elemental damage, projectile capacities, plants, floor gates, and boss rounds are preserved semantically, but a seed does not produce the same individual tiles or random draws as JAX. The GameBench task provides symbolic JSON/ASCII rather than the author repository's pixel asset renderer. These are representation and PRNG boundaries; none falls back to `craftax-singleplayer` or removes a cooperative action/dynamic.
 
-Python and Rust emit the same structured and legacy NEV contracts, but internal event granularity is not byte-for-byte identical: Rust records some simultaneous resolution details as separate events. The deterministic HTTP policy fixture therefore requires identical terminal state, reward, achievements, trades, and observation fields while reporting each runtime's event counts independently.
+Python and Rust emit the same canonical structured and legacy NEV records for parity traces. The parity verifier compares the full logs for reset, joint actions, requests, movement, and resource collection, in addition to semantic scenario projections and cross-language checkpoint restoration. The fixture bundle pins broader canonical Python event/state artifacts, while HTTP action-tape replay proves both services consume the same policy trace.
 
 ## Usage
 
@@ -38,14 +38,31 @@ The evaluator uses disjoint train/selection/heldout seed ranges and frozen iron 
 
 `python scripts/verify_python_rust_parity.py`
 
+Canonical multiplayer fixture verification (five deterministic task bundles with
+structured NEV, legacy NEV, projected observations/state, request expiry,
+resource giving, checkpoint restore, and timestep termination):
+
+`python scripts/verify_gold_fixtures.py`
+
+Regenerate those checked-in artifacts after an intentional runtime contract
+change with `python scripts/generate_gold_fixtures.py`.
+
 Shared HTTP policy runner (works against either service):
 
 `python scripts/run_http_policy.py --base-url http://127.0.0.1:8080 --runtime python --seed 404 --steps 300 --output reports/http_e2e/python_seed404.json`
 
-Code-policy rollout:
+Code-policy HTTP rollout, capturing one deterministic joint-action tape:
 
-`python containers/codepolicy/rollout_code_policy.py --policy policies/heuristic_baseline.py --seed 101 --steps 100 --output reports/codepolicy/heuristic_seed101.json`
+`python3 containers/codepolicy/rollout_code_policy.py --base-url http://127.0.0.1:8080 --runtime python --policy policies/heuristic_baseline.py --seed 101 --steps 100 --capture-actions reports/codepolicy/heuristic_seed101.actions.json --output reports/codepolicy/heuristic_seed101.python.json`
 
-Three-agent Gemini 3.1 Flash Lite ReAct rollout (requires `GEMINI_API_KEY`):
+Replay those exact actions against the Rust HTTP service:
 
-`python containers/react/run_react_policy.py --model gemini-3.1-flash-lite --seed 101 --steps 30 --output reports/react/gemini_3_1_flash_lite_seed101.json`
+`python3 containers/codepolicy/rollout_code_policy.py --base-url http://127.0.0.1:8081 --runtime rust --seed 101 --steps 100 --replay-actions reports/codepolicy/heuristic_seed101.actions.json --output reports/codepolicy/heuristic_seed101.rust.json`
+
+Three-agent Gemini 3.1 Flash Lite ReAct HTTP rollout (requires `GEMINI_API_KEY`), followed by a no-cost Rust replay:
+
+`python3 containers/react/run_react_policy.py --base-url http://127.0.0.1:8080 --runtime python --model gemini-3.1-flash-lite --seed 101 --steps 30 --capture-actions reports/react/gemini_3_1_flash_lite_seed101.actions.json --output reports/react/gemini_3_1_flash_lite_seed101.python.json`
+
+`python3 containers/react/run_react_policy.py --base-url http://127.0.0.1:8081 --runtime rust --seed 101 --steps 30 --replay-actions reports/react/gemini_3_1_flash_lite_seed101.actions.json --output reports/react/gemini_3_1_flash_lite_seed101.rust.json`
+
+Both runners emit the same report schema with per-step joint actions, rewards, events, dones, and per-agent/team dashboard snapshots. Action tapes are runtime-neutral and validate the seed and complete agent set before replay.

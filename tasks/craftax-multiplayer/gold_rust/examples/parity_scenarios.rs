@@ -1,4 +1,4 @@
-use craftax_coop_gamebench::{CraftaxCoopEnv, Monster};
+use craftax_coop_gamebench::{CraftaxCoopEnv, Monster, Plant};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 
@@ -35,8 +35,9 @@ fn main() {
     env.state.monsters.clear();
     let p = &env.state.players[2];
     env.state.maps[p.level][p.y + 1][p.x] = "iron".into();
+    env.state.players[2].pickaxe = 2;
     let step = env.step(&joint("noop", "noop", "do")).unwrap();
-    out.insert("collect".into(),json!({"iron":env.state.players[2].inventory["iron"],"tile":env.state.maps[0][4][5],"reward":step.rewards["agent_0"],"achievements":env.state.achievements}));
+    out.insert("collect".into(),json!({"iron":env.state.players[2].inventory["iron"],"tile":env.state.maps[0][4][5],"reward":step.rewards["agent_0"],"achievements":env.state.achievements,"nev":env.state.nev,"legacy_nev":env.state.legacy_nev}));
     let mut env = CraftaxCoopEnv::reset(17, 3, 100);
     env.state.monsters = vec![Monster {
         id: "fixture".into(),
@@ -44,8 +45,10 @@ fn main() {
         level: 0,
         x: 3,
         y: 4,
-        health: 4,
+        health: 4.0,
         damage: 2,
+        category: "melee".into(),
+        attack_cooldown: 0,
     }];
     env.step(&joint("do", "noop", "noop")).unwrap();
     env.step(&joint("do", "noop", "noop")).unwrap();
@@ -58,6 +61,7 @@ fn main() {
         p.y = 23;
         p.facing = "down".into();
     }
+    env.state.boss_wave_timer = 0;
     for _ in 0..3 {
         if !env.state.terminated {
             env.step(&joint("do", "do", "do")).unwrap();
@@ -67,9 +71,10 @@ fn main() {
     let mut env = CraftaxCoopEnv::reset(17, 3, 100);
     env.state.monsters.clear();
     for p in &mut env.state.players {
-        p.health = 1;
+        p.health = 1.0;
         p.food = 0;
         p.drink = 0;
+        p.recover = -16.0;
     }
     let death_step = env.step(&noop()).unwrap();
     out.insert("death".into(),json!({"health":env.state.players.iter().map(|p|p.health).collect::<Vec<_>>(),"reward":death_step.rewards["agent_0"],"terminated":env.state.terminated,"reason":env.state.termination_reason,"achievements":env.state.achievements}));
@@ -79,8 +84,13 @@ fn main() {
     out.insert("timestep".into(),json!({"timestep":env.state.timestep,"terminated":env.state.terminated,"reason":env.state.termination_reason}));
     let mut env = CraftaxCoopEnv::reset(17, 3, 100);
     env.state.monsters.clear();
-    env.state.timestep = 50;
     env.state.maps[0][8][8] = "plant".into();
+    env.state.plants = vec![Plant {
+        level: 0,
+        x: 8,
+        y: 8,
+        age: 499,
+    }];
     env.step(&noop()).unwrap();
     out.insert("plant_light".into(),json!({"tile":env.state.maps[0][8][8],"timestep":env.state.timestep,"light":env.state.light_level}));
     let mut floor_env = CraftaxCoopEnv::reset(17, 3, 100);
@@ -102,7 +112,7 @@ fn main() {
     *trade_env.state.players[0]
         .inventory
         .get_mut("wood")
-        .unwrap() = 99;
+        .unwrap() = 98;
     *trade_env.state.players[2]
         .inventory
         .get_mut("wood")
@@ -125,8 +135,10 @@ fn main() {
         level: 0,
         x: 3,
         y: 4,
-        health: 2,
+        health: 2.0,
         damage: 0,
+        category: "passive".into(),
+        attack_cooldown: 0,
     }];
     survival_env.step(&joint("do", "noop", "noop")).unwrap();
     out.insert("survival".into(),json!({"saplings":survival_env.state.players[1].saplings,"drink":survival_env.state.players[1].drink,"food":survival_env.state.players[0].food,"achievements":survival_env.state.achievements}));
@@ -137,8 +149,10 @@ fn main() {
         level: 0,
         x: 3,
         y: 5,
-        health: 4,
+        health: 4.0,
         damage: 0,
+        category: "melee".into(),
+        attack_cooldown: 0,
     }];
     projectile_env.state.maps[0][4][3] = "stone".into();
     projectile_env.state.players[0].arrows = 1;
@@ -148,17 +162,10 @@ fn main() {
     out.insert("projectile_block".into(), json!({"projectiles":projectile_env.state.projectiles.len(),"monster_health":projectile_env.state.monsters[0].health}));
     let mut progression_env = CraftaxCoopEnv::reset(17, 3, 100);
     progression_env.state.players[0].xp = 2;
-    progression_env.state.monsters = vec![Monster {
-        id: "threshold".into(),
-        kind: "zombie".into(),
-        level: 0,
-        x: 3,
-        y: 4,
-        health: 2,
-        damage: 0,
-    }];
-    progression_env.step(&joint("do", "noop", "noop")).unwrap();
-    out.insert("level_point".into(), json!({"xp":progression_env.state.players[0].xp,"points":progression_env.state.players[0].level_points}));
+    progression_env
+        .step(&joint("level_up_strength", "noop", "noop"))
+        .unwrap();
+    out.insert("level_point".into(), json!({"xp":progression_env.state.players[0].xp,"points":progression_env.state.players[0].strength}));
     let mut chest_env = CraftaxCoopEnv::reset(17, 3, 100);
     chest_env.state.monsters.clear();
     chest_env.state.maps[0][4][5] = "chest".into();
