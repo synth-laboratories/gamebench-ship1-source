@@ -1,0 +1,20 @@
+{
+  "task_id": "dg_lantern_crypt_lite_rust_smoke",
+  "scenario_id": "lantern_crypt_lite",
+  "quest_id": "base:lantern_crypt:lite",
+  "title": "Lantern Crypt Lite",
+  "seed": 1,
+  "max_steps": 120,
+  "map_ascii": "###########\n#E..D.....#\n#...#..I..#\n#...#..R..#\n###D#######\n#..T.C....#\n###########",
+  "hero_roles": ["barbarian", "wizard"],
+  "objective_item": "little_ember_idol",
+  "metadata": {
+    "marl_axis": "role-specialized causal counterplay",
+    "coordination_type": "support action before damage commitment",
+    "coordination_skills": [
+      "assign a clue reader or altar breaker before the boss engage",
+      "screen the support hero while counterplay is prepared",
+      "communicate when the guardian has been weakened enough to commit"
+    ]
+  }
+}

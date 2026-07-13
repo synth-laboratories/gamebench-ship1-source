@@ -1,0 +1,26 @@
+{
+  "task_id": "dg_cinder_mage_threshold_rust_smoke",
+  "scenario_id": "cinder_mage_threshold",
+  "quest_id": "gamebench:cinder_mage_threshold:lite",
+  "title": "Cinder Mage Threshold",
+  "seed": 10,
+  "max_steps": 100,
+  "map_ascii": "#########\n#E.D.RI.#\n#..T.C..#\n#########",
+  "hero_roles": ["barbarian", "wizard"],
+  "objective_item": "cinder_focus",
+  "metadata": {
+    "source_seed": {
+      "quest_id": "cinder_mage_tower",
+      "title": "Cinder Mage Tower",
+      "tier": "full",
+      "distillation": "compresses the full tower's caster-support dependency into a one-door threshold where spell timing decides the breach"
+    },
+    "marl_axis": "spell-timed breach against a guarded threshold",
+    "coordination_type": "support magic must precede frontline commitment",
+    "coordination_skills": [
+      "encode caster-first timing in the opening message",
+      "hold the frontline until ward and reveal are both applied",
+      "use melee and spark damage in sequence to clear the threshold"
+    ]
+  }
+}

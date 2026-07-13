@@ -1,0 +1,26 @@
+{
+  "task_id": "dg_chokepoint_passage_rust_smoke",
+  "scenario_id": "chokepoint_passage",
+  "quest_id": "gamebench:chokepoint_passage:lite",
+  "title": "Black Standard Chokepoint",
+  "seed": 2,
+  "max_steps": 80,
+  "map_ascii": "#########\n#E.D.I..#\n#...#R..#\n#...C...#\n#########",
+  "hero_roles": ["barbarian", "wizard"],
+  "objective_item": "passage_ward",
+  "metadata": {
+    "source_seed": {
+      "quest_id": "black_standard_keep",
+      "title": "Black Standard Keep",
+      "tier": "full",
+      "distillation": "compresses the full keep's standard-room chokepoint pressure into one breach door and one support timing window"
+    },
+    "marl_axis": "single-tile chokepoint coordination",
+    "coordination_type": "support counterplay before frontline route commitment",
+    "coordination_skills": [
+      "support acts before the frontline occupies the chokepoint",
+      "frontline clears or guards without blocking the support route",
+      "agents communicate before crossing the door"
+    ]
+  }
+}
