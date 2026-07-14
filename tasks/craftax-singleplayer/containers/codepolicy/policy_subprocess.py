@@ -324,8 +324,11 @@ def _load_policy(policy_path: Path) -> Any:
         raise ValueError(f"cannot load policy module: {resolved}")
     module = importlib.util.module_from_spec(spec)
     sys.modules[module_name] = module
-    with contextlib.redirect_stdout(sys.stderr):
-        spec.loader.exec_module(module)
+    with open(os.devnull, "w", encoding="utf-8") as candidate_output:
+        with contextlib.redirect_stdout(candidate_output), contextlib.redirect_stderr(
+            candidate_output
+        ):
+            spec.loader.exec_module(module)
     candidate = getattr(module, "choose_actions", None)
     if not callable(candidate):
         raise ValueError(f"policy module {resolved} missing callable choose_actions")
@@ -347,16 +350,19 @@ def _serve(policy_path: Path) -> int:
             return 0
         if request.get("op") != "choose_actions":
             raise ValueError("unsupported isolated policy operation")
-        with contextlib.redirect_stdout(sys.stderr):
-            decision = candidate(
-                observation_text=str(request.get("observation_text") or ""),
-                session=dict(request.get("session") or {}),
-                valid_actions=list(request.get("valid_actions") or []),
-                engine=None,
-                seed=None,
-                ply=int(request.get("ply") or 0),
-                readout=dict(request.get("readout") or {}),
-            )
+        with open(os.devnull, "w", encoding="utf-8") as candidate_output:
+            with contextlib.redirect_stdout(
+                candidate_output
+            ), contextlib.redirect_stderr(candidate_output):
+                decision = candidate(
+                    observation_text=str(request.get("observation_text") or ""),
+                    session=dict(request.get("session") or {}),
+                    valid_actions=list(request.get("valid_actions") or []),
+                    engine=None,
+                    seed=None,
+                    ply=int(request.get("ply") or 0),
+                    readout=dict(request.get("readout") or {}),
+                )
         if not isinstance(decision, dict) or not isinstance(
             decision.get("actions"), list
         ):
@@ -444,7 +450,7 @@ class IsolatedPolicyProcess:
         self._stdout = self._proc.stdout
         self._lock = threading.Lock()
         self._request_id = 0
-        self._stderr_tail = ""
+        self._discarded_stderr_bytes = 0
         self._stderr_thread = threading.Thread(
             target=self._drain_stderr,
             name=f"craftax-policy-stderr-{self._proc.pid}",
@@ -480,7 +486,9 @@ class IsolatedPolicyProcess:
             chunk = self._proc.stderr.read(4096)
             if not chunk:
                 return
-            self._stderr_tail = (self._stderr_tail + chunk)[-8192:]
+            # Candidate code owns this channel, so its bytes must never cross
+            # into a benchmark result, typed grading status, or exception text.
+            self._discarded_stderr_bytes += len(chunk.encode("utf-8", errors="replace"))
 
     def __call__(self, **kwargs: Any) -> dict[str, Any]:
         session = dict(kwargs.get("session") or {})
@@ -506,7 +514,7 @@ class IsolatedPolicyProcess:
         }
         with self._lock:
             if self._proc.poll() is not None:
-                raise RuntimeError("isolated policy process exited unexpectedly")
+                raise RuntimeError("isolated_policy_process_exited")
             self._request_id += 1
             request_id = self._request_id
             request["id"] = request_id
@@ -515,25 +523,29 @@ class IsolatedPolicyProcess:
                 raise ValueError("isolated policy request exceeds IPC limit")
             self._stdin.write(encoded_request + "\n")
             self._stdin.flush()
-            response_line = self._stdout.readline(_MAX_IPC_LINE_CHARS + 1)
+            try:
+                response_line = self._stdout.readline(_MAX_IPC_LINE_CHARS + 1)
+            except UnicodeError:
+                self._terminate()
+                raise RuntimeError("isolated_policy_protocol_invalid") from None
         if not response_line:
             self._stderr_thread.join(timeout=0.25)
-            detail = self._stderr_tail.strip()
-            raise RuntimeError(
-                "isolated policy process returned no response"
-                + (f": {detail}" if detail else "")
-            )
+            raise RuntimeError("isolated_policy_no_response")
         if len(response_line) > _MAX_IPC_LINE_CHARS or not response_line.endswith("\n"):
             self._terminate()
             raise RuntimeError("isolated policy process exceeded IPC response limit")
-        response = json.loads(response_line)
+        try:
+            response = json.loads(response_line)
+        except json.JSONDecodeError:
+            self._terminate()
+            raise RuntimeError("isolated_policy_protocol_invalid") from None
         if (
             not isinstance(response, dict)
             or response.get("id") != request_id
             or response.get("ok") is not True
             or not isinstance(response.get("decision"), dict)
         ):
-            raise RuntimeError("isolated policy process returned an invalid response")
+            raise RuntimeError("isolated_policy_protocol_invalid")
         return dict(response["decision"])
 
     def _terminate(self) -> None:

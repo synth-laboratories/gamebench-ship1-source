@@ -300,9 +300,11 @@ def _run_supervised_rust_episode(
                 f"Craftax Rust episode exceeded {timeout_seconds:.3f}s"
             ) from exc
         if process.returncode != 0:
+            # The worker stderr transitively includes candidate-controlled
+            # diagnostics. Never copy it into benchmark exceptions because
+            # callers persist those failures in typed grading status.
             raise RuntimeError(
-                "Craftax Rust episode worker failed: "
-                f"{stderr[-2000:].strip() or f'exit {process.returncode}'}"
+                f"craftax_rust_episode_worker_failed:{process.returncode}"
             )
         result = json.loads(stdout)
         if not isinstance(result, dict):
