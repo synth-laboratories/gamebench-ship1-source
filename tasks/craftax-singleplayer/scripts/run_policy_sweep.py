@@ -30,7 +30,10 @@ for path in (TASK_DIR, TASK_DIR / "gold_python", TASK_DIR / "shared"):
         sys.path.insert(0, str(path))
 
 from containers.codepolicy.rollout_code_policy import compile_check_policy, load_policy_module, rollout_code_policy
-from containers.codepolicy.policy_subprocess import IsolatedPolicyProcess
+from containers.codepolicy.policy_subprocess import (
+    IsolatedPolicyProcess,
+    cleanup_isolated_policy_containers,
+)
 from containers.codepolicy.rust_repl_session import RustReplSession, ensure_rust_repl_binary
 from scoring import achievement_success_score
 
@@ -263,6 +266,8 @@ def _run_supervised_rust_episode(
 ) -> tuple[int, dict[str, Any]]:
     policy_path_s, seed, task_path, max_steps, include_trace = payload
     started = time.monotonic()
+    episode_env = os.environ.copy()
+    episode_env["FACTORYBENCH_POLICY_RUNNER_PID"] = str(os.getpid())
     process = subprocess.Popen(
         [sys.executable, str(Path(__file__).resolve()), "--rust-episode-worker"],
         stdin=subprocess.PIPE,
@@ -271,7 +276,7 @@ def _run_supervised_rust_episode(
         text=True,
         start_new_session=os.name == "posix",
         close_fds=True,
-        env=os.environ.copy(),
+        env=episode_env,
         cwd=TASK_DIR,
     )
     with _ACTIVE_EPISODE_GROUPS_LOCK:
@@ -313,6 +318,10 @@ def _run_supervised_rust_episode(
         with _ACTIVE_EPISODE_GROUPS_LOCK:
             _ACTIVE_EPISODE_PROCESSES.pop(process.pid, None)
         _terminate_episode_process(process)
+        cleanup_isolated_policy_containers(
+            runner_pid=os.getpid(),
+            worker_pid=process.pid,
+        )
 
 
 def _run_supervised_rust_episodes(

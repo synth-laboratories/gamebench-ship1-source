@@ -12,6 +12,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +21,15 @@ _POLICY_ENV_ALLOWLIST = frozenset({"LANG", "LC_ALL", "SYSTEMROOT"})
 _MAX_IPC_LINE_CHARS = 2 * 1024 * 1024
 _LINUX_SANDBOX_UID = 65534
 _LINUX_SANDBOX_GID = 65534
+_DARWIN_DOCKER_CONTEXT = "orbstack"
+_DARWIN_POLICY_IMAGE = (
+    "python:3.13-slim-bookworm@"
+    "sha256:129f9f5d5729767916d79f0021ba4fe56ff113332b08ef1213ecf529a9da7ebb"
+)
+_DARWIN_POLICY_PLATFORM = "linux/amd64"
+_POLICY_LABEL = "synth.factorybench.policy"
+_RUNNER_PID_LABEL = "synth.factorybench.runner_pid"
+_WORKER_PID_LABEL = "synth.factorybench.worker_pid"
 
 
 def _candidate_environment(*, home: str, path: str) -> dict[str, str]:
@@ -103,91 +113,179 @@ def _linux_sandbox_command(*, root: Path, executable: Path) -> tuple[list[str], 
     )
 
 
+def _docker_client_environment() -> dict[str, str]:
+    keys = {
+        "DOCKER_CONFIG",
+        "DOCKER_CONTEXT",
+        "DOCKER_HOST",
+        "HOME",
+        "PATH",
+        "XDG_CONFIG_HOME",
+    }
+    return {key: value for key, value in os.environ.items() if key in keys}
+
+
 def _darwin_sandbox_command(
-    *, root: Path, executable: Path, protected_source_parent: Path
+    *, root: Path, container_name: str
 ) -> tuple[list[str], dict[str, str]]:
-    sandbox_exec = Path("/usr/bin/sandbox-exec")
-    if not sandbox_exec.is_file():
+    docker = shutil.which("docker")
+    if not docker:
         raise RuntimeError(
-            "FactoryBench candidate isolation requires sandbox-exec on Darwin"
+            "FactoryBench candidate isolation requires Docker on Darwin"
         )
-    home = root / "home"
-    tmp = root / "tmp"
-    home.mkdir()
-    tmp.mkdir()
-    profile = " ".join(
-        (
-            "(version 1)",
-            "(deny default)",
-            "(allow process-exec (literal " + json.dumps(str(executable)) + "))",
-            "(deny process-fork)",
-            "(allow file-read*)",
-            "(deny file-read* (subpath "
-            + json.dumps(str(protected_source_parent))
-            + ") (subpath \"/Users\"))",
-            "(allow mach-lookup)",
-            "(allow sysctl-read)",
-            "(deny network*)",
-        )
+    empty = root / "empty"
+    readonly_mounts = (
+        (root, Path("/workspace")),
+        (empty, Path("/tmp")),
+        (empty, Path("/home/candidate")),
+        (empty, Path("/dev/shm")),
     )
+    runner_pid = str(
+        os.environ.get("FACTORYBENCH_POLICY_RUNNER_PID") or os.getppid()
+    ).strip()
+    if not runner_pid.isdigit():
+        raise RuntimeError("FactoryBench policy runner pid must be numeric")
     command = [
-        str(sandbox_exec),
-        "-p",
-        profile,
-        str(executable),
-        str(root / "policy_subprocess.py"),
-        "--serve",
-        str(root / "policy.py"),
+        docker,
+        "--context",
+        _DARWIN_DOCKER_CONTEXT,
+        "run",
+        "--rm",
+        "--interactive",
+        "--pull=never",
+        "--name",
+        container_name,
+        "--label",
+        f"{_POLICY_LABEL}=true",
+        "--label",
+        f"{_RUNNER_PID_LABEL}={runner_pid}",
+        "--label",
+        f"{_WORKER_PID_LABEL}={os.getpid()}",
+        "--platform",
+        _DARWIN_POLICY_PLATFORM,
+        "--network",
+        "none",
+        "--read-only",
+        "--memory",
+        "512m",
+        "--memory-swap",
+        "512m",
+        "--pids-limit",
+        "1",
+        "--cpus",
+        "1",
+        "--user",
+        f"{_LINUX_SANDBOX_UID}:{_LINUX_SANDBOX_GID}",
+        "--cap-drop",
+        "ALL",
+        "--security-opt",
+        "no-new-privileges",
+        "--ulimit",
+        "fsize=1048576:1048576",
+        "--ulimit",
+        "nofile=64:64",
+        "--log-driver",
+        "none",
+        "--workdir",
+        "/workspace",
     ]
-    env = _candidate_environment(
-        home=str(home),
-        path=f"{Path(sys.base_prefix).resolve() / 'bin'}:/usr/bin:/bin",
+    for source, target in readonly_mounts:
+        command.extend(
+            (
+                "--mount",
+                f"type=bind,source={source},target={target},readonly",
+            )
+        )
+    command.extend(
+        (
+            _DARWIN_POLICY_IMAGE,
+            "/usr/bin/env",
+            "-i",
+            "HOME=/home/candidate",
+            "PATH=/usr/local/bin:/usr/bin:/bin",
+            "PYTHONDONTWRITEBYTECODE=1",
+            "PYTHONNOUSERSITE=1",
+            "TMPDIR=/tmp",
+            "/usr/local/bin/python3",
+            "/workspace/policy_subprocess.py",
+            "--serve",
+            "/workspace/policy.py",
+        )
     )
-    env["TMPDIR"] = str(tmp)
-    return command, env
+    return command, _docker_client_environment()
+
+
+def cleanup_isolated_policy_containers(*, runner_pid: int, worker_pid: int) -> None:
+    """Remove only a supervised episode's exactly labeled Darwin containers."""
+    if sys.platform != "darwin":
+        return
+    docker = shutil.which("docker")
+    if not docker:
+        return
+    filters = [
+        "--filter",
+        f"label={_POLICY_LABEL}=true",
+        "--filter",
+        f"label={_RUNNER_PID_LABEL}={int(runner_pid)}",
+        "--filter",
+        f"label={_WORKER_PID_LABEL}={int(worker_pid)}",
+    ]
+    try:
+        listed = subprocess.run(
+            [
+                docker,
+                "--context",
+                _DARWIN_DOCKER_CONTEXT,
+                "ps",
+                "--all",
+                "--quiet",
+                *filters,
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=3,
+            env=_docker_client_environment(),
+        )
+        container_ids = [
+            value.strip()
+            for value in listed.stdout.splitlines()
+            if value.strip()
+            and 12 <= len(value.strip()) <= 64
+            and all(char in "0123456789abcdef" for char in value.strip())
+        ]
+        if container_ids:
+            subprocess.run(
+                [
+                    docker,
+                    "--context",
+                    _DARWIN_DOCKER_CONTEXT,
+                    "rm",
+                    "--force",
+                    *container_ids,
+                ],
+                check=False,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=3,
+                env=_docker_client_environment(),
+            )
+    except subprocess.TimeoutExpired:
+        return
 
 
 def _sandbox_command(
-    *, root: Path, protected_source_parent: Path
+    *, root: Path, container_name: str | None
 ) -> tuple[list[str], dict[str, str]]:
-    if sys.platform == "darwin":
-        executable = next(
-            (
-                path.resolve()
-                for path in (
-                    Path("/opt/homebrew/bin/python3"),
-                    Path("/usr/local/bin/python3"),
-                    Path("/usr/bin/python3"),
-                )
-                if path.is_file()
-                and not path.resolve().is_relative_to(Path("/Users"))
-            ),
-            None,
-        )
-        if executable is None:
-            raise RuntimeError("FactoryBench candidate isolation requires python3")
-        framework_executable = (
-            executable.parent.parent
-            / "Resources"
-            / "Python.app"
-            / "Contents"
-            / "MacOS"
-            / "Python"
-        )
-        if framework_executable.is_file():
-            executable = framework_executable.resolve()
-    else:
+    if sys.platform.startswith("linux"):
         executable = Path(
             str(getattr(sys, "_base_executable", "") or sys.executable)
         ).resolve()
-    if sys.platform.startswith("linux"):
         return _linux_sandbox_command(root=root, executable=executable)
     if sys.platform == "darwin":
-        return _darwin_sandbox_command(
-            root=root,
-            executable=executable,
-            protected_source_parent=protected_source_parent,
-        )
+        if not container_name:
+            raise RuntimeError("FactoryBench Darwin sandbox requires a container name")
+        return _darwin_sandbox_command(root=root, container_name=container_name)
     raise RuntimeError(
         f"FactoryBench candidate isolation unsupported on platform {sys.platform!r}"
     )
@@ -206,7 +304,7 @@ def _apply_candidate_resource_limits() -> None:
     if sys.platform.startswith("linux"):
         limits += (
             (resource.RLIMIT_AS, 512 * 1024 * 1024),
-            (resource.RLIMIT_NPROC, 32),
+            (resource.RLIMIT_NPROC, 1),
         )
     for kind, ceiling in limits:
         _soft, hard = resource.getrlimit(kind)
@@ -318,9 +416,14 @@ class IsolatedPolicyProcess:
         server_copy.write_bytes(Path(__file__).resolve().read_bytes())
         policy_copy.chmod(0o444)
         server_copy.chmod(0o444)
+        self._container_name = (
+            f"factorybench-policy-{uuid.uuid4().hex}"
+            if sys.platform == "darwin"
+            else None
+        )
         command, env = _sandbox_command(
             root=sandbox_root,
-            protected_source_parent=source_path.parent,
+            container_name=self._container_name,
         )
         self._proc = subprocess.Popen(
             command,
@@ -351,15 +454,25 @@ class IsolatedPolicyProcess:
         self.isolation_receipt = {
             "contract": "os_sandbox_observation_action.v2",
             "platform": sys.platform,
-            "sandbox": "bubblewrap" if sys.platform.startswith("linux") else "sandbox-exec",
+            "sandbox": "bubblewrap" if sys.platform.startswith("linux") else "docker",
             "network": "unshared" if sys.platform.startswith("linux") else "denied",
             "filesystem": "policy_only_read_only",
-            "policy_uid": _LINUX_SANDBOX_UID if sys.platform.startswith("linux") else os.getuid(),
+            "policy_uid": _LINUX_SANDBOX_UID,
             "suite_visible": False,
             "output_visible": False,
             "evaluator_visible": False,
-            "forking": "pid_namespace_bounded" if sys.platform.startswith("linux") else "denied",
+            "forking": "denied",
         }
+        if sys.platform == "darwin":
+            self.isolation_receipt.update(
+                {
+                    "container_context": _DARWIN_DOCKER_CONTEXT,
+                    "container_image": _DARWIN_POLICY_IMAGE,
+                    "container_platform": _DARWIN_POLICY_PLATFORM,
+                    "memory_limit_bytes": 512 * 1024 * 1024,
+                    "pids_limit": 1,
+                }
+            )
 
     def _drain_stderr(self) -> None:
         assert self._proc.stderr is not None
@@ -424,6 +537,27 @@ class IsolatedPolicyProcess:
         return dict(response["decision"])
 
     def _terminate(self) -> None:
+        if self._container_name:
+            docker = shutil.which("docker")
+            if docker:
+                try:
+                    subprocess.run(
+                        [
+                            docker,
+                            "--context",
+                            _DARWIN_DOCKER_CONTEXT,
+                            "rm",
+                            "--force",
+                            self._container_name,
+                        ],
+                        check=False,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        timeout=3,
+                        env=_docker_client_environment(),
+                    )
+                except subprocess.TimeoutExpired:
+                    pass
         if self._proc.poll() is not None:
             return
         try:
