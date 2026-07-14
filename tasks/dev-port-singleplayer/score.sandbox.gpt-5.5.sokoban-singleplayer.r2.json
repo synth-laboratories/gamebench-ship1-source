@@ -1,0 +1,137 @@
+{
+  "schema": "gamebench.dev_port.score.v1",
+  "source_task": "sokoban-singleplayer",
+  "build_ok": true,
+  "build_detail": "ok",
+  "passed": 5,
+  "total": 15,
+  "score": 0.3333,
+  "per_scenario": [
+    {
+      "scenario_id": "inline_01_corner_solve",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "inline_02_corridor_solve",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "inline_03_t_walk_push",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "inline_04_walls_block",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "inline_05_double_progress",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "curriculum_seed_101",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(seed-107,sha256:d6a63ac70314fc1d29abf59c6e51ce3640119524e8c3a50dcfff8cf1b208818a)",
+        "actual": "TaskResolved(seed-107,sha256:76511df043c19c1e2fd30f125b4bf57105e69d27135c96e9fee4971bdc5a8000)"
+      }
+    },
+    {
+      "scenario_id": "curriculum_seed_102",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(seed-108,sha256:67c61ce5997c4d248feebce72858eacacdaeb706cdf330d14d8664d6c2df9338)",
+        "actual": "TaskResolved(seed-108,sha256:f9d5ea3535865cc25945ed65f65b76bc87cdc902d4fafb0d0199016e1b33d905)"
+      }
+    },
+    {
+      "scenario_id": "curriculum_seed_103",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(seed-109,sha256:a200dc056efa62a2e74cebbf1ecbce8b355f33fe87a19f4f72bb99ad57f55612)",
+        "actual": "TaskResolved(seed-109,sha256:9da0fa86877f0dad1562716ff4495565694dd05885d788baee0689618f74e59b)"
+      }
+    },
+    {
+      "scenario_id": "curriculum_seed_104",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(seed-110,sha256:27e168d481e591cff6a64e73fce8af7e83ccd4e51212f916e215680b3d1957c9)",
+        "actual": "TaskResolved(seed-110,sha256:605f89bd8b8d2159b978045b12ef11fc735ff9e3662e168f892305742b2cf12c)"
+      }
+    },
+    {
+      "scenario_id": "curriculum_seed_105",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(lvl-01-corner,sha256:64cf1b86b705c14781267d58b779d750f64b1d3176505638b33ba220d3e139d6)",
+        "actual": "TaskResolved(lvl-01-corner,sha256:21fabd7129568ae82a08d0cf8a018969d1abab8a79b1622d8c162cf68b37d7f6)"
+      }
+    },
+    {
+      "scenario_id": "curriculum_seed_106",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(lvl-02-corridor,sha256:152c34277e85476eb4f3a36c16f8123b35ed9886cdf66e2a6d85ea10824ca7ab)",
+        "actual": "TaskResolved(lvl-02-corridor,sha256:4b750d6fe159ce06eeb9c64d3e3ec920197c3b2684ff2899ca2027d496abf020)"
+      }
+    },
+    {
+      "scenario_id": "curriculum_seed_107",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(lvl-03-t,sha256:2e1ec0a494de3496ed62dd82a1a231bffcc0890c936c5c2606b66a33734cac5d)",
+        "actual": "TaskResolved(lvl-03-t,sha256:0dd3c701aead27c40907eecd17cfd4394caf16ac57031a2bf233cca6310c9fb5)"
+      }
+    },
+    {
+      "scenario_id": "curriculum_seed_108",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(lvl-04-walls,sha256:6b7155a43462c5aa3e37d7448dffdeb5c12ffeb19e42e233ca9b6106fe2ce2dc)",
+        "actual": "TaskResolved(lvl-04-walls,sha256:f7b3f7c7bcf2368248f08e0caaddbea412c2bf3e91da5bfaac8c11c20afb6966)"
+      }
+    },
+    {
+      "scenario_id": "curriculum_seed_109",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(lvl-05-double,sha256:7e79ab451b5da9ec5de04f06be89b3376be8713f26008ebf51ea6a8b18574c4b)",
+        "actual": "TaskResolved(lvl-05-double,sha256:79bfb69bbf2a25c02b5dfd74859e0534682120fcbcf893a77d5f5d9510ad0604)"
+      }
+    },
+    {
+      "scenario_id": "curriculum_seed_110",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(seed-101,sha256:2abe079dabb6cf94a1ec59ae9bbc2c6436e99477cf73357f115a366171e30518)",
+        "actual": "TaskResolved(seed-101,sha256:dcee227edd3422f5543ce7d2757294dfa1ef09a5f5700c2093012b22ec6de559)"
+      }
+    }
+  ],
+  "crate_files": 3
+}

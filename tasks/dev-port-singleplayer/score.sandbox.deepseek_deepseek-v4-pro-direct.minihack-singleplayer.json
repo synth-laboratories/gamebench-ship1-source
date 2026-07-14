@@ -1,0 +1,147 @@
+{
+  "schema": "gamebench.dev_port.score.v1",
+  "source_task": "minihack-singleplayer",
+  "build_ok": false,
+  "build_detail": "cargo build failed:\nerror: couldn't read `src/bin/scenario.rs`: No such file or directory (os error 2)\n\nerror: could not compile `minihack-rust-port` (bin \"scenario\") due to 1 previous error\n",
+  "passed": 0,
+  "total": 27,
+  "score": 0.0,
+  "per_scenario": [
+    {
+      "scenario_id": "corridor_straight_smoke",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "corridor_turn_left_smoke",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "corridor_turn_right_smoke",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "corridor_profile_turn_left",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "navigation_wall_blocked",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "navigation_wait_smoke",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "corridor_battle_smoke",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "corridor_battle_two_monsters",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "corridor_battle_blocked_attack",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "quest_easy_levitation",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "quest_medium_freeze_and_fight",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "quest_easy_missing_pickup",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "boxoban_single_push",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "boxoban_push_blocked",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "boxoban_two_box_complete",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "boxoban_partial_one_on_target",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "boxoban_two_box_seed_alt",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "boxoban_hard_four_fountains",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "maze_9x9_seed_101",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "maze_9x9_seed_202",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "maze_9x9_seed_303",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "maze_9x9_partial_truncated",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "maze_15x15_seed_401",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "maze_15x15_seed_502",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "maze_15x15_seed_603",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "maze_15x15_partial_truncated",
+      "ok": false,
+      "reason": "build_failed"
+    },
+    {
+      "scenario_id": "diagonal_move_smoke",
+      "ok": false,
+      "reason": "build_failed"
+    }
+  ],
+  "crate_files": 15
+}

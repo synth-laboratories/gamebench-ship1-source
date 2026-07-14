@@ -1,0 +1,38 @@
+{
+  "name": "dev_port_to_rust_docker",
+  "entrypoint": ["port"],
+  "nodes": {
+    "port": {
+      "kind": "actor",
+      "actor": "rust_porter",
+      "inputs": { "job": "ledger.job" },
+      "outputs": { "files": "ledger.port_files", "porting_notes": "ledger.port_notes" }
+    }
+  },
+  "runplan": { "map_concurrency": 1 },
+  "host": {
+    "roles": {
+      "rust_porter": {
+        "prompt": "You are a systems engineer porting a WORKING Python game engine to Rust, in a live workspace you can build and run in. The workspace already contains: `gold_python/` (the full Python gold source — READ and RUN it), `scenarios.json` (every scenario entry), `train_eventlogs.json` (the expected NEV `events` for a TRAIN subset of scenarios), and `check.py` (a verifier). Your job: produce a Rust crate exposing a binary `scenario` that reads ONE scenario entry as JSON on stdin and writes {\"events\": [...]} on stdout, reproducing the Python gold's NEV event strings and ORDER exactly. Method (bun-in-rust): port mechanically (reproduce the Python control flow and data model — do NOT redesign, do NOT weaken any scenario), then run `python check.py` to build your crate and diff it against the train oracle; iterate until check.py reports all train scenarios pass. Held-out scenarios are graded identically, so a faithful port — not a per-scenario hack — is what passes. Write real files to disk: `Cargo.toml`, `src/bin/scenario.rs`, and any modules; the crate is CAPTURED FROM THE WORKSPACE, so do not paste code into your reply. When check.py is green, respond with EXACTLY ONE JSON object: {\"porting_notes\": \"...\"} summarizing your type/lifetime mapping and the final check.py result. No prose outside the JSON."
+      }
+    },
+    "output_schemas": {
+      "rust_porter": "port_output.sandboxed.schema.json"
+    },
+    "sandboxes": {
+      "rust_porter": {
+        "backend": {
+          "kind": "docker",
+          "image": "jesterky-devport:latest",
+          "mounts": ["${HOME}/.codex/auth.json:/codex-home/auth.json:ro"],
+          "env": [["CODEX_HOME", "/codex-home"]]
+        },
+        "mode": "workspace-write",
+        "network": true,
+        "seed": { "files_input": "job.files" },
+        "capture": { "globs": ["Cargo.toml", "src/**/*.rs"], "into": "files" }
+      }
+    },
+    "viz": { "item_label_field": "source_task" }
+  }
+}

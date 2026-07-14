@@ -1,0 +1,55 @@
+# Blog run: CISPO (GRPO + CISPO loss) at 20 train steps on the frozen 4x32=128 heldout.
+# Convincing step size for the crafter-rl-compute-uplift post (10-step never finished cleanly).
+# 20 steps is long (budget overnight per seed); submit only after PPO is terminal, and
+# do NOT restart :8890 mid-run (orphans the child -> service_restarted_child_orphaned).
+#
+# MULTI-SEED PROTOCOL (CI across runs, eval seeds stay frozen):
+#   Run this config 3x, varying ONLY the training `seeds` set and the `output` suffix:
+#     s1: seeds = [101, 102, 103, 104]   output = ".../blog_cispo_20step_heldout_4x32_s1"
+#     s2: seeds = [201, 202, 203, 204]   output = ".../blog_cispo_20step_heldout_4x32_s2"
+#     s3: seeds = [301, 302, 303, 304]   output = ".../blog_cispo_20step_heldout_4x32_s3"
+#   eval_seeds stay [581,582,583,584]. Report mean +/- CI across the 3 runs.
+#   You may iterate hyperparameters and re-run the FULL seed set; never drop/cherry-pick seeds.
+# Primary column = goal_success_rate (CR-03 metric rule; do not merge with PPO's mean_achievement).
+schema_version = "crafter.rl.run.v1"
+algorithm = "grpo"
+follow = false
+service_url = "http://127.0.0.1:8890"
+
+[run]
+reward_mode = "standard"
+objective = "standard"
+seeds = [101, 102, 103, 104]
+group_size = 8
+rollout_concurrency = 4
+max_llm_calls = 5
+max_tokens = 512
+train_steps = 20
+model = "openai/gpt-oss-20b"
+reasoning_effort = ""
+learner_backend = "tinker"
+tinker_train_url = "http://127.0.0.1:8899/train"
+crafter_base_url = "http://127.0.0.1:18096"
+task_template = "../../tasks/policy_dev_template.json"
+response_format_json = true
+action_contract_preflight_attempts = 3
+output = "reports/rl_rust/blog_cispo_20step_heldout_4x32_s1"
+
+collection_mode = "barrier"
+max_rollout_lag = 0
+staleness_policy = "drop"
+loss_fn = "cispo"
+skip_zero_variance_groups = false
+dry_run_train = false
+
+eval_frequency = "bootstrap,every:2,final"
+eval_samples_per_seed = 32
+eval_seeds = [581, 582, 583, 584]
+
+[analysis]
+enabled = false
+profile = "cispo_standard"
+on_purpose = []
+llm_enabled = false
+skip_on_failure = true
+timeout_seconds = 120

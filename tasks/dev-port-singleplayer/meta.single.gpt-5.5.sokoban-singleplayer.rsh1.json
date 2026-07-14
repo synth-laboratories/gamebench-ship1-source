@@ -1,0 +1,10 @@
+{
+  "arm": "single_harness",
+  "model": "gpt-5.5",
+  "source_task": "sokoban-singleplayer",
+  "wall_seconds": 274,
+  "tokens": 96875,
+  "capped": false,
+  "passed": 15,
+  "total": 15
+}

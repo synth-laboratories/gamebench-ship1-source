@@ -1,0 +1,132 @@
+{
+  "schema": "gamebench.dev_port.score.v1",
+  "source_task": "tictactoe-singleplayer",
+  "build_ok": true,
+  "build_detail": "ok",
+  "passed": 16,
+  "total": 20,
+  "score": 0.8,
+  "per_scenario": [
+    {
+      "scenario_id": "ttt_001_empty_win_vs_block",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "ttt_002_empty_block_vs_win",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "ttt_003_center_vs_corner",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "ttt_004_corner_vs_center",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "ttt_005_first_vs_last",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "ttt_006_last_vs_first",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "ttt_007_edge_vs_corner",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "ttt_008_mirror_vs_center",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 1,
+        "expected": "MoveApplied(X,8)",
+        "actual": "MoveApplied(X,4)"
+      }
+    },
+    {
+      "scenario_id": "ttt_009_seeded_vs_center",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 5,
+        "expected": "MoveApplied(X,5)",
+        "actual": "MoveApplied(X,2)"
+      }
+    },
+    {
+      "scenario_id": "ttt_010_seeded_win_block",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 1,
+        "expected": "MoveApplied(X,4)",
+        "actual": "MoveApplied(X,0)"
+      }
+    },
+    {
+      "scenario_id": "ttt_011_x_center_open",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "ttt_012_x_corner_open",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "ttt_013_x_edge_open",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 3,
+        "expected": "MoveApplied(O,8)",
+        "actual": "MoveApplied(O,7)"
+      }
+    },
+    {
+      "scenario_id": "ttt_014_two_ply_diagonal",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "ttt_015_two_ply_edge_center",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "ttt_016_two_ply_corner_edge",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "ttt_017_three_ply_x_threat",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "ttt_018_three_ply_o_threat",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "ttt_019_midgame_o_column",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "ttt_020_near_terminal_draw",
+      "ok": true,
+      "reason": "match"
+    }
+  ],
+  "crate_files": 9
+}

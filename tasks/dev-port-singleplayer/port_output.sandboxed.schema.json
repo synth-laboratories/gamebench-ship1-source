@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["porting_notes"],
+  "properties": {
+    "porting_notes": {
+      "type": "string",
+      "description": "The type/lifetime mapping, staging decisions, and the final `python check.py` result. The Rust crate itself is captured from the workspace on disk — do NOT inline it here."
+    }
+  }
+}

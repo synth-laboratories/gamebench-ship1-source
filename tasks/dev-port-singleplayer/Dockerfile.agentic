@@ -1,0 +1,21 @@
+# Agentic dev-port image: codex runs INSIDE this container (docker sandbox backend)
+# with the toolchain a Python→Rust port needs. Native linux/arm64 (OrbStack, no
+# QEMU). codex auth is NOT baked in — it is bind-mounted at run (see the docker
+# spec's `mounts` → CODEX_HOME).
+#
+#   docker build -f Dockerfile.agentic -t jesterky-devport:latest .
+FROM node:20-bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        curl ca-certificates build-essential python3 git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Rust toolchain (for `cargo build/run`) + uv (for the Python gold), on PATH.
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.cargo/bin:/root/.local/bin:${PATH}"
+
+# The codex agent itself (pinned to the host version for auth compatibility).
+RUN npm install -g @openai/codex@0.142.5
+
+WORKDIR /workspace

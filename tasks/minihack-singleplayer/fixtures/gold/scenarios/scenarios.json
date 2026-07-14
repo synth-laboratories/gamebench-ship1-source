@@ -1,0 +1,2118 @@
+{
+  "schema": "gamebench.minihack.gold_scenarios.v1",
+  "scenarios": [
+    {
+      "scenario_id": "corridor_straight_smoke",
+      "seed": 1,
+      "profile": "corridor_straight",
+      "rules": {
+        "base": "navigation",
+        "overrides": {
+          "max_steps": 20
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        }
+      ]
+    },
+    {
+      "scenario_id": "corridor_turn_left_smoke",
+      "seed": 2,
+      "map": [
+        "#######",
+        "#@....#",
+        "#.....#",
+        "#.....#",
+        "#>....#",
+        "#######"
+      ],
+      "rules": {
+        "base": "navigation",
+        "overrides": {
+          "max_steps": 20
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        }
+      ]
+    },
+    {
+      "scenario_id": "corridor_turn_right_smoke",
+      "seed": 3,
+      "map": [
+        "#######",
+        "#....@#",
+        "#.....#",
+        "#.....#",
+        "#>....#",
+        "#######"
+      ],
+      "rules": {
+        "base": "navigation",
+        "overrides": {
+          "max_steps": 20
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        }
+      ]
+    },
+    {
+      "scenario_id": "corridor_profile_turn_left",
+      "seed": 11,
+      "profile": "corridor_turn_left",
+      "rules": {
+        "base": "navigation",
+        "overrides": {
+          "max_steps": 20
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        }
+      ]
+    },
+    {
+      "scenario_id": "navigation_wall_blocked",
+      "seed": 4,
+      "profile": "corridor_straight",
+      "rules": {
+        "base": "navigation",
+        "overrides": {
+          "max_steps": 10
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        }
+      ]
+    },
+    {
+      "scenario_id": "navigation_wait_smoke",
+      "seed": 5,
+      "profile": "corridor_straight",
+      "rules": {
+        "base": "navigation",
+        "overrides": {
+          "max_steps": 20
+        }
+      },
+      "actions": [
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        }
+      ]
+    },
+    {
+      "scenario_id": "corridor_battle_smoke",
+      "seed": 12,
+      "profile": "corridor_battle",
+      "rules": {
+        "base": "navigation",
+        "overrides": {
+          "max_steps": 20
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "attack",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        }
+      ]
+    },
+    {
+      "scenario_id": "corridor_battle_two_monsters",
+      "seed": 13,
+      "profile": "corridor_battle_two",
+      "rules": {
+        "base": "navigation",
+        "overrides": {
+          "max_steps": 25
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "attack",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        }
+      ]
+    },
+    {
+      "scenario_id": "corridor_battle_blocked_attack",
+      "seed": 14,
+      "profile": "corridor_battle",
+      "rules": {
+        "base": "navigation",
+        "overrides": {
+          "max_steps": 10
+        }
+      },
+      "actions": [
+        {
+          "kind": "attack",
+          "direction": "north"
+        }
+      ]
+    },
+    {
+      "scenario_id": "quest_easy_levitation",
+      "seed": 20,
+      "profile": "quest_easy",
+      "rules": {
+        "base": "navigation",
+        "overrides": {
+          "max_steps": 30
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "pickup"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        }
+      ]
+    },
+    {
+      "scenario_id": "quest_medium_freeze_and_fight",
+      "seed": 21,
+      "profile": "quest_medium",
+      "rules": {
+        "base": "navigation",
+        "overrides": {
+          "max_steps": 40
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "pickup"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "attack",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        }
+      ]
+    },
+    {
+      "scenario_id": "quest_easy_missing_pickup",
+      "seed": 22,
+      "profile": "quest_easy",
+      "rules": {
+        "base": "navigation",
+        "overrides": {
+          "max_steps": 10
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "south"
+        }
+      ]
+    },
+    {
+      "scenario_id": "boxoban_single_push",
+      "seed": 6,
+      "map": [
+        "#####",
+        "#.@$*#",
+        "#...#",
+        "#####"
+      ],
+      "rules": {
+        "base": "boxoban",
+        "overrides": {
+          "max_steps": 20,
+          "win_mode": "all_boulders_on_targets"
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "east"
+        }
+      ]
+    },
+    {
+      "scenario_id": "boxoban_push_blocked",
+      "seed": 7,
+      "map": [
+        "######",
+        "#.@$ #",
+        "#  * #",
+        "######"
+      ],
+      "rules": {
+        "base": "boxoban",
+        "overrides": {
+          "max_steps": 10,
+          "win_mode": "all_boulders_on_targets"
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        }
+      ]
+    },
+    {
+      "scenario_id": "boxoban_two_box_complete",
+      "seed": 8,
+      "map": [
+        "#######",
+        "#.@$  *#",
+        "#  $  *#",
+        "#######"
+      ],
+      "rules": {
+        "base": "boxoban",
+        "overrides": {
+          "max_steps": 30,
+          "win_mode": "all_boulders_on_targets"
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        }
+      ]
+    },
+    {
+      "scenario_id": "boxoban_partial_one_on_target",
+      "seed": 9,
+      "map": [
+        "#######",
+        "#.@$  *#",
+        "#  $  *#",
+        "#######"
+      ],
+      "rules": {
+        "base": "boxoban",
+        "overrides": {
+          "max_steps": 5,
+          "win_mode": "all_boulders_on_targets"
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        }
+      ]
+    },
+    {
+      "scenario_id": "boxoban_two_box_seed_alt",
+      "seed": 10,
+      "map": [
+        "######",
+        "# @$*#",
+        "# $ *#",
+        "######"
+      ],
+      "rules": {
+        "base": "boxoban",
+        "overrides": {
+          "max_steps": 25,
+          "win_mode": "all_boulders_on_targets"
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        }
+      ]
+    },
+    {
+      "scenario_id": "boxoban_hard_four_fountains",
+      "seed": 15,
+      "profile": "boxoban_hard",
+      "rules": {
+        "base": "boxoban",
+        "overrides": {
+          "max_steps": 60,
+          "win_mode": "all_boulders_on_targets"
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        }
+      ]
+    },
+    {
+      "scenario_id": "maze_9x9_seed_101",
+      "seed": 101,
+      "profile": "maze_9x9",
+      "rules": {
+        "base": "navigation",
+        "overrides": {
+          "max_steps": 80
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        }
+      ]
+    },
+    {
+      "scenario_id": "maze_9x9_seed_202",
+      "seed": 202,
+      "profile": "maze_9x9",
+      "rules": {
+        "base": "navigation",
+        "overrides": {
+          "max_steps": 80
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        }
+      ]
+    },
+    {
+      "scenario_id": "maze_9x9_seed_303",
+      "seed": 303,
+      "profile": "maze_9x9",
+      "rules": {
+        "base": "navigation",
+        "overrides": {
+          "max_steps": 80
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        }
+      ]
+    },
+    {
+      "scenario_id": "maze_9x9_partial_truncated",
+      "seed": 303,
+      "profile": "maze_9x9",
+      "rules": {
+        "base": "navigation",
+        "overrides": {
+          "max_steps": 5
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        }
+      ]
+    },
+    {
+      "scenario_id": "maze_15x15_seed_401",
+      "seed": 401,
+      "profile": "maze_15x15",
+      "rules": {
+        "base": "navigation",
+        "overrides": {
+          "max_steps": 120
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        }
+      ]
+    },
+    {
+      "scenario_id": "maze_15x15_seed_502",
+      "seed": 502,
+      "profile": "maze_15x15",
+      "rules": {
+        "base": "navigation",
+        "overrides": {
+          "max_steps": 120
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        }
+      ]
+    },
+    {
+      "scenario_id": "maze_15x15_seed_603",
+      "seed": 603,
+      "profile": "maze_15x15",
+      "rules": {
+        "base": "navigation",
+        "overrides": {
+          "max_steps": 120
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "west"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        }
+      ]
+    },
+    {
+      "scenario_id": "maze_15x15_partial_truncated",
+      "seed": 502,
+      "profile": "maze_15x15",
+      "rules": {
+        "base": "navigation",
+        "overrides": {
+          "max_steps": 8
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "south"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "north"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        }
+      ]
+    },
+    {
+      "scenario_id": "diagonal_move_smoke",
+      "seed": 30,
+      "map": [
+        "#####",
+        "#@ .#",
+        "# .>#",
+        "#####"
+      ],
+      "rules": {
+        "base": "navigation",
+        "overrides": {
+          "max_steps": 10
+        }
+      },
+      "actions": [
+        {
+          "kind": "move",
+          "direction": "southeast"
+        },
+        {
+          "kind": "move",
+          "direction": "east"
+        }
+      ]
+    }
+  ]
+}
