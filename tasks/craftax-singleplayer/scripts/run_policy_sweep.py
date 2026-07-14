@@ -31,7 +31,9 @@ for path in (TASK_DIR, TASK_DIR / "gold_python", TASK_DIR / "shared"):
 
 from containers.codepolicy.rollout_code_policy import compile_check_policy, load_policy_module, rollout_code_policy
 from containers.codepolicy.policy_subprocess import (
+    CandidatePolicyFailure,
     IsolatedPolicyProcess,
+    POLICY_PROCESS_CANDIDATE_FAILURE_EXIT_CODE,
     cleanup_isolated_policy_containers,
 )
 from containers.codepolicy.rust_repl_session import RustReplSession, ensure_rust_repl_binary
@@ -44,6 +46,10 @@ _ACTIVE_EPISODE_PROCESSES: dict[int, subprocess.Popen[str]] = {}
 _ACTIVE_EPISODE_GROUPS_LOCK = threading.Lock()
 MAX_RUST_REPL_ACTION_BATCH = 16
 MAX_SUPERVISED_RUST_PARALLEL = 8
+EXIT_CANDIDATE_POLICY_FAILURE = POLICY_PROCESS_CANDIDATE_FAILURE_EXIT_CODE
+EXIT_CANDIDATE_EPISODE_TIMEOUT = 41
+EXIT_EPISODE_WORKER_FAILURE = 42
+EXIT_EVALUATOR_INFRASTRUCTURE_FAILURE = 43
 RUST_REPL_VALID_ACTIONS = [
     "noop",
     "left",
@@ -88,6 +94,14 @@ RUST_REPL_VALID_ACTIONS = [
     "level_up_intelligence",
     "enchant_bow",
 ]
+
+
+class CandidateEpisodeTimeout(TimeoutError):
+    """Trusted per-episode deadline exceeded without candidate diagnostics."""
+
+
+class EpisodeWorkerFailure(RuntimeError):
+    """Trusted episode worker failed outside the candidate policy boundary."""
 
 
 def policy_sha256(path: Path) -> str:
@@ -290,25 +304,23 @@ def _run_supervised_rust_episode(
     }
     try:
         try:
-            stdout, stderr = process.communicate(
+            stdout, _stderr = process.communicate(
                 json.dumps(request, separators=(",", ":")),
                 timeout=timeout_seconds,
             )
         except subprocess.TimeoutExpired as exc:
             _terminate_episode_process(process)
-            raise TimeoutError(
-                f"Craftax Rust episode exceeded {timeout_seconds:.3f}s"
-            ) from exc
+            raise CandidateEpisodeTimeout() from exc
         if process.returncode != 0:
-            # The worker stderr transitively includes candidate-controlled
-            # diagnostics. Never copy it into benchmark exceptions because
-            # callers persist those failures in typed grading status.
-            raise RuntimeError(
-                f"craftax_rust_episode_worker_failed:{process.returncode}"
-            )
-        result = json.loads(stdout)
+            if process.returncode == POLICY_PROCESS_CANDIDATE_FAILURE_EXIT_CODE:
+                raise CandidatePolicyFailure()
+            raise EpisodeWorkerFailure()
+        try:
+            result = json.loads(stdout)
+        except json.JSONDecodeError:
+            raise EpisodeWorkerFailure() from None
         if not isinstance(result, dict):
-            raise RuntimeError("Craftax Rust episode worker returned a non-object")
+            raise EpisodeWorkerFailure()
         result["benchmark_supervision"] = {
             "contract": "process_group_episode_timeout.v1",
             "timeout_seconds": float(timeout_seconds),
@@ -372,6 +384,8 @@ def _run_internal_rust_episode_worker() -> int:
         sys.stdout.write(json.dumps(result, separators=(",", ":")) + "\n")
         sys.stdout.flush()
         return 0
+    except CandidatePolicyFailure:
+        return POLICY_PROCESS_CANDIDATE_FAILURE_EXIT_CODE
     finally:
         _close_worker_resources()
 
@@ -855,6 +869,31 @@ def distribution_stats(values: list[float]) -> dict[str, Any]:
     }
 
 
+def _write_failure_receipt(
+    output_path: Path,
+    *,
+    status: str,
+    code: str,
+    origin: str,
+    candidate_attributable: bool,
+    retryable: bool,
+    exit_code: int,
+) -> None:
+    receipt = {
+        "schema": "gamebench.craftax.policy_sweep_failure.v1",
+        "status": status,
+        "exit_code": exit_code,
+        "failure": {
+            "code": code,
+            "origin": origin,
+            "candidate_attributable": candidate_attributable,
+            "retryable": retryable,
+        },
+    }
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n")
+
+
 def main() -> int:
     if sys.argv[1:] == ["--rust-episode-worker"]:
         return _run_internal_rust_episode_worker()
@@ -884,18 +923,7 @@ def main() -> int:
     )
     parser.add_argument("--summary-only", action="store_true", help="Omit per-episode traces from output JSON")
     args = parser.parse_args()
-    if args.suite_stdin:
-        suite_payload = json.load(sys.stdin)
-        suite_path = None
-    else:
-        suite_payload = None
-        suite_path = Path(args.suite).expanduser().resolve()
-    if (
-        args.suite_stdin
-        and args.lane == "rust"
-        and args.episode_timeout_seconds is None
-    ):
-        parser.error("sealed Rust suites require --episode-timeout-seconds")
+    output_path = Path(args.output).expanduser().resolve()
 
     def terminate_children(signum: int, _frame: Any) -> None:
         _terminate_active_episode_processes()
@@ -905,18 +933,75 @@ def main() -> int:
         signal.signal(signal.SIGTERM, terminate_children)
         signal.signal(signal.SIGINT, terminate_children)
     atexit.register(_terminate_active_episode_processes)
-    report = run_policy_sweep(
-        policy_path=Path(args.policy).expanduser().resolve(),
-        suite_path=suite_path,
-        suite_payload=suite_payload,
-        output_path=Path(args.output).expanduser().resolve(),
-        include_trace=bool(args.include_trace),
-        lane=str(args.lane),
-        base_url=str(args.base_url),
-        parallel=int(args.parallel),
-        summary_only=bool(args.summary_only),
-        episode_timeout_seconds=args.episode_timeout_seconds,
-    )
+    try:
+        if args.suite_stdin:
+            suite_payload = json.load(sys.stdin)
+            suite_path = None
+        else:
+            suite_payload = None
+            suite_path = Path(args.suite).expanduser().resolve()
+        if (
+            args.suite_stdin
+            and args.lane == "rust"
+            and args.episode_timeout_seconds is None
+        ):
+            raise ValueError("sealed Rust suites require an episode deadline")
+        report = run_policy_sweep(
+            policy_path=Path(args.policy).expanduser().resolve(),
+            suite_path=suite_path,
+            suite_payload=suite_payload,
+            output_path=output_path,
+            include_trace=bool(args.include_trace),
+            lane=str(args.lane),
+            base_url=str(args.base_url),
+            parallel=int(args.parallel),
+            summary_only=bool(args.summary_only),
+            episode_timeout_seconds=args.episode_timeout_seconds,
+        )
+    except CandidatePolicyFailure:
+        _write_failure_receipt(
+            output_path,
+            status="failed",
+            code="candidate_policy_failure",
+            origin="candidate",
+            candidate_attributable=True,
+            retryable=False,
+            exit_code=EXIT_CANDIDATE_POLICY_FAILURE,
+        )
+        return EXIT_CANDIDATE_POLICY_FAILURE
+    except CandidateEpisodeTimeout:
+        _write_failure_receipt(
+            output_path,
+            status="timeout",
+            code="candidate_episode_timeout",
+            origin="trusted_supervisor",
+            candidate_attributable=True,
+            retryable=False,
+            exit_code=EXIT_CANDIDATE_EPISODE_TIMEOUT,
+        )
+        return EXIT_CANDIDATE_EPISODE_TIMEOUT
+    except EpisodeWorkerFailure:
+        _write_failure_receipt(
+            output_path,
+            status="error",
+            code="episode_worker_failure",
+            origin="trusted_episode_worker",
+            candidate_attributable=False,
+            retryable=True,
+            exit_code=EXIT_EPISODE_WORKER_FAILURE,
+        )
+        return EXIT_EPISODE_WORKER_FAILURE
+    except Exception:
+        _write_failure_receipt(
+            output_path,
+            status="error",
+            code="evaluator_infrastructure_failure",
+            origin="trusted_evaluator",
+            candidate_attributable=False,
+            retryable=True,
+            exit_code=EXIT_EVALUATOR_INFRASTRUCTURE_FAILURE,
+        )
+        return EXIT_EVALUATOR_INFRASTRUCTURE_FAILURE
     printable = {
         key: report[key]
         for key in (

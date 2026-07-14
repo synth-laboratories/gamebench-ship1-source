@@ -30,6 +30,15 @@ _DARWIN_POLICY_PLATFORM = "linux/amd64"
 _POLICY_LABEL = "synth.factorybench.policy"
 _RUNNER_PID_LABEL = "synth.factorybench.runner_pid"
 _WORKER_PID_LABEL = "synth.factorybench.worker_pid"
+POLICY_PROCESS_CANDIDATE_FAILURE_EXIT_CODE = 40
+_CANDIDATE_FAILURE_CODE = "candidate_policy_failure"
+
+
+class CandidatePolicyFailure(RuntimeError):
+    """Stable trusted classification for candidate-owned policy failures."""
+
+    def __init__(self, _code: str = _CANDIDATE_FAILURE_CODE) -> None:
+        super().__init__(_CANDIDATE_FAILURE_CODE)
 
 
 def _candidate_environment(*, home: str, path: str) -> dict[str, str]:
@@ -338,7 +347,26 @@ def _load_policy(policy_path: Path) -> Any:
 def _serve(policy_path: Path) -> int:
     _apply_candidate_resource_limits()
     protocol_out = sys.stdout
-    candidate = _load_policy(policy_path)
+    try:
+        candidate = _load_policy(policy_path)
+    except BaseException:
+        protocol_out.write(
+            json.dumps(
+                {
+                    "op": "ready",
+                    "ok": False,
+                    "error_code": _CANDIDATE_FAILURE_CODE,
+                },
+                separators=(",", ":"),
+            )
+            + "\n"
+        )
+        protocol_out.flush()
+        return POLICY_PROCESS_CANDIDATE_FAILURE_EXIT_CODE
+    protocol_out.write(
+        json.dumps({"op": "ready", "ok": True}, separators=(",", ":")) + "\n"
+    )
+    protocol_out.flush()
     for line in sys.stdin:
         if len(line) > _MAX_IPC_LINE_CHARS:
             raise ValueError("isolated policy request exceeds IPC limit")
@@ -350,34 +378,49 @@ def _serve(policy_path: Path) -> int:
             return 0
         if request.get("op") != "choose_actions":
             raise ValueError("unsupported isolated policy operation")
-        with open(os.devnull, "w", encoding="utf-8") as candidate_output:
-            with contextlib.redirect_stdout(
-                candidate_output
-            ), contextlib.redirect_stderr(candidate_output):
-                decision = candidate(
-                    observation_text=str(request.get("observation_text") or ""),
-                    session=dict(request.get("session") or {}),
-                    valid_actions=list(request.get("valid_actions") or []),
-                    engine=None,
-                    seed=None,
-                    ply=int(request.get("ply") or 0),
-                    readout=dict(request.get("readout") or {}),
+        try:
+            with open(os.devnull, "w", encoding="utf-8") as candidate_output:
+                with contextlib.redirect_stdout(
+                    candidate_output
+                ), contextlib.redirect_stderr(candidate_output):
+                    decision = candidate(
+                        observation_text=str(request.get("observation_text") or ""),
+                        session=dict(request.get("session") or {}),
+                        valid_actions=list(request.get("valid_actions") or []),
+                        engine=None,
+                        seed=None,
+                        ply=int(request.get("ply") or 0),
+                        readout=dict(request.get("readout") or {}),
+                    )
+            if not isinstance(decision, dict) or not isinstance(
+                decision.get("actions"), list
+            ):
+                raise ValueError("candidate policy response is invalid")
+            response = {
+                "id": request_id,
+                "ok": True,
+                "decision": {
+                    "actions": [str(action) for action in decision["actions"]],
+                    "policy_reason": str(decision.get("policy_reason") or ""),
+                },
+            }
+            encoded = json.dumps(response, separators=(",", ":"))
+            if len(encoded) > _MAX_IPC_LINE_CHARS:
+                raise ValueError("candidate policy response exceeds IPC limit")
+        except BaseException:
+            protocol_out.write(
+                json.dumps(
+                    {
+                        "id": request_id,
+                        "ok": False,
+                        "error_code": _CANDIDATE_FAILURE_CODE,
+                    },
+                    separators=(",", ":"),
                 )
-        if not isinstance(decision, dict) or not isinstance(
-            decision.get("actions"), list
-        ):
-            raise ValueError("choose_actions must return {'actions': [...]}")
-        response = {
-            "id": request_id,
-            "ok": True,
-            "decision": {
-                "actions": [str(action) for action in decision["actions"]],
-                "policy_reason": str(decision.get("policy_reason") or ""),
-            },
-        }
-        encoded = json.dumps(response, separators=(",", ":"))
-        if len(encoded) > _MAX_IPC_LINE_CHARS:
-            raise ValueError("isolated policy response exceeds IPC limit")
+                + "\n"
+            )
+            protocol_out.flush()
+            return POLICY_PROCESS_CANDIDATE_FAILURE_EXIT_CODE
         protocol_out.write(encoded + "\n")
         protocol_out.flush()
     return 0
@@ -389,7 +432,7 @@ class IsolatedPolicyProcess:
     def __init__(self, policy_path: Path) -> None:
         source_path = policy_path.expanduser().resolve()
         if not source_path.is_file():
-            raise ValueError(f"policy file not found: {source_path}")
+            raise CandidatePolicyFailure()
         sandbox_parent: str | None = None
         if sys.platform == "darwin":
             sandbox_parent_path = next(
@@ -457,6 +500,34 @@ class IsolatedPolicyProcess:
             daemon=True,
         )
         self._stderr_thread.start()
+        try:
+            ready_line = self._stdout.readline(_MAX_IPC_LINE_CHARS + 1)
+            if not ready_line:
+                self._stderr_thread.join(timeout=0.25)
+                returncode = self._proc.poll()
+                if returncode == POLICY_PROCESS_CANDIDATE_FAILURE_EXIT_CODE:
+                    raise CandidatePolicyFailure()
+                raise RuntimeError("isolated_policy_startup_failed")
+            if len(ready_line) > _MAX_IPC_LINE_CHARS or not ready_line.endswith("\n"):
+                raise CandidatePolicyFailure()
+            try:
+                ready = json.loads(ready_line)
+            except json.JSONDecodeError:
+                raise CandidatePolicyFailure() from None
+            if (
+                not isinstance(ready, dict)
+                or ready.get("op") != "ready"
+                or ready.get("ok") not in {True, False}
+            ):
+                raise CandidatePolicyFailure()
+            if ready.get("ok") is not True:
+                raise CandidatePolicyFailure()
+        except BaseException:
+            try:
+                self._terminate()
+            finally:
+                self._sandbox.cleanup()
+            raise
         self.isolation_receipt = {
             "contract": "os_sandbox_observation_action.v2",
             "platform": sys.platform,
@@ -514,38 +585,48 @@ class IsolatedPolicyProcess:
         }
         with self._lock:
             if self._proc.poll() is not None:
-                raise RuntimeError("isolated_policy_process_exited")
+                raise CandidatePolicyFailure()
             self._request_id += 1
             request_id = self._request_id
             request["id"] = request_id
             encoded_request = json.dumps(request, separators=(",", ":"))
             if len(encoded_request) > _MAX_IPC_LINE_CHARS:
                 raise ValueError("isolated policy request exceeds IPC limit")
-            self._stdin.write(encoded_request + "\n")
-            self._stdin.flush()
+            try:
+                self._stdin.write(encoded_request + "\n")
+                self._stdin.flush()
+            except (BrokenPipeError, OSError):
+                raise CandidatePolicyFailure() from None
             try:
                 response_line = self._stdout.readline(_MAX_IPC_LINE_CHARS + 1)
             except UnicodeError:
                 self._terminate()
-                raise RuntimeError("isolated_policy_protocol_invalid") from None
+                raise CandidatePolicyFailure() from None
         if not response_line:
             self._stderr_thread.join(timeout=0.25)
-            raise RuntimeError("isolated_policy_no_response")
+            raise CandidatePolicyFailure()
         if len(response_line) > _MAX_IPC_LINE_CHARS or not response_line.endswith("\n"):
             self._terminate()
-            raise RuntimeError("isolated policy process exceeded IPC response limit")
+            raise CandidatePolicyFailure()
         try:
             response = json.loads(response_line)
         except json.JSONDecodeError:
             self._terminate()
-            raise RuntimeError("isolated_policy_protocol_invalid") from None
+            raise CandidatePolicyFailure() from None
+        if (
+            isinstance(response, dict)
+            and response.get("id") == request_id
+            and response.get("ok") is False
+            and response.get("error_code") == _CANDIDATE_FAILURE_CODE
+        ):
+            raise CandidatePolicyFailure()
         if (
             not isinstance(response, dict)
             or response.get("id") != request_id
             or response.get("ok") is not True
             or not isinstance(response.get("decision"), dict)
         ):
-            raise RuntimeError("isolated_policy_protocol_invalid")
+            raise CandidatePolicyFailure()
         return dict(response["decision"])
 
     def _terminate(self) -> None:
