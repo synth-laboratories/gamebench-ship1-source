@@ -249,20 +249,14 @@ def _terminate_episode_process(process: subprocess.Popen[str]) -> None:
     if process.poll() is not None:
         return
     try:
-        if os.name == "posix":
-            os.killpg(process.pid, signal.SIGTERM)
-        else:
-            process.terminate()
+        process.terminate()
         process.wait(timeout=2)
     except (ProcessLookupError, subprocess.TimeoutExpired):
         if process.poll() is None:
-            if os.name == "posix":
-                try:
-                    os.killpg(process.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
-            else:
+            try:
                 process.kill()
+            except ProcessLookupError:
+                pass
             process.wait(timeout=2)
 
 
@@ -288,7 +282,12 @@ def _run_supervised_rust_episode(
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
-        start_new_session=os.name == "posix",
+        # The scorer job worker is the process-group authority.  Episode workers
+        # stay in that group so the service-level cleanup fence reaches them even
+        # if the job worker is killed before its Python signal handler runs.  The
+        # nested bwrap process retains --die-with-parent and its private PID
+        # namespace, so terminating this worker also terminates candidate work.
+        start_new_session=False,
         close_fds=True,
         env=episode_env,
         cwd=TASK_DIR,
@@ -560,6 +559,7 @@ def run_policy_sweep(
         "episode_summaries": [
             {
                 "seed": int(item["reward_info"]["details"].get("seed", seeds[index])),
+                "rollout_id": str(item.get("rollout_id") or ""),
                 "reward": round(float(item["reward_info"]["outcome_reward"]), 4),
                 "achievement_count": int(item["reward_info"]["details"].get("achievement_count", 0)),
                 "achievements": sorted(item["reward_info"]["details"].get("achievements", [])),

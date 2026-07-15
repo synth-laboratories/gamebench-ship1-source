@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 
-_POLICY_ENV_ALLOWLIST = frozenset({"LANG", "LC_ALL", "SYSTEMROOT"})
+_POLICY_ENV_ALLOWLIST: frozenset[str] = frozenset()
 _MAX_IPC_LINE_CHARS = 2 * 1024 * 1024
 _LINUX_SANDBOX_UID = 65534
 _LINUX_SANDBOX_GID = 65534
