@@ -46,7 +46,7 @@ jobs:
           platforms: linux/arm64
           build-args: |
             SCORER_BASE_IMAGE=python@sha256:baf89808ec37adeaab83cec287adb4a2afa4a11c1d51e961c7ec737877e61af6
-          tags: ghcr.io/${{ github.repository_owner }}/gamebench-craftax-scorer:${{ github.sha }}
+          tags: ghcr.io/joshuapurtell/gamebench-craftax-scorer:${{ github.sha }}
           push: true
 
       - name: Record immutable image authority
@@ -55,4 +55,4 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$IMAGE_DIGEST"
-          echo "image=ghcr.io/${GITHUB_REPOSITORY_OWNER}/gamebench-craftax-scorer@${IMAGE_DIGEST}" >> "$GITHUB_STEP_SUMMARY"
+          echo "image=ghcr.io/joshuapurtell/gamebench-craftax-scorer@${IMAGE_DIGEST}" >> "$GITHUB_STEP_SUMMARY"
