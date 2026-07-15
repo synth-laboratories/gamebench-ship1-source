@@ -180,7 +180,9 @@ def start(args: argparse.Namespace) -> dict[str, Any]:
                     "container_name": CONTAINER_NAME,
                     "deployment_id": args.deployment_id,
                     "claim_id": args.claim_id,
-                    "fencing_token": args.fencing_token,
+                    "fencing_token_sha256": hashlib.sha256(
+                        str(args.fencing_token).encode()
+                    ).hexdigest(),
                     "scorer_source_sha": args.scorer_source_sha,
                     "scorer_image_digest": f"sha256:{args.image_digest}",
                 }
