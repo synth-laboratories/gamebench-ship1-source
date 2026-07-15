@@ -7,6 +7,7 @@ import json
 import math
 import os
 import platform
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -76,6 +77,10 @@ class ScoringProfile(StrictModel):
         return self
 
     def matches(self, request: CandidateScoreRequest) -> bool:
+        policy_identity = re.fullmatch(
+            r"git:([0-9a-f]{40}):([^:]+):sha256:([0-9a-f]{64})",
+            request.policy_identity,
+        )
         return (
             self.execution_contract_version == request.execution_contract_version
             and self.entrypoint == request.entrypoint
@@ -84,7 +89,10 @@ class ScoringProfile(StrictModel):
             and self.seeds == request.seeds
             and self.max_steps == request.max_steps
             and self.lane == request.lane
-            and self.policy_identity == request.policy_identity
+            and self.policy_identity == "git_source_sha256_v1"
+            and policy_identity is not None
+            and policy_identity.group(2) == request.entrypoint
+            and policy_identity.group(3) == request.candidate_sha256
         )
 
 
