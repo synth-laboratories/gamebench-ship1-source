@@ -46,6 +46,7 @@ jobs:
           platforms: linux/amd64
           build-args: |
             SCORER_BASE_IMAGE=python@sha256:28255a3ace7eb4c48bc1b57b90af29e1bc82b4fd6c60614a8e3dce61b87ff941
+            SCORER_BUILDER_IMAGE=rust@sha256:b07b1bc9cb80ea8f48f304fe469feb759f54cfd30c6ec545a1b0ec3af822daf0
           tags: ghcr.io/joshuapurtell/gamebench-craftax-scorer:${{ github.sha }}
           push: true
 
