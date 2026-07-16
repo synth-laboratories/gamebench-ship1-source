@@ -115,7 +115,7 @@ class ScorerAuthority(StrictModel):
     request_bearer_token_sha256: str
     backend_claim_read_timeout_seconds: float
     expected_platform_system: Literal["Linux"]
-    expected_platform_machine: Literal["aarch64"]
+    expected_platform_machine: Literal["x86_64"]
     state_directory: str
     workspace_directory: str
     max_candidate_bytes: int

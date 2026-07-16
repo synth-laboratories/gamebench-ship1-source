@@ -86,8 +86,8 @@ def _loaded_image_identity(args: argparse.Namespace) -> tuple[str, str]:
     }
     if image_ref not in exact_refs:
         raise RuntimeError("local Craftax scorer image reference is not bound to inspected image")
-    if image.get("Os") != "linux" or image.get("Architecture") != "arm64":
-        raise RuntimeError("local Craftax scorer image platform must be linux/arm64")
+    if image.get("Os") != "linux" or image.get("Architecture") != "amd64":
+        raise RuntimeError("local Craftax scorer image platform must be linux/amd64")
     return image_ref, expected_manifest_digest
 
 
@@ -203,7 +203,7 @@ def start(args: argparse.Namespace) -> dict[str, Any]:
         "request_bearer_token_sha256": hashlib.sha256(token.encode("utf-8")).hexdigest(),
         "backend_claim_read_timeout_seconds": 10.0,
         "expected_platform_system": "Linux",
-        "expected_platform_machine": "aarch64",
+        "expected_platform_machine": "x86_64",
         "state_directory": "/var/lib/gamebench/scorer-state",
         "workspace_directory": "/var/lib/gamebench/scorer-workspaces",
         "max_candidate_bytes": 65_536,
