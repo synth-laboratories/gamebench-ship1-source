@@ -712,7 +712,12 @@ class RustReplSession:
                     pass
 
     def reset(
-        self, *, task: dict[str, Any], seed: int, readout_mode: str = "full"
+        self,
+        *,
+        task: dict[str, Any],
+        seed: int,
+        readout_mode: str = "full",
+        replay: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         response = self._request(
             {
@@ -720,11 +725,20 @@ class RustReplSession:
                 "task": task,
                 "seed": seed,
                 "readout_mode": self._readout_mode(readout_mode),
+                "replay": replay,
             }
         )
         if not response.get("ok"):
             raise RuntimeError(
                 f"craftax_repl reset failed: {response.get('error', response)}"
+            )
+        return response
+
+    def save_replay(self, path: Path) -> dict[str, Any]:
+        response = self._request({"op": "save_replay", "path": str(path)})
+        if not response.get("ok"):
+            raise RuntimeError(
+                f"craftax_repl save_replay failed: {response.get('error', response)}"
             )
         return response
 

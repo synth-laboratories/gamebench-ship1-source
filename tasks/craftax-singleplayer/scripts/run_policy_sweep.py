@@ -126,8 +126,8 @@ def failure_modes_for_result(result: dict[str, Any]) -> list[str]:
     return modes or ["progress"]
 
 
-def _python_rollout_job(payload: tuple[str, int, str, int, bool]) -> dict[str, Any]:
-    policy_path_s, seed, task_path, max_steps, include_trace = payload
+def _python_rollout_job(payload: tuple[str, int, str, int, bool, str | None]) -> dict[str, Any]:
+    policy_path_s, seed, task_path, max_steps, include_trace, _replay_path = payload
     policy_path = Path(policy_path_s)
     candidate_fn = load_policy_module(policy_path)
     return rollout_code_policy(
@@ -147,11 +147,11 @@ def _init_rust_worker() -> None:
     _WORKER_RUST_REPL = RustReplSession()
 
 
-def _rust_rollout_job(payload: tuple[str, int, str, int, bool]) -> dict[str, Any]:
+def _rust_rollout_job(payload: tuple[str, int, str, int, bool, str | None]) -> dict[str, Any]:
     global _WORKER_RUST_REPL
     if _WORKER_RUST_REPL is None:
         _init_rust_worker()
-    policy_path_s, seed, task_path, max_steps, include_trace = payload
+    policy_path_s, seed, task_path, max_steps, include_trace, replay_path = payload
     policy_path = Path(policy_path_s)
     candidate_fn = _load_worker_policy(policy_path_s, policy_path, isolated=True)
     result = rollout_code_policy_rust_repl(
@@ -162,6 +162,7 @@ def _rust_rollout_job(payload: tuple[str, int, str, int, bool]) -> dict[str, Any
         include_trace=include_trace,
         candidate_fn=candidate_fn,
         repl=_WORKER_RUST_REPL,
+        replay_path=Path(replay_path) if replay_path else None,
     )
     result["benchmark_isolation"] = dict(candidate_fn.isolation_receipt)
     return result
@@ -183,10 +184,10 @@ def _load_worker_policy(
 
 
 def _python_rollout_batch_job(
-    payloads: list[tuple[str, int, str, int, bool]],
+    payloads: list[tuple[str, int, str, int, bool, str | None]],
 ) -> list[tuple[int, dict[str, Any]]]:
     results: list[tuple[int, dict[str, Any]]] = []
-    for policy_path_s, seed, task_path, max_steps, include_trace in payloads:
+    for policy_path_s, seed, task_path, max_steps, include_trace, _replay_path in payloads:
         policy_path = Path(policy_path_s)
         candidate_fn = _load_worker_policy(policy_path_s, policy_path)
         results.append(
@@ -207,13 +208,13 @@ def _python_rollout_batch_job(
 
 
 def _rust_rollout_batch_job(
-    payloads: list[tuple[str, int, str, int, bool]],
+    payloads: list[tuple[str, int, str, int, bool, str | None]],
 ) -> list[tuple[int, dict[str, Any]]]:
     global _WORKER_RUST_REPL
     if _WORKER_RUST_REPL is None:
         _init_rust_worker()
     results: list[tuple[int, dict[str, Any]]] = []
-    for policy_path_s, seed, task_path, max_steps, include_trace in payloads:
+    for policy_path_s, seed, task_path, max_steps, include_trace, replay_path in payloads:
         policy_path = Path(policy_path_s)
         candidate_fn = _load_worker_policy(policy_path_s, policy_path, isolated=True)
         results.append(
@@ -227,6 +228,7 @@ def _rust_rollout_batch_job(
                     include_trace=include_trace,
                     candidate_fn=candidate_fn,
                     repl=_WORKER_RUST_REPL,
+                    replay_path=Path(replay_path) if replay_path else None,
                 ),
             )
         )
@@ -268,11 +270,11 @@ def _terminate_active_episode_processes() -> None:
 
 
 def _run_supervised_rust_episode(
-    payload: tuple[str, int, str, int, bool],
+    payload: tuple[str, int, str, int, bool, str | None],
     *,
     timeout_seconds: float,
 ) -> tuple[int, dict[str, Any]]:
-    policy_path_s, seed, task_path, max_steps, include_trace = payload
+    policy_path_s, seed, task_path, max_steps, include_trace, replay_path = payload
     started = time.monotonic()
     episode_env = os.environ.copy()
     episode_env["FACTORYBENCH_POLICY_RUNNER_PID"] = str(os.getpid())
@@ -300,6 +302,7 @@ def _run_supervised_rust_episode(
         "task_path": task_path,
         "max_steps": max_steps,
         "include_trace": include_trace,
+        "replay_path": replay_path,
     }
     try:
         try:
@@ -338,7 +341,7 @@ def _run_supervised_rust_episode(
 
 
 def _run_supervised_rust_episodes(
-    payloads: list[tuple[str, int, str, int, bool]],
+    payloads: list[tuple[str, int, str, int, bool, str | None]],
     *,
     parallel: int,
     timeout_seconds: float,
@@ -377,6 +380,7 @@ def _run_internal_rust_episode_worker() -> int:
         str(request.get("task_path") or ""),
         int(request["max_steps"]),
         bool(request.get("include_trace")),
+        str(request["replay_path"]) if request.get("replay_path") else None,
     )
     try:
         result = _rust_rollout_job(payload)
@@ -403,6 +407,7 @@ def run_policy_sweep(
     progress: Callable[[int, int, int, float], None] | None = None,
     max_steps_override: int | None = None,
     episode_timeout_seconds: float | None = None,
+    replay_dir: Path | None = None,
 ) -> dict[str, Any]:
     started = time.time()
     if (suite_path is None) == (suite_payload is None):
@@ -433,21 +438,32 @@ def run_policy_sweep(
 
     if lane == "python":
         job_payloads = [
-            (str(policy_path), seed, task_path, max_steps, include_trace) for seed in seeds
+            (str(policy_path), seed, task_path, max_steps, include_trace, None) for seed in seeds
         ]
 
         def rollout_fn(seed: int) -> dict[str, Any]:
-            payload = (str(policy_path), seed, task_path, max_steps, include_trace)
+            payload = (str(policy_path), seed, task_path, max_steps, include_trace, None)
             return _python_rollout_job(payload)
 
     elif lane == "rust":
         ensure_rust_repl_binary()
         job_payloads = [
-            (str(policy_path), seed, task_path, max_steps, include_trace) for seed in seeds
+            (
+                str(policy_path),
+                seed,
+                task_path,
+                max_steps,
+                include_trace,
+                str(replay_dir / f"seed-{seed}.gif") if replay_dir is not None else None,
+            )
+            for seed in seeds
         ]
 
         def rollout_fn(seed: int) -> dict[str, Any]:
-            payload = (str(policy_path), seed, task_path, max_steps, include_trace)
+            payload = (
+                str(policy_path), seed, task_path, max_steps, include_trace,
+                str(replay_dir / f"seed-{seed}.gif") if replay_dir is not None else None,
+            )
             return _rust_rollout_job(payload)
 
     elif lane == "rust_http":
@@ -465,6 +481,10 @@ def run_policy_sweep(
 
     workers = max(1, int(parallel))
     supervised_rust = lane == "rust" and episode_timeout_seconds is not None
+    if replay_dir is not None:
+        if lane != "rust":
+            raise ValueError("replay capture requires the rust lane")
+        replay_dir.mkdir(parents=True, exist_ok=True)
     if supervised_rust:
         results = _run_supervised_rust_episodes(
             job_payloads,
@@ -565,6 +585,7 @@ def run_policy_sweep(
                 "achievements": sorted(item["reward_info"]["details"].get("achievements", [])),
                 "supervision": item.get("benchmark_supervision"),
                 "policy_isolation": item.get("benchmark_isolation"),
+                "replay": item.get("replay"),
             }
             for index, item in enumerate(results)
         ],
@@ -590,10 +611,18 @@ def rollout_code_policy_rust_repl(
     include_trace: bool,
     candidate_fn: Any,
     repl: RustReplSession,
+    replay_path: Path | None = None,
 ) -> dict[str, Any]:
     task = _load_task(task_path, seed=seed)
     step_readout_mode = "full" if include_trace else "policy"
-    latest = repl.reset(task=task, seed=seed, readout_mode=step_readout_mode)
+    latest = repl.reset(
+        task=task,
+        seed=seed,
+        readout_mode=step_readout_mode,
+        replay={"enabled": True, "stride": 100, "max_frames": 160, "delay_cs": 8}
+        if replay_path is not None
+        else None,
+    )
     readout = latest["readout"]
     turns: list[dict[str, Any]] = []
     session: dict[str, Any] = {"rollout_id": f"rust-repl-{seed}", "ply": 0, "lane": "rust"}
@@ -640,6 +669,7 @@ def rollout_code_policy_rust_repl(
     private = final_readout["private"]
     achievements = sorted(private.get("achievements", []))
     outcome = "success" if achievements else "truncated" if latest.get("truncated", False) or ply >= max_steps else "failure"
+    replay = repl.save_replay(replay_path) if replay_path is not None else None
     return {
         "trace_correlation_id": f"craftax-codepolicy-rust-repl-{seed}",
         "rollout_id": session["rollout_id"],
@@ -663,6 +693,7 @@ def rollout_code_policy_rust_repl(
         },
         "state": {"public": final_readout["public"], "private": private},
         "artifact": [{"artifact_type": "turns", "turns": turns}],
+        "replay": replay,
     }
 
 
@@ -922,6 +953,7 @@ def main() -> int:
         help="Supervise each Rust episode in its own process group with this deadline",
     )
     parser.add_argument("--summary-only", action="store_true", help="Omit per-episode traces from output JSON")
+    parser.add_argument("--replay-dir", help="Write sparse deterministic Rust rollout GIFs here")
     args = parser.parse_args()
     output_path = Path(args.output).expanduser().resolve()
 
@@ -957,6 +989,7 @@ def main() -> int:
             parallel=int(args.parallel),
             summary_only=bool(args.summary_only),
             episode_timeout_seconds=args.episode_timeout_seconds,
+            replay_dir=Path(args.replay_dir).expanduser().resolve() if args.replay_dir else None,
         )
     except CandidatePolicyFailure:
         _write_failure_receipt(
