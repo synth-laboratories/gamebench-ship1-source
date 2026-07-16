@@ -111,21 +111,44 @@ def _write_private_json(path: Path, payload: dict[str, Any]) -> None:
     os.replace(temporary, path)
 
 
+def _identity_labels(args: argparse.Namespace) -> dict[str, str]:
+    return {
+        "ai.synth.cloud-deployment-id": args.deployment_id,
+        "ai.synth.cloud-claim-id": args.claim_id,
+        "ai.synth.cloud-fencing-token-sha256": hashlib.sha256(
+            str(args.fencing_token).encode()
+        ).hexdigest(),
+        "ai.synth.scorer-image-digest": args.image_manifest_digest,
+        "ai.synth.scorer-image-config-digest": args.image_config_digest,
+        "ai.synth.scorer-local-image-ref": args.local_image_ref,
+    }
+
+
 def _labels(args: argparse.Namespace) -> list[str]:
     return [
-        "--label",
-        f"ai.synth.cloud-deployment-id={args.deployment_id}",
-        "--label",
-        f"ai.synth.cloud-claim-id={args.claim_id}",
-        "--label",
-        f"ai.synth.cloud-fencing-token-sha256={hashlib.sha256(str(args.fencing_token).encode()).hexdigest()}",
-        "--label",
-        f"ai.synth.scorer-image-digest={args.image_manifest_digest}",
-        "--label",
-        f"ai.synth.scorer-image-config-digest={args.image_config_digest}",
-        "--label",
-        f"ai.synth.scorer-local-image-ref={args.local_image_ref}",
+        part
+        for key, value in _identity_labels(args).items()
+        for part in ("--label", f"{key}={value}")
     ]
+
+
+def _assert_launched_identity(args: argparse.Namespace, image_id: str) -> None:
+    inspected = _run(["docker", "container", "inspect", CONTAINER_NAME])
+    if inspected.returncode != 0:
+        raise RuntimeError("launched Craftax scorer container inspection failed")
+    try:
+        payload = json.loads(inspected.stdout)
+    except (TypeError, json.JSONDecodeError) as exc:
+        raise RuntimeError("launched Craftax scorer container inspection is malformed") from exc
+    if not isinstance(payload, list) or len(payload) != 1 or not isinstance(payload[0], dict):
+        raise RuntimeError("launched Craftax scorer container inspection is ambiguous")
+    container = payload[0]
+    config = container.get("Config")
+    labels = config.get("Labels") if isinstance(config, dict) else None
+    if container.get("Image") != image_id or not isinstance(labels, dict):
+        raise RuntimeError("launched Craftax scorer image identity mismatch")
+    if any(labels.get(key) != value for key, value in _identity_labels(args).items()):
+        raise RuntimeError("launched Craftax scorer authority labels mismatch")
 
 
 def start(args: argparse.Namespace) -> dict[str, Any]:
@@ -221,12 +244,11 @@ def start(args: argparse.Namespace) -> dict[str, Any]:
     launched = _run(command)
     if launched.returncode != 0:
         raise RuntimeError("Craftax scorer container launch failed")
-    launched_identity = _run(
-        ["docker", "container", "inspect", CONTAINER_NAME, "--format", "{{.Image}}"]
-    )
-    if launched_identity.returncode != 0 or launched_identity.stdout.strip() != image_id:
+    try:
+        _assert_launched_identity(args, image_id)
+    except BaseException:
         _run(["docker", "rm", "--force", CONTAINER_NAME])
-        raise RuntimeError("launched Craftax scorer image identity mismatch")
+        raise
     try:
         deadline = time.monotonic() + 60.0
         while time.monotonic() < deadline:
