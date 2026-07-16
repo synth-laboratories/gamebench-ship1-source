@@ -54,7 +54,11 @@ def _required_local_image_ref(value: str) -> str:
 
 def _loaded_image_identity(args: argparse.Namespace) -> tuple[str, str]:
     image_ref = _required_local_image_ref(args.local_image_ref)
-    expected_config_digest = _required_digest(
+    expected_manifest_digest = _required_digest(
+        args.image_manifest_digest,
+        "image_manifest_digest",
+    )
+    _required_digest(
         args.image_config_digest,
         "image_config_digest",
     )
@@ -69,8 +73,8 @@ def _loaded_image_identity(args: argparse.Namespace) -> tuple[str, str]:
         raise RuntimeError("local Craftax scorer image inspection is ambiguous")
     image = payload[0]
     image_id = image.get("Id")
-    if image_id != expected_config_digest:
-        raise RuntimeError("local Craftax scorer image config digest mismatch")
+    if image_id != expected_manifest_digest:
+        raise RuntimeError("local Craftax scorer image manifest digest mismatch")
     repo_tags = image.get("RepoTags")
     repo_digests = image.get("RepoDigests")
     exact_refs = {
@@ -84,7 +88,7 @@ def _loaded_image_identity(args: argparse.Namespace) -> tuple[str, str]:
         raise RuntimeError("local Craftax scorer image reference is not bound to inspected image")
     if image.get("Os") != "linux" or image.get("Architecture") != "arm64":
         raise RuntimeError("local Craftax scorer image platform must be linux/arm64")
-    return image_ref, expected_config_digest
+    return image_ref, expected_manifest_digest
 
 
 def _slot_secret(path: Path, name: str) -> str:
@@ -132,7 +136,10 @@ def _labels(args: argparse.Namespace) -> list[str]:
     ]
 
 
-def _assert_launched_identity(args: argparse.Namespace, image_id: str) -> None:
+def _assert_launched_identity(
+    args: argparse.Namespace,
+    image_manifest_digest: str,
+) -> None:
     inspected = _run(["docker", "container", "inspect", CONTAINER_NAME])
     if inspected.returncode != 0:
         raise RuntimeError("launched Craftax scorer container inspection failed")
@@ -145,7 +152,7 @@ def _assert_launched_identity(args: argparse.Namespace, image_id: str) -> None:
     container = payload[0]
     config = container.get("Config")
     labels = config.get("Labels") if isinstance(config, dict) else None
-    if container.get("Image") != image_id or not isinstance(labels, dict):
+    if container.get("Image") != image_manifest_digest or not isinstance(labels, dict):
         raise RuntimeError("launched Craftax scorer image identity mismatch")
     if any(labels.get(key) != value for key, value in _identity_labels(args).items()):
         raise RuntimeError("launched Craftax scorer authority labels mismatch")
@@ -154,7 +161,7 @@ def _assert_launched_identity(args: argparse.Namespace, image_id: str) -> None:
 def start(args: argparse.Namespace) -> dict[str, Any]:
     if _run(["docker", "container", "inspect", CONTAINER_NAME]).returncode == 0:
         raise RuntimeError("craftax scorer container already exists")
-    image_ref, image_id = _loaded_image_identity(args)
+    image_ref, image_manifest_digest = _loaded_image_identity(args)
     image_manifest_digest = _required_digest(
         args.image_manifest_digest,
         "image_manifest_digest",
@@ -237,7 +244,7 @@ def start(args: argparse.Namespace) -> dict[str, Any]:
         "--volume", f"{service_auth}:{SERVICE_AUTH_PATH}:ro",
         "--volume", f"{state}:/var/lib/gamebench/scorer-state",
         "--volume", f"{workspace}:/var/lib/gamebench/scorer-workspaces",
-        *_labels(args), image_id,
+        *_labels(args), image_manifest_digest,
         "--authority", AUTHORITY_PATH,
         "--host", "0.0.0.0", "--port", "8001", "--log-level", "info",
     ]
@@ -245,7 +252,7 @@ def start(args: argparse.Namespace) -> dict[str, Any]:
     if launched.returncode != 0:
         raise RuntimeError("Craftax scorer container launch failed")
     try:
-        _assert_launched_identity(args, image_id)
+        _assert_launched_identity(args, image_manifest_digest)
     except BaseException:
         _run(["docker", "rm", "--force", CONTAINER_NAME])
         raise
@@ -271,7 +278,7 @@ def start(args: argparse.Namespace) -> dict[str, Any]:
                     ).hexdigest(),
                     "scorer_source_sha": args.scorer_source_sha,
                     "scorer_image_digest": image_manifest_digest,
-                    "scorer_image_config_digest": image_id,
+                    "scorer_image_config_digest": args.image_config_digest,
                     "scorer_local_image_ref": image_ref,
                 }
             time.sleep(1.0)
