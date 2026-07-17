@@ -141,6 +141,28 @@ def _python_rollout_job(payload: tuple[str, int, str, int, bool, str | None]) ->
     )
 
 
+def _isolated_python_rollout_job(
+    payload: tuple[str, int, str, int, bool, str | None],
+) -> dict[str, Any]:
+    policy_path_s, seed, task_path, max_steps, include_trace, _replay_path = payload
+    policy_path = Path(policy_path_s)
+    candidate_fn = IsolatedPolicyProcess(policy_path)
+    try:
+        result = rollout_code_policy(
+            policy_path=policy_path,
+            seed=seed,
+            task_path=task_path,
+            max_steps=max_steps,
+            include_trace=include_trace,
+            candidate_fn=candidate_fn,
+            policy_engine_sim=False,
+        )
+        result["benchmark_isolation"] = dict(candidate_fn.isolation_receipt)
+        return result
+    finally:
+        candidate_fn.close()
+
+
 def _init_rust_worker() -> None:
     global _WORKER_RUST_REPL
     ensure_rust_repl_binary()
@@ -269,17 +291,18 @@ def _terminate_active_episode_processes() -> None:
         _terminate_episode_process(process)
 
 
-def _run_supervised_rust_episode(
+def _run_supervised_episode(
     payload: tuple[str, int, str, int, bool, str | None],
     *,
     timeout_seconds: float,
+    worker_flag: str,
 ) -> tuple[int, dict[str, Any]]:
     policy_path_s, seed, task_path, max_steps, include_trace, replay_path = payload
     started = time.monotonic()
     episode_env = os.environ.copy()
     episode_env["FACTORYBENCH_POLICY_RUNNER_PID"] = str(os.getpid())
     process = subprocess.Popen(
-        [sys.executable, str(Path(__file__).resolve()), "--rust-episode-worker"],
+        [sys.executable, str(Path(__file__).resolve()), worker_flag],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -340,15 +363,16 @@ def _run_supervised_rust_episode(
         )
 
 
-def _run_supervised_rust_episodes(
+def _run_supervised_episodes(
     payloads: list[tuple[str, int, str, int, bool, str | None]],
     *,
     parallel: int,
     timeout_seconds: float,
+    worker_flag: str,
 ) -> list[dict[str, Any]]:
     if not 1 <= parallel <= MAX_SUPERVISED_RUST_PARALLEL:
         raise ValueError(
-            "supervised Rust parallelism must be from 1 through "
+            "supervised episode parallelism must be from 1 through "
             f"{MAX_SUPERVISED_RUST_PARALLEL}"
         )
     if timeout_seconds <= 0:
@@ -358,9 +382,10 @@ def _run_supervised_rust_episodes(
     with ThreadPoolExecutor(max_workers=parallel) as pool:
         futures = {
             pool.submit(
-                _run_supervised_rust_episode,
+                _run_supervised_episode,
                 payload,
                 timeout_seconds=timeout_seconds,
+                worker_flag=worker_flag,
             ): payload[1]
             for payload in payloads
         }
@@ -393,6 +418,27 @@ def _run_internal_rust_episode_worker() -> int:
         _close_worker_resources()
 
 
+def _run_internal_python_episode_worker() -> int:
+    request = json.load(sys.stdin)
+    if not isinstance(request, Mapping):
+        raise ValueError("Python episode worker request must be an object")
+    payload = (
+        str(request.get("policy_path") or ""),
+        int(request["seed"]),
+        str(request.get("task_path") or ""),
+        int(request["max_steps"]),
+        bool(request.get("include_trace")),
+        None,
+    )
+    try:
+        result = _isolated_python_rollout_job(payload)
+        sys.stdout.write(json.dumps(result, separators=(",", ":")) + "\n")
+        sys.stdout.flush()
+        return 0
+    except CandidatePolicyFailure:
+        return POLICY_PROCESS_CANDIDATE_FAILURE_EXIT_CODE
+
+
 def run_policy_sweep(
     *,
     policy_path: Path,
@@ -417,7 +463,8 @@ def run_policy_sweep(
         if suite_payload is not None
         else load_suite(Path(suite_path))
     )
-    if lane == "rust":
+    supervised_python = lane == "python" and episode_timeout_seconds is not None
+    if lane == "rust" or supervised_python:
         policy_fn = None
     else:
         compile_check_policy(policy_path)
@@ -480,16 +527,22 @@ def run_policy_sweep(
         raise ValueError(f"unsupported lane: {lane}")
 
     workers = max(1, int(parallel))
-    supervised_rust = lane == "rust" and episode_timeout_seconds is not None
+    supervised_lane = lane in {"python", "rust"} and episode_timeout_seconds is not None
+    isolated_lane = lane == "rust" or supervised_lane
     if replay_dir is not None:
         if lane != "rust":
             raise ValueError("replay capture requires the rust lane")
         replay_dir.mkdir(parents=True, exist_ok=True)
-    if supervised_rust:
-        results = _run_supervised_rust_episodes(
+    if supervised_lane:
+        results = _run_supervised_episodes(
             job_payloads,
             parallel=workers,
             timeout_seconds=float(episode_timeout_seconds),
+            worker_flag=(
+                "--rust-episode-worker"
+                if lane == "rust"
+                else "--python-episode-worker"
+            ),
         )
         for seed in seeds:
             emit_progress(seed)
@@ -531,7 +584,7 @@ def run_policy_sweep(
                     emit_progress(seed)
     rewards = [float(item["reward_info"]["outcome_reward"]) for item in results]
     isolation_receipts = [item.get("benchmark_isolation") for item in results]
-    if lane == "rust" and any(
+    if isolated_lane and any(
         not isinstance(receipt, Mapping)
         or receipt.get("contract") != "os_sandbox_observation_action.v2"
         or receipt.get("suite_visible") is not False
@@ -564,7 +617,7 @@ def run_policy_sweep(
         "lane": lane,
         "engine_mode": "rust_repl" if lane == "rust" else "rust_http" if lane == "rust_http" else "python",
         "policy_isolation": (
-            "os_sandbox_observation_action.v2" if lane == "rust" else "in_process"
+            "os_sandbox_observation_action.v2" if isolated_lane else "in_process"
         ),
         "episode_timeout_seconds": episode_timeout_seconds,
         "base_url": base_url if lane == "rust_http" else None,
@@ -928,6 +981,8 @@ def _write_failure_receipt(
 def main() -> int:
     if sys.argv[1:] == ["--rust-episode-worker"]:
         return _run_internal_rust_episode_worker()
+    if sys.argv[1:] == ["--python-episode-worker"]:
+        return _run_internal_python_episode_worker()
     parser = argparse.ArgumentParser(description="Run a Craftax code-policy sweep.")
     parser.add_argument("--policy", default=str(TASK_DIR / "policies" / "heuristic_baseline.py"))
     parser.add_argument("--suite", default=str(TASK_DIR / "defaults" / "policy_sweep" / "policy_dev_v1.json"))
@@ -950,7 +1005,7 @@ def main() -> int:
         "--episode-timeout-seconds",
         type=float,
         default=None,
-        help="Supervise each Rust episode in its own process group with this deadline",
+        help="Supervise each Python or Rust episode with this deadline",
     )
     parser.add_argument("--summary-only", action="store_true", help="Omit per-episode traces from output JSON")
     parser.add_argument("--replay-dir", help="Write sparse deterministic Rust rollout GIFs here")
@@ -974,10 +1029,10 @@ def main() -> int:
             suite_path = Path(args.suite).expanduser().resolve()
         if (
             args.suite_stdin
-            and args.lane == "rust"
+            and args.lane in {"python", "rust"}
             and args.episode_timeout_seconds is None
         ):
-            raise ValueError("sealed Rust suites require an episode deadline")
+            raise ValueError("sealed Python and Rust suites require an episode deadline")
         report = run_policy_sweep(
             policy_path=Path(args.policy).expanduser().resolve(),
             suite_path=suite_path,
