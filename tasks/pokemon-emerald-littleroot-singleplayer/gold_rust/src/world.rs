@@ -3473,13 +3473,16 @@ impl WorldState {
         true
     }
 
-    /// Applies `Movement_RivalApproachPlayer` and the player's in-place
-    /// right-facing turn between Birch's Pokédex explanation and the ball
-    /// gift dialogue.
+    /// Applies the rival's normal down step, faster left turn, and the
+    /// player's faster right turn between Birch's Pokédex explanation and
+    /// the ball gift dialogue.
     pub fn advance_pokedex_rival_approach(&mut self, frames: u32) -> bool {
         let Some(remaining) = self.pokedex_rival_frames else { return false; };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
-        if remaining > 16 && next_remaining <= 16 {
+        // The first 16 frames are the rival's normal `walk_down`; its
+        // following four-frame faster turn and the player's four-frame
+        // faster turn complete the serialized 24-frame source stream.
+        if remaining > 8 && next_remaining <= 8 {
             self.move_scripted_npc("rival", MapId::ProfessorBirchsLab, TilePosition { x: 7, y: 5 }, Facing::Down);
         }
         if next_remaining != 0 {
@@ -3487,7 +3490,7 @@ impl WorldState {
             return true;
         }
         self.pokedex_rival_frames = None;
-        self.move_scripted_npc("rival", MapId::ProfessorBirchsLab, TilePosition { x: 7, y: 5 }, Facing::Left);
+        self.move_faster_scripted_npc("rival", MapId::ProfessorBirchsLab, TilePosition { x: 7, y: 5 }, Facing::Left);
         self.facing = Facing::Right;
         self.title_intro_step = 3;
         self.dialogue = Some(pokedex_handoff_page(3, self.player_gender, &self.player_name));
@@ -5073,9 +5076,10 @@ impl WorldState {
                         self.title_intro_step = 4;
                         self.dialogue = Some(pokedex_handoff_page(4, self.player_gender, &self.player_name));
                     } else if self.title_intro_step == 2 {
-                        // Birch's explanation closes before the rival walks
-                        // down to the player and the player turns right.
-                        self.pokedex_rival_frames = Some(32);
+                        // Birch's explanation closes before the rival's
+                        // normal down step, faster left turn, and the
+                        // player's faster right turn.
+                        self.pokedex_rival_frames = Some(24);
                     } else if self.title_intro_step == 3 {
                         // `giveitem ITEM_POKE_BALL, 5` adds the balls before
                         // its obtain-item receipt, then waits for the
