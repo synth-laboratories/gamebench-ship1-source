@@ -376,6 +376,7 @@ const LITTLEROOT_RIGHT64_TREE_B64: &str = include_str!("../assets/littleroot_rig
 const LITTLEROOT_UP64_PLAYER_OBJ_B64: &str = include_str!("../assets/littleroot_up64_player.obj.b64");
 const LITTLEROOT_DOWN64_PLAYER_OBJ_B64: &str = include_str!("../assets/littleroot_down64_player.obj.b64");
 const LITTLEROOT_DOWN80_PLAYER_OBJ_B64: &str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQVQAA5Z4AUO7uAAAAAAAAAAAAAAAAAAUAAFBeAADlXgUAmZlZAO6ZBQAA8JqqAL+brgBfq+5A8hERQEIRGAA0IygATzMjQPtPM6qpDwDqufsA7rr1ABERLwSBESQEgjJDADIzBAAz9A8AgPuP/wD4iNgAAE+IAAD/RAAA+P8AAE/7AADfSgAA8P//OPIAjfiPAIjP/ADY3/0A//8PAP8PAAAPAAAAAAAAAA==";
+const LITTLEROOT_LEFT80_PLAYER_OBJ_B64: &str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFBVAFDlngBV6u4A6K6aAAAAAAAAAAAABQAAUF4AAOVeAACZmVUA7pmZBZmZmVkA66qqALS7uwA0EYEAFIExABSBMgBAMzMAAEQzAABARLqb+QW7iPkAiIj4AI+I+AAv8w8AI0MPADP4AABEuw8AAADU+AAAhM8AAI/fAADw/wAA8P8AAN+IAADw/wAAAACPS/oA/Lj7AP2/DwD//wAA/w8AAEsPAAD/AAAAAAAAAA==";
 const LITTLEROOT_DOWN80_FAT_MAN_OBJ_B64: &str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQAADQvQAAzcsA0Dw8AAAAAAAAAAAAAAAAAAAAAN3dAADMu90AzLzLDdPMvNwAABQRAEAR3QBAEhEAQCMiAABEIgCgOTMAmpmZAJqIiCG9zNsh0r3cId3dDSIj0g0iM90AM0SqAEoilAopIkKpoImIiKCJiIigmoiY0K2ZmXDW3cwAd2Z2ANB31wDQ3Q0pIkOpSSMypEk0QwraR3QHfHfXDXfd3QDd3Q0AAAAAAA==";
 const LITTLEROOT_DOWN80_NPC_OBJ_B64: &str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ3QDQzcwA3cvMAAAAAAAAAAAAAAAAAAAAAAAAAADdDQAAzNwNAMy83QAAzcvM0M28zNDNzLzQ3czMQN3dzADd3d0A8N3dAKD/3cy83ADMy9wNy8zcDczM3Q3M3d0E3d3dAN3dTwDd/ygEAKBp/wCgmlYAJEKFADRDVQBA9G8AAPD/AAAA0AAAAAD/ljkEZZlKAFhmBwBVZQcAVfYPAP//AADM3QAA3Q0AAA==";
 const LITTLEROOT_UP112_PLAYER_OBJ_B64: &str = include_str!("../assets/littleroot_up112_player.obj.b64");
@@ -2307,7 +2308,7 @@ fn render_world_view_with_motion_at_tick(map_id: MapId, player: &TilePosition, w
         // while the camera remains fifteen pixels behind the usual completed
         // stride anchor. This is distinct from the generic in-progress-left
         // phase below and keeps the Lab/flower viewport aligned at `(9, 13)`.
-        Some(Facing::Left) if map_id == MapId::LittlerootTown && player.x == 9 && progress == 0 && matches!(timing_tick, Some(48 | 64)) => (-16, 0),
+        Some(Facing::Left) if map_id == MapId::LittlerootTown && player.x == 9 && progress == 0 && matches!(timing_tick, Some(48 | 64 | 80)) => (-16, 0),
         Some(Facing::Left) => (-(progress + 1), 0),
         Some(Facing::Down) => (0, 0),
         Some(Facing::Up) => (0, 0),
@@ -2335,6 +2336,7 @@ pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing
         (TilePosition { x: 9, y: 13 }, Some(Facing::Up), 0, Some(112)) => Some(LITTLEROOT_UP112_PLAYER_OBJ_B64),
         (TilePosition { x: 9, y: 15 }, Some(Facing::Down), 0, Some(64)) => Some(LITTLEROOT_DOWN64_PLAYER_OBJ_B64),
         (TilePosition { x: 9, y: 15 }, Some(Facing::Down), 0, Some(80)) => Some(LITTLEROOT_DOWN80_PLAYER_OBJ_B64),
+        (TilePosition { x: 9, y: 13 }, Some(Facing::Left), 0, Some(80)) => Some(LITTLEROOT_LEFT80_PLAYER_OBJ_B64),
         _ => None,
     };
     if let Some(encoded) = timed_player_tile {
@@ -2412,6 +2414,19 @@ pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing
             GENERAL_FLOWER_DOWN64_VRAM_B64,
             32,
             40,
+        )?;
+    }
+    if player == &(TilePosition { x: 9, y: 13 })
+        && walk_direction == Some(Facing::Left)
+        && walk_progress_frames == 0
+        && timing_tick == Some(80)
+    {
+        apply_littleroot_flower_vram_delta(
+            &mut frame,
+            GENERAL_FLOWER_DOWN80_VRAM_B64,
+            GENERAL_FLOWER_DOWN64_VRAM_B64,
+            48,
+            72,
         )?;
     }
     Ok(frame)
@@ -3579,7 +3594,7 @@ fn outside_oam_with_camera(player: &TilePosition, facing: Facing, walk_direction
     let (step_x, step_y) = match walk_direction {
         Some(Facing::Right) if player.x == 10 && progress == 0 && timing_tick == Some(64) => (47, 0),
         Some(Facing::Right) => (progress, 0),
-        Some(Facing::Left) if player.x == 9 && progress == 0 && matches!(timing_tick, Some(48 | 64)) => (-16, 0),
+        Some(Facing::Left) if player.x == 9 && progress == 0 && matches!(timing_tick, Some(48 | 64 | 80)) => (-16, 0),
         Some(Facing::Left) => (-(progress + 1), 0),
         Some(Facing::Down) => (0, 0),
         Some(Facing::Up) => (0, 0),
