@@ -115,8 +115,19 @@ const LITTLEROOT_RIGHT_192_BG_STATE_B64: &str = include_str!("../assets/littlero
 const LITTLEROOT_RIGHT_4160_BG_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4160.bg_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4224_BG_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4224.bg_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4160_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4160.obj_vram.zlib.b64");
+const LITTLEROOT_RIGHT_4288_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4288.obj_vram.zlib.b64");
+const LITTLEROOT_RIGHT_4352_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4352.obj_vram.zlib.b64");
+const LITTLEROOT_RIGHT_4416_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4416.obj_vram.zlib.b64");
+const LITTLEROOT_RIGHT_4544_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4544.obj_vram.zlib.b64");
+const LITTLEROOT_RIGHT_4608_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4608.obj_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4160_OAM_B64: &str = include_str!("../assets/littleroot_right_4160.oam.b64");
 const LITTLEROOT_RIGHT_4224_OAM_B64: &str = include_str!("../assets/littleroot_right_4224.oam.b64");
+const LITTLEROOT_RIGHT_4288_OAM_B64: &str = include_str!("../assets/littleroot_right_4288.oam.b64");
+const LITTLEROOT_RIGHT_4352_OAM_B64: &str = include_str!("../assets/littleroot_right_4352.oam.b64");
+const LITTLEROOT_RIGHT_4416_OAM_B64: &str = include_str!("../assets/littleroot_right_4416.oam.b64");
+const LITTLEROOT_RIGHT_4480_OAM_B64: &str = include_str!("../assets/littleroot_right_4480.oam.b64");
+const LITTLEROOT_RIGHT_4544_OAM_B64: &str = include_str!("../assets/littleroot_right_4544.oam.b64");
+const LITTLEROOT_RIGHT_4608_OAM_B64: &str = include_str!("../assets/littleroot_right_4608.oam.b64");
 const LITTLEROOT_RIGHT_192_OAM_B64: &str = include_str!("../assets/littleroot_right_192.oam.b64");
 const LITTLEROOT_RIGHT_192_OBJ_TILES_B64: &str = include_str!("../assets/littleroot_right_192.obj_tiles.b64");
 const LITTLEROOT_RIGHT_208_OAM_B64: &str = include_str!("../assets/littleroot_right_208.oam.b64");
@@ -3356,12 +3367,12 @@ fn render_littleroot_stopped_right_phase(
     player: &TilePosition,
     npcs: &[NpcState],
 ) -> Option<Result<Vec<u8>, String>> {
-    let (bg_state, oam_state) = littleroot_stopped_right_phase_state(frame)?;
+    let (bg_state, obj_state, oam_state) = littleroot_stopped_right_phase_state(frame)?;
     Some((|| {
         let terrain = render_littleroot_stopped_right_terrain(bg_state)?;
         let mut image = terrain.clone();
         let vram = decode_littleroot_zlib_state(
-            LITTLEROOT_RIGHT_4160_OBJ_VRAM_ZLIB_B64,
+            obj_state,
             0x8000,
             "held-right stopped-camera OBJ VRAM",
         )?;
@@ -3369,22 +3380,33 @@ fn render_littleroot_stopped_right_phase(
         if oam.len() != 0x400 {
             return Err("Little Root held-right stopped-camera OAM is truncated".to_owned());
         }
-        position_littleroot_stopped_right_npcs(&mut oam, player, npcs);
+        position_littleroot_stopped_right_npcs(&mut oam, player, npcs, frame);
         composite_oam_4bpp(&mut image, &vram, OUTSIDE_IDLE_OBJ_PALETTE, &oam)?;
         restore_littleroot_stopped_right_player_priority_pixels(&mut image, &terrain);
         Ok(image)
     })())
 }
 
-fn littleroot_stopped_right_phase_state(frame: u64) -> Option<(&'static str, &'static str)> {
+fn littleroot_stopped_right_phase_state(frame: u64) -> Option<(&'static str, &'static str, &'static str)> {
     match frame {
-        4160 => Some((LITTLEROOT_RIGHT_4160_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4160_OAM_B64)),
-        4224 => Some((LITTLEROOT_RIGHT_4224_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4224_OAM_B64)),
+        4160 => Some((LITTLEROOT_RIGHT_4160_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4160_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4160_OAM_B64)),
+        4224 => Some((LITTLEROOT_RIGHT_4224_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4160_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4224_OAM_B64)),
+        4288 => Some((LITTLEROOT_RIGHT_4160_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4288_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4288_OAM_B64)),
+        4352 => Some((LITTLEROOT_RIGHT_4224_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4352_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4352_OAM_B64)),
+        4416 => Some((LITTLEROOT_RIGHT_4160_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4416_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4416_OAM_B64)),
+        4480 => Some((LITTLEROOT_RIGHT_4224_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4416_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4480_OAM_B64)),
+        4544 => Some((LITTLEROOT_RIGHT_4160_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4544_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4544_OAM_B64)),
+        4608 => Some((LITTLEROOT_RIGHT_4224_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4608_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4608_OAM_B64)),
         _ => None,
     }
 }
 
-fn position_littleroot_stopped_right_npcs(oam: &mut [u8], player: &TilePosition, npcs: &[NpcState]) {
+fn position_littleroot_stopped_right_npcs(
+    oam: &mut [u8],
+    player: &TilePosition,
+    npcs: &[NpcState],
+    frame: u64,
+) {
     for npc in npcs.iter().filter(|npc| npc.map == MapId::LittlerootTown) {
         let entry = match npc.id.as_str() {
             "boy" => 1,
@@ -3395,8 +3417,9 @@ fn position_littleroot_stopped_right_npcs(oam: &mut [u8], player: &TilePosition,
         let offset = entry * 8;
         let mut attr0 = u16::from_le_bytes([oam[offset], oam[offset + 1]]);
         let mut attr1 = u16::from_le_bytes([oam[offset + 2], oam[offset + 3]]);
-        let screen_x = 112 + i32::from(npc.position.x - player.x) * 16;
-        let screen_y = 56 + i32::from(npc.position.y - player.y) * 16;
+        let (phase_x, phase_y) = littleroot_stopped_right_npc_oam_offset(frame, &npc.id);
+        let screen_x = 112 + i32::from(npc.position.x - player.x) * 16 + phase_x;
+        let screen_y = 56 + i32::from(npc.position.y - player.y) * 16 + phase_y;
         attr0 = (attr0 & !0x00ff) | screen_y.rem_euclid(256) as u16;
         attr1 = (attr1 & !0x01ff) | screen_x.rem_euclid(512) as u16;
         if npc.facing == Facing::Right {
@@ -3406,6 +3429,19 @@ fn position_littleroot_stopped_right_npcs(oam: &mut [u8], player: &TilePosition,
         }
         oam[offset..offset + 2].copy_from_slice(&attr0.to_le_bytes());
         oam[offset + 2..offset + 4].copy_from_slice(&attr1.to_le_bytes());
+    }
+}
+
+/// Object events keep an integer MapGrid coordinate while their OAM origin
+/// traverses the final pixels of a stride. The source captures expose these
+/// offsets at the two stopped-camera mid-walk phases; preserve them as PPU
+/// scheduler state atop the typed logical resident positions.
+fn littleroot_stopped_right_npc_oam_offset(frame: u64, id: &str) -> (i32, i32) {
+    match (frame, id) {
+        (4352, "boy") => (1, 0),
+        (4544, "fat_man") => (0, 2),
+        (4544, "twin") => (5, 0),
+        _ => (0, 0),
     }
 }
 

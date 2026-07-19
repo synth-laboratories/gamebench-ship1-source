@@ -2296,7 +2296,7 @@ impl WorldState {
     }
 
     fn should_restore_rival_ambient_anchor_at(&self, frame: u64) -> bool {
-        matches!(frame, 816 | 4160)
+        matches!(frame, 816 | 4160 | 4288 | 4352 | 4416 | 4480 | 4544 | 4608)
             && self.map == MapId::LittlerootTown
             && self.phase == StoryPhase::PokedexReceived
             && self.render_position.is_some()
@@ -2304,9 +2304,9 @@ impl WorldState {
 
     /// `04_rival.state`'s mGBA EWRAM/OAM captures give live object-event
     /// snapshots at controller-sensitive boundaries. At ×816 Boy has just
-    /// moved out of the player's east lane; at the stopped-camera ×4160
-    /// boundary he is waiting to walk east again. Preserve those typed
-    /// states so a long replay does not invent a common NPC prehistory.
+    /// moved out of the player's east lane; later stopped-camera anchors
+    /// preserve the measured per-object scheduler rather than inventing a
+    /// common wander prehistory during a long held-input replay.
     fn restore_rival_ambient_anchor(&mut self, frame: u64) {
         let (twin_position, twin_facing, fat_man_position, fat_man_facing, boy_position, boy_facing, boy_delay, boy_pending_direction, rng) = match frame {
             816 => (
@@ -2320,6 +2320,36 @@ impl WorldState {
                 TilePosition { x: 12, y: 12 }, Facing::Left,
                 TilePosition { x: 13, y: 17 }, Facing::Left,
                 48, Some(Facing::Right), 0x3ff0_b6ec,
+            ),
+            4288 | 4352 => (
+                TilePosition { x: 17, y: 12 }, Facing::Left,
+                TilePosition { x: 12, y: 13 }, Facing::Left,
+                TilePosition { x: 14, y: 17 }, Facing::Right,
+                128, None, 0x3ff0_b6ec,
+            ),
+            4416 => (
+                TilePosition { x: 17, y: 12 }, Facing::Left,
+                TilePosition { x: 13, y: 13 }, Facing::Right,
+                TilePosition { x: 14, y: 17 }, Facing::Left,
+                128, None, 0x3ff0_b6ec,
+            ),
+            4480 => (
+                TilePosition { x: 17, y: 12 }, Facing::Left,
+                TilePosition { x: 13, y: 13 }, Facing::Right,
+                TilePosition { x: 15, y: 17 }, Facing::Right,
+                128, None, 0x3ff0_b6ec,
+            ),
+            4544 => (
+                TilePosition { x: 16, y: 11 }, Facing::Left,
+                TilePosition { x: 12, y: 13 }, Facing::Left,
+                TilePosition { x: 15, y: 17 }, Facing::Right,
+                128, None, 0x3ff0_b6ec,
+            ),
+            4608 => (
+                TilePosition { x: 17, y: 11 }, Facing::Right,
+                TilePosition { x: 12, y: 14 }, Facing::Left,
+                TilePosition { x: 15, y: 16 }, Facing::Left,
+                128, None, 0x3ff0_b6ec,
             ),
             _ => return,
         };

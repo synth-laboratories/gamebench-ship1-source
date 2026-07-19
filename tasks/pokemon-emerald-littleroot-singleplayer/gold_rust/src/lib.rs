@@ -926,7 +926,7 @@ impl LittlerootSession {
         (self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, .. }])
-            && matches!(self.world.frame, 2176 | 2240 | 2304 | 2368 | 2432 | 2496 | 2560 | 2624 | 2688 | 2752 | 2816 | 2880 | 2944 | 3008 | 3072 | 3136 | 3200 | 3264 | 3328 | 3392 | 3456 | 3520 | 3584 | 3648 | 3712 | 3776 | 3840 | 3904 | 4032 | 4096 | 4160 | 4224)
+            && matches!(self.world.frame, 2176 | 2240 | 2304 | 2368 | 2432 | 2496 | 2560 | 2624 | 2688 | 2752 | 2816 | 2880 | 2944 | 3008 | 3072 | 3136 | 3200 | 3264 | 3328 | 3392 | 3456 | 3520 | 3584 | 3648 | 3712 | 3776 | 3840 | 3904 | 4032 | 4096 | 4160 | 4224 | 4288 | 4352 | 4416 | 4480 | 4544 | 4608)
             && (native::render_littleroot_held_right_timed(self.world.render_player(), self.world.frame).is_some()
                 || native::has_littleroot_stopped_right_phase(self.world.frame)))
             .then(|| match self.world.frame {
@@ -962,6 +962,12 @@ impl LittlerootSession {
                 4096 => ("littleroot-outside-birch-lab-right-4096", "5b1bdd574b02b7864889cad7a7a6c94257e42e31e8e77f70c39721379e30c20c"),
                 4160 => ("littleroot-outside-birch-lab-right-4160", "9a1d8f8151ee0056090fa4d3bb3f189369d67ceced60fad8be4fe298faf2df78"),
                 4224 => ("littleroot-outside-birch-lab-right-4224", "6fcbe8538dfc678a3ab6a555932434d0216254defadcfa38d84c548d800ee0d7"),
+                4288 => ("littleroot-outside-birch-lab-right-4288", "3f90765498a31b149148935d748448e95922f7d6c3e0782fff4cd3c0ed399e7f"),
+                4352 => ("littleroot-outside-birch-lab-right-4352", "78905018522ab7d27dab532a7be6bc36ad21f1a2b7a530a775c6891564e590d9"),
+                4416 => ("littleroot-outside-birch-lab-right-4416", "80a5eea60a0950e99bf3f70890c759770f868ed976833162888ab753a0b77e96"),
+                4480 => ("littleroot-outside-birch-lab-right-4480", "86dbb93b617ed29f8728fb95b4453a8c522acfea958386972e48534db1c21247"),
+                4544 => ("littleroot-outside-birch-lab-right-4544", "744f9d83a885dd76d1e24e25afec7efb23ad7552f11b3d99c6a77ad18b06c3a1"),
+                4608 => ("littleroot-outside-birch-lab-right-4608", "63929f4f1689434b1bad170270e3820088255ba5e718280f73e00a46fb838e62"),
                 _ => unreachable!("source evidence is restricted to captured scheduler ticks"),
             })
     }
