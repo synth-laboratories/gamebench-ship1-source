@@ -1434,6 +1434,10 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
                 crate::world::BattleOpponent::Zigzagoon | crate::world::BattleOpponent::Rival => 48,
             };
             let elapsed = entry_frames.saturating_sub(usize::from(battle.entry_transition_frames));
+            if battle.opponent == crate::world::BattleOpponent::Wurmple {
+                draw_wurmple_entry_phase(frame, world, battle, elapsed);
+                return;
+            }
             let band_phase = elapsed.saturating_sub(entry_frames.saturating_sub(48));
             let band_height = (band_phase * 80 / 48).min(80);
             draw_solid_rect(frame, 0, 0, 240, band_height, [0, 0, 0]);
@@ -1739,6 +1743,55 @@ fn draw_battle_background(frame: &mut [u8]) {
     // viewport edge, while the player's is clipped by the left edge.
     draw_battle_platform(frame, 193, 64, 52, 16);
     draw_battle_platform(frame, 59, 108, 64, 15);
+}
+
+/// Captures the measured state boundaries of the Route 101 Wurmple hand-off:
+/// distorted field (0–95), blackout (96–143), grass/UI staging (144–191),
+/// sprite upload (192–287), and status upload (288–351). The source's DMA
+/// scanline effects inside those ranges are still an approximation, but the
+/// typed phase ownership and input lock now follow the replay.
+fn draw_wurmple_entry_phase(frame: &mut [u8], world: &WorldState, battle: &crate::world::BattleState, elapsed: usize) {
+    if elapsed < 96 {
+        let offset = elapsed % 4;
+        for y in (offset..160).step_by(4) {
+            draw_solid_rect(frame, 0, y, 240, 1, [24, 24, 24]);
+        }
+        return;
+    }
+    if elapsed < 144 {
+        draw_solid_rect(frame, 0, 0, 240, 160, [0, 0, 0]);
+        return;
+    }
+
+    draw_battle_background(frame);
+    draw_menu_window(frame, 8, 18, 104, 24);
+    draw_menu_window(frame, 132, 76, 100, 32);
+    draw_menu_window(frame, 0, 112, 240, 48);
+    if elapsed < 192 {
+        return;
+    }
+
+    draw_battle_sprite(frame, battle_front_sprite(&battle.opponent_species), 160, 18);
+    draw_battle_sprite(frame, battle_back_sprite(world.starter), 24, 52);
+    if elapsed < 288 {
+        return;
+    }
+
+    let player = match world.starter {
+        Some(crate::world::StarterSpecies::Treecko) => "TREECKO",
+        Some(crate::world::StarterSpecies::Torchic) => "TORCHIC",
+        Some(crate::world::StarterSpecies::Mudkip) => "MUDKIP",
+        None => "POKEMON",
+    };
+    draw_text(frame, 16, 24, "WURMPLE", 10);
+    draw_text(frame, 86, 24, "L2", 2);
+    draw_text(frame, 16, 34, "HP", 10);
+    draw_battle_hp_bar(frame, 38, 34, battle.rival_hp, battle.opponent_max_hp);
+    draw_text(frame, 140, 82, player, 10);
+    draw_text(frame, 212, 82, "L5", 2);
+    draw_text(frame, 140, 94, "HP", 2);
+    draw_battle_hp_bar(frame, 160, 95, battle.player_hp, battle.player_max_hp);
+    draw_text(frame, 198, 99, &format!("{}/{}", battle.player_hp, battle.player_max_hp), 6);
 }
 
 fn draw_battle_platform(frame: &mut [u8], center_x: usize, center_y: usize, radius_x: usize, radius_y: usize) {
