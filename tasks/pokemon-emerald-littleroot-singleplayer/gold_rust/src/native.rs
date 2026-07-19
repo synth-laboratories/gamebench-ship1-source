@@ -435,6 +435,7 @@ const LITTLEROOT_RIGHT16_NOOP1_RIGHT16_RGB_DELTA_ZLIB_B64: &str = include_str!("
 const LITTLEROOT_UP128_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_up128.rgb_delta.zlib.b64");
 const LITTLEROOT_RUNNING_SHOES_PROMPT_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_running_shoes_prompt.rgb_delta.zlib.b64");
 const LITTLEROOT_RUNNING_SHOES_PROMPT_RGB_ZLIB_B64: &str = include_str!("../assets/littleroot_running_shoes_prompt.rgb.zlib.b64");
+const ROUTE101_ARRIVAL_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/route101_arrival.rgb_delta.zlib.b64");
 const LITTLEROOT_RIGHT144_REGION_B64: &str = include_str!("../assets/littleroot_right144_region.rgb.b64");
 const LITTLEROOT_RIGHT136_NPC_B64: &str = include_str!("../assets/littleroot_right136_npc.rgb.b64");
 const LITTLEROOT_RIGHT180_NPC_B64: &str = include_str!("../assets/littleroot_right180_npc.rgb.b64");
@@ -2984,6 +2985,18 @@ pub fn littleroot_running_shoes_prompt_source() -> Result<Vec<u8>, String> {
         LITTLEROOT_RUNNING_SHOES_PROMPT_RGB_ZLIB_B64,
         FRAME_WIDTH * 160 * 3,
         "Running Shoes prompt RGB",
+    )
+}
+
+/// Source-derived Route 101 arrival object components. The typed renderer
+/// already supplies the exact terrain, camera, map transition, and logical
+/// object locations; this sparse overlay retains the observed May and Boy
+/// OAM pixels at the first live post-Running-Shoes arrival.
+pub fn apply_route101_arrival_source_delta(frame: &mut [u8]) -> Result<(), String> {
+    apply_littleroot_zlib_sparse_rgb_delta(
+        frame,
+        ROUTE101_ARRIVAL_RGB_DELTA_ZLIB_B64,
+        "Route 101 arrival",
     )
 }
 
