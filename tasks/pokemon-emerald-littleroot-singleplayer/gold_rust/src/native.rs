@@ -2647,6 +2647,89 @@ pub fn render_world_view_with_dynamic_objects(map_id: MapId, player: &TilePositi
     Ok(frame)
 }
 
+/// Presents the parallel movement portion of Little Root's first home entry.
+/// `MomApproachDoor` and `PlayerApproachDoor` both wait 24 frames, then walk
+/// for 16 frames; only the player adds a four-frame faster turn afterward.
+/// The serialized world commits the object coordinates at frame 40, so this
+/// renderer derives the prior 16-frame visual stride from its existing
+/// departure countdown without changing gameplay or transition state.
+pub fn render_littleroot_truck_door_approach(
+    player: &TilePosition,
+    player_gender: PlayerGender,
+    facing: Facing,
+    npc_animation_tick: u64,
+    npcs: &[NpcState],
+    npc_walk_starts: &[NpcWalkStart],
+    departure_frames: Option<u16>,
+) -> Result<Vec<u8>, String> {
+    const TOTAL_FRAMES: u16 = 44;
+    const WALK_START_FRAME: u16 = 24;
+    const WALK_END_FRAME: u16 = 40;
+
+    let mut visual_npcs = npcs.to_vec();
+    // The gameplay endpoint records Mom's normal walk at frame 40. Do not
+    // replay that marker after the source action has completed; the approach
+    // stride below is the only visual owner for this actor during the rail.
+    let mut visual_walks = npc_walk_starts
+        .iter()
+        .filter(|walk| walk.id != "truck_arrival_mom")
+        .cloned()
+        .collect::<Vec<_>>();
+
+    let Some(remaining) = departure_frames else {
+        return render_world_view_with_dynamic_objects(
+            MapId::LittlerootTown,
+            player,
+            player_gender,
+            facing,
+            None,
+            0,
+            npc_animation_tick,
+            &visual_npcs,
+            &visual_walks,
+        );
+    };
+    let elapsed = TOTAL_FRAMES.saturating_sub(remaining.min(TOTAL_FRAMES));
+    if (WALK_START_FRAME..WALK_END_FRAME).contains(&elapsed) {
+        if let Some(mom) = visual_npcs.iter_mut().find(|npc| npc.id == "truck_arrival_mom") {
+            // The source object-event coordinate commits at the end of the
+            // upward stride, while the OBJ layer interpolates from its prior
+            // tile for the preceding sixteen frames.
+            mom.position.y -= 1;
+            mom.facing = Facing::Up;
+            visual_walks.push(NpcWalkStart {
+                id: "truck_arrival_mom".to_owned(),
+                frame: npc_animation_tick.saturating_sub(u64::from(elapsed - WALK_START_FRAME)),
+                duration_frames: 16,
+                sprite_facing: Some(Facing::Up),
+            });
+        }
+        return render_world_view_with_dynamic_objects(
+            MapId::LittlerootTown,
+            player,
+            player_gender,
+            Facing::Right,
+            Some(Facing::Right),
+            (elapsed - WALK_START_FRAME) as u8,
+            npc_animation_tick,
+            &visual_npcs,
+            &visual_walks,
+        );
+    }
+
+    render_world_view_with_dynamic_objects(
+        MapId::LittlerootTown,
+        player,
+        player_gender,
+        facing,
+        None,
+        0,
+        npc_animation_tick,
+        &visual_npcs,
+        &visual_walks,
+    )
+}
+
 fn is_brendans_house_2f_terminal_oracle(
     map_id: MapId,
     player: &TilePosition,
