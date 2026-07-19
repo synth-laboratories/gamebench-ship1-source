@@ -2189,7 +2189,17 @@ pub fn render_world_view_with_dynamic_objects(map_id: MapId, player: &TilePositi
     let mut vram = outside_player_vram_continuous(player_gender, facing, walk_progress_frames)?;
     let mut palette = outside_player_palette(player_gender)?;
     apply_dynamic_npc_tiles(&mut vram, &mut palette, map_id, player_gender, npc_animation_tick, npcs, npc_walk_starts)?;
-    let oam = dynamic_object_oam(map_id, player, facing, player_gender, npc_animation_tick, npcs, npc_walk_starts);
+    let oam = dynamic_object_oam(
+        map_id,
+        player,
+        facing,
+        walk_direction,
+        walk_progress_frames,
+        player_gender,
+        npc_animation_tick,
+        npcs,
+        npc_walk_starts,
+    );
     composite_oam_4bpp(&mut frame, &vram, &palette, &oam)?;
     Ok(frame)
 }
@@ -2246,10 +2256,10 @@ fn render_world_view_with_motion_at_tick(map_id: MapId, player: &TilePosition, w
         Some(Facing::Right) if map_id == MapId::LittlerootTown && player.x == 16 => (0, 0),
         Some(Facing::Right) => (progress, 0),
         // The direct Left ×48 source frame completes its logical second tile
-        // while the camera remains twelve pixels behind the usual completed
+        // while the camera remains fifteen pixels behind the usual completed
         // stride anchor. This is distinct from the generic in-progress-left
         // phase below and keeps the Lab/flower viewport aligned at `(9, 13)`.
-        Some(Facing::Left) if map_id == MapId::LittlerootTown && player.x == 9 && progress == 0 && timing_tick == Some(48) => (-13, 0),
+        Some(Facing::Left) if map_id == MapId::LittlerootTown && player.x == 9 && progress == 0 && timing_tick == Some(48) => (-16, 0),
         Some(Facing::Left) => (-(progress + 1), 0),
         Some(Facing::Down) => (0, 0),
         Some(Facing::Up) => (0, 0),
@@ -2272,7 +2282,7 @@ pub fn render_littleroot_with_idle_objects(player: &TilePosition, facing: Facing
 
 pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing: Facing, walk_direction: Option<Facing>, walk_progress_frames: u8, timing_tick: Option<u64>) -> Result<Vec<u8>, String> {
     let vram = outside_player_vram(facing, walk_progress_frames)?;
-    let oam = outside_oam_with_camera(player, walk_direction, walk_progress_frames);
+    let oam = outside_oam_with_camera(player, walk_direction, walk_progress_frames, timing_tick);
     let mut frame = render_world_view_with_motion_at_tick(MapId::LittlerootTown, player, walk_direction, walk_progress_frames, timing_tick)?;
     composite_oam_4bpp(&mut frame, &vram, OUTSIDE_IDLE_OBJ_PALETTE, &oam)?;
     // The first-stride renderer already applies this source flower phase. On
@@ -2290,7 +2300,7 @@ pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing
 pub fn render_littleroot_held_right_188(player: &TilePosition) -> Result<Vec<u8>, String> {
     let mut vram = outside_player_vram(Facing::Right, 0)?;
     apply_obj_vram_byte_patch(&mut vram, LITTLEROOT_NOOP_192_OBJ_VRAM_PATCH_B64, "Little Root held-right 188")?;
-    let mut oam = outside_oam_with_camera(player, Some(Facing::Right), 0);
+    let mut oam = outside_oam_with_camera(player, Some(Facing::Right), 0, None);
     oam[8..16].copy_from_slice(&[0x38, 0x80, 0x80, 0x80, 0x24, 0x28, 0, 0]);
     oam[16..24].copy_from_slice(&[0x05, 0x80, 0x60, 0x80, 0x1c, 0x28, 0, 0]);
     let mut frame = render_world_view_with_motion_at_tick(MapId::LittlerootTown, player, Some(Facing::Right), 0, Some(188))?;
@@ -3043,7 +3053,7 @@ fn restore_littleroot_right_192_bg_state() -> Result<(Vec<u8>, Vec<u8>), String>
 pub fn render_littleroot_ambient_128(player: &TilePosition, facing: Facing) -> Result<Vec<u8>, String> {
     let mut vram = outside_player_vram(facing, 0)?;
     apply_obj_vram_byte_patch(&mut vram, LITTLEROOT_NOOP_128_OBJ_VRAM_PATCH_B64, "Little Root ambient")?;
-    let mut oam = outside_oam_with_camera(player, None, 0);
+    let mut oam = outside_oam_with_camera(player, None, 0, None);
     oam[18..20].copy_from_slice(&0x90d0_u16.to_le_bytes());
     render_world_view_with_objects(MapId::LittlerootTown, player, None, 0, &vram, OUTSIDE_IDLE_OBJ_PALETTE, &oam)
 }
@@ -3051,7 +3061,7 @@ pub fn render_littleroot_ambient_128(player: &TilePosition, facing: Facing) -> R
 pub fn render_littleroot_ambient_192(player: &TilePosition, facing: Facing) -> Result<Vec<u8>, String> {
     let mut vram = outside_player_vram(facing, 0)?;
     apply_obj_vram_byte_patch(&mut vram, LITTLEROOT_NOOP_192_OBJ_VRAM_PATCH_B64, "Little Root later ambient")?;
-    let mut oam = outside_oam_with_camera(player, None, 0);
+    let mut oam = outside_oam_with_camera(player, None, 0, None);
     oam[10..12].copy_from_slice(&0x80f0_u16.to_le_bytes());
     oam[16..18].copy_from_slice(&0x8001_u16.to_le_bytes());
     oam[18..20].copy_from_slice(&0x80d0_u16.to_le_bytes());
@@ -3166,7 +3176,7 @@ pub fn render_littleroot_start_walk(player: &TilePosition, facing: Facing) -> Re
         Facing::Left => (Some(Facing::Left), 7),
         Facing::Right => (Some(Facing::Right), 15),
     };
-    let mut oam = outside_oam_with_camera(player, camera_direction, camera_progress);
+    let mut oam = outside_oam_with_camera(player, camera_direction, camera_progress, None);
     let (offset_x, offset_y) = match facing {
         Facing::Up => (0_i32, 0_i32),
         Facing::Down => (0, 0),
@@ -3440,11 +3450,12 @@ fn composite_gba_text_bg(
 
 /// The rival-exterior idle OBJ snapshot contains two nearby NPC entries.
 /// Keep those source sprites in world space as the camera follows the player.
-fn outside_oam_with_camera(player: &TilePosition, walk_direction: Option<Facing>, walk_progress_frames: u8) -> Vec<u8> {
+fn outside_oam_with_camera(player: &TilePosition, walk_direction: Option<Facing>, walk_progress_frames: u8, timing_tick: Option<u64>) -> Vec<u8> {
     let mut oam = OUTSIDE_IDLE_OAM.to_vec();
     let progress = i32::from(walk_progress_frames.min(16));
     let (step_x, step_y) = match walk_direction {
         Some(Facing::Right) => (progress, 0),
+        Some(Facing::Left) if player.x == 9 && progress == 0 && timing_tick == Some(48) => (-16, 0),
         Some(Facing::Left) => (-(progress + 1), 0),
         Some(Facing::Down) => (0, 0),
         Some(Facing::Up) => (0, 0),
@@ -3488,8 +3499,31 @@ fn dynamic_player_oam(facing: Facing) -> Vec<u8> {
     oam
 }
 
-fn dynamic_object_oam(map_id: MapId, player: &TilePosition, facing: Facing, player_gender: PlayerGender, npc_animation_tick: u64, npcs: &[NpcState], npc_walk_starts: &[NpcWalkStart]) -> Vec<u8> {
+fn dynamic_object_oam(
+    map_id: MapId,
+    player: &TilePosition,
+    facing: Facing,
+    walk_direction: Option<Facing>,
+    walk_progress_frames: u8,
+    player_gender: PlayerGender,
+    npc_animation_tick: u64,
+    npcs: &[NpcState],
+    npc_walk_starts: &[NpcWalkStart],
+) -> Vec<u8> {
     let mut oam = dynamic_player_oam(facing);
+    // Objects scroll with the terrain during the direct Left ×48 phase even
+    // though the player remains screen anchored. The completed-stride camera
+    // is fifteen pixels behind its ordinary anchor at this exact source tick.
+    let camera_phase_x = if map_id == MapId::LittlerootTown
+        && player.x == 9
+        && walk_direction == Some(Facing::Left)
+        && walk_progress_frames == 0
+        && npc_animation_tick == 48
+    {
+        15
+    } else {
+        0
+    };
     for (entry, npc) in npcs.iter().filter(|npc| npc.map == map_id).take(127).enumerate() {
         let target_entry = entry + 1;
         // A controlled Little Root right-held source frame isolates Boy on
@@ -3502,7 +3536,7 @@ fn dynamic_object_oam(map_id: MapId, player: &TilePosition, facing: Facing, play
         let mut attr0 = u16::from_le_bytes([oam[target], oam[target + 1]]);
         let mut attr1 = u16::from_le_bytes([oam[target + 2], oam[target + 3]]);
         let mut attr2 = u16::from_le_bytes([oam[target + 4], oam[target + 5]]);
-        let mut screen_x = 112 + i32::from(npc.position.x - player.x) * 16;
+        let mut screen_x = 112 + i32::from(npc.position.x - player.x) * 16 + camera_phase_x;
         let mut screen_y = 56 + i32::from(npc.position.y - player.y) * 16;
         // The deterministic ambient scheduler commits the logical tile at
         // the beginning of its 64-frame beat. Render the first 16 frames

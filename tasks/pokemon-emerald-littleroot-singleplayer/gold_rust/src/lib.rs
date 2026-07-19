@@ -552,6 +552,41 @@ impl LittlerootSession {
             .then(|| self.input_log.iter().map(|step| step.frames).sum())
     }
 
+    /// A directional exterior reference remains valid when the controller
+    /// hold is split across requests, including a trailing zero-frame no-op
+    /// used by service clients to request a redraw of the same emulated tick.
+    fn rival_directional_48_evidence(&self) -> Option<Facing> {
+        let first = self.input_log.first()?;
+        let direction = match first.action {
+            Input::Up => Facing::Up,
+            Input::Down => Facing::Down,
+            Input::Left => Facing::Left,
+            Input::Right => Facing::Right,
+            _ => return None,
+        };
+        let held_frames = self.input_log.iter().try_fold(0_u32, |total, step| {
+            let continues_direction = matches!(
+                (direction, step.action),
+                (Facing::Up, Input::Up)
+                    | (Facing::Down, Input::Down)
+                    | (Facing::Left, Input::Left)
+                    | (Facing::Right, Input::Right)
+            );
+            if continues_direction {
+                Some(total.saturating_add(step.frames))
+            } else if step.action == Input::Noop && step.frames == 0 {
+                Some(total)
+            } else {
+                None
+            }
+        })?;
+        (self.checkpoint == OpeningCheckpoint::RivalOutsideLab
+            && self.world.map == MapId::LittlerootTown
+            && self.world.frame == 48
+            && held_frames == 48)
+            .then_some(direction)
+    }
+
     /// A single held-Right request from the rival-exterior source state has
     /// source-derived PPU/OAM scheduling at these later stopped-camera ticks.
     /// Keep this predicate aligned with the renderer's timed dispatch instead
@@ -599,14 +634,8 @@ impl LittlerootSession {
         if matches!(self.truck_held_right_frames(), Some(16 | 32 | 48)) {
             return "native_oracle_exact";
         }
-        if self.checkpoint == OpeningCheckpoint::RivalOutsideLab
-            && self.world.map == MapId::LittlerootTown
-            && matches!(
-                self.input_log.as_slice(),
-                [StepRequest { action: Input::Up | Input::Down | Input::Left | Input::Right, frames: 48 }]
-            )
-        {
-            return "captured_frame_exact";
+        if self.rival_directional_48_evidence().is_some() {
+            return "native_oracle_exact";
         }
         if self.checkpoint == OpeningCheckpoint::TitleMenu
             && self.world.phase == world::StoryPhase::GenderSelect
@@ -709,6 +738,15 @@ impl LittlerootSession {
     }
 
     fn reference_diff(&self) -> Value {
+        if let Some(direction) = self.rival_directional_48_evidence() {
+            let (trace, reference) = match direction {
+                Facing::Left => ("littleroot-outside-birch-lab-left-48", LITTLEROOT_OUTSIDE_LEFT_48),
+                Facing::Up => ("littleroot-outside-birch-lab-up-48", LITTLEROOT_OUTSIDE_UP_48),
+                Facing::Down => ("littleroot-outside-birch-lab-down-48", LITTLEROOT_OUTSIDE_DOWN_48),
+                Facing::Right => ("littleroot-outside-birch-lab-right-48", LITTLEROOT_OUTSIDE_RIGHT_48),
+            };
+            return json!({ "trace": trace, "baseline_only": false, "pixels": pixel_diff(self.frame_rgb(), reference) });
+        }
         match self.truck_held_right_frames() {
             Some(16) => {
                 let reference = native::opening_truck_right_16().expect("embedded truck right frame must decode");
