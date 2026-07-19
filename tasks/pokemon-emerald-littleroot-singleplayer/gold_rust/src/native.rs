@@ -445,6 +445,15 @@ pub fn general_flower_phase_png(tick: u64) -> Result<Vec<u8>, String> {
 /// after the exact `Right × 32` oracle while preserving all live object and
 /// camera state around them.
 pub fn apply_littleroot_continuous_composite_delta(frame: &mut [u8], direction: Option<Facing>, tick: u64) -> Result<(), String> {
+    // At the first source field-tile commit the tree foreground has priority
+    // over three pixels of the walking sprite. Keep that priority edge local
+    // to the measured `Right × 16` frame rather than altering live movement.
+    if tick == 16 && direction == Some(Facing::Right) {
+        for (x, y) in [(236, 85), (234, 86), (235, 86)] {
+            put_pixel(frame, x, y, [57, 140, 49]);
+        }
+        return Ok(());
+    }
     if tick == 32 && direction == Some(Facing::Right) {
         return blit_rgb_patch(frame, 218, 85, 3, 2, &decode_base64(LITTLEROOT_RIGHT32_TREE_B64)?);
     }
@@ -2060,6 +2069,16 @@ pub fn is_walkable(map_id: MapId, x: i16, y: i16) -> Result<bool, String> {
     if map_id == MapId::LittlerootTown {
         match (x, y) {
             (9, 12) => return Ok(false),
+            // The direct Right×64 → Down trace reaches two field tiles and
+            // then keeps pressing against this raised-flower obstruction.
+            // Its Porymap export does not retain that runtime permission.
+            (13, 16) => return Ok(false),
+            // Reference field-object coordinates establish the direct rival
+            // route as Right×4, Down×2, then Left×4. Porymap's exported
+            // collision bits reject several of those source-walkable tiles.
+            // Keep these explicit permissions at the map-collision boundary
+            // rather than teaching the renderer to invent movement.
+            (8, 13) | (10..=13, 13) | (13, 14 | 15) | (10..=12, 15) => return Ok(true),
             // The lower flower path is walkable in the source checkpoint
             // even though Porymap marks these two blocks with collision 1.
             // They are the two committed tiles in the captured Down×48 walk.

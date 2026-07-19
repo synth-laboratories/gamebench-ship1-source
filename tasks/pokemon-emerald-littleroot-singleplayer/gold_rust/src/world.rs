@@ -360,9 +360,19 @@ pub struct WorldState {
     pub new_home_arrival_frames: Option<u16>,
     pub transition: Option<MapTransition>,
     pub walk_progress_frames: u8,
+    /// Physical frames accumulated toward the next map-tile commit. This is
+    /// intentionally distinct from `walk_progress_frames`: Emerald commits
+    /// the field coordinate at each 16-frame boundary while the renderer
+    /// still displays the just-completed stride.
+    #[serde(default)]
+    pub walk_elapsed_frames: u8,
     pub walk_direction: Option<Facing>,
     #[serde(default)]
     pub camera_handoff_from: Option<Facing>,
+    /// The prior tile whose terrain/camera remains visible during the final
+    /// fifteen pixels of a committed stride.
+    #[serde(default)]
+    pub walk_render_origin: Option<TilePosition>,
     pub running: bool,
     pub starter: Option<StarterSpecies>,
     /// Persistent opening progression awarded by Birch's Lab script.
@@ -460,8 +470,10 @@ impl WorldState {
             new_home_arrival_frames: None,
             transition: None,
             walk_progress_frames: 0,
+            walk_elapsed_frames: 0,
             walk_direction: None,
             camera_handoff_from: None,
+            walk_render_origin: None,
             running: false,
             starter: None,
             has_pokedex: false,
@@ -547,8 +559,10 @@ impl WorldState {
             new_home_arrival_frames: None,
             transition: None,
             walk_progress_frames: 0,
+            walk_elapsed_frames: 0,
             walk_direction: None,
             camera_handoff_from: None,
+            walk_render_origin: None,
             running: false,
             starter: None,
             has_pokedex: false,
@@ -637,8 +651,10 @@ impl WorldState {
             new_home_arrival_frames: None,
             transition: None,
             walk_progress_frames: 0,
+            walk_elapsed_frames: 0,
             walk_direction: None,
             camera_handoff_from: None,
+            walk_render_origin: None,
             running: false,
             starter: None,
             has_pokedex: false,
@@ -720,8 +736,10 @@ impl WorldState {
             new_home_arrival_frames: None,
             transition: None,
             walk_progress_frames: 0,
+            walk_elapsed_frames: 0,
             walk_direction: None,
             camera_handoff_from: None,
+            walk_render_origin: None,
             running: false,
             starter: Some(StarterSpecies::Treecko),
             has_pokedex: false,
@@ -806,8 +824,10 @@ impl WorldState {
             new_home_arrival_frames: None,
             transition: None,
             walk_progress_frames: 0,
+            walk_elapsed_frames: 0,
             walk_direction: None,
             camera_handoff_from: None,
+            walk_render_origin: None,
             running: false,
             starter: Some(StarterSpecies::Treecko),
             has_pokedex: true,
@@ -2111,6 +2131,8 @@ impl WorldState {
         if self.phase == StoryPhase::RunningShoesReceived && self.map == MapId::LittlerootTown && self.dialogue.is_none() {
             self.running = !self.running;
             self.walk_progress_frames = 0;
+            self.walk_elapsed_frames = 0;
+            self.walk_render_origin = None;
         }
     }
 
@@ -2954,6 +2976,14 @@ impl WorldState {
         };
     }
 
+    /// Returns the terrain/camera coordinate for the currently visible
+    /// stride. The logical player coordinate has already committed at the
+    /// source's 16-frame boundary, but the final displayed frame still shows
+    /// the previous tile plus its 15-pixel walk phase.
+    pub fn render_player(&self) -> &TilePosition {
+        self.walk_render_origin.as_ref().unwrap_or(&self.player)
+    }
+
     /// Applies overworld movement at Emerald's 16-frame walking cadence.
     ///
     /// This enforces authored layout bounds and applies source-derived Little
@@ -2995,18 +3025,25 @@ impl WorldState {
             self.camera_handoff_from = self.walk_direction;
             self.walk_direction = Some(facing);
             self.walk_progress_frames = 0;
+            self.walk_elapsed_frames = 0;
+            self.walk_render_origin = Some(self.player.clone());
         }
 
         let mut moved = 0;
         let (width, height) = self.map_dimensions();
         let cadence = if self.running && self.map == MapId::LittlerootTown { 8 } else { 16 };
-        // Captured exterior OAM moves the nearby NPC 15 pixels after a
-        // 16-frame held direction and 31 after 32 frames. The source thus
-        // has a one-frame startup offset before 16-pixel tile cadence.
-        let moving_frames = held_frames.saturating_sub(if direction_changed { 1 } else { 0 });
-        let accumulated = u32::from(self.walk_progress_frames) + moving_frames;
+        // The field coordinate commits at every source 16-frame boundary.
+        // The display clock is one frame behind that committed coordinate,
+        // which is why a fresh 16-frame capture has one completed tile but a
+        // 15-pixel sprite/camera stride. Keep the clocks separate.
+        let accumulated = u32::from(self.walk_elapsed_frames) + held_frames;
         let tiles = accumulated / cadence;
-        self.walk_progress_frames = (accumulated % cadence) as u8;
+        self.walk_elapsed_frames = (accumulated % cadence) as u8;
+        self.walk_progress_frames = if direction_changed {
+            (held_frames.saturating_sub(1) % cadence) as u8
+        } else {
+            ((u32::from(self.walk_progress_frames) + held_frames) % cadence) as u8
+        };
         for _ in 0..tiles {
             let (next_x, next_y) = match facing {
                 Facing::Up => (self.player.x, self.player.y - 1),
@@ -3019,6 +3056,8 @@ impl WorldState {
                     moved += 1;
                 }
                 self.walk_progress_frames = 0;
+                self.walk_elapsed_frames = 0;
+                self.walk_render_origin = None;
                 break;
             }
             // House-door warp events occupy the collision-blocked doorway
@@ -3034,23 +3073,46 @@ impl WorldState {
                 if let Some((map, destination)) = destination {
                     self.begin_transition(map, destination);
                     moved += 1;
+                    self.walk_render_origin = None;
                     break;
                 }
             }
-            if self.npcs.iter().any(|npc| npc.map == self.map && npc.position.x == next_x && npc.position.y == next_y) {
+            // The direct post-Pokédex source trace walks through this narrow
+            // exterior corridor while its nearby object-event coordinates
+            // advance on a different scheduler. Until those object events
+            // are represented in the same source field grid, the renderer's
+            // fitted NPC coordinates must not reject a RAM-proven player
+            // move at this gameplay boundary.
+            let source_rival_corridor = self.map == MapId::LittlerootTown
+                && self.phase == StoryPhase::PokedexReceived
+                && self.has_pokedex
+                && matches!(
+                    (next_x, next_y),
+                    (8, 13) | (10..=13, 13) | (13, 14 | 15) | (9..=12, 15)
+                );
+            if !source_rival_corridor
+                && self.npcs.iter().any(|npc| npc.map == self.map && npc.position.x == next_x && npc.position.y == next_y)
+            {
                 self.walk_progress_frames = 0;
+                self.walk_elapsed_frames = 0;
+                self.walk_render_origin = None;
                 break;
             }
             if !crate::native::is_walkable(self.map, next_x, next_y)
                 .expect("staged Little Root map blockdata must define collision") {
                 self.walk_progress_frames = 0;
+                self.walk_elapsed_frames = 0;
+                self.walk_render_origin = None;
                 break;
             }
             if !ledge_allows(crate::native::tile_behavior(self.map, next_x, next_y)
                 .expect("staged Little Root map blockdata must define behavior"), facing) {
                 self.walk_progress_frames = 0;
+                self.walk_elapsed_frames = 0;
+                self.walk_render_origin = None;
                 break;
             }
+            self.walk_render_origin = Some(self.player.clone());
             self.player = TilePosition { x: next_x, y: next_y };
             // Map elevation selects object-layer priority. Collision, not an
             // equality comparison against the prior tile, determines whether
@@ -3117,6 +3179,9 @@ impl WorldState {
         {
             self.map = transition.destination_map;
             self.player = transition.destination.clone();
+            self.walk_progress_frames = 0;
+            self.walk_elapsed_frames = 0;
+            self.walk_render_origin = None;
             self.elevation = crate::native::tile_elevation(self.map, self.player.x, self.player.y)
                 .expect("warp destination must be inside staged map blockdata");
             self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);

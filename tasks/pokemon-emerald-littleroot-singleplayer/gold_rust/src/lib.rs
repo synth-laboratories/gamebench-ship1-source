@@ -730,7 +730,7 @@ impl LittlerootSession {
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && self.world.frame == 64
-            && self.world.player == TilePosition { x: 10, y: 13 }
+            && self.world.player == TilePosition { x: 13, y: 13 }
             && self.rival_held_right_frames() == Some(64)
     }
 
@@ -738,7 +738,7 @@ impl LittlerootSession {
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && self.world.frame == 80
-            && self.world.player == TilePosition { x: 10, y: 13 }
+            && self.world.player == TilePosition { x: 13, y: 14 }
             && self.world.walk_direction == Some(Facing::Down)
             && self.world.walk_progress_frames == 15
             && self.world.camera_handoff_from == Some(Facing::Right)
@@ -755,7 +755,7 @@ impl LittlerootSession {
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && self.world.frame == 96
-            && self.world.player == TilePosition { x: 10, y: 14 }
+            && self.world.player == TilePosition { x: 13, y: 15 }
             && self.world.walk_direction == Some(Facing::Down)
             && self.world.walk_progress_frames == 15
             && self.world.camera_handoff_from == Some(Facing::Right)
@@ -772,9 +772,9 @@ impl LittlerootSession {
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && self.world.frame == 112
-            && self.world.player == TilePosition { x: 10, y: 15 }
+            && self.world.player == TilePosition { x: 13, y: 15 }
             && self.world.walk_direction == Some(Facing::Down)
-            && self.world.walk_progress_frames == 15
+            && self.world.walk_progress_frames == 0
             && self.world.camera_handoff_from == Some(Facing::Right)
             && matches!(
                 self.input_log.as_slice(),
@@ -789,9 +789,9 @@ impl LittlerootSession {
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && self.world.frame == 128
-            && self.world.player == TilePosition { x: 10, y: 16 }
+            && self.world.player == TilePosition { x: 13, y: 15 }
             && self.world.walk_direction == Some(Facing::Down)
-            && self.world.walk_progress_frames == 15
+            && self.world.walk_progress_frames == 0
             && self.world.camera_handoff_from == Some(Facing::Right)
             && matches!(
                 self.input_log.as_slice(),
@@ -811,7 +811,7 @@ impl LittlerootSession {
             && self.world.map == MapId::LittlerootTown
             && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, .. }])
             && matches!(self.world.frame, 2176 | 2240 | 2304 | 2368 | 2432 | 2496 | 2560 | 2624 | 2688 | 2752 | 2816 | 2880 | 2944 | 3008 | 3072 | 3136 | 3200 | 3264 | 3328 | 3392 | 3456 | 3520 | 3584 | 3648 | 3712 | 3776 | 3840 | 3904)
-            && native::render_littleroot_held_right_timed(&self.world.player, self.world.frame).is_some())
+            && native::render_littleroot_held_right_timed(self.world.render_player(), self.world.frame).is_some())
             .then(|| match self.world.frame {
                 2176 => ("littleroot-outside-birch-lab-right-2176", "ce02453e8957367700771aec5eee5f11699842f726350dd355177f911b2951c4"),
                 2240 => ("littleroot-outside-birch-lab-right-2240", "31c7812cade2e90d47ae40ae06d04cbe85a29a68e488ea2334060ad0dd352fc8"),
@@ -1383,7 +1383,7 @@ impl LittlerootSession {
                 if self.world.map == MapId::LittlerootTown
                     && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Up | Input::Down | Input::Left | Input::Right, frames: 16 }]) =>
             {
-                native::render_littleroot_start_walk(&self.world.player, self.world.facing)
+                native::render_littleroot_start_walk(self.world.render_player(), self.world.facing)
             }
             OpeningCheckpoint::RivalOutsideLab
                 if self.world.map == MapId::LittlerootTown
@@ -1413,76 +1413,76 @@ impl LittlerootSession {
                 if self.world.map == MapId::LittlerootTown
                     && self.rival_ambient_noop_frame() == Some(128) =>
             {
-                native::render_littleroot_ambient_128(&self.world.player, self.world.facing)
+                native::render_littleroot_ambient_128(self.world.render_player(), self.world.facing)
             }
             OpeningCheckpoint::RivalOutsideLab
                 if self.world.map == MapId::LittlerootTown
                     && self.rival_ambient_noop_frame() == Some(192) =>
             {
-                native::render_littleroot_ambient_192(&self.world.player, self.world.facing)
+                native::render_littleroot_ambient_192(self.world.render_player(), self.world.facing)
             }
             OpeningCheckpoint::RivalOutsideLab
                 if self.world.map == MapId::LittlerootTown
                     && matches!(self.rival_ambient_noop_frame(), Some(256 | 320)) =>
             {
-                native::render_littleroot_ambient_256(&self.world.player, self.world.facing)
+                native::render_littleroot_ambient_256(self.world.render_player(), self.world.facing)
             }
             OpeningCheckpoint::RivalOutsideLab
                 if self.world.map == MapId::LittlerootTown
                     && matches!(self.rival_ambient_noop_frame(), Some(384 | 448)) =>
             {
-                native::render_littleroot_ambient_384(&self.world.player, self.world.facing)
+                native::render_littleroot_ambient_384(self.world.render_player(), self.world.facing)
             }
             OpeningCheckpoint::RivalOutsideLab
                 if self.world.map == MapId::LittlerootTown
                     && matches!(self.rival_ambient_noop_frame(), Some(512 | 576)) =>
             {
-                native::render_littleroot_ambient_512(&self.world.player, self.world.facing)
+                native::render_littleroot_ambient_512(self.world.render_player(), self.world.facing)
             }
             OpeningCheckpoint::RivalOutsideLab
                 if self.world.map == MapId::LittlerootTown && self.rival_ambient_noop_frame() == Some(640) =>
             {
-                native::render_littleroot_ambient_640(&self.world.player, self.world.facing)
+                native::render_littleroot_ambient_640(self.world.render_player(), self.world.facing)
             }
             OpeningCheckpoint::RivalOutsideLab
                 if self.world.map == MapId::LittlerootTown && self.rival_ambient_noop_frame() == Some(704) =>
             {
-                native::render_littleroot_ambient_704(&self.world.player, self.world.facing)
+                native::render_littleroot_ambient_704(self.world.render_player(), self.world.facing)
             }
             OpeningCheckpoint::RivalOutsideLab
                 if self.world.map == MapId::LittlerootTown && self.rival_ambient_noop_frame() == Some(768) =>
             {
-                native::render_littleroot_ambient_768(&self.world.player, self.world.facing)
+                native::render_littleroot_ambient_768(self.world.render_player(), self.world.facing)
             }
             OpeningCheckpoint::RivalOutsideLab
                 if self.world.map == MapId::LittlerootTown && self.rival_ambient_noop_frame() == Some(832) =>
             {
-                native::render_littleroot_ambient_832(&self.world.player, self.world.facing)
+                native::render_littleroot_ambient_832(self.world.render_player(), self.world.facing)
             }
             OpeningCheckpoint::RivalOutsideLab
                 if self.world.map == MapId::LittlerootTown && self.rival_ambient_noop_frame() == Some(896) =>
             {
-                native::render_littleroot_ambient_896(&self.world.player, self.world.facing)
+                native::render_littleroot_ambient_896(self.world.render_player(), self.world.facing)
             }
             OpeningCheckpoint::RivalOutsideLab
                 if self.world.map == MapId::LittlerootTown && self.rival_ambient_noop_frame() == Some(960) =>
             {
-                native::render_littleroot_ambient_960(&self.world.player, self.world.facing)
+                native::render_littleroot_ambient_960(self.world.render_player(), self.world.facing)
             }
             OpeningCheckpoint::RivalOutsideLab if self.world.map == MapId::LittlerootTown => {
                 if self.world.walk_direction == Some(Facing::Right) {
-                    if let Some(frame) = native::render_littleroot_held_right_timed(&self.world.player, self.world.frame) {
+                    if let Some(frame) = native::render_littleroot_held_right_timed(self.world.render_player(), self.world.frame) {
                         frame
                     } else {
-                        native::render_littleroot_with_idle_objects_at_tick(&self.world.player, self.world.facing, self.world.walk_direction, self.world.walk_progress_frames, Some(self.world.frame), self.world.camera_handoff_from)
+                        native::render_littleroot_with_idle_objects_at_tick(self.world.render_player(), self.world.facing, self.world.walk_direction, self.world.walk_progress_frames, Some(self.world.frame), self.world.camera_handoff_from)
                     }
                 } else {
-                    native::render_littleroot_with_idle_objects_at_tick(&self.world.player, self.world.facing, self.world.walk_direction, self.world.walk_progress_frames, Some(self.world.frame), self.world.camera_handoff_from)
+                    native::render_littleroot_with_idle_objects_at_tick(self.world.render_player(), self.world.facing, self.world.walk_direction, self.world.walk_progress_frames, Some(self.world.frame), self.world.camera_handoff_from)
                 }
             }
-            OpeningCheckpoint::BedroomIdle if self.world.map == MapId::MaysHouse2F => native::render_bedroom_with_idle_objects(self.world.map, &self.world.player),
-            OpeningCheckpoint::BirchLabExterior if self.world.map == MapId::LittlerootTown => native::render_birch_exterior_with_idle_objects(&self.world.player),
-            _ => native::render_world_view_with_dynamic_objects(self.world.map, &self.world.player, self.world.player_gender, self.world.facing, self.world.walk_direction, self.world.walk_progress_frames, self.world.frame, &self.world.npcs, &self.world.npc_walk_starts),
+            OpeningCheckpoint::BedroomIdle if self.world.map == MapId::MaysHouse2F => native::render_bedroom_with_idle_objects(self.world.map, self.world.render_player()),
+            OpeningCheckpoint::BirchLabExterior if self.world.map == MapId::LittlerootTown => native::render_birch_exterior_with_idle_objects(self.world.render_player()),
+            _ => native::render_world_view_with_dynamic_objects(self.world.map, self.world.render_player(), self.world.player_gender, self.world.facing, self.world.walk_direction, self.world.walk_progress_frames, self.world.frame, &self.world.npcs, &self.world.npc_walk_starts),
         }.expect("staged Little Root terrain and object assets must render");
         if self.world.map == MapId::LittlerootTown && !captured_directional_48 {
             native::apply_littleroot_continuous_composite_delta(&mut frame, self.world.walk_direction, self.world.frame)
