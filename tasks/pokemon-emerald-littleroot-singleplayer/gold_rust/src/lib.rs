@@ -266,6 +266,11 @@ impl LittlerootSession {
             self.redraw();
             return;
         }
+        if self.world.advance_field_dialogue_printer(request.frames) {
+            self.input_log.push(request);
+            self.redraw();
+            return;
+        }
         if self.world.advance_oldale_mart_scene(request.frames) {
             self.input_log.push(request);
             self.redraw();
@@ -533,6 +538,10 @@ impl LittlerootSession {
                     // its dismissing A request begins the employee/player
                     // `applymovement` stream before the next input arrives.
                     self.world.advance_oldale_mart_scene(request.frames);
+                } else {
+                    // Ordinary object interactions enter the source text
+                    // printer during this same held-A sample window.
+                    self.world.advance_field_dialogue_printer(request.frames);
                 }
             }
             Input::Select => self.world.cycle_starter(),

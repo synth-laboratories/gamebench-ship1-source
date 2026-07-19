@@ -420,6 +420,10 @@ pub struct WorldState {
     /// Invitation page before the Mart guide begins its scripted walk.
     #[serde(default)]
     pub oldale_mart_dialogue_page: u8,
+    /// Remaining frames while a regular overworld message prints. Story
+    /// scripts with their own message sequencing retain dedicated clocks.
+    #[serde(default)]
+    pub field_dialogue_frames: Option<u16>,
     /// Remaining frames in Mom's post-clock upstairs entry script.
     pub clock_visit_frames: Option<u16>,
     /// Remaining frames in the source truck-arrival choreography before Mom
@@ -553,6 +557,7 @@ impl WorldState {
             oldale_mart_scene_route: None,
             oldale_mart_dialogue_frames: None,
             oldale_mart_dialogue_page: 0,
+            field_dialogue_frames: None,
             clock_visit_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
@@ -653,6 +658,7 @@ impl WorldState {
             oldale_mart_scene_route: None,
             oldale_mart_dialogue_frames: None,
             oldale_mart_dialogue_page: 0,
+            field_dialogue_frames: None,
             clock_visit_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
@@ -756,6 +762,7 @@ impl WorldState {
             oldale_mart_scene_route: None,
             oldale_mart_dialogue_frames: None,
             oldale_mart_dialogue_page: 0,
+            field_dialogue_frames: None,
             clock_visit_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
@@ -852,6 +859,7 @@ impl WorldState {
             oldale_mart_scene_route: None,
             oldale_mart_dialogue_frames: None,
             oldale_mart_dialogue_page: 0,
+            field_dialogue_frames: None,
             clock_visit_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
@@ -980,6 +988,7 @@ impl WorldState {
             oldale_mart_scene_route: None,
             oldale_mart_dialogue_frames: None,
             oldale_mart_dialogue_page: 0,
+            field_dialogue_frames: None,
             clock_visit_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
@@ -1097,7 +1106,7 @@ impl WorldState {
                 .expect("Route 101 starter-selection tile must be staged");
             self.facing = Facing::Left;
             self.phase = StoryPhase::StarterSelect;
-            self.dialogue = Some("Which POKéMON will you choose?".to_owned());
+            self.begin_field_dialogue("Which POKéMON will you choose?".to_owned());
             self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
             return true;
         }
@@ -1106,7 +1115,7 @@ impl WorldState {
             && (x, y) == (10, 3) {
             self.phase = StoryPhase::RivalBattle;
             self.title_intro_step = 0;
-            self.dialogue = Some(rival_route103_observation(self.player_gender));
+            self.begin_field_dialogue(rival_route103_observation(self.player_gender));
             return true;
         }
         if self.phase == StoryPhase::MeetRival && self.is_rival_pokeball(x, y) {
@@ -1128,7 +1137,7 @@ impl WorldState {
             return true;
         }
         if let Some(text) = self.house_background_text(x, y) {
-            self.dialogue = Some(text.to_owned());
+            self.begin_field_dialogue(text.to_owned());
             return true;
         }
         let Some(npc) = self.npcs.iter_mut().find(|npc| npc.map == self.map && npc.position.x == x && npc.position.y == y) else {
@@ -1140,7 +1149,7 @@ impl WorldState {
             Facing::Left => Facing::Right,
             Facing::Right => Facing::Left,
         };
-        self.dialogue = Some(match npc.id.as_str() {
+        let dialogue = match npc.id.as_str() {
             "twin" if self.phase >= StoryPhase::PokedexReceived => {
                 "Are you going to catch POKéMON?\nGood luck!".to_owned()
             }
@@ -1201,8 +1210,22 @@ impl WorldState {
                 PlayerGender::May => "BRENDAN: Where should I look for\nPOKéMON next…".to_owned(),
             },
             _ => return false,
-        });
+        };
+        if self.oldale_mart_dialogue_frames.is_some() {
+            self.field_dialogue_frames = None;
+            self.dialogue = Some(dialogue);
+        } else {
+            self.begin_field_dialogue(dialogue);
+        }
         true
+    }
+
+    /// Starts a normal object/background field message. Emerald's text box
+    /// has a lead-in before revealing one glyph per frame, so the message is
+    /// not dismissible on the same input that opened it.
+    fn begin_field_dialogue(&mut self, dialogue: String) {
+        self.field_dialogue_frames = Some(dialogue_printer_duration(&dialogue));
+        self.dialogue = Some(dialogue);
     }
 
     pub fn open_menu(&mut self) {
@@ -1708,6 +1731,16 @@ impl WorldState {
         true
     }
 
+    /// Advances a regular overworld message printer. The request that opens
+    /// an interaction consumes its initial sample window here as it does on
+    /// hardware, while later A presses remain locked until printing ends.
+    pub fn advance_field_dialogue_printer(&mut self, frames: u32) -> bool {
+        let Some(remaining) = self.field_dialogue_frames else { return false; };
+        let next = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
+        self.field_dialogue_frames = (next != 0).then_some(next);
+        true
+    }
+
     /// Runs `PlayersHouse_2F_Movement_MomEnters{Male,Female}` after the wall
     /// clock: delay 8, step down, fast turn, delay 24, then step beside the
     /// player. Input remains locked until her room dialogue opens.
@@ -2051,6 +2084,7 @@ impl WorldState {
         let Some(remaining) = self.running_shoes_wait_frames.map(u16::from)
             .or(self.running_shoes_dialogue_frames)
             .or(self.truck_arrival_dialogue_frames)
+            .or(self.field_dialogue_frames)
         else {
             return Some(dialogue.clone());
         };
@@ -2067,6 +2101,7 @@ impl WorldState {
             || self.running_shoes_dialogue_frames.is_some()
             || self.truck_arrival_dialogue_frames.is_some()
             || self.oldale_mart_dialogue_frames.is_some()
+            || self.field_dialogue_frames.is_some()
     }
 
     pub fn advance_running_shoes_scene(&mut self, frames: u32) -> bool {
@@ -3285,6 +3320,7 @@ impl WorldState {
         if self.truck_arrival_dialogue_frames.is_some()
             || self.running_shoes_wait_frames.is_some()
             || self.oldale_mart_dialogue_frames.is_some()
+            || self.field_dialogue_frames.is_some()
         {
             return;
         }
