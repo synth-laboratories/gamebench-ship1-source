@@ -437,9 +437,6 @@ const LITTLEROOT_RIGHT16_NOOP1_RIGHT16_RGB_DELTA_ZLIB_B64: &str = include_str!("
 const LITTLEROOT_UP128_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_up128.rgb_delta.zlib.b64");
 const LITTLEROOT_RUNNING_SHOES_PROMPT_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_running_shoes_prompt.rgb_delta.zlib.b64");
 const LITTLEROOT_RUNNING_SHOES_PROMPT_RGB_ZLIB_B64: &str = include_str!("../assets/littleroot_running_shoes_prompt.rgb.zlib.b64");
-const ROUTE101_ARRIVAL_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/route101_arrival.rgb_delta.zlib.b64");
-const ROUTE101_WURMPLE_APPEAR_RGB_ZLIB_B64: &str = include_str!("../assets/route101_wurmple_appear.rgb.zlib.b64");
-const ROUTE103_AFTER_WURMPLE_RGB_ZLIB_B64: &str = include_str!("../assets/route103_after_wurmple.rgb.zlib.b64");
 const LITTLEROOT_RIGHT144_REGION_B64: &str = include_str!("../assets/littleroot_right144_region.rgb.b64");
 const LITTLEROOT_RIGHT136_NPC_B64: &str = include_str!("../assets/littleroot_right136_npc.rgb.b64");
 const LITTLEROOT_RIGHT180_NPC_B64: &str = include_str!("../assets/littleroot_right180_npc.rgb.b64");
@@ -2994,38 +2991,6 @@ pub fn littleroot_running_shoes_prompt_source() -> Result<Vec<u8>, String> {
     )
 }
 
-/// Source-derived Route 101 arrival object components. The typed renderer
-/// already supplies the exact terrain, camera, map transition, and logical
-/// object locations; this sparse overlay retains the observed May and Boy
-/// OAM pixels at the first live post-Running-Shoes arrival.
-pub fn apply_route101_arrival_source_delta(frame: &mut [u8]) -> Result<(), String> {
-    apply_littleroot_zlib_sparse_rgb_delta(
-        frame,
-        ROUTE101_ARRIVAL_RGB_DELTA_ZLIB_B64,
-        "Route 101 arrival",
-    )
-}
-
-/// Complete source compositor output for the first live Route 101 wild
-/// encounter appearance after its observed battle-transition sequence.
-pub fn route101_wurmple_appearance_source() -> Result<Vec<u8>, String> {
-    decode_littleroot_zlib_state(
-        ROUTE101_WURMPLE_APPEAR_RGB_ZLIB_B64,
-        FRAME_WIDTH * 160 * 3,
-        "Route 101 Wurmple appearance RGB",
-    )
-}
-
-/// Complete source compositor output for the Route 103 entry reached after
-/// the live Route 101 Wurmple encounter is escaped.
-pub fn route103_after_wurmple_source() -> Result<Vec<u8>, String> {
-    decode_littleroot_zlib_state(
-        ROUTE103_AFTER_WURMPLE_RGB_ZLIB_B64,
-        FRAME_WIDTH * 160 * 3,
-        "Route 103 post-Wurmple RGB",
-    )
-}
-
 /// The held-right wall trace enters its next object scheduler phase at 188
 /// frames.  Its terrain camera is still stopped at x=17, while two nearby
 /// object events use the source OAM positions and the shared 192-tick upload.
@@ -4508,7 +4473,9 @@ fn dynamic_object_oam(
 fn apply_dynamic_npc_tiles(vram: &mut [u8], palette: &mut [u8], map_id: MapId, player_gender: PlayerGender, npc_animation_tick: u64, npcs: &[NpcState], npc_walk_starts: &[NpcWalkStart]) -> Result<(), String> {
     for (entry, npc) in npcs.iter().filter(|npc| npc.map == map_id).take(127).enumerate() {
         let Some(encoded) = npc_source_sheet(map_id, player_gender, &npc.id) else { continue; };
-        let sheet = decode_npc_sprite_sheet(encoded)?;
+        let sheet = decode_npc_sprite_sheet(encoded).map_err(|error| {
+            format!("failed to decode object-event sheet for {}: {error}", npc.id)
+        })?;
         let walking_frame = npc_walk_starts.iter().find(|walk| walk.id == npc.id)
             .and_then(|walk| {
                 let elapsed = npc_animation_tick.saturating_sub(walk.frame);

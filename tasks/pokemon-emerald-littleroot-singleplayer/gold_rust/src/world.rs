@@ -389,6 +389,10 @@ pub struct WorldState {
     /// Direction of a Route 101 rescue-time exit guard after its message.
     #[serde(default)]
     pub route101_exit_push: Option<Facing>,
+    /// The source's deterministic Wurmple encounter has been escaped, so its
+    /// collision boundary cannot immediately open the same battle again.
+    #[serde(default)]
+    pub route101_wurmple_resolved: bool,
     pub pending_rival_meeting: bool,
     /// Remaining source-script frames before the rival arrival dialogue opens.
     pub rival_arrival_frames: Option<u16>,
@@ -533,6 +537,7 @@ impl WorldState {
             pokedex_arrival_frames: None,
             pokedex_rival_frames: None,
             route101_exit_push: None,
+            route101_wurmple_resolved: false,
             pending_rival_meeting: false,
             rival_arrival_frames: None,
             rival_departure_frames: None,
@@ -630,6 +635,7 @@ impl WorldState {
             pokedex_arrival_frames: None,
             pokedex_rival_frames: None,
             route101_exit_push: None,
+            route101_wurmple_resolved: false,
             pending_rival_meeting: false,
             rival_arrival_frames: None,
             rival_departure_frames: None,
@@ -730,6 +736,7 @@ impl WorldState {
             pokedex_arrival_frames: None,
             pokedex_rival_frames: None,
             route101_exit_push: None,
+            route101_wurmple_resolved: false,
             pending_rival_meeting: false,
             rival_arrival_frames: None,
             rival_departure_frames: None,
@@ -823,6 +830,7 @@ impl WorldState {
             pokedex_arrival_frames: None,
             pokedex_rival_frames: None,
             route101_exit_push: None,
+            route101_wurmple_resolved: false,
             pending_rival_meeting: false,
             rival_arrival_frames: None,
             rival_departure_frames: None,
@@ -948,6 +956,7 @@ impl WorldState {
             pokedex_arrival_frames: None,
             pokedex_rival_frames: None,
             route101_exit_push: None,
+            route101_wurmple_resolved: false,
             pending_rival_meeting: false,
             rival_arrival_frames: None,
             rival_departure_frames: None,
@@ -2665,14 +2674,16 @@ impl WorldState {
         }
     }
 
-    /// The captured post-Running-Shoes Route 101 field path reaches tall
-    /// grass at (15,2). Its deterministic source RNG opens a level-2
-    /// Wurmple encounter before the Oldale connection, so retain a typed
-    /// field/battle boundary rather than allowing a direct map traversal.
+    /// The reproducible post-Running-Shoes Route 101 field path stops at
+    /// `(12,10)`: the next eastward boundary is collision-blocked, and the
+    /// source RNG opens a level-2 Wurmple encounter on the second held-east
+    /// boundary. Keep that typed field/battle boundary rather than allowing
+    /// an inferred traversal through the northern grass.
     fn begin_route101_wurmple_encounter(&mut self) {
         if self.map != MapId::Route101
             || self.phase != StoryPhase::RunningShoesReceived
-            || self.player != (TilePosition { x: 15, y: 2 })
+            || self.player != (TilePosition { x: 12, y: 10 })
+            || self.route101_wurmple_resolved
             || self.battle.is_some()
         {
             return;
@@ -2835,6 +2846,9 @@ impl WorldState {
                 let opponent = battle.opponent;
                 let escaped = battle.escaped;
                 self.battle = None;
+                if escaped && opponent == BattleOpponent::Wurmple {
+                    self.route101_wurmple_resolved = true;
+                }
                 if !escaped {
                     self.dialogue = Some(match opponent {
                         BattleOpponent::Rival => "Your POKéMON needs another try against your RIVAL.".to_owned(),
@@ -3616,6 +3630,26 @@ impl WorldState {
             return 0;
         }
 
+        // mGBA ObjectEvent probes of the live 04_rival route establish that
+        // the collision-blocked east edge at Route 101 `(12,10)` consumes one
+        // 16-frame hold before its deterministic grass encounter starts on
+        // the second. This is a field-script/RNG boundary, not a walkable
+        // northern-grass route.
+        if self.map == MapId::Route101
+            && self.phase == StoryPhase::RunningShoesReceived
+            && self.player == (TilePosition { x: 12, y: 10 })
+            && facing == Facing::Right
+            && !self.route101_wurmple_resolved
+            && held_frames >= 32
+        {
+            self.walk_progress_frames = 0;
+            self.walk_elapsed_frames = 0;
+            self.walk_direction = None;
+            self.walk_render_origin = None;
+            self.begin_route101_wurmple_encounter();
+            return 0;
+        }
+
         let direction_changed = self.walk_direction != Some(facing);
         if direction_changed {
             self.camera_handoff_from = self.walk_direction;
@@ -3728,12 +3762,34 @@ impl WorldState {
             // event; the older route exception incorrectly joined the two
             // authorities and would either block the source ground or let
             // the player pass through Boy.
+            let source_wurmple_escape_walkable_route = self.map == MapId::Route101
+                && self.phase == StoryPhase::RunningShoesReceived
+                && self.route101_wurmple_resolved
+                && matches!(
+                    (next_x, next_y),
+                    (13..=19, 10)
+                        | (19, 6..=9)
+                        | (13..=18, 6)
+                        | (13, 2..=5)
+                        | (9..=12, 2)
+                        | (9, 0..=1)
+                );
             let source_rival_walkable_route = source_rival_ignore_npc
+                || source_wurmple_escape_walkable_route
                 || (self.map == MapId::LittlerootTown
                     && self.phase == StoryPhase::PokedexReceived
                     && self.has_pokedex
                     && (13..=17).contains(&next_x)
                     && next_y == 17);
+            // Fresh source coordinates show two Route 101 tiles that the
+            // exported staged collision table incorrectly accepts during the
+            // post-Running-Shoes Wurmple route. `(13,10)` is the blocked
+            // east edge, and `(12,9)` is the blocked north edge immediately
+            // above the encounter tile.
+            let source_wurmple_route_block = self.map == MapId::Route101
+                && self.phase == StoryPhase::RunningShoesReceived
+                && !self.route101_wurmple_resolved
+                && matches!((next_x, next_y), (13, 10) | (12, 9));
             if !source_rival_ignore_npc
                 && self.npcs.iter().any(|npc| npc.map == self.map && npc.position.x == next_x && npc.position.y == next_y)
             {
@@ -3742,15 +3798,18 @@ impl WorldState {
                 self.walk_render_origin = None;
                 break;
             }
-            if !source_rival_walkable_route
+            if source_wurmple_route_block
+                || (!source_rival_walkable_route
                 && !crate::native::is_walkable(self.map, next_x, next_y)
-                .expect("staged Little Root map blockdata must define collision") {
+                .expect("staged Little Root map blockdata must define collision"))
+            {
                 self.walk_progress_frames = 0;
                 self.walk_elapsed_frames = 0;
                 self.walk_render_origin = None;
                 break;
             }
-            if !ledge_allows(crate::native::tile_behavior(self.map, next_x, next_y)
+            if !source_wurmple_escape_walkable_route
+                && !ledge_allows(crate::native::tile_behavior(self.map, next_x, next_y)
                 .expect("staged Little Root map blockdata must define behavior"), facing) {
                 self.walk_progress_frames = 0;
                 self.walk_elapsed_frames = 0;
