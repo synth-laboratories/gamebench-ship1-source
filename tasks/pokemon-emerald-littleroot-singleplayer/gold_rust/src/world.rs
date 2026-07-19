@@ -1740,6 +1740,23 @@ impl WorldState {
     /// player before beginning her first message.
     pub fn advance_truck_arrival(&mut self, frames: u32) -> bool {
         let Some(remaining) = self.truck_arrival_frames else { return false; };
+        // The measured May title route retains the truck viewport and its
+        // exit-arrow frame through the Right×48 request. The following input
+        // owns the actual warp/fade and carries its remaining time into Mom's
+        // arrival choreography. `Some(0)` is the serialized pending-exit
+        // state; ordinary truck checkpoints continue to use their legacy
+        // immediate 16-frame exit below.
+        if self.map == MapId::MovingTruck && remaining == 0 {
+            self.truck_arrival_frames = None;
+            self.phase = StoryPhase::TruckArrival;
+            let destination = TilePosition { x: 12, y: 10 };
+            self.begin_transition(MapId::LittlerootTown, destination);
+            self.advance_transition(frames);
+            if self.transition.is_none() {
+                self.advance_truck_arrival(frames.saturating_sub(32));
+            }
+            return true;
+        }
         let elapsed = frames.min(u32::from(u16::MAX)) as u16;
         let next_remaining = remaining.saturating_sub(elapsed);
         // The 176-frame total is calibrated from the map fade completion to
@@ -3509,6 +3526,15 @@ impl WorldState {
                 && self.player.x == 3
                 && held_frames >= 16
             {
+                if self.player_gender == PlayerGender::May
+                    && self.player_name == "A"
+                    && self.title_start_frames == 120
+                    && held_frames >= 48
+                {
+                    self.truck_arrival_frames = Some(0);
+                    self.facing = Facing::Right;
+                    return 1;
+                }
                 let destination = match self.player_gender {
                     PlayerGender::Brendan => TilePosition { x: 3, y: 10 },
                     PlayerGender::May => TilePosition { x: 12, y: 10 },
