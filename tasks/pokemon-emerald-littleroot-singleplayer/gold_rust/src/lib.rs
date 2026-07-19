@@ -309,6 +309,11 @@ impl LittlerootSession {
             self.redraw();
             return;
         }
+        if self.world.advance_tv_broadcast_view(request.frames) {
+            self.input_log.push(request);
+            self.redraw();
+            return;
+        }
         if self.world.advance_truck_arrival(request.frames) {
             self.input_log.push(request);
             self.redraw();
@@ -619,6 +624,10 @@ impl LittlerootSession {
                     // `PlayerApproachTVForGym*` stream in the same held-A
                     // input window before its `waitmovement` lock continues.
                     self.world.advance_tv_broadcast_approach(request.frames);
+                    // Closing `MaybeDadWillBeOn` likewise begins Mom's
+                    // make-room movement and the final player-to-TV rail in
+                    // this held-A window before its waits keep input locked.
+                    self.world.advance_tv_broadcast_view(request.frames);
                     // The wall-clock background event opens its first source
                     // message during this A sample window. Its printer must
                     // consume that same request, just like ordinary object
