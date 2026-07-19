@@ -1145,21 +1145,6 @@ impl LittlerootSession {
             && self.world.battle.is_none()
     }
 
-    fn oldale_after_wurmple_evidence(&self) -> bool {
-        self.checkpoint == OpeningCheckpoint::RivalOutsideLab
-            && self.frame_index == 7_082
-            && self.input_log.len() == 243
-            && self.world.phase == world::StoryPhase::RunningShoesReceived
-            && self.world.map == MapId::OldaleTown
-            && self.world.player == TilePosition { x: 10, y: 19 }
-            && self.world.player_gender == world::PlayerGender::May
-            && self.world.player_name == "CASEY"
-            && self.world.facing == Facing::Up
-            && self.world.walk_progress_frames == 0
-            && self.world.dialogue.is_none()
-            && self.world.battle.is_none()
-    }
-
     fn title_to_met_rival_rival_entry_evidence(&self) -> bool {
         self.checkpoint == OpeningCheckpoint::TitleMenu
             && self.frame_index == 22_096
@@ -1357,9 +1342,6 @@ impl LittlerootSession {
         if self.route103_after_wurmple_evidence() {
             return "source_route103_arrival_exact";
         }
-        if self.oldale_after_wurmple_evidence() {
-            return "source_oldale_arrival_exact";
-        }
         if self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && matches!(
                 self.input_log.as_slice(),
@@ -1432,18 +1414,6 @@ impl LittlerootSession {
                 "trace": "route103-after-wurmple-arrival",
                 "baseline_only": false,
                 "source_route103_arrival": true,
-                "expected_sha256": expected_sha256,
-                "actual_sha256": actual_sha256,
-                "exact": actual_sha256 == expected_sha256,
-            });
-        }
-        if self.oldale_after_wurmple_evidence() {
-            let expected_sha256 = "e3fbb6d7176469bfa7aec5b2bd09026438f99df74498708ace529137f3b16bea";
-            let actual_sha256 = frame_sha256(self.frame_rgb());
-            return json!({
-                "trace": "oldale-after-wurmple-arrival",
-                "baseline_only": false,
-                "source_oldale_arrival": true,
                 "expected_sha256": expected_sha256,
                 "actual_sha256": actual_sha256,
                 "exact": actual_sha256 == expected_sha256,
@@ -2227,15 +2197,6 @@ impl LittlerootSession {
     }
 
     fn redraw(&mut self) {
-        // The first immediate Oldale arrival is source-proven at the
-        // south-edge camera limit. Its exact compositor must be selected
-        // before the generic map pass, whose unclamped edge filter does not
-        // yet own that camera state.
-        if self.oldale_after_wurmple_evidence() {
-            self.framebuffer = native::oldale_after_wurmple_source()
-                .expect("Oldale post-Wurmple arrival must decode");
-            return;
-        }
         if self.has_native_scene() {
             self.framebuffer = self.render_native_world();
         } else {
