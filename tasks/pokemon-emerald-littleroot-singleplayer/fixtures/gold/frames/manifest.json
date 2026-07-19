@@ -434,6 +434,13 @@
       "sha256": "b9f725d96a61e61205124199f1aa4dbe4032b031b4413dd11b3744a8234a9c58"
     },
     {
+      "id": "littleroot-running-shoes-initial-prompt",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "right", "frames": 80 }, { "action": "up", "frames": 160 }, { "action": "left", "frames": 48 }],
+      "frame": "gold_rust/assets/littleroot_running_shoes_prompt.png.b64",
+      "sha256": "990d6da15cc5811e61e8bed68e44afcbef77bb2d8d818304fd152f27d5464602"
+    },
+    {
       "id": "title-to-met-rival-may-first-page",
       "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/00_init/00_init.state",
       "replay": "fixtures/gold/replays/title_to_met_rival_may.json",

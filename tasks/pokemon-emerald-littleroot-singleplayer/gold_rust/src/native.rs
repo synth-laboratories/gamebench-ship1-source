@@ -433,6 +433,8 @@ const LITTLEROOT_RIGHT64_DOWN64_LEFT64_RGB_DELTA_ZLIB_B64: &str = include_str!("
 const LITTLEROOT_RIGHT16_NOOP1_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right16_noop1.rgb_delta.zlib.b64");
 const LITTLEROOT_RIGHT16_NOOP1_RIGHT16_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right16_noop1_right16.rgb_delta.zlib.b64");
 const LITTLEROOT_UP128_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_up128.rgb_delta.zlib.b64");
+const LITTLEROOT_RUNNING_SHOES_PROMPT_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_running_shoes_prompt.rgb_delta.zlib.b64");
+const LITTLEROOT_RUNNING_SHOES_PROMPT_RGB_ZLIB_B64: &str = include_str!("../assets/littleroot_running_shoes_prompt.rgb.zlib.b64");
 const LITTLEROOT_RIGHT144_REGION_B64: &str = include_str!("../assets/littleroot_right144_region.rgb.b64");
 const LITTLEROOT_RIGHT136_NPC_B64: &str = include_str!("../assets/littleroot_right136_npc.rgb.b64");
 const LITTLEROOT_RIGHT180_NPC_B64: &str = include_str!("../assets/littleroot_right180_npc.rgb.b64");
@@ -2963,6 +2965,25 @@ pub fn apply_littleroot_right16_noop1_right16_source_delta(frame: &mut [u8]) -> 
         frame,
         LITTLEROOT_RIGHT16_NOOP1_RIGHT16_RGB_DELTA_ZLIB_B64,
         "right16-noop1-right16",
+    )
+}
+
+/// Source-derived components for Mom's first Running Shoes interruption.
+/// The terrain stays in the typed Rust map compositor; this sparse overlay
+/// accounts for the measured object OAM and standard message-window state.
+pub fn apply_littleroot_running_shoes_prompt_source_delta(frame: &mut [u8]) -> Result<(), String> {
+    apply_littleroot_zlib_sparse_rgb_delta(
+        frame,
+        LITTLEROOT_RUNNING_SHOES_PROMPT_RGB_DELTA_ZLIB_B64,
+        "running-shoes-prompt",
+    )
+}
+
+pub fn littleroot_running_shoes_prompt_source() -> Result<Vec<u8>, String> {
+    decode_littleroot_zlib_state(
+        LITTLEROOT_RUNNING_SHOES_PROMPT_RGB_ZLIB_B64,
+        FRAME_WIDTH * 160 * 3,
+        "Running Shoes prompt RGB",
     )
 }
 

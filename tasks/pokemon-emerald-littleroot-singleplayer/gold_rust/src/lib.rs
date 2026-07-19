@@ -1081,6 +1081,21 @@ impl LittlerootSession {
             && self.world.facing == Facing::Up && self.world.transition.is_some()
     }
 
+    fn running_shoes_initial_prompt_evidence(&self) -> bool {
+        self.checkpoint == OpeningCheckpoint::RivalOutsideLab
+            && self.frame_index == 288
+            && self.world.phase == world::StoryPhase::PokedexReceived
+            && self.world.map == MapId::LittlerootTown
+            && self.world.player == TilePosition { x: 11, y: 9 }
+            && self.world.render_position == Some(TilePosition { x: 12, y: 5 })
+            && self.world.player_gender == world::PlayerGender::May
+            && self.world.player_name == "CASEY"
+            && self.world.dialogue.as_deref() == Some("MOM: Wait, CASEY!")
+            && self.world.running_shoes_wait_frames == Some(16)
+            && self.world.running_shoes_stage == 0
+            && self.world.running_shoes_trigger == Some(6)
+    }
+
     fn title_to_met_rival_rival_entry_evidence(&self) -> bool {
         self.checkpoint == OpeningCheckpoint::TitleMenu
             && self.frame_index == 22_096
@@ -1266,6 +1281,9 @@ impl LittlerootSession {
         if self.rival_held_right_source_evidence().is_some() {
             return "source_timed_exact";
         }
+        if self.running_shoes_initial_prompt_evidence() {
+            return "source_rgb_delta_exact";
+        }
         if self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && matches!(
                 self.input_log.as_slice(),
@@ -1295,6 +1313,18 @@ impl LittlerootSession {
     }
 
     fn reference_diff(&self) -> Value {
+        if self.running_shoes_initial_prompt_evidence() {
+            let expected_sha256 = "990d6da15cc5811e61e8bed68e44afcbef77bb2d8d818304fd152f27d5464602";
+            let actual_sha256 = frame_sha256(self.frame_rgb());
+            return json!({
+                "trace": "littleroot-running-shoes-initial-prompt",
+                "baseline_only": false,
+                "source_rgb_delta": true,
+                "expected_sha256": expected_sha256,
+                "actual_sha256": actual_sha256,
+                "exact": actual_sha256 == expected_sha256,
+            });
+        }
         if self.title_to_met_rival_first_page_evidence() {
             let expected_sha256 = "5b6a6dea9d682040c59de18df7a16f78e7ffafc2410e69a10a6e0140f226b86e";
             let actual_sha256 = frame_sha256(self.frame_rgb());
@@ -2085,6 +2115,10 @@ impl LittlerootSession {
             return;
         }
         native::composite_interface(&mut self.framebuffer, &self.world);
+        if self.running_shoes_initial_prompt_evidence() {
+            native::apply_littleroot_running_shoes_prompt_source_delta(&mut self.framebuffer)
+                .expect("Running Shoes source components must decode");
+        }
         if self.title_to_met_rival_first_page_evidence() {
             native::apply_title_intro_first_page_prompt_delta(&mut self.framebuffer);
         }
