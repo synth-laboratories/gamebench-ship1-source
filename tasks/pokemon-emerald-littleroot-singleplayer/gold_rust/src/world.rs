@@ -3118,11 +3118,15 @@ impl WorldState {
             // renderer-fitted NPC coordinates must not reject a RAM-proven
             // player move at this gameplay boundary.
             let source_rival_field_route = self.map == MapId::LittlerootTown
-                && self.phase == StoryPhase::PokedexReceived
+                && matches!(
+                    self.phase,
+                    StoryPhase::PokedexReceived | StoryPhase::RunningShoesReceived
+                )
                 && self.has_pokedex
                 && matches!(
                     (next_x, next_y),
-                    (14, 9) | (8, 13) | (10..=13, 13) | (13, 14 | 15) | (9..=12, 15)
+                    (14, 9) | (12, 5..=15) | (8, 13) | (10..=13, 13)
+                        | (13, 14 | 15) | (9..=12, 15)
                 );
             if !source_rival_field_route
                 && self.npcs.iter().any(|npc| npc.map == self.map && npc.position.x == next_x && npc.position.y == next_y)
