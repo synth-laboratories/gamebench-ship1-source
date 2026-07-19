@@ -2930,6 +2930,14 @@ impl WorldState {
                         2 => {
                             self.running_shoes_stage = 3;
                             self.dialogue = Some(running_shoes_page(1, &self.player_name));
+                            // The frozen rival-exterior source keeps Mom at
+                            // her approach endpoint, then immediately marks
+                            // the field object hidden as A advances the long
+                            // Running Shoes message. It does not run the
+                            // Porymap branch's late reverse walk.
+                            if self.running_shoes_trigger == Some(SOURCE_RIVAL_RUNNING_SHOES_TRIGGER) {
+                                self.npcs.retain(|npc| npc.id != "mom_outside");
+                            }
                         }
                         3 => {
                             self.running_shoes_stage = 4;
@@ -2940,11 +2948,19 @@ impl WorldState {
                             self.dialogue = Some(running_shoes_page(3, &self.player_name));
                         }
                         5 => {
-                            self.running_shoes_stage = 6;
-                            let (_, steps, fast_turn) = running_shoes_mom_path(
-                                self.running_shoes_trigger.unwrap_or(2), self.player_gender, true,
-                            );
-                            self.running_shoes_frames = Some(u16::from(steps) * 16 + if fast_turn { 8 } else { 0 });
+                            if self.running_shoes_trigger == Some(SOURCE_RIVAL_RUNNING_SHOES_TRIGGER) {
+                                self.pending_running_shoes = false;
+                                self.running_shoes_item_shown = true;
+                                self.running_shoes_stage = 0;
+                                self.running_shoes_trigger = None;
+                                self.phase = StoryPhase::RunningShoesReceived;
+                            } else {
+                                self.running_shoes_stage = 6;
+                                let (_, steps, fast_turn) = running_shoes_mom_path(
+                                    self.running_shoes_trigger.unwrap_or(2), self.player_gender, true,
+                                );
+                                self.running_shoes_frames = Some(u16::from(steps) * 16 + if fast_turn { 8 } else { 0 });
+                            }
                         }
                         _ => {}
                     }
@@ -3642,7 +3658,6 @@ fn running_shoes_approach_frames(trigger: u8, player_gender: PlayerGender) -> u1
 fn running_shoes_mom_path(trigger: u8, player_gender: PlayerGender, returning: bool) -> (Facing, u8, bool) {
     match (trigger, player_gender, returning) {
         (SOURCE_RIVAL_RUNNING_SHOES_TRIGGER, _, false) => (Facing::Right, 5, false),
-        (SOURCE_RIVAL_RUNNING_SHOES_TRIGGER, _, true) => (Facing::Left, 5, false),
         (0 | 1, _, false) => (Facing::Up, 6, false),
         (0 | 1, _, true) => (Facing::Down, 5, false),
         (2, PlayerGender::Brendan, false) => (Facing::Right, 4, false),
