@@ -3097,7 +3097,7 @@ impl WorldState {
             }
             let trigger = self.running_shoes_trigger.unwrap_or(2);
             let (_, steps, fast_turn) = running_shoes_mom_path(trigger, self.player_gender, true);
-            self.running_shoes_frames = Some(u16::from(steps) * 16 + if fast_turn { 8 } else { 0 });
+            self.running_shoes_frames = Some(u16::from(steps) * 16 + if fast_turn { 4 } else { 0 });
             let carried_frames = frames.saturating_sub(u32::from(remaining));
             if carried_frames != 0 {
                 self.advance_running_shoes_scene(carried_frames);
@@ -3111,17 +3111,17 @@ impl WorldState {
         let returning = self.running_shoes_stage == 6;
         let (direction, steps, fast_return_turn) = running_shoes_mom_path(trigger, self.player_gender, returning);
         let total = u16::from(steps) * 16
-            + if (!returning && !source_rival_trigger) || fast_return_turn { 8 } else { 0 };
+            + if (!returning && !source_rival_trigger) || fast_return_turn { 4 } else { 0 };
         let elapsed_before = total.saturating_sub(remaining);
         let elapsed_after = total.saturating_sub(next_remaining);
-        if !returning && !source_rival_trigger && elapsed_before < 8 && elapsed_after >= 8 {
+        if !returning && !source_rival_trigger && elapsed_before < 4 && elapsed_after >= 4 {
             self.facing = match (trigger, self.player_gender) {
                 (0 | 1, _) => Facing::Down,
                 (_, PlayerGender::Brendan) => Facing::Left,
                 (_, PlayerGender::May) => Facing::Right,
             };
         }
-        let movement_offset = if returning || source_rival_trigger { 0 } else { 8 };
+        let movement_offset = if returning || source_rival_trigger { 0 } else { 4 };
         for step in 1..=u16::from(steps) {
             let boundary = movement_offset + step * 16;
             if elapsed_before < boundary && boundary <= elapsed_after {
@@ -3148,7 +3148,7 @@ impl WorldState {
                     if fast_return_turn {
                         let mom = self.npcs.iter().find(|npc| npc.id == "mom_outside")
                             .expect("Running Shoes Mom must exist for her return turn");
-                        self.move_fast_scripted_npc("mom_outside", MapId::LittlerootTown, mom.position.clone(), Facing::Up);
+                        self.move_faster_scripted_npc("mom_outside", MapId::LittlerootTown, mom.position.clone(), Facing::Up);
                     }
                     self.pending_running_shoes = false;
                     self.running_shoes_wait_frames = None;
@@ -6036,9 +6036,9 @@ fn running_shoes_approach_frames(trigger: u8, player_gender: PlayerGender) -> u1
     if trigger == SOURCE_RIVAL_RUNNING_SHOES_TRIGGER {
         return u16::from(steps) * 16;
     }
-    // Common in-place player notice turn (8 frames), followed by ordinary
+    // Common in-place player notice turn (4 frames), followed by ordinary
     // Mom walk steps at the overworld 16-frame cadence.
-    8 + u16::from(steps) * 16
+    4 + u16::from(steps) * 16
 }
 
 fn running_shoes_mom_path(trigger: u8, player_gender: PlayerGender, returning: bool) -> (Facing, u8, bool) {
