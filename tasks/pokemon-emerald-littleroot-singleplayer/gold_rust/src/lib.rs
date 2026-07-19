@@ -500,7 +500,9 @@ impl LittlerootSession {
             return;
         }
         if self.world.phase == world::StoryPhase::NamePrompt {
-            if request.action == Input::A {
+            // Task_NewGameBirchSpeech_WaitPressBeforeNameChoice accepts both
+            // confirmation buttons before fading into the naming screen.
+            if matches!(request.action, Input::A | Input::B) {
                 self.world.confirm_name_prompt();
             }
             self.input_log.push(request);
