@@ -529,6 +529,10 @@ impl LittlerootSession {
                     // request window immediately so the first 16-frame
                     // source movement commit is not deferred to Noop.
                     self.world.advance_running_shoes_scene(request.frames);
+                    // Oldale's Mart invitation has the same carry behavior:
+                    // its dismissing A request begins the employee/player
+                    // `applymovement` stream before the next input arrives.
+                    self.world.advance_oldale_mart_scene(request.frames);
                 }
             }
             Input::Select => self.world.cycle_starter(),
