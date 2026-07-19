@@ -573,6 +573,10 @@ pub struct WorldState {
     pub clock_editing: Option<ClockField>,
     pub clock_confirming: bool,
     pub clock_confirm_yes: bool,
+    /// The source wall-clock script first displays its stopped-clock message
+    /// before it hands control to `StartWallClock`.
+    #[serde(default)]
+    pub clock_prompt_active: bool,
     pub pending_running_shoes: bool,
     /// Source frames before Mom's initial Running Shoes `Wait` box accepts a
     /// dismiss input. The trigger frame itself is not a valid close.
@@ -686,6 +690,10 @@ pub struct WorldState {
     pub field_dialogue_frames: Option<u16>,
     /// Remaining frames in Mom's post-clock upstairs entry script.
     pub clock_visit_frames: Option<u16>,
+    /// `PlayersHouse_2F_EventScript_WallClock` waits thirty frames after the
+    /// clock editor closes before it creates Mom's upstairs object event.
+    #[serde(default)]
+    pub clock_settle_frames: Option<u8>,
     /// Remaining frames in the source truck-arrival choreography before Mom
     /// opens her first Little Root dialogue. Input is locked throughout.
     #[serde(default)]
@@ -789,6 +797,7 @@ impl WorldState {
             clock_editing: None,
             clock_confirming: false,
             clock_confirm_yes: true,
+            clock_prompt_active: false,
             pending_running_shoes: false,
             running_shoes_wait_frames: None,
             running_shoes_frames: None,
@@ -826,6 +835,7 @@ impl WorldState {
             oldale_mart_item_fanfare_frames: None,
             field_dialogue_frames: None,
             clock_visit_frames: None,
+            clock_settle_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -894,6 +904,7 @@ impl WorldState {
             clock_editing: None,
             clock_confirming: false,
             clock_confirm_yes: true,
+            clock_prompt_active: false,
             pending_running_shoes: false,
             running_shoes_wait_frames: None,
             running_shoes_frames: None,
@@ -931,6 +942,7 @@ impl WorldState {
             oldale_mart_item_fanfare_frames: None,
             field_dialogue_frames: None,
             clock_visit_frames: None,
+            clock_settle_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1002,6 +1014,7 @@ impl WorldState {
             clock_editing: None,
             clock_confirming: false,
             clock_confirm_yes: true,
+            clock_prompt_active: false,
             pending_running_shoes: false,
             running_shoes_wait_frames: None,
             running_shoes_frames: None,
@@ -1039,6 +1052,7 @@ impl WorldState {
             oldale_mart_item_fanfare_frames: None,
             field_dialogue_frames: None,
             clock_visit_frames: None,
+            clock_settle_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1106,6 +1120,7 @@ impl WorldState {
             clock_editing: None,
             clock_confirming: false,
             clock_confirm_yes: true,
+            clock_prompt_active: false,
             pending_running_shoes: false,
             running_shoes_wait_frames: None,
             running_shoes_frames: None,
@@ -1143,6 +1158,7 @@ impl WorldState {
             oldale_mart_item_fanfare_frames: None,
             field_dialogue_frames: None,
             clock_visit_frames: None,
+            clock_settle_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1239,6 +1255,7 @@ impl WorldState {
             clock_editing: None,
             clock_confirming: false,
             clock_confirm_yes: true,
+            clock_prompt_active: false,
             pending_running_shoes: false,
             running_shoes_wait_frames: None,
             running_shoes_frames: None,
@@ -1276,6 +1293,7 @@ impl WorldState {
             oldale_mart_item_fanfare_frames: None,
             field_dialogue_frames: None,
             clock_visit_frames: None,
+            clock_settle_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1636,12 +1654,25 @@ impl WorldState {
     }
 
     pub fn begin_clock_edit(&mut self) {
-        if self.phase == StoryPhase::ClockSet && self.dialogue.is_none() {
-            self.clock_minutes.get_or_insert(720);
-            self.clock_editing = Some(ClockField::Hours);
-            self.clock_confirming = false;
-            self.clock_confirm_yes = true;
+        if self.phase == StoryPhase::ClockSet
+            && self.dialogue.is_none()
+            && !self.clock_prompt_active
+        {
+            // `PlayersHouse_2F_EventScript_WallClock` opens this message
+            // before it calls `StartWallClock`; the editor is not the first
+            // result of interacting with the background event.
+            self.clock_prompt_active = true;
+            self.begin_field_dialogue(
+                "The clock is stopped…\nBetter set it and start it!".to_owned(),
+            );
         }
+    }
+
+    fn start_clock_editor(&mut self) {
+        self.clock_minutes.get_or_insert(720);
+        self.clock_editing = Some(ClockField::Hours);
+        self.clock_confirming = false;
+        self.clock_confirm_yes = true;
     }
 
     pub fn move_clock_cursor(&mut self) {
@@ -1672,14 +1703,14 @@ impl WorldState {
         } else if self.clock_confirm_yes {
             self.clock_editing = None;
             self.clock_confirming = false;
-            // The source waits for Mom's upstairs entry movement before the
-            // room dialogue is printed.
+            // `PlayersHouse_2F_EventScript_WallClock` waits thirty frames
+            // after `StartWallClock` before it creates Mom's upstairs object
+            // event, then runs her 72-frame entry movement.
             self.phase = StoryPhase::ClockVisit;
-            // Source movement: delay_8 + walk_down + faster in-place turn
-            // + delay_16 + delay_8 + final lateral walk = 72 frames.
-            self.clock_visit_frames = Some(72);
+            self.clock_settle_frames = Some(30);
+            self.clock_visit_frames = None;
             self.dialogue = None;
-            self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
+            self.npcs.clear();
         } else {
             self.clock_confirming = false;
         }
@@ -2060,6 +2091,37 @@ impl WorldState {
         let Some(remaining) = self.field_dialogue_frames else { return false; };
         let next = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         self.field_dialogue_frames = (next != 0).then_some(next);
+        true
+    }
+
+    /// Advances the script delay between `StartWallClock` returning and Mom's
+    /// upstairs object event being created. The source's `delay 30` occurs
+    /// before `addobject`, so keeping it separate avoids displaying Mom for
+    /// frames in which the original room is still empty.
+    pub fn advance_clock_settle(&mut self, frames: u32) -> bool {
+        let Some(remaining) = self.clock_settle_frames else { return false; };
+        let consumed = frames.min(u32::from(u8::MAX)) as u8;
+        let next_remaining = remaining.saturating_sub(consumed);
+        if next_remaining != 0 {
+            self.clock_settle_frames = Some(next_remaining);
+            return true;
+        }
+
+        self.clock_settle_frames = None;
+        // Source movement: delay_8 + walk_down + faster in-place turn +
+        // delay_16 + delay_8 + final lateral walk = 72 frames.
+        self.clock_visit_frames = Some(72);
+        self.npcs = map_npcs(
+            self.map,
+            self.phase,
+            self.potions,
+            self.oldale_rival_departed,
+            self.player_gender,
+        );
+        let carried = frames.saturating_sub(u32::from(remaining));
+        if carried != 0 {
+            self.advance_clock_visit(carried);
+        }
         true
     }
 
@@ -3805,6 +3867,11 @@ impl WorldState {
             return;
         }
         if self.dialogue.take().is_some() {
+            if self.clock_prompt_active && self.phase == StoryPhase::ClockSet {
+                self.clock_prompt_active = false;
+                self.start_clock_editor();
+                return;
+            }
             if let Some(blocked_facing) = self.route101_exit_push.take() {
                 match blocked_facing {
                     Facing::Down => self.player.y -= 1,

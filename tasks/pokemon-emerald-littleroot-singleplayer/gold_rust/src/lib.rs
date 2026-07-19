@@ -284,6 +284,11 @@ impl LittlerootSession {
             self.redraw();
             return;
         }
+        if self.world.advance_clock_settle(request.frames) {
+            self.input_log.push(request);
+            self.redraw();
+            return;
+        }
         if self.world.advance_clock_visit(request.frames) {
             self.input_log.push(request);
             self.redraw();
@@ -537,6 +542,13 @@ impl LittlerootSession {
                     self.world.confirm_starter();
                 } else if !self.world.interact_with_npc() {
                     self.world.advance_opening_script();
+                    // The wall-clock background event opens its first source
+                    // message during this A sample window. Its printer must
+                    // consume that same request, just like ordinary object
+                    // interactions handled by the branch below.
+                    if self.world.clock_prompt_active {
+                        self.world.advance_field_dialogue_printer(request.frames);
+                    }
                     // A source dialogue close can launch Mom's scripted
                     // approach during the same held-A request. Consume that
                     // request window immediately so the first 16-frame
