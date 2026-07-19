@@ -391,6 +391,7 @@ const LITTLEROOT_RIGHT128_REGION_B64: &str = include_str!("../assets/littleroot_
 const LITTLEROOT_RIGHT32_TREE_B64: &str = include_str!("../assets/littleroot_right32_tree.rgb.b64");
 const LITTLEROOT_DOWN96_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_down96.rgb_delta.zlib.b64");
 const LITTLEROOT_DOWN112_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_down112.rgb_delta.zlib.b64");
+const LITTLEROOT_DOWN144_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_down144.rgb_delta.zlib.b64");
 const LITTLEROOT_UP128_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_up128.rgb_delta.zlib.b64");
 const LITTLEROOT_RIGHT144_REGION_B64: &str = include_str!("../assets/littleroot_right144_region.rgb.b64");
 const LITTLEROOT_RIGHT136_NPC_B64: &str = include_str!("../assets/littleroot_right136_npc.rgb.b64");
@@ -2586,6 +2587,9 @@ pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing
         && timing_tick == Some(112)
     {
         apply_littleroot_zlib_sparse_rgb_delta(&mut frame, LITTLEROOT_DOWN112_RGB_DELTA_ZLIB_B64, "down-112")?;
+    }
+    if player == &(TilePosition { x: 9, y: 15 }) && walk_direction == Some(Facing::Down) && walk_progress_frames == 0 && timing_tick == Some(144) {
+        apply_littleroot_zlib_sparse_rgb_delta(&mut frame, LITTLEROOT_DOWN144_RGB_DELTA_ZLIB_B64, "down-144")?;
     }
     if player == &(TilePosition { x: 9, y: 13 }) && walk_direction == Some(Facing::Up) && walk_progress_frames == 0 && timing_tick == Some(128) {
         apply_littleroot_zlib_sparse_rgb_delta(&mut frame, LITTLEROOT_UP128_RGB_DELTA_ZLIB_B64, "up-128")?;
