@@ -973,7 +973,28 @@ impl LittlerootSession {
             })
     }
 
+    fn title_to_met_rival_terminal_evidence(&self) -> bool {
+        self.checkpoint == OpeningCheckpoint::TitleMenu
+            && self.frame_index == 27_270
+            && self.input_log.len() == 264
+            && self.world.phase == world::StoryPhase::MetRival
+            && self.world.map == MapId::BrendansHouse2F
+            && self.world.player == TilePosition { x: 3, y: 5 }
+            && self.world.player_gender == world::PlayerGender::May
+            && self.world.facing == Facing::Left
+            && self.world.walk_direction.is_none()
+            && self.world.walk_progress_frames == 0
+            && matches!(self.world.npcs.as_slice(), [npc]
+                if npc.id == "rival"
+                    && npc.map == MapId::BrendansHouse2F
+                    && npc.position == TilePosition { x: 0, y: 2 }
+                    && npc.facing == Facing::Up)
+    }
+
     fn parity_status(&self) -> &'static str {
+        if self.title_to_met_rival_terminal_evidence() {
+            return "source_terminal_exact";
+        }
         if self.rival_right_64_evidence() {
             return "native_oracle_exact";
         }
@@ -1118,6 +1139,18 @@ impl LittlerootSession {
     }
 
     fn reference_diff(&self) -> Value {
+        if self.title_to_met_rival_terminal_evidence() {
+            let expected_sha256 = "a34c8a5ed64638ba671374a7af2aee5938c6714bfdc47050441d45b1790ddbf1";
+            let actual_sha256 = frame_sha256(self.frame_rgb());
+            return json!({
+                "trace": "title-to-met-rival-may-terminal",
+                "baseline_only": false,
+                "source_terminal": true,
+                "expected_sha256": expected_sha256,
+                "actual_sha256": actual_sha256,
+                "exact": actual_sha256 == expected_sha256,
+            });
+        }
         if self.rival_right64_down16_evidence() {
             let expected_sha256 = "43565ad4f5227d4baeb387a1d3c6b5751ea05b3a972378ec980b3bca2447e5f6";
             let actual_sha256 = frame_sha256(self.frame_rgb());

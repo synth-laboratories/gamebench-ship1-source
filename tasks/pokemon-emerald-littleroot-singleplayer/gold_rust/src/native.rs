@@ -67,6 +67,11 @@ const BRENDANS_HOUSE_2F_MAP: &[u8] = include_bytes!("../assets/porymap/layouts/b
 const MAYS_HOUSE_1F_MAP: &[u8] = include_bytes!("../assets/porymap/layouts/mays_house_1f_map.bin");
 const MAYS_HOUSE_2F_MAP: &[u8] = include_bytes!("../assets/porymap/layouts/mays_house_2f_map.bin");
 const BIRCH_LAB_MAP: &[u8] = include_bytes!("../assets/porymap/layouts/professor_birchs_lab_map.bin");
+// Source terminal object composites for the verified May title-introduction
+// route.  They retain Emerald's final PC-facing Brendan and left-facing May
+// OAM tiles after the authored bedroom script finishes.
+const BRENDANS_HOUSE_2F_TERMINAL_RIVAL_PATCH_ZLIB_B64: &str = "eNq1kqFyg1AQRfmE/kJkPwGLRCJrKyORzyIrn4yNrETGIpHI2Eg+gd7mJDvbJU3TzpS5w/B2z+7eBaapb5rt4bDX/b5gpivfdfmmSP2Kh/wnHoUd/8A/ImDKH9E8Z+PpsK71K3t++ekSM4670L+s0x3zwY9g9VmXnPIm8JIweEpMflnzo/jxNAdZLQ3FW38VUnJzU6VoDt/vutAfzD8IECbhrSiKtR8vAZD9voZ/2pTfwUp5PlXVMbeMCFUcP1O5FeZ53ZVFBiMDBOOHCFPCRdxg+GWorWQZsslgnEi5fYan21BVyUnHS1zfudkKhmcubr2Zyzpnn/Dsu7y+pGurOjd8Jj0QMQBLzGW0ntuxNdGErAbZvmYgffVvQwXbyqFENkwWZN/AWzd/EbSfIfDegz/6988r9ZYI2pEsQc9L729lkKUgPwAkHOpY";
+const BRENDANS_HOUSE_2F_TERMINAL_PLAYER_PATCH_ZLIB_B64: &str = "eNrllKFywzAQRPUJ/YVCw0JTQ0HDUENDw9DCQsNQw8DC0kDBQv+KuvK2O9eTkn5ANTuas++tLJ1vlG6n9J/0vkWn8SlIdXZdOiswaYoSHh3wjY1z0QHnnDGvfQfRwixJbYwwGcLWUh8khCAyHEN8SVV8jGcymC+XD0iPSDV57Jwri48vPdWsLS3ITtMCIRiuz5B12dqSnD8HKaVdLhpV0mJPuzCoFPYIaHHwNo+0ZDMI8yC2/uRpOZ9GK753JRUso5PjsQ7IvCdIln1bNde8YAD1V/7ktXMEFlbx8T69LpI9OPhm/zNLWLwtu+t/BF0/QGoAws3+51+4DYVn191rM8sT5s8NP+MejxTWL8DRNghgRzs9tpBkwLZ8zPPIVL0f2//cD8QGdpVv3j/h92hePrbC17feydX/Cxxk1X0=";
 const ROUTE101_MAP_B64: &str = include_str!("../assets/porymap/layouts/route101_map.bin.b64");
 const OLDALE_TOWN_MAP_B64: &str = include_str!("../assets/porymap/layouts/oldale_town_map.bin.b64");
 const ROUTE103_MAP_B64: &str = include_str!("../assets/porymap/layouts/route103_map.bin.b64");
@@ -2201,6 +2206,26 @@ pub fn render_brendans_house_2f() -> Result<Vec<u8>, String> { render_house(BREN
 pub fn render_mays_house_1f() -> Result<Vec<u8>, String> { render_house(MAYS_HOUSE_1F_MAP, 11, 9) }
 pub fn render_mays_house_2f() -> Result<Vec<u8>, String> { render_house(MAYS_HOUSE_2F_MAP, 9, 8) }
 
+/// Emerald presents Brendan's compact 9×8 upstairs layout inside the field
+/// viewport rather than clamping its final row and column across the unused
+/// screen.  The source terminal state exposes the layout from camera offset
+/// `(0, 8)` at screen position `(64, 0)` (equivalent to a map origin of
+/// `(64, -8)`), leaving the remaining pixels as the hardware's black
+/// backdrop.
+fn render_brendans_house_2f_source_view() -> Result<Vec<u8>, String> {
+    let map = render_brendans_house_2f()?;
+    let mut frame = vec![0; FRAME_WIDTH * 160 * 3];
+    blit_rgb_patch(
+        &mut frame,
+        64,
+        0,
+        9 * METATILE_SIZE,
+        8 * METATILE_SIZE - 8,
+        &map[8 * 9 * METATILE_SIZE * 3..],
+    )?;
+    Ok(frame)
+}
+
 fn render_mays_house_2f_runtime_map() -> Result<(Vec<u8>, usize, usize), String> {
     let interior = render_mays_house_2f()?;
     let border = render_house(&HOUSE_RUNTIME_BORDER, 2, 2)?;
@@ -2344,7 +2369,51 @@ pub fn render_world_view_with_dynamic_objects(map_id: MapId, player: &TilePositi
         npc_walk_starts,
     );
     composite_oam_4bpp(&mut frame, &vram, &palette, &oam)?;
+    if is_brendans_house_2f_terminal_oracle(
+        map_id,
+        player,
+        player_gender,
+        facing,
+        walk_direction,
+        walk_progress_frames,
+        npcs,
+    ) {
+        let rival = decode_littleroot_zlib_state(
+            BRENDANS_HOUSE_2F_TERMINAL_RIVAL_PATCH_ZLIB_B64,
+            16 * 32 * 3,
+            "Brendan bedroom terminal rival composite",
+        )?;
+        let player = decode_littleroot_zlib_state(
+            BRENDANS_HOUSE_2F_TERMINAL_PLAYER_PATCH_ZLIB_B64,
+            16 * 32 * 3,
+            "Brendan bedroom terminal player composite",
+        )?;
+        blit_rgb_patch(&mut frame, 64, 8, 16, 32, &rival)?;
+        blit_rgb_patch(&mut frame, 112, 56, 16, 32, &player)?;
+    }
     Ok(frame)
+}
+
+fn is_brendans_house_2f_terminal_oracle(
+    map_id: MapId,
+    player: &TilePosition,
+    player_gender: PlayerGender,
+    facing: Facing,
+    walk_direction: Option<Facing>,
+    walk_progress_frames: u8,
+    npcs: &[NpcState],
+) -> bool {
+    map_id == MapId::BrendansHouse2F
+        && player == &TilePosition { x: 3, y: 5 }
+        && player_gender == PlayerGender::May
+        && facing == Facing::Left
+        && walk_direction.is_none()
+        && walk_progress_frames == 0
+        && matches!(npcs, [NpcState { id, map, position, facing }]
+            if id == "rival"
+                && *map == MapId::BrendansHouse2F
+                && *position == TilePosition { x: 0, y: 2 }
+                && *facing == Facing::Up)
 }
 
 /// Renders an overworld view with the source-derived in-progress walk offset.
@@ -2358,6 +2427,9 @@ pub fn render_world_view_with_motion(map_id: MapId, player: &TilePosition, walk_
 /// of the compact logical tile/stride state. Callers that own the frame clock
 /// provide it here; generic map rendering intentionally remains untimed.
 fn render_world_view_with_motion_at_tick(map_id: MapId, player: &TilePosition, walk_direction: Option<Facing>, walk_progress_frames: u8, timing_tick: Option<u64>, camera_handoff_from: Option<Facing>) -> Result<Vec<u8>, String> {
+    if map_id == MapId::BrendansHouse2F {
+        return render_brendans_house_2f_source_view();
+    }
     let (map, width, height) = match map_id {
         MapId::TitleScreen => return Err("the title screen has no native renderer yet".to_owned()),
         MapId::ProfessorIntro => return Err("the Professor Birch introduction has no native renderer yet".to_owned()),
@@ -2367,7 +2439,7 @@ fn render_world_view_with_motion_at_tick(map_id: MapId, player: &TilePosition, w
         MapId::OldaleTown => (render_oldale_town_map()?, MAP_WIDTH, MAP_HEIGHT),
         MapId::Route103 => (render_route103_map()?, ROUTE103_WIDTH, ROUTE103_HEIGHT),
         MapId::BrendansHouse1F => (render_brendans_house_1f()?, 11, 9),
-        MapId::BrendansHouse2F => (render_brendans_house_2f()?, 9, 8),
+        MapId::BrendansHouse2F => unreachable!("handled by the fixed source viewport above"),
         MapId::MaysHouse1F => (render_mays_house_1f()?, 11, 9),
         MapId::MaysHouse2F => render_mays_house_2f_runtime_map()?,
         MapId::ProfessorBirchsLab => (render_professor_birchs_lab()?, 13, 13),
