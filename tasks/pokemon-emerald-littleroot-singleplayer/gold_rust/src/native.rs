@@ -1494,6 +1494,36 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             }
         }
     }
+    // `...House_1F_EventScript_YoureNewNeighbor` starts the same 60-frame
+    // source field-effect icon before its 48-frame pause. The icon remains
+    // attached as Mom starts her normal down step, so follow the existing
+    // NPC stride interpolation rather than anchoring it to her next tile.
+    if matches!(world.map, MapId::BrendansHouse1F | MapId::MaysHouse1F)
+        && world.rival_mom_exclamation_frames.is_some()
+    {
+        if let Some(mom) = world.npcs.iter().find(|npc| npc.id == "mom" && npc.map == world.map) {
+            let mut screen_x = 112 + i32::from(mom.position.x - world.player.x) * 16;
+            let mut screen_y = 56 + i32::from(mom.position.y - world.player.y) * 16;
+            if let Some(walk) = world.npc_walk_starts.iter().rev().find(|walk| walk.id == mom.id) {
+                let elapsed = world.frame.saturating_sub(walk.frame) as i32;
+                let duration = i32::from(walk.duration_frames.max(1));
+                if elapsed < duration {
+                    let remaining = duration - elapsed;
+                    match walk.sprite_facing.unwrap_or(mom.facing) {
+                        Facing::Up => screen_y += remaining,
+                        Facing::Down => screen_y -= remaining,
+                        Facing::Left => screen_x += remaining,
+                        Facing::Right => screen_x -= remaining,
+                    }
+                }
+            }
+            draw_exclamation_marker(
+                frame,
+                (screen_x + 7).max(0) as usize,
+                (screen_y - 14).max(0) as usize,
+            );
+        }
+    }
     if let Some(battle) = world.battle.as_ref() {
         if battle.entry_transition_frames > 0 {
             // The Route 101 Wurmple capture keeps field input locked through

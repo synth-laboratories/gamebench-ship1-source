@@ -299,6 +299,11 @@ impl LittlerootSession {
             self.redraw();
             return;
         }
+        if self.world.advance_rival_mom_intro(request.frames) {
+            self.input_log.push(request);
+            self.redraw();
+            return;
+        }
         if self.world.advance_truck_arrival(request.frames) {
             self.input_log.push(request);
             self.redraw();
