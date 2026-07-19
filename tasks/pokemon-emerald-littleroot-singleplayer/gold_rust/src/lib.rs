@@ -1346,10 +1346,10 @@ impl LittlerootSession {
                     if let Some(frame) = native::render_littleroot_held_right_timed(&self.world.player, self.world.frame) {
                         frame
                     } else {
-                        native::render_littleroot_with_idle_objects_at_tick(&self.world.player, self.world.facing, self.world.walk_direction, self.world.walk_progress_frames, Some(self.world.frame))
+                        native::render_littleroot_with_idle_objects_at_tick(&self.world.player, self.world.facing, self.world.walk_direction, self.world.walk_progress_frames, Some(self.world.frame), self.world.camera_handoff_from)
                     }
                 } else {
-                    native::render_littleroot_with_idle_objects_at_tick(&self.world.player, self.world.facing, self.world.walk_direction, self.world.walk_progress_frames, Some(self.world.frame))
+                    native::render_littleroot_with_idle_objects_at_tick(&self.world.player, self.world.facing, self.world.walk_direction, self.world.walk_progress_frames, Some(self.world.frame), self.world.camera_handoff_from)
                 }
             }
             OpeningCheckpoint::BedroomIdle if self.world.map == MapId::MaysHouse2F => native::render_bedroom_with_idle_objects(self.world.map, &self.world.player),

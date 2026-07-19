@@ -361,6 +361,8 @@ pub struct WorldState {
     pub transition: Option<MapTransition>,
     pub walk_progress_frames: u8,
     pub walk_direction: Option<Facing>,
+    #[serde(default)]
+    pub camera_handoff_from: Option<Facing>,
     pub running: bool,
     pub starter: Option<StarterSpecies>,
     /// Persistent opening progression awarded by Birch's Lab script.
@@ -459,6 +461,7 @@ impl WorldState {
             transition: None,
             walk_progress_frames: 0,
             walk_direction: None,
+            camera_handoff_from: None,
             running: false,
             starter: None,
             has_pokedex: false,
@@ -545,6 +548,7 @@ impl WorldState {
             transition: None,
             walk_progress_frames: 0,
             walk_direction: None,
+            camera_handoff_from: None,
             running: false,
             starter: None,
             has_pokedex: false,
@@ -634,6 +638,7 @@ impl WorldState {
             transition: None,
             walk_progress_frames: 0,
             walk_direction: None,
+            camera_handoff_from: None,
             running: false,
             starter: None,
             has_pokedex: false,
@@ -716,6 +721,7 @@ impl WorldState {
             transition: None,
             walk_progress_frames: 0,
             walk_direction: None,
+            camera_handoff_from: None,
             running: false,
             starter: Some(StarterSpecies::Treecko),
             has_pokedex: false,
@@ -801,6 +807,7 @@ impl WorldState {
             transition: None,
             walk_progress_frames: 0,
             walk_direction: None,
+            camera_handoff_from: None,
             running: false,
             starter: Some(StarterSpecies::Treecko),
             has_pokedex: true,
@@ -2985,6 +2992,7 @@ impl WorldState {
 
         let direction_changed = self.walk_direction != Some(facing);
         if direction_changed {
+            self.camera_handoff_from = self.walk_direction;
             self.walk_direction = Some(facing);
             self.walk_progress_frames = 0;
         }
