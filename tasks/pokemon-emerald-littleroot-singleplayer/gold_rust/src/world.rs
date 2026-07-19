@@ -103,6 +103,11 @@ pub enum BattleOpponent { Zigzagoon, Poochyena, Wingull, Wurmple, Rival }
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct BattleState {
     pub opponent: BattleOpponent,
+    /// Emerald's global `Random()` stream as it enters this active battle.
+    /// Keeping it with the serializable battle means a restored mid-turn
+    /// checkpoint continues accuracy, critical, and damage-variance draws.
+    #[serde(default = "default_battle_rng_state")]
+    pub rng_state: u32,
     #[serde(default = "default_player_species")]
     pub player_species: String,
     #[serde(default = "default_opponent_species")]
@@ -190,6 +195,14 @@ pub struct BattleState {
     /// command screen rather than replaying a new introduction.
     #[serde(default = "default_battle_intro_stage")]
     pub intro_stage: u8,
+    /// Outcome metadata for the most recently resolved move. It keeps the
+    /// deterministic RNG decision observable without inventing battle UI.
+    #[serde(default)]
+    pub last_move_hit: bool,
+    #[serde(default)]
+    pub last_move_critical: bool,
+    #[serde(default)]
+    pub last_damage_variance: Option<u8>,
 }
 
 fn default_player_battle_hp() -> u8 { 24 }
@@ -203,6 +216,7 @@ fn default_opponent_species() -> String { "ZIGZAGOON".to_owned() }
 fn default_opponent_move_name() -> String { "TACKLE".to_owned() }
 fn default_opponent_move_damage() -> u8 { 4 }
 fn default_battle_intro_stage() -> u8 { 2 }
+fn default_battle_rng_state() -> u32 { default_ambient_rng() }
 fn default_player_species() -> String { "TREECKO".to_owned() }
 fn default_battle_level() -> u8 { 5 }
 fn default_battle_stat() -> u8 { 10 }
@@ -243,7 +257,7 @@ struct SpeciesBattleProfile {
 }
 
 #[derive(Clone, Copy)]
-struct MoveBattleProfile { name: &'static str, power: u8, pp: u8, move_type: BattleType, special: bool }
+struct MoveBattleProfile { name: &'static str, power: u8, accuracy: u8, pp: u8, move_type: BattleType, special: bool }
 
 #[derive(Clone, Copy)]
 struct CombatantBattleProfile {
@@ -299,12 +313,12 @@ fn species_battle_profile(name: &str) -> SpeciesBattleProfile {
 fn move_battle_profile(name: &str) -> MoveBattleProfile {
     // Source: src/data/battle_moves.h.
     match name {
-        "POUND" => MoveBattleProfile { name: "POUND", power: 40, pp: 35, move_type: BattleType::Normal, special: false },
-        "SCRATCH" => MoveBattleProfile { name: "SCRATCH", power: 40, pp: 35, move_type: BattleType::Normal, special: false },
-        "LEER" => MoveBattleProfile { name: "LEER", power: 0, pp: 30, move_type: BattleType::Normal, special: false },
-        "GROWL" => MoveBattleProfile { name: "GROWL", power: 0, pp: 40, move_type: BattleType::Normal, special: false },
-        "WATER GUN" => MoveBattleProfile { name: "WATER GUN", power: 40, pp: 25, move_type: BattleType::Water, special: true },
-        _ => MoveBattleProfile { name: "TACKLE", power: 35, pp: 35, move_type: BattleType::Normal, special: false },
+        "POUND" => MoveBattleProfile { name: "POUND", power: 40, accuracy: 100, pp: 35, move_type: BattleType::Normal, special: false },
+        "SCRATCH" => MoveBattleProfile { name: "SCRATCH", power: 40, accuracy: 100, pp: 35, move_type: BattleType::Normal, special: false },
+        "LEER" => MoveBattleProfile { name: "LEER", power: 0, accuracy: 100, pp: 30, move_type: BattleType::Normal, special: false },
+        "GROWL" => MoveBattleProfile { name: "GROWL", power: 0, accuracy: 100, pp: 40, move_type: BattleType::Normal, special: false },
+        "WATER GUN" => MoveBattleProfile { name: "WATER GUN", power: 40, accuracy: 100, pp: 25, move_type: BattleType::Water, special: true },
+        _ => MoveBattleProfile { name: "TACKLE", power: 35, accuracy: 95, pp: 35, move_type: BattleType::Normal, special: false },
     }
 }
 
@@ -423,35 +437,104 @@ fn type_multiplier(move_type: BattleType, types: (BattleType, BattleType)) -> (u
     (numerator, denominator)
 }
 
-fn source_move_damage(level: u8, attacker: SpeciesBattleProfile, attack: u8, special_attack: u8, attacker_stage: i8, defender: SpeciesBattleProfile, defense: u8, special_defense: u8, defender_stage: i8, move_data: MoveBattleProfile) -> u8 {
+fn source_move_damage(level: u8, attacker: SpeciesBattleProfile, attack: u8, special_attack: u8, attacker_stage: i8, defender: SpeciesBattleProfile, defense: u8, special_defense: u8, defender_stage: i8, move_data: MoveBattleProfile, critical: bool) -> u8 {
     if move_data.power == 0 { return 0; }
-    let attacking = source_stage_stat(if move_data.special { special_attack } else { attack }, attacker_stage);
-    let defending = source_stage_stat(if move_data.special { special_defense } else { defense }, defender_stage).max(1);
+    let attack_stat = if move_data.special { special_attack } else { attack };
+    let defense_stat = if move_data.special { special_defense } else { defense };
+    // `CalculateBaseDamage` ignores an attacker's negative stage and a
+    // defender's positive stage on a critical hit, but preserves the
+    // favorable stage in either direction.
+    let attacking = if critical && attacker_stage <= 0 { attack_stat } else { source_stage_stat(attack_stat, attacker_stage) };
+    let defending = (if critical && defender_stage >= 0 { defense_stat } else { source_stage_stat(defense_stat, defender_stage) }).max(1);
     let scaled = (u32::from(2 * level / 5 + 2) * u32::from(move_data.power) * u32::from(attacking)) / u32::from(defending);
     let mut damage = ((scaled / 50) + 2) as u16;
+    if critical { damage *= 2; }
     if attacker.types.0 == move_data.move_type || attacker.types.1 == move_data.move_type { damage = (damage * 15) / 10; }
     let (numerator, denominator) = type_multiplier(move_data.move_type, defender.types);
     damage = (damage * u16::from(numerator)) / u16::from(denominator);
     damage.max(1) as u8
 }
 
-fn player_battle_damage(battle: &BattleState) -> u8 {
-    source_move_damage(battle.player_level, species_battle_profile(&battle.player_species), battle.player_attack, battle.player_special_attack, 0, species_battle_profile(&battle.opponent_species), battle.opponent_defense, battle.opponent_special_defense, battle.opponent_defense_stage, move_battle_profile(&battle.player_move_name))
+fn player_battle_damage(battle: &BattleState, critical: bool) -> u8 {
+    source_move_damage(battle.player_level, species_battle_profile(&battle.player_species), battle.player_attack, battle.player_special_attack, 0, species_battle_profile(&battle.opponent_species), battle.opponent_defense, battle.opponent_special_defense, battle.opponent_defense_stage, move_battle_profile(&battle.player_move_name), critical)
 }
 
-fn opponent_battle_damage(battle: &BattleState) -> u8 {
-    source_move_damage(battle.opponent_level, species_battle_profile(&battle.opponent_species), battle.opponent_attack, battle.opponent_special_attack, battle.opponent_attack_stage, species_battle_profile(&battle.player_species), battle.player_defense, battle.player_special_defense, 0, move_battle_profile(&battle.opponent_move_name))
+fn opponent_battle_damage(battle: &BattleState, critical: bool) -> u8 {
+    source_move_damage(battle.opponent_level, species_battle_profile(&battle.opponent_species), battle.opponent_attack, battle.opponent_special_attack, battle.opponent_attack_stage, species_battle_profile(&battle.player_species), battle.player_defense, battle.player_special_defense, 0, move_battle_profile(&battle.opponent_move_name), critical)
 }
 
-fn opening_battle_state(opponent: BattleOpponent, player: CombatantBattleProfile, enemy: CombatantBattleProfile, wild: bool, message: String, entry_transition_frames: u16) -> BattleState {
-    let player_move_damage = source_move_damage(player.level, player.species, player.attack, player.special_attack, 0, enemy.species, enemy.defense, enemy.special_defense, 0, player.physical_move);
-    let opponent_move_damage = source_move_damage(enemy.level, enemy.species, enemy.attack, enemy.special_attack, 0, player.species, player.defense, player.special_defense, 0, enemy.physical_move);
+fn opening_battle_state(opponent: BattleOpponent, player: CombatantBattleProfile, enemy: CombatantBattleProfile, wild: bool, message: String, entry_transition_frames: u16, rng_state: u32) -> BattleState {
+    let player_move_damage = source_move_damage(player.level, player.species, player.attack, player.special_attack, 0, enemy.species, enemy.defense, enemy.special_defense, 0, player.physical_move, false);
+    let opponent_move_damage = source_move_damage(enemy.level, enemy.species, enemy.attack, enemy.special_attack, 0, player.species, player.defense, player.special_defense, 0, enemy.physical_move, false);
     BattleState {
-        opponent, player_species: player.species.name.to_owned(), opponent_species: enemy.species.name.to_owned(), opponent_move_name: enemy.physical_move.name.to_owned(), opponent_move_damage,
+        opponent, rng_state, player_species: player.species.name.to_owned(), opponent_species: enemy.species.name.to_owned(), opponent_move_name: enemy.physical_move.name.to_owned(), opponent_move_damage,
         player_hp: player.max_hp, player_max_hp: player.max_hp, player_level: player.level, player_attack: player.attack, player_defense: player.defense, player_speed: player.speed, player_special_attack: player.special_attack, player_special_defense: player.special_defense,
         rival_hp: enemy.max_hp, opponent_max_hp: enemy.max_hp, opponent_level: enemy.level, opponent_attack: enemy.attack, opponent_defense: enemy.defense, opponent_speed: enemy.speed, opponent_special_attack: enemy.special_attack, opponent_special_defense: enemy.special_defense,
         player_move_damage, player_move_name: player.physical_move.name.to_owned(), player_status_move_name: player.status_move.name.to_owned(), player_move_pp: player.physical_move.pp, player_status_move_pp: player.status_move.pp,
-        opponent_attack_stage: 0, opponent_defense_stage: 0, command_cursor: 0, selecting_move: false, party_screen_open: false, escaped: false, wild, move_cursor: 0, player_fainted: false, message: Some(message), entry_transition_frames, intro_stage: 0,
+        opponent_attack_stage: 0, opponent_defense_stage: 0, command_cursor: 0, selecting_move: false, party_screen_open: false, escaped: false, wild, move_cursor: 0, player_fainted: false, message: Some(message), entry_transition_frames, intro_stage: 0, last_move_hit: false, last_move_critical: false, last_damage_variance: None,
+    }
+}
+
+#[derive(Clone, Copy)]
+struct BattleMoveResolution { hit: bool, critical: bool, damage: u8 }
+
+fn battle_random(battle: &mut BattleState) -> u16 {
+    source_random(&mut battle.rng_state)
+}
+
+fn battle_accuracy_check(battle: &mut BattleState, move_data: MoveBattleProfile) -> bool {
+    // `Cmd_accuracycheck` always consumes `Random() % 100 + 1`, including
+    // the source opening moves with 100% accuracy.
+    let hit = (battle_random(battle) % 100 + 1) <= u16::from(move_data.accuracy);
+    battle.last_move_hit = hit;
+    battle.last_move_critical = false;
+    battle.last_damage_variance = None;
+    hit
+}
+
+fn battle_critical_check(battle: &mut BattleState) -> bool {
+    // `BATTLE_TYPE_FIRST_BATTLE` short-circuits before its `Random()` call.
+    // The Birch-rescue Zigzagoon is that opening tutorial battle, so neither
+    // side can crit nor consume a critical-roll RNG value there.
+    battle.opponent != BattleOpponent::Zigzagoon && battle_random(battle) % 16 == 0
+}
+
+fn apply_battle_damage_variance(battle: &mut BattleState, damage: u8) -> u8 {
+    // `Cmd_adjustnormaldamage`: 100 - (`Random() % 16), i.e. 85–100%.
+    let percent = 100 - (battle_random(battle) % 16) as u8;
+    battle.last_damage_variance = Some(percent);
+    (u16::from(damage) * u16::from(percent) / 100).max(1) as u8
+}
+
+fn resolve_player_damage_move(battle: &mut BattleState) -> BattleMoveResolution {
+    let move_data = move_battle_profile(&battle.player_move_name);
+    if !battle_accuracy_check(battle, move_data) {
+        return BattleMoveResolution { hit: false, critical: false, damage: 0 };
+    }
+    let critical = battle_critical_check(battle);
+    let damage = apply_battle_damage_variance(battle, player_battle_damage(battle, critical));
+    battle.last_move_critical = critical;
+    BattleMoveResolution { hit: true, critical, damage }
+}
+
+fn resolve_opponent_damage_move(battle: &mut BattleState) -> BattleMoveResolution {
+    let move_data = move_battle_profile(&battle.opponent_move_name);
+    if !battle_accuracy_check(battle, move_data) {
+        return BattleMoveResolution { hit: false, critical: false, damage: 0 };
+    }
+    let critical = battle_critical_check(battle);
+    let damage = apply_battle_damage_variance(battle, opponent_battle_damage(battle, critical));
+    battle.last_move_critical = critical;
+    BattleMoveResolution { hit: true, critical, damage }
+}
+
+fn resolved_move_text(actor: &str, move_name: &str, resolution: BattleMoveResolution) -> String {
+    if !resolution.hit {
+        format!("{actor} used {move_name}, but it missed!")
+    } else if resolution.critical {
+        format!("{actor} used {move_name}! A critical hit!")
+    } else {
+        format!("{actor} used {move_name}.")
     }
 }
 
@@ -3223,9 +3306,9 @@ impl WorldState {
 
     fn sync_starter_party_from_battle(&mut self) {
         let Some(battle) = self.battle.as_ref() else { return; };
-        let (hp, max_hp, level, attack, defense, speed, special_attack, special_defense, physical_move_pp, status_move_pp) = (
+        let (hp, max_hp, level, attack, defense, speed, special_attack, special_defense, physical_move_pp, status_move_pp, rng_state) = (
             battle.player_hp, battle.player_max_hp, battle.player_level, battle.player_attack, battle.player_defense,
-            battle.player_speed, battle.player_special_attack, battle.player_special_defense, battle.player_move_pp, battle.player_status_move_pp,
+            battle.player_speed, battle.player_special_attack, battle.player_special_defense, battle.player_move_pp, battle.player_status_move_pp, battle.rng_state,
         );
         self.ensure_starter_party();
         let party = self.starter_party.as_mut().expect("starter party must exist after construction");
@@ -3239,6 +3322,9 @@ impl WorldState {
         party.special_defense = special_defense;
         party.physical_move_pp = physical_move_pp;
         party.status_move_pp = status_move_pp;
+        // Field object events and battles share Emerald's global Random()
+        // state, so the next overworld task resumes the turn's final draw.
+        self.ambient_rng = rng_state;
     }
 
     fn heal_starter_party(&mut self) {
@@ -3352,7 +3438,7 @@ impl WorldState {
     /// of treating the battle as an automatic story jump.
     pub fn begin_rival_battle(&mut self) {
         if self.phase == StoryPhase::RivalBattle && self.battle.is_none() {
-            let mut battle = opening_battle_state(BattleOpponent::Rival, starter_battle_profile(self.starter), rival_battle_profile(self.starter, self.player_gender), false, format!("RIVAL {} would like to battle!", rival_trainer_name(self.player_gender)), 48);
+            let mut battle = opening_battle_state(BattleOpponent::Rival, starter_battle_profile(self.starter), rival_battle_profile(self.starter, self.player_gender), false, format!("RIVAL {} would like to battle!", rival_trainer_name(self.player_gender)), 48, self.ambient_rng);
             self.apply_starter_party_to_battle(&mut battle);
             self.battle = Some(battle);
         }
@@ -3360,7 +3446,7 @@ impl WorldState {
 
     pub fn begin_birch_battle(&mut self) {
         if self.phase == StoryPhase::BirchBattle && self.battle.is_none() {
-            let mut battle = opening_battle_state(BattleOpponent::Zigzagoon, starter_battle_profile(self.starter), wild_battle_profile("ZIGZAGOON", 2, "TACKLE", "GROWL"), false, "Wild ZIGZAGOON appeared!".to_owned(), 48);
+            let mut battle = opening_battle_state(BattleOpponent::Zigzagoon, starter_battle_profile(self.starter), wild_battle_profile("ZIGZAGOON", 2, "TACKLE", "GROWL"), false, "Wild ZIGZAGOON appeared!".to_owned(), 48, self.ambient_rng);
             self.apply_starter_party_to_battle(&mut battle);
             self.battle = Some(battle);
         }
@@ -3379,7 +3465,7 @@ impl WorldState {
         {
             return;
         }
-        let mut battle = opening_battle_state(BattleOpponent::Poochyena, starter_battle_profile(self.starter), wild_battle_profile("POOCHYENA", 2, "TACKLE", "TACKLE"), true, "Wild POOCHYENA appeared!".to_owned(), 224);
+        let mut battle = opening_battle_state(BattleOpponent::Poochyena, starter_battle_profile(self.starter), wild_battle_profile("POOCHYENA", 2, "TACKLE", "TACKLE"), true, "Wild POOCHYENA appeared!".to_owned(), 224, self.ambient_rng);
         self.apply_starter_party_to_battle(&mut battle);
         self.battle = Some(battle);
     }
@@ -3398,7 +3484,7 @@ impl WorldState {
         {
             return;
         }
-        let mut battle = opening_battle_state(BattleOpponent::Wurmple, starter_battle_profile(self.starter), wild_battle_profile("WURMPLE", 2, "TACKLE", "TACKLE"), true, "Wild WURMPLE appeared!".to_owned(), 352);
+        let mut battle = opening_battle_state(BattleOpponent::Wurmple, starter_battle_profile(self.starter), wild_battle_profile("WURMPLE", 2, "TACKLE", "TACKLE"), true, "Wild WURMPLE appeared!".to_owned(), 352, self.ambient_rng);
         self.apply_starter_party_to_battle(&mut battle);
         self.battle = Some(battle);
     }
@@ -3415,7 +3501,7 @@ impl WorldState {
         {
             return;
         }
-        let mut battle = opening_battle_state(BattleOpponent::Wingull, starter_battle_profile(self.starter), wild_battle_profile("WINGULL", 3, "WATER GUN", "GROWL"), true, "Wild WINGULL appeared!".to_owned(), 224);
+        let mut battle = opening_battle_state(BattleOpponent::Wingull, starter_battle_profile(self.starter), wild_battle_profile("WINGULL", 3, "WATER GUN", "GROWL"), true, "Wild WINGULL appeared!".to_owned(), 224, self.ambient_rng);
         self.apply_starter_party_to_battle(&mut battle);
         self.battle = Some(battle);
     }
@@ -3518,9 +3604,11 @@ impl WorldState {
             self.potions -= 1;
             let battle = self.battle.as_mut().expect("Potion action requires an active battle");
             battle.player_hp = battle.player_hp.saturating_add(20).min(battle.player_max_hp);
-            let retaliation = opponent_battle_damage(battle);
-            battle.opponent_move_damage = retaliation;
-            battle.player_hp = battle.player_hp.saturating_sub(retaliation);
+            let retaliation = resolve_opponent_damage_move(battle);
+            battle.opponent_move_damage = retaliation.damage;
+            if retaliation.hit {
+                battle.player_hp = battle.player_hp.saturating_sub(retaliation.damage);
+            }
             let opponent = match battle.opponent {
                 BattleOpponent::Rival => "RIVAL",
                 BattleOpponent::Zigzagoon => "ZIGZAGOON",
@@ -3530,9 +3618,9 @@ impl WorldState {
             };
             battle.player_fainted = battle.player_hp == 0;
             battle.message = Some(if battle.player_fainted {
-                format!("Used a POTION! {opponent} used {}. Your POKéMON fainted!", battle.opponent_move_name)
+                format!("Used a POTION! {} Your POKéMON fainted!", resolved_move_text(opponent, &battle.opponent_move_name, retaliation))
             } else {
-                format!("Used a POTION! {opponent} used {}.", battle.opponent_move_name)
+                format!("Used a POTION! {}", resolved_move_text(opponent, &battle.opponent_move_name, retaliation))
             });
             battle.selecting_move = false;
             self.sync_starter_party_from_battle();
@@ -3590,40 +3678,50 @@ impl WorldState {
         // compact renderer remains player-first on a speed tie until its full
         // battle RNG command scheduler is modeled.
         let opponent_moves_first = battle.opponent_speed > battle.player_speed;
+        let mut opponent_result = None;
         if opponent_moves_first {
-            let retaliation = opponent_battle_damage(battle);
-            battle.opponent_move_damage = retaliation;
-            battle.player_hp = battle.player_hp.saturating_sub(retaliation);
+            let retaliation = resolve_opponent_damage_move(battle);
+            battle.opponent_move_damage = retaliation.damage;
+            if retaliation.hit {
+                battle.player_hp = battle.player_hp.saturating_sub(retaliation.damage);
+            }
+            opponent_result = Some(retaliation);
             if battle.player_hp == 0 {
                 battle.player_fainted = true;
                 battle.selecting_move = false;
-                battle.message = Some(format!("{} used {}. Your POKéMON fainted!", battle_opponent_name(battle.opponent), battle.opponent_move_name));
+                battle.message = Some(format!("{} Your POKéMON fainted!", resolved_move_text(battle_opponent_name(battle.opponent), &battle.opponent_move_name, retaliation)));
                 self.sync_starter_party_from_battle();
                 return;
             }
         }
-        let move_name = if battle.move_cursor == 0 {
+        let (move_name, player_result) = if battle.move_cursor == 0 {
             if battle.player_move_pp == 0 {
                 battle.message = Some("But there was no PP left for that move!".to_owned());
                 return;
             }
+            // `BattleScript_PrintMoveMissed` still reaches `ppreduce`, so
+            // both a hit and miss consume the selected move's PP.
             battle.player_move_pp -= 1;
-            let damage = player_battle_damage(battle);
-            battle.player_move_damage = damage;
-            battle.rival_hp = battle.rival_hp.saturating_sub(damage);
-            battle.player_move_name.clone()
+            let result = resolve_player_damage_move(battle);
+            battle.player_move_damage = result.damage;
+            if result.hit {
+                battle.rival_hp = battle.rival_hp.saturating_sub(result.damage);
+            }
+            (battle.player_move_name.clone(), result)
         } else {
             if battle.player_status_move_pp == 0 {
                 battle.message = Some("But there was no PP left for that move!".to_owned());
                 return;
             }
             battle.player_status_move_pp -= 1;
-            if battle.player_status_move_name == "LEER" {
+            let move_data = move_battle_profile(&battle.player_status_move_name);
+            let hit = battle_accuracy_check(battle, move_data);
+            if hit && battle.player_status_move_name == "LEER" {
                 battle.opponent_defense_stage = (battle.opponent_defense_stage - 1).max(-6);
-            } else {
+            } else if hit {
                 battle.opponent_attack_stage = (battle.opponent_attack_stage - 1).max(-6);
             }
-            battle.player_status_move_name.clone()
+            (battle.player_status_move_name.clone(), BattleMoveResolution { hit, critical: false, damage: 0 })
         };
         battle.selecting_move = false;
         if battle.rival_hp == 0 {
@@ -3668,10 +3766,14 @@ impl WorldState {
         }
         if !opponent_moves_first {
             // Growl lowers the source opponent's physical attack stage; the
-            // shared source damage calculation consumes that stage here.
-            let retaliation = opponent_battle_damage(battle);
-            battle.opponent_move_damage = retaliation;
-            battle.player_hp = battle.player_hp.saturating_sub(retaliation);
+            // source damage calculation consumes that stage before its RNG
+            // variance roll.
+            let retaliation = resolve_opponent_damage_move(battle);
+            battle.opponent_move_damage = retaliation.damage;
+            if retaliation.hit {
+                battle.player_hp = battle.player_hp.saturating_sub(retaliation.damage);
+            }
+            opponent_result = Some(retaliation);
         }
         let opponent = match battle.opponent {
             BattleOpponent::Rival => "RIVAL",
@@ -3680,18 +3782,20 @@ impl WorldState {
             BattleOpponent::Wingull => "WINGULL",
             BattleOpponent::Wurmple => "WURMPLE",
         };
+        let player_text = resolved_move_text("Your POKéMON", &move_name, player_result);
+        let opponent_text = resolved_move_text(opponent, &battle.opponent_move_name, opponent_result.expect("opponent must resolve after a non-KO player move"));
         if battle.player_hp == 0 {
             battle.player_fainted = true;
             battle.message = Some(if opponent_moves_first {
-                format!("{opponent} used {}. {move_name} was used! Your POKéMON fainted!", battle.opponent_move_name)
+                format!("{opponent_text} {player_text} Your POKéMON fainted!")
             } else {
-                format!("{move_name} was used! {opponent} used {}. Your POKéMON fainted!", battle.opponent_move_name)
+                format!("{player_text} {opponent_text} Your POKéMON fainted!")
             });
         } else {
             battle.message = Some(if opponent_moves_first {
-                format!("{opponent} used {}. {move_name} was used!", battle.opponent_move_name)
+                format!("{opponent_text} {player_text}")
             } else {
-                format!("{move_name} was used! {opponent} used {}.", battle.opponent_move_name)
+                format!("{player_text} {opponent_text}")
             });
         }
         self.sync_starter_party_from_battle();
