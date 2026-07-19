@@ -130,7 +130,10 @@ impl LittlerootSession {
     }
 
     fn can_replay_exterior_direction(&self) -> bool {
-        self.checkpoint == OpeningCheckpoint::RivalOutsideLab
+        matches!(
+            self.checkpoint,
+            OpeningCheckpoint::BirchLabExterior | OpeningCheckpoint::RivalOutsideLab
+        )
             && self.world.map == MapId::LittlerootTown
             && self.world.dialogue.is_none()
             && self.world.transition.is_none()
@@ -2082,7 +2085,11 @@ impl LittlerootSession {
                 }
             }
             OpeningCheckpoint::BedroomIdle if self.world.map == MapId::MaysHouse2F => native::render_bedroom_with_idle_objects(self.world.map, self.world.render_player()),
-            OpeningCheckpoint::BirchLabExterior if self.world.map == MapId::LittlerootTown => native::render_birch_exterior_with_idle_objects(self.world.render_player()),
+            OpeningCheckpoint::BirchLabExterior
+                if self.world.map == MapId::LittlerootTown && self.input_log.is_empty() =>
+            {
+                native::render_birch_exterior_with_idle_objects(self.world.render_player())
+            }
             _ => native::render_world_view_with_dynamic_objects(self.world.map, self.world.render_player(), self.world.player_gender, self.world.facing, self.world.walk_direction, self.world.walk_progress_frames, self.world.frame, &self.world.npcs, &self.world.npc_walk_starts),
         }.expect("staged Little Root terrain and object assets must render");
         if self.world.map == MapId::LittlerootTown && !captured_directional_48 {

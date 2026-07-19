@@ -811,7 +811,10 @@ impl WorldState {
         Self {
             map: MapId::LittlerootTown,
             phase: StoryPhase::BirchRescued,
-            player: TilePosition { x: 7, y: 16 },
+            // Live 03_birch EWRAM entry 0 reports ObjectEvent.currentCoords
+            // `(14,24)`. Emerald's field map stores those coordinates with
+            // `MAP_OFFSET = 7`, yielding the authored Little Root spawn.
+            player: TilePosition { x: 7, y: 17 },
             render_position: None,
             elevation: 3,
             npcs: littleroot_town_npcs(StoryPhase::BirchRescued, PlayerGender::May),

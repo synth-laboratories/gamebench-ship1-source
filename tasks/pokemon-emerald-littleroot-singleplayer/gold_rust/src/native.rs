@@ -4137,10 +4137,10 @@ pub fn render_bedroom_with_idle_objects(map_id: MapId, player: &TilePosition) ->
 }
 
 pub fn render_birch_exterior_with_idle_objects(player: &TilePosition) -> Result<Vec<u8>, String> {
-    // This source checkpoint keeps the camera three tiles north and one tile
+    // This source checkpoint keeps the camera four tiles north and one tile
     // east of the bag-position player, while the captured OAM supplies the
     // visible player and nearby NPCs.
-    let camera_player = TilePosition { x: player.x + 1, y: player.y - 3 };
+    let camera_player = TilePosition { x: player.x + 1, y: player.y - 4 };
     let mut frame = render_world_view_with_objects(MapId::LittlerootTown, &camera_player, None, 0, BIRCH_IDLE_OBJ_VRAM, BIRCH_IDLE_OBJ_PALETTE, BIRCH_IDLE_OAM)?;
     apply_birch_flower_animation(&mut frame);
     Ok(frame)
