@@ -926,8 +926,9 @@ impl LittlerootSession {
         (self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, .. }])
-            && matches!(self.world.frame, 2176 | 2240 | 2304 | 2368 | 2432 | 2496 | 2560 | 2624 | 2688 | 2752 | 2816 | 2880 | 2944 | 3008 | 3072 | 3136 | 3200 | 3264 | 3328 | 3392 | 3456 | 3520 | 3584 | 3648 | 3712 | 3776 | 3840 | 3904 | 4032 | 4096 | 4160)
-            && native::render_littleroot_held_right_timed(self.world.render_player(), self.world.frame).is_some())
+            && matches!(self.world.frame, 2176 | 2240 | 2304 | 2368 | 2432 | 2496 | 2560 | 2624 | 2688 | 2752 | 2816 | 2880 | 2944 | 3008 | 3072 | 3136 | 3200 | 3264 | 3328 | 3392 | 3456 | 3520 | 3584 | 3648 | 3712 | 3776 | 3840 | 3904 | 4032 | 4096 | 4160 | 4224)
+            && (native::render_littleroot_held_right_timed(self.world.render_player(), self.world.frame).is_some()
+                || native::has_littleroot_stopped_right_phase(self.world.frame)))
             .then(|| match self.world.frame {
                 2176 => ("littleroot-outside-birch-lab-right-2176", "ce02453e8957367700771aec5eee5f11699842f726350dd355177f911b2951c4"),
                 2240 => ("littleroot-outside-birch-lab-right-2240", "31c7812cade2e90d47ae40ae06d04cbe85a29a68e488ea2334060ad0dd352fc8"),
@@ -960,6 +961,7 @@ impl LittlerootSession {
                 4032 => ("littleroot-outside-birch-lab-right-4032", "5b1bdd574b02b7864889cad7a7a6c94257e42e31e8e77f70c39721379e30c20c"),
                 4096 => ("littleroot-outside-birch-lab-right-4096", "5b1bdd574b02b7864889cad7a7a6c94257e42e31e8e77f70c39721379e30c20c"),
                 4160 => ("littleroot-outside-birch-lab-right-4160", "9a1d8f8151ee0056090fa4d3bb3f189369d67ceced60fad8be4fe298faf2df78"),
+                4224 => ("littleroot-outside-birch-lab-right-4224", "6fcbe8538dfc678a3ab6a555932434d0216254defadcfa38d84c548d800ee0d7"),
                 _ => unreachable!("source evidence is restricted to captured scheduler ticks"),
             })
     }
@@ -1078,7 +1080,7 @@ impl LittlerootSession {
             return "captured_frame_exact";
         }
         if self.rival_held_right_source_evidence().is_some() {
-            return "source_rgb_delta_exact";
+            return "source_timed_exact";
         }
         if self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && matches!(
@@ -1660,6 +1662,12 @@ impl LittlerootSession {
             OpeningCheckpoint::RivalOutsideLab if self.world.map == MapId::LittlerootTown => {
                 if self.world.walk_direction == Some(Facing::Right) {
                     if let Some(frame) = native::render_littleroot_held_right_timed(self.world.render_player(), self.world.frame) {
+                        frame
+                    } else if let Some(frame) = native::render_littleroot_stopped_right_with_dynamic_objects(
+                        &self.world.player,
+                        self.world.frame,
+                        &self.world.npcs,
+                    ) {
                         frame
                     } else {
                         native::render_littleroot_with_idle_objects_at_tick(self.world.render_player(), self.world.facing, self.world.walk_direction, self.world.walk_progress_frames, Some(self.world.frame), self.world.camera_handoff_from)

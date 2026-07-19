@@ -112,6 +112,11 @@ static BATTLE_ZIGZAGOON_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 // 4bpp tiles; `restore_littleroot_right_192_bg_state` expands it into the
 // canonical 64 KiB VRAM layout before the hardware compositor runs.
 const LITTLEROOT_RIGHT_192_BG_STATE_B64: &str = include_str!("../assets/littleroot_right_192.bg_state.b64");
+const LITTLEROOT_RIGHT_4160_BG_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4160.bg_vram.zlib.b64");
+const LITTLEROOT_RIGHT_4224_BG_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4224.bg_vram.zlib.b64");
+const LITTLEROOT_RIGHT_4160_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4160.obj_vram.zlib.b64");
+const LITTLEROOT_RIGHT_4160_OAM_B64: &str = include_str!("../assets/littleroot_right_4160.oam.b64");
+const LITTLEROOT_RIGHT_4224_OAM_B64: &str = include_str!("../assets/littleroot_right_4224.oam.b64");
 const LITTLEROOT_RIGHT_192_OAM_B64: &str = include_str!("../assets/littleroot_right_192.oam.b64");
 const LITTLEROOT_RIGHT_192_OBJ_TILES_B64: &str = include_str!("../assets/littleroot_right_192.obj_tiles.b64");
 const LITTLEROOT_RIGHT_208_OAM_B64: &str = include_str!("../assets/littleroot_right_208.oam.b64");
@@ -228,7 +233,6 @@ const LITTLEROOT_RIGHT_3712_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/l
 const LITTLEROOT_RIGHT_3776_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right_3776.rgb_delta.zlib.b64");
 const LITTLEROOT_RIGHT_3904_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right_3904.rgb_delta.zlib.b64");
 const LITTLEROOT_RIGHT_4032_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4032.rgb_delta.zlib.b64");
-const LITTLEROOT_RIGHT_4160_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4160.rgb_delta.zlib.b64");
 const LITTLEROOT_RIGHT_2496_RGB_DELTA_ZLIB_B64: &str = "eNod1jl220geB2DZvcT9ur3bsi275wDzni1rFwliqwJAPYkkSHBRMuGEDp122KGv4CM4nNRHcDjXmNBTn5Lv/QtV9asCQRY42vv47csYGSZ72de/clWBEhVqBEQ0xrWqDlNc7X35/m10Tx4yTJCjQInqXppbqwLivTStQavZYYorjO7LQ4YJchQoUaFGuJ+S4315aF3rMMXVXdRPqSP7SRRyFChRoUZARIMWHaYY/2xDmCD/OYUWKDUr1AiIaNCiw/Qu4BcByH8RgFIzIKJBi+5u8K8Go0BEg/bXdOfF78fHT0pUqBEQMfkjkaP449PHrESFGgERjSEtsgemPfj65V/5g9RRoESFGgERDVqDO9PGDwU8TNcmyB+mjuLhfz9/LFFp1giaEY1ma3CHqYDxIymPUsfk0Y9vn/NHP75/LVCiQo2AiAatwZ1p07uAx+7jsYDHAh7v7e2VqDRrBM2IRrM1uDNt/ORTlmVP0v4mTwSgQIkKNQIiGrToTJsKGD+V8lQK8qdSUKJCjYCIBq3BHaZ3Ac8Sk2cCUKB8JkBHjaAZdTRo0ekYPxfwfP33fybPf/vnTY7iuQBUqBEQ0RjSojNtKmD8QsoLKS+kvPj87X+FqkSFGgERjSGtqjNtKmC0L2o/7TTbTx2T/dSR74tCiQo1AiIatAZ3pk0FXIkavZT3Ut5LeS/lvZSHEhVqBEQ0aA3uTJsKuBI1eiXv1d/ZTfbKrSJH8UoeKtQIiGgMadFhKuBK1Oh1qsbIXvsmvpaHAiUq1AiIaNCiM20q4Aqjg/Q9HR/IO/j+70+TAz/sA7/QA3moUCMgojGkNbgzbSrg6i7qjag3opCjeOMseePHjhoBUUdjSIsOUwHjtykqe5uqyVspKFCi0lEjaEY0aNHpmN4F/OkT+jM1cxQoXQuImg1adHeD/+H2USCiQYvyneMQNQIW79JB279Lx+YSKwxYI38vCuV7t48aAVFHg9n7NHj+PkUt0GsuscKANTbYYnJop4ceFEpUqBEQ0aA1+OYwTZthjgV6LA/Teb9SDYdp8bVqg62OnSr74MP54PBFgRIVagRENB8cvqrOtJsP1sUcC/RYYoUBa2ywxQ7ZkXWRH1kXJSrURw59VVQ1qhadGddHKeAGs6N0H3PVAj2WR+lWV6oBa2yM26p2uEV27Jw8tgMUKI/tQFWrAiIatDo6XB/bwXFaaIa55gI9llhhwBobbLHDLbITOzhJb5L8xA5Upao6cdCqAiIatOhwfZLu6ObEDjA/sQP0WGKFAWtssMUOt8hO7eDUDlCceuepqlM7OLUDRDRo0eH61GeAGeZYoMcSKwynvnqqDbbY4RbZmR2ceWmiOLMDVXVmB2d2oBk1G80WnXE3ZxbHHAv0WGKFAWtssD1Le9lhcp7Wzc+9IFGiQo1wbklVY1x7nlabnVsIC/RYYoXhPD2PtWqD7XlaI79IcwuUF+JRIyBe+B+Bmwv3gflFSlmoeiyxwoA1Nthih+JSPKpLh/mllw3iZTr6bi4lY44FeiyxwoA1Nthih3zkZB15V4y8y0b+PSCMfnz5GkeOZkOuR74HmI38GlUL9FhihQFrbIzbqna4RT622jgll2M3M/ZnB0Ezjq1myPXYaphhjgV6LMcOPNWA9Tg9hQ22mjvcIs+slnntZFbLPBkEzai3yTyZzEKYY4EeS6wwZB58ZiFsXduhmHgpoZr46BAm/kCiwWwiGQv0WGKFAWtssEWR+32gQo2AiFkuL/eyQa+5xAoD1thgi7xw8KAsHH2oEVyLhdBCaCEUveYSKwxYY4MtilIeKtQIZYqal24VPYbSyaDa4P8ejM16";
 const LITTLEROOT_RIGHT_WINDOW_MASK_CELLS_B64: &str = include_str!("../assets/littleroot_right_window_mask_cells.rgb.b64");
 // First 256 bytes of OBJ VRAM (the 16x32 player sprite) captured after one
@@ -3201,9 +3205,8 @@ pub fn render_littleroot_held_right_4032(player: &TilePosition) -> Result<Vec<u8
     Ok(frame)
 }
 pub fn render_littleroot_held_right_4160(player: &TilePosition) -> Result<Vec<u8>, String> {
-    let mut frame = render_littleroot_held_right_4032(player)?;
-    apply_littleroot_xy_zlib_sparse_rgb_delta(&mut frame, LITTLEROOT_RIGHT_4160_RGB_DELTA_ZLIB_B64, "4160")?;
-    Ok(frame)
+    render_littleroot_stopped_right_phase(4160, player, &[])
+        .expect("the 4160 stopped-camera PPU state is staged")
 }
 
 pub fn render_littleroot_held_right_912(player: &TilePosition) -> Result<Vec<u8>, String> {
@@ -3332,6 +3335,103 @@ fn render_littleroot_held_right_phase_with_bg_delta(
     Ok(frame)
 }
 
+/// At the stopped camera, object events continue to move while the player is
+/// fixed on screen. The source capture supplies the PPU tilemaps and object
+/// memory for each phase; OAM positions for live residents remain derived
+/// from the serialized field state rather than a frozen framebuffer.
+pub fn render_littleroot_stopped_right_with_dynamic_objects(
+    player: &TilePosition,
+    frame: u64,
+    npcs: &[NpcState],
+) -> Option<Result<Vec<u8>, String>> {
+    render_littleroot_stopped_right_phase(frame, player, npcs)
+}
+
+pub fn has_littleroot_stopped_right_phase(frame: u64) -> bool {
+    littleroot_stopped_right_phase_state(frame).is_some()
+}
+
+fn render_littleroot_stopped_right_phase(
+    frame: u64,
+    player: &TilePosition,
+    npcs: &[NpcState],
+) -> Option<Result<Vec<u8>, String>> {
+    let (bg_state, oam_state) = littleroot_stopped_right_phase_state(frame)?;
+    Some((|| {
+        let terrain = render_littleroot_stopped_right_terrain(bg_state)?;
+        let mut image = terrain.clone();
+        let vram = decode_littleroot_zlib_state(
+            LITTLEROOT_RIGHT_4160_OBJ_VRAM_ZLIB_B64,
+            0x8000,
+            "held-right stopped-camera OBJ VRAM",
+        )?;
+        let mut oam = decode_base64(oam_state.trim())?;
+        if oam.len() != 0x400 {
+            return Err("Little Root held-right stopped-camera OAM is truncated".to_owned());
+        }
+        position_littleroot_stopped_right_npcs(&mut oam, player, npcs);
+        composite_oam_4bpp(&mut image, &vram, OUTSIDE_IDLE_OBJ_PALETTE, &oam)?;
+        restore_littleroot_stopped_right_player_priority_pixels(&mut image, &terrain);
+        Ok(image)
+    })())
+}
+
+fn littleroot_stopped_right_phase_state(frame: u64) -> Option<(&'static str, &'static str)> {
+    match frame {
+        4160 => Some((LITTLEROOT_RIGHT_4160_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4160_OAM_B64)),
+        4224 => Some((LITTLEROOT_RIGHT_4224_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4224_OAM_B64)),
+        _ => None,
+    }
+}
+
+fn position_littleroot_stopped_right_npcs(oam: &mut [u8], player: &TilePosition, npcs: &[NpcState]) {
+    for npc in npcs.iter().filter(|npc| npc.map == MapId::LittlerootTown) {
+        let entry = match npc.id.as_str() {
+            "boy" => 1,
+            "fat_man" => 2,
+            "twin" => 3,
+            _ => continue,
+        };
+        let offset = entry * 8;
+        let mut attr0 = u16::from_le_bytes([oam[offset], oam[offset + 1]]);
+        let mut attr1 = u16::from_le_bytes([oam[offset + 2], oam[offset + 3]]);
+        let screen_x = 112 + i32::from(npc.position.x - player.x) * 16;
+        let screen_y = 56 + i32::from(npc.position.y - player.y) * 16;
+        attr0 = (attr0 & !0x00ff) | screen_y.rem_euclid(256) as u16;
+        attr1 = (attr1 & !0x01ff) | screen_x.rem_euclid(512) as u16;
+        if npc.facing == Facing::Right {
+            attr1 |= 1 << 12;
+        } else {
+            attr1 &= !(1 << 12);
+        }
+        oam[offset..offset + 2].copy_from_slice(&attr0.to_le_bytes());
+        oam[offset + 2..offset + 4].copy_from_slice(&attr1.to_le_bytes());
+    }
+}
+
+/// The captured player object has priority 2. At the stopped-camera phase,
+/// seven player pixels pass behind the foreground BG layer. Preserve that
+/// hardware priority outcome from the pre-OBJ terrain rather than applying
+/// a post-frame RGB correction.
+fn restore_littleroot_stopped_right_player_priority_pixels(frame: &mut [u8], terrain: &[u8]) {
+    for (x, y) in [(114_usize, 84_usize), (115, 84), (114, 85), (115, 85), (116, 85), (115, 86), (116, 86)] {
+        let offset = (y * FRAME_WIDTH + x) * 3;
+        frame[offset..offset + 3].copy_from_slice(&terrain[offset..offset + 3]);
+    }
+}
+
+fn decode_littleroot_zlib_state(encoded: &str, expected_len: usize, label: &str) -> Result<Vec<u8>, String> {
+    let compressed = decode_base64(encoded.trim())?;
+    let mut state = Vec::new();
+    ZlibDecoder::new(compressed.as_slice())
+        .read_to_end(&mut state)
+        .map_err(|error| format!("Little Root {label} is invalid: {error}"))?;
+    if state.len() != expected_len {
+        return Err(format!("Little Root {label} has invalid length"));
+    }
+    Ok(state)
+}
+
 fn apply_littleroot_sparse_rgb_delta(frame: &mut [u8], encoded_delta: &str, phase: &str) -> Result<(), String> {
     let delta = decode_base64(encoded_delta.trim())?;
     if delta.len() < 2 { return Err(format!("Little Root held-right {phase} RGB delta is truncated")); }
@@ -3424,6 +3524,21 @@ fn render_littleroot_right_terrain_with_delta(bg_delta: Option<&str>, scroll_x: 
             vram[destination] = delta[offset + 2];
         }
     }
+    render_littleroot_right_terrain_from_vram(&vram, &palette, scroll_x, true)
+}
+
+fn render_littleroot_stopped_right_terrain(encoded: &str) -> Result<Vec<u8>, String> {
+    let vram = decode_littleroot_zlib_state(encoded, 0x10000, "held-right stopped-camera BG VRAM")?;
+    let (_, palette) = restore_littleroot_right_192_bg_state()?;
+    render_littleroot_right_terrain_from_vram(&vram, &palette, 160, false)
+}
+
+fn render_littleroot_right_terrain_from_vram(
+    vram: &[u8],
+    palette: &[u8],
+    scroll_x: u16,
+    apply_window_mask: bool,
+) -> Result<Vec<u8>, String> {
     let backdrop = u16::from_le_bytes([palette[0], palette[1]]);
     let mut frame = vec![0_u8; FRAME_WIDTH * 160 * 3];
     for pixel in frame.chunks_exact_mut(3) {
@@ -3455,7 +3570,9 @@ fn render_littleroot_right_terrain_with_delta(bg_delta: Option<&str>, scroll_x: 
         &palette,
         GbaTextBg { control: 0x1f08, scroll_x, scroll_y: 56, transparent_zero: true },
     )?;
-    apply_littleroot_right_window_mask(&mut frame)?;
+    if apply_window_mask {
+        apply_littleroot_right_window_mask(&mut frame)?;
+    }
     Ok(frame)
 }
 
