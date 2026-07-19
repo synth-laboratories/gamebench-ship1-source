@@ -2073,11 +2073,6 @@ pub fn is_walkable(map_id: MapId, x: i16, y: i16) -> Result<bool, String> {
     if map_id == MapId::LittlerootTown {
         match (x, y) {
             (8, 16) => return Ok(false),
-            // Fresh EWRAM provenance for the checkpoint's initial Left x16
-            // stores `(14,24)` only as the previous object coordinate while
-            // the current coordinate remains `(15,24)`: authored `(7,17)`
-            // is a source obstruction despite Porymap marking it walkable.
-            (7, 17) => return Ok(false),
             // The post-Pokédex field route reaches local `(13, 9)` from the
             // south and remains pressed against this northern obstruction.
             (13, 8) => return Ok(false),

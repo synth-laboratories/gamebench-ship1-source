@@ -3091,7 +3091,8 @@ impl WorldState {
         // The display clock is one frame behind that committed coordinate,
         // which is why a fresh 16-frame capture has one completed tile but a
         // 15-pixel sprite/camera stride. Keep the clocks separate.
-        let accumulated = u32::from(self.walk_elapsed_frames) + held_frames;
+        let prior_walk_elapsed = u32::from(self.walk_elapsed_frames);
+        let accumulated = prior_walk_elapsed + held_frames;
         let tiles = accumulated / cadence;
         self.walk_elapsed_frames = (accumulated % cadence) as u8;
         self.walk_progress_frames = if direction_changed {
@@ -3099,7 +3100,7 @@ impl WorldState {
         } else {
             ((u32::from(self.walk_progress_frames) + held_frames) % cadence) as u8
         };
-        for _ in 0..tiles {
+        for tile_index in 0..tiles {
             let (next_x, next_y) = match facing {
                 Facing::Up => (self.player.x, self.player.y - 1),
                 Facing::Down => (self.player.x, self.player.y + 1),
@@ -3109,6 +3110,21 @@ impl WorldState {
             if !(0..width).contains(&next_x) || !(0..height).contains(&next_y) {
                 if self.begin_connected_map(facing) {
                     moved += 1;
+                    // The connection fires on this tile boundary. A single
+                    // held source input can then cover both 16-frame fades
+                    // and keep walking on the destination map; preserve that
+                    // carry so a long hold is equivalent to 16-frame splits.
+                    let frames_to_connection = u32::from(cadence)
+                        .saturating_sub(prior_walk_elapsed)
+                        .saturating_add(tile_index * u32::from(cadence));
+                    let carry = held_frames.saturating_sub(frames_to_connection);
+                    self.advance_transition(carry);
+                    if self.transition.is_none() {
+                        let destination_hold = carry.saturating_sub(32);
+                        if destination_hold > 0 {
+                            moved += self.walk_bounds(facing, destination_hold);
+                        }
+                    }
                 }
                 self.walk_progress_frames = 0;
                 self.walk_elapsed_frames = 0;
@@ -3150,7 +3166,7 @@ impl WorldState {
                 && matches!(
                     (next_x, next_y),
                     (13, 13) | (11, 9..=19) | (2..=11, 19) | (2, 9..=18)
-                        | (3..=19, 9) | (9..=12, 17)
+                        | (3..=19, 9) | (7, 17) | (9..=12, 17)
                         | (12, 18 | 19)
                 );
             if !source_rival_field_route
