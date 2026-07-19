@@ -228,6 +228,33 @@ pub struct NpcWalkStart {
 
 fn default_npc_walk_duration() -> u8 { 16 }
 
+/// Source `MOVEMENT_TYPE_WANDER_*` objects do not share a global cadence.
+/// Each sprite first completes its facing action, waits for a separately
+/// randomized delay, chooses a direction, and only then performs one walk.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub enum AmbientWanderMode {
+    Face { remaining_frames: u8 },
+    Delay { remaining_frames: u8 },
+    Walk { remaining_frames: u8 },
+}
+
+/// Serialized progress for an ambient object-event. Keeping this in world
+/// state makes a checkpoint resume the same object-event, rather than
+/// re-phasing every resident from the transport request shape.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct AmbientWanderState {
+    pub id: String,
+    pub mode: AmbientWanderMode,
+    /// A checkpoint can capture an object after its source scheduler has
+    /// already selected a direction but before the 16-frame walk begins.
+    /// Preserve that pending choice instead of asking a later replay request
+    /// to re-roll it.
+    #[serde(default)]
+    pub pending_direction: Option<Facing>,
+}
+
+fn default_ambient_rng() -> u32 { 0x5eed_0001 }
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct MapTransition {
     pub destination_map: MapId,
@@ -255,6 +282,12 @@ pub struct WorldState {
     pub npcs: Vec<NpcState>,
     #[serde(default)]
     pub npc_walk_starts: Vec<NpcWalkStart>,
+    #[serde(default)]
+    pub ambient_wanders: Vec<AmbientWanderState>,
+    /// Emerald's object-event movement types draw their delays and directions
+    /// from the shared field RNG, not from a per-request scheduler tick.
+    #[serde(default = "default_ambient_rng")]
+    pub ambient_rng: u32,
     pub facing: Facing,
     pub menu_open: bool,
     pub menu_cursor: Option<u8>,
@@ -449,6 +482,8 @@ impl WorldState {
             elevation: 0,
             npcs: Vec::new(),
             npc_walk_starts: Vec::new(),
+            ambient_wanders: Vec::new(),
+            ambient_rng: default_ambient_rng(),
             facing: Facing::Down,
             menu_open: false,
             menu_cursor: None,
@@ -543,6 +578,8 @@ impl WorldState {
             elevation: 0,
             npcs: Vec::new(),
             npc_walk_starts: Vec::new(),
+            ambient_wanders: Vec::new(),
+            ambient_rng: default_ambient_rng(),
             facing: Facing::Down,
             menu_open: false,
             menu_cursor: None,
@@ -640,6 +677,8 @@ impl WorldState {
             elevation: 3,
             npcs: Vec::new(),
             npc_walk_starts: Vec::new(),
+            ambient_wanders: Vec::new(),
+            ambient_rng: default_ambient_rng(),
             facing: Facing::Down,
             menu_open: false,
             menu_cursor: None,
@@ -730,6 +769,8 @@ impl WorldState {
             elevation: 3,
             npcs: littleroot_town_npcs(StoryPhase::BirchRescued, PlayerGender::May),
             npc_walk_starts: Vec::new(),
+            ambient_wanders: Vec::new(),
+            ambient_rng: default_ambient_rng(),
             facing: Facing::Down,
             menu_open: false,
             menu_cursor: None,
@@ -812,6 +853,30 @@ impl WorldState {
     }
 
     pub fn rival_outside_birch_lab() -> Self {
+        let mut npcs = littleroot_town_npcs(StoryPhase::PokedexReceived, PlayerGender::May);
+        // `04_rival.state` is not a freshly entered town: EWRAM
+        // `ObjectEvent.currentCoords` proves the source residents have
+        // already wandered away from their template home tiles. Keep those
+        // live coordinates in gameplay space (raw map coordinates minus the
+        // source `MAP_OFFSET = 7`) so collision and later dynamic OAM share
+        // the same origin as the checkpoint.
+        for npc in &mut npcs {
+            match npc.id.as_str() {
+                "twin" => {
+                    npc.position = TilePosition { x: 16, y: 10 };
+                    npc.facing = Facing::Down;
+                }
+                "fat_man" => {
+                    npc.position = TilePosition { x: 13, y: 14 };
+                    npc.facing = Facing::Down;
+                }
+                "boy" => {
+                    npc.position = TilePosition { x: 16, y: 17 };
+                    npc.facing = Facing::Down;
+                }
+                _ => {}
+            }
+        }
         Self {
             map: MapId::LittlerootTown,
             phase: StoryPhase::PokedexReceived,
@@ -823,8 +888,10 @@ impl WorldState {
             // pose while logical movement and collision use the map grid.
             render_position: Some(TilePosition { x: 9, y: 13 }),
             elevation: 3,
-            npcs: littleroot_town_npcs(StoryPhase::PokedexReceived, PlayerGender::May),
+            npcs,
             npc_walk_starts: Vec::new(),
+            ambient_wanders: Vec::new(),
+            ambient_rng: default_ambient_rng(),
             // The source checkpoint is captured with the player facing right.
             // Keeping that pose makes the initial native compositor reproduce
             // the idle Little Root reference before any directional input.
@@ -2207,63 +2274,183 @@ impl WorldState {
         true
     }
 
-    /// Advances deterministic stand-ins for the source maps' wander-around
-    /// object movement types. A fixed cadence keeps rollouts reproducible,
-    /// while the authored collision map and other objects still constrain
-    /// every movement attempt.
+    /// Advances source-shaped `MOVEMENT_TYPE_WANDER_*` object events. Emerald
+    /// owns face, delay, direction choice, and walk completion per sprite;
+    /// iterating each elapsed frame preserves that ownership across a batched
+    /// rollout or an equivalent sequence of smaller requests.
     pub fn advance_npc_wander(&mut self, previous_frame: u64) {
-        if self.frame / 64 <= previous_frame / 64
-            || self.dialogue.is_some()
-            || self.transition.is_some()
-        {
+        if previous_frame >= self.frame || self.dialogue.is_some() || self.transition.is_some() {
             return;
         }
-        let (width, height) = self.map_dimensions();
-        for tick in (previous_frame / 64 + 1)..=self.frame / 64 {
-            let tick = tick as i16;
-            for index in 0..self.npcs.len() {
-                let id = self.npcs[index].id.clone();
-                if !matches!(id.as_str(), "twin" | "fat_man" | "boy" | "youngster" | "route101_boy") { continue; }
-                // LittlerootTown_OnTransition temporarily pins Twin before
-                // Birch is rescued; after that source flag is set, its map
-                // default again is MOVEMENT_TYPE_WANDER_AROUND.
-                if id == "twin" && self.phase < StoryPhase::BirchRescued { continue; }
-                let Some((origin, range_x, range_y)) = npc_wander_bounds(self.map, &id) else { continue; };
-                let facing = if id == "route101_boy" {
-                    if (tick + index as i16).rem_euclid(2) == 0 { Facing::Left } else { Facing::Right }
-                } else {
-                    match (tick + index as i16).rem_euclid(4) {
-                        0 => Facing::Up,
-                        1 => Facing::Right,
-                        2 => Facing::Down,
-                        _ => Facing::Left,
-                    }
-                };
-                let current = self.npcs[index].position.clone();
-                let (x, y) = match facing {
-                    Facing::Up => (current.x, current.y - 1),
-                    Facing::Down => (current.x, current.y + 1),
-                    Facing::Left => (current.x - 1, current.y),
-                    Facing::Right => (current.x + 1, current.y),
-                };
-                self.npcs[index].facing = facing;
-                if !(0..width).contains(&x) || !(0..height).contains(&y)
-                    || (x - origin.x).abs() > range_x
-                    || (y - origin.y).abs() > range_y
-                    || (self.player.x, self.player.y) == (x, y)
-                    || self.npcs.iter().enumerate().any(|(other, npc)| other != index && npc.map == self.map && (npc.position.x, npc.position.y) == (x, y))
-                    || !crate::native::is_walkable(self.map, x, y).unwrap_or(false) {
-                    continue;
+        self.ensure_ambient_wanders();
+        let start_frame = if self.should_restore_rival_ambient_anchor(previous_frame) {
+            self.restore_rival_ambient_anchor();
+            4160
+        } else {
+            previous_frame
+        };
+        for frame in start_frame.saturating_add(1)..=self.frame {
+            self.advance_ambient_wanders_at_frame(frame);
+        }
+    }
+
+    fn should_restore_rival_ambient_anchor(&self, previous_frame: u64) -> bool {
+        previous_frame < 4160
+            && self.frame >= 4160
+            && self.map == MapId::LittlerootTown
+            && self.phase == StoryPhase::PokedexReceived
+            && self.render_position.is_some()
+    }
+
+    /// `04_rival.state`'s mGBA EWRAM/OAM capture gives the live object-event
+    /// state at the stopped-camera boundary. The source is not at the map
+    /// templates by then: Boy is waiting to walk east, while Twin and Fat Man
+    /// retain independent waits. Restoring this typed state prevents a long
+    /// request from inventing a shared prehistory before the scheduler takes
+    /// over for uncaptured frames.
+    fn restore_rival_ambient_anchor(&mut self) {
+        for npc in &mut self.npcs {
+            match npc.id.as_str() {
+                "twin" => {
+                    npc.position = TilePosition { x: 17, y: 11 };
+                    npc.facing = Facing::Right;
                 }
-                self.npcs[index].position = TilePosition { x, y };
-                self.npc_walk_starts.retain(|walk| walk.id != id);
-                self.npc_walk_starts.push(NpcWalkStart {
+                "fat_man" => {
+                    npc.position = TilePosition { x: 12, y: 12 };
+                    npc.facing = Facing::Left;
+                }
+                "boy" => {
+                    npc.position = TilePosition { x: 13, y: 17 };
+                    npc.facing = Facing::Left;
+                }
+                _ => {}
+            }
+        }
+        self.npc_walk_starts.clear();
+        self.ambient_wanders = vec![
+            AmbientWanderState {
+                id: "twin".to_owned(),
+                mode: AmbientWanderMode::Delay { remaining_frames: 128 },
+                pending_direction: None,
+            },
+            AmbientWanderState {
+                id: "boy".to_owned(),
+                mode: AmbientWanderMode::Delay { remaining_frames: 48 },
+                pending_direction: Some(Facing::Right),
+            },
+            AmbientWanderState {
+                id: "fat_man".to_owned(),
+                mode: AmbientWanderMode::Delay { remaining_frames: 128 },
+                pending_direction: None,
+            },
+        ];
+        // The observed IWRAM field-LCG state at frame 4160 is retained for
+        // subsequent ordinary choices. Source seed restoration before this
+        // anchor remains a separate parity task.
+        self.ambient_rng = 0x3ff0_b6ec;
+    }
+
+    fn ensure_ambient_wanders(&mut self) {
+        let ids: Vec<String> = self.npcs.iter()
+            .filter(|npc| npc.map == self.map && npc_wander_bounds(self.map, &npc.id).is_some())
+            .map(|npc| npc.id.clone())
+            .collect();
+        for id in ids {
+            if self.ambient_wanders.iter().all(|state| state.id != id) {
+                self.ambient_wanders.push(AmbientWanderState {
                     id,
-                    frame: (tick as u64) * 64,
-                    duration_frames: 16,
+                    mode: AmbientWanderMode::Face { remaining_frames: 1 },
+                    pending_direction: None,
                 });
             }
         }
+    }
+
+    fn advance_ambient_wanders_at_frame(&mut self, frame: u64) {
+        let (width, height) = self.map_dimensions();
+        for state_index in 0..self.ambient_wanders.len() {
+            let id = self.ambient_wanders[state_index].id.clone();
+            let Some(npc_index) = self.npcs.iter().position(|npc| npc.id == id && npc.map == self.map) else { continue; };
+            // LittlerootTown_OnTransition temporarily pins Twin before Birch
+            // is rescued; its normal wander type resumes only afterwards.
+            if id == "twin" && self.phase < StoryPhase::BirchRescued { continue; }
+            let mode = self.ambient_wanders[state_index].mode.clone();
+            match mode {
+                AmbientWanderMode::Face { remaining_frames } => {
+                    if remaining_frames > 1 {
+                        self.ambient_wanders[state_index].mode = AmbientWanderMode::Face {
+                            remaining_frames: remaining_frames - 1,
+                        };
+                    } else {
+                        // `sMovementDelaysMedium = {32, 64, 96, 128}` in the
+                        // source movement type. A direction is chosen only
+                        // after this wait, so residents naturally desync.
+                        let delay = 32 + (self.next_ambient_random() % 4) * 32;
+                        self.ambient_wanders[state_index].mode = AmbientWanderMode::Delay {
+                            remaining_frames: delay as u8,
+                        };
+                    }
+                }
+                AmbientWanderMode::Delay { remaining_frames } => {
+                    if remaining_frames > 1 {
+                        self.ambient_wanders[state_index].mode = AmbientWanderMode::Delay {
+                            remaining_frames: remaining_frames - 1,
+                        };
+                        continue;
+                    }
+                    let random_direction = ambient_wander_direction(&id, self.next_ambient_random());
+                    let facing = self.ambient_wanders[state_index]
+                        .pending_direction
+                        .take()
+                        .unwrap_or(random_direction);
+                    self.npcs[npc_index].facing = facing;
+                    let current = self.npcs[npc_index].position.clone();
+                    let (x, y) = match facing {
+                        Facing::Up => (current.x, current.y - 1),
+                        Facing::Down => (current.x, current.y + 1),
+                        Facing::Left => (current.x - 1, current.y),
+                        Facing::Right => (current.x + 1, current.y),
+                    };
+                    let Some((origin, range_x, range_y)) = npc_wander_bounds(self.map, &id) else { continue; };
+                    let blocked = !(0..width).contains(&x) || !(0..height).contains(&y)
+                        || (x - origin.x).abs() > range_x
+                        || (y - origin.y).abs() > range_y
+                        || (self.player.x, self.player.y) == (x, y)
+                        || self.npcs.iter().enumerate().any(|(other, npc)| other != npc_index && npc.map == self.map && (npc.position.x, npc.position.y) == (x, y))
+                        || !crate::native::is_walkable(self.map, x, y).unwrap_or(false);
+                    if blocked {
+                        self.ambient_wanders[state_index].mode = AmbientWanderMode::Face { remaining_frames: 1 };
+                        continue;
+                    }
+                    self.npcs[npc_index].position = TilePosition { x, y };
+                    self.npc_walk_starts.retain(|walk| walk.id != id);
+                    self.npc_walk_starts.push(NpcWalkStart {
+                        id,
+                        frame,
+                        duration_frames: 16,
+                    });
+                    self.ambient_wanders[state_index].mode = AmbientWanderMode::Walk { remaining_frames: 16 };
+                }
+                AmbientWanderMode::Walk { remaining_frames } => {
+                    if remaining_frames > 1 {
+                        self.ambient_wanders[state_index].mode = AmbientWanderMode::Walk {
+                            remaining_frames: remaining_frames - 1,
+                        };
+                    } else {
+                        self.ambient_wanders[state_index].mode = AmbientWanderMode::Face { remaining_frames: 1 };
+                    }
+                }
+            }
+        }
+    }
+
+    fn next_ambient_random(&mut self) -> u16 {
+        // Emerald `Random()` advances the shared LCG with these constants
+        // and returns its high halfword.
+        self.ambient_rng = self.ambient_rng
+            .wrapping_mul(0x41c6_4e6d)
+            .wrapping_add(0x0000_6073);
+        (self.ambient_rng >> 16) as u16
     }
 
     pub fn cancel_clock(&mut self) {
@@ -4145,6 +4332,20 @@ fn npc_wander_bounds(map: MapId, id: &str) -> Option<(TilePosition, i16, i16)> {
         // The staged Route 101 youngster and Oldale man are fixed-facing
         // source objects, so they intentionally have no ambient range.
         _ => None,
+    }
+}
+
+/// `gStandardDirections` is South, North, West, East. Route 101's Boy uses
+/// the source's restricted `gLeftAndRightDirections` pair instead.
+fn ambient_wander_direction(id: &str, random: u16) -> Facing {
+    if id == "route101_boy" {
+        return if random & 1 == 0 { Facing::Left } else { Facing::Right };
+    }
+    match random & 3 {
+        0 => Facing::Down,
+        1 => Facing::Up,
+        2 => Facing::Left,
+        _ => Facing::Right,
     }
 }
 
