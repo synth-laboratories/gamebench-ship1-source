@@ -227,6 +227,8 @@ const LITTLEROOT_RIGHT_3648_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/l
 const LITTLEROOT_RIGHT_3712_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right_3712.rgb_delta.zlib.b64");
 const LITTLEROOT_RIGHT_3776_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right_3776.rgb_delta.zlib.b64");
 const LITTLEROOT_RIGHT_3904_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right_3904.rgb_delta.zlib.b64");
+const LITTLEROOT_RIGHT_4032_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4032.rgb_delta.zlib.b64");
+const LITTLEROOT_RIGHT_4160_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4160.rgb_delta.zlib.b64");
 const LITTLEROOT_RIGHT_2496_RGB_DELTA_ZLIB_B64: &str = "eNod1jl220geB2DZvcT9ur3bsi275wDzni1rFwliqwJAPYkkSHBRMuGEDp122KGv4CM4nNRHcDjXmNBTn5Lv/QtV9asCQRY42vv47csYGSZ72de/clWBEhVqBEQ0xrWqDlNc7X35/m10Tx4yTJCjQInqXppbqwLivTStQavZYYorjO7LQ4YJchQoUaFGuJ+S4315aF3rMMXVXdRPqSP7SRRyFChRoUZARIMWHaYY/2xDmCD/OYUWKDUr1AiIaNCiw/Qu4BcByH8RgFIzIKJBi+5u8K8Go0BEg/bXdOfF78fHT0pUqBEQMfkjkaP449PHrESFGgERjSEtsgemPfj65V/5g9RRoESFGgERDVqDO9PGDwU8TNcmyB+mjuLhfz9/LFFp1giaEY1ma3CHqYDxIymPUsfk0Y9vn/NHP75/LVCiQo2AiAatwZ1p07uAx+7jsYDHAh7v7e2VqDRrBM2IRrM1uDNt/ORTlmVP0v4mTwSgQIkKNQIiGrToTJsKGD+V8lQK8qdSUKJCjYCIBq3BHaZ3Ac8Sk2cCUKB8JkBHjaAZdTRo0ekYPxfwfP33fybPf/vnTY7iuQBUqBEQ0RjSojNtKmD8QsoLKS+kvPj87X+FqkSFGgERjSGtqjNtKmC0L2o/7TTbTx2T/dSR74tCiQo1AiIatAZ3pk0FXIkavZT3Ut5LeS/lvZSHEhVqBEQ0aA3uTJsKuBI1eiXv1d/ZTfbKrSJH8UoeKtQIiGgMadFhKuBK1Oh1qsbIXvsmvpaHAiUq1AiIaNCiM20q4Aqjg/Q9HR/IO/j+70+TAz/sA7/QA3moUCMgojGkNbgzbSrg6i7qjag3opCjeOMseePHjhoBUUdjSIsOUwHjtykqe5uqyVspKFCi0lEjaEY0aNHpmN4F/OkT+jM1cxQoXQuImg1adHeD/+H2USCiQYvyneMQNQIW79JB279Lx+YSKwxYI38vCuV7t48aAVFHg9n7NHj+PkUt0GsuscKANTbYYnJop4ceFEpUqBEQ0aA1+OYwTZthjgV6LA/Teb9SDYdp8bVqg62OnSr74MP54PBFgRIVagRENB8cvqrOtJsP1sUcC/RYYoUBa2ywxQ7ZkXWRH1kXJSrURw59VVQ1qhadGddHKeAGs6N0H3PVAj2WR+lWV6oBa2yM26p2uEV27Jw8tgMUKI/tQFWrAiIatDo6XB/bwXFaaIa55gI9llhhwBobbLHDLbITOzhJb5L8xA5Upao6cdCqAiIatOhwfZLu6ObEDjA/sQP0WGKFAWtssMUOt8hO7eDUDlCceuepqlM7OLUDRDRo0eH61GeAGeZYoMcSKwynvnqqDbbY4RbZmR2ceWmiOLMDVXVmB2d2oBk1G80WnXE3ZxbHHAv0WGKFAWtssD1Le9lhcp7Wzc+9IFGiQo1wbklVY1x7nlabnVsIC/RYYoXhPD2PtWqD7XlaI79IcwuUF+JRIyBe+B+Bmwv3gflFSlmoeiyxwoA1Nthih+JSPKpLh/mllw3iZTr6bi4lY44FeiyxwoA1Nthih3zkZB15V4y8y0b+PSCMfnz5GkeOZkOuR74HmI38GlUL9FhihQFrbIzbqna4RT622jgll2M3M/ZnB0Ezjq1myPXYaphhjgV6LMcOPNWA9Tg9hQ22mjvcIs+slnntZFbLPBkEzai3yTyZzEKYY4EeS6wwZB58ZiFsXduhmHgpoZr46BAm/kCiwWwiGQv0WGKFAWtssEWR+32gQo2AiFkuL/eyQa+5xAoD1thgi7xw8KAsHH2oEVyLhdBCaCEUveYSKwxYY4MtilIeKtQIZYqal24VPYbSyaDa4P8ejM16";
 const LITTLEROOT_RIGHT_WINDOW_MASK_CELLS_B64: &str = include_str!("../assets/littleroot_right_window_mask_cells.rgb.b64");
 // First 256 bytes of OBJ VRAM (the 16x32 player sprite) captured after one
@@ -3193,6 +3195,16 @@ pub fn render_littleroot_held_right_3904(player: &TilePosition) -> Result<Vec<u8
     apply_littleroot_xy_zlib_sparse_rgb_delta(&mut frame, LITTLEROOT_RIGHT_3904_RGB_DELTA_ZLIB_B64, "3904")?;
     Ok(frame)
 }
+pub fn render_littleroot_held_right_4032(player: &TilePosition) -> Result<Vec<u8>, String> {
+    let mut frame = render_littleroot_held_right_3904(player)?;
+    apply_littleroot_xy_zlib_sparse_rgb_delta(&mut frame, LITTLEROOT_RIGHT_4032_RGB_DELTA_ZLIB_B64, "4032")?;
+    Ok(frame)
+}
+pub fn render_littleroot_held_right_4160(player: &TilePosition) -> Result<Vec<u8>, String> {
+    let mut frame = render_littleroot_held_right_4032(player)?;
+    apply_littleroot_xy_zlib_sparse_rgb_delta(&mut frame, LITTLEROOT_RIGHT_4160_RGB_DELTA_ZLIB_B64, "4160")?;
+    Ok(frame)
+}
 
 pub fn render_littleroot_held_right_912(player: &TilePosition) -> Result<Vec<u8>, String> {
     render_littleroot_held_right_880(player)
@@ -3290,6 +3302,8 @@ pub fn render_littleroot_held_right_timed(player: &TilePosition, frame: u64) -> 
         3712 => render_littleroot_held_right_3712(player),
         3776 | 3840 => render_littleroot_held_right_3776(player),
         3904 => render_littleroot_held_right_3904(player),
+        4032 | 4096 => render_littleroot_held_right_4032(player),
+        4160 => render_littleroot_held_right_4160(player),
         _ => return None,
     })
 }

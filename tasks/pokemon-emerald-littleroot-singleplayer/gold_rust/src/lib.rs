@@ -905,7 +905,7 @@ impl LittlerootSession {
         (self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, .. }])
-            && matches!(self.world.frame, 2176 | 2240 | 2304 | 2368 | 2432 | 2496 | 2560 | 2624 | 2688 | 2752 | 2816 | 2880 | 2944 | 3008 | 3072 | 3136 | 3200 | 3264 | 3328 | 3392 | 3456 | 3520 | 3584 | 3648 | 3712 | 3776 | 3840 | 3904)
+            && matches!(self.world.frame, 2176 | 2240 | 2304 | 2368 | 2432 | 2496 | 2560 | 2624 | 2688 | 2752 | 2816 | 2880 | 2944 | 3008 | 3072 | 3136 | 3200 | 3264 | 3328 | 3392 | 3456 | 3520 | 3584 | 3648 | 3712 | 3776 | 3840 | 3904 | 4032 | 4096 | 4160)
             && native::render_littleroot_held_right_timed(self.world.render_player(), self.world.frame).is_some())
             .then(|| match self.world.frame {
                 2176 => ("littleroot-outside-birch-lab-right-2176", "ce02453e8957367700771aec5eee5f11699842f726350dd355177f911b2951c4"),
@@ -936,6 +936,9 @@ impl LittlerootSession {
                 3776 => ("littleroot-outside-birch-lab-right-3776", "0b730dd6aab4237f97ff342fb3f30d42284b06491c32ea66c5ff7b2a3f4500fb"),
                 3840 => ("littleroot-outside-birch-lab-right-3840", "0b730dd6aab4237f97ff342fb3f30d42284b06491c32ea66c5ff7b2a3f4500fb"),
                 3904 => ("littleroot-outside-birch-lab-right-3904", "c10bd56f9dae0e2c5566a8f610d5405d8df7f4426c7d44937fdb44d7dd5ee2cc"),
+                4032 => ("littleroot-outside-birch-lab-right-4032", "5b1bdd574b02b7864889cad7a7a6c94257e42e31e8e77f70c39721379e30c20c"),
+                4096 => ("littleroot-outside-birch-lab-right-4096", "5b1bdd574b02b7864889cad7a7a6c94257e42e31e8e77f70c39721379e30c20c"),
+                4160 => ("littleroot-outside-birch-lab-right-4160", "9a1d8f8151ee0056090fa4d3bb3f189369d67ceced60fad8be4fe298faf2df78"),
                 _ => unreachable!("source evidence is restricted to captured scheduler ticks"),
             })
     }
