@@ -442,6 +442,14 @@
       "sha256": "5b6a6dea9d682040c59de18df7a16f78e7ffafc2410e69a10a6e0140f226b86e"
     },
     {
+      "id": "title-to-met-rival-may-name-entry-a",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/00_init/00_init.state",
+      "replay": "fixtures/gold/replays/title_to_met_rival_may.json",
+      "input_limit": 42,
+      "frame": "gold_rust/assets/title_to_met_rival_may_name_entry_a.png.b64",
+      "sha256": "660d26a21637df25c8350f6a2738a30ef494c85d38be88640f37e0df6de18e19"
+    },
+    {
       "id": "title-to-met-rival-may-rival-entry",
       "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/00_init/00_init.state",
       "replay": "fixtures/gold/replays/title_to_met_rival_may.json",

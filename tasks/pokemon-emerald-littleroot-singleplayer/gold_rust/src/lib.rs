@@ -992,6 +992,19 @@ impl LittlerootSession {
             )
     }
 
+    fn title_to_met_rival_name_entry_evidence(&self) -> bool {
+        self.checkpoint == OpeningCheckpoint::TitleMenu
+            && self.frame_index == 3_262
+            && self.input_log.len() == 42
+            && self.world.phase == world::StoryPhase::NameEntry
+            && self.world.map == MapId::ProfessorIntro
+            && self.world.player_gender == world::PlayerGender::May
+            && self.world.player_name == "A"
+            && self.world.name_cursor == 0
+            && self.world.name_entry_ready_frames == 60
+            && self.world.title_intro_step == 14
+    }
+
     fn title_to_met_rival_rival_entry_evidence(&self) -> bool {
         self.checkpoint == OpeningCheckpoint::TitleMenu
             && self.frame_index == 22_096
@@ -1033,6 +1046,9 @@ impl LittlerootSession {
     fn parity_status(&self) -> &'static str {
         if self.title_to_met_rival_first_page_evidence() {
             return "source_first_page_exact";
+        }
+        if self.title_to_met_rival_name_entry_evidence() {
+            return "source_name_entry_exact";
         }
         if self.title_to_met_rival_rival_entry_evidence() {
             return "source_rival_entry_exact";
@@ -1191,6 +1207,18 @@ impl LittlerootSession {
                 "trace": "title-to-met-rival-may-first-page",
                 "baseline_only": false,
                 "source_first_page": true,
+                "expected_sha256": expected_sha256,
+                "actual_sha256": actual_sha256,
+                "exact": actual_sha256 == expected_sha256,
+            });
+        }
+        if self.title_to_met_rival_name_entry_evidence() {
+            let expected_sha256 = "660d26a21637df25c8350f6a2738a30ef494c85d38be88640f37e0df6de18e19";
+            let actual_sha256 = frame_sha256(self.frame_rgb());
+            return json!({
+                "trace": "title-to-met-rival-may-name-entry-a",
+                "baseline_only": false,
+                "source_name_entry": true,
                 "expected_sha256": expected_sha256,
                 "actual_sha256": actual_sha256,
                 "exact": actual_sha256 == expected_sha256,

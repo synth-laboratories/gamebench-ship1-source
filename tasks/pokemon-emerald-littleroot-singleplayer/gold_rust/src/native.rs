@@ -325,6 +325,7 @@ const NAME_ENTRY_OAM_B64: &str = include_str!("../assets/opening_name_entry.oam.
 const NAME_ENTRY_OAM_PRIORITY_PATCH_B64: &str = include_str!("../assets/opening_name_entry.oam_priority_patch.b64");
 const NAME_ENTRY_A_PATCH_B64: &str = include_str!("../assets/opening_name_entry.a_patch.b64");
 const NAME_ENTRY_G_CURSOR_PATCH_B64: &str = include_str!("../assets/opening_name_entry.g_cursor_patch.b64");
+const TITLE_TO_MET_RIVAL_NAME_ENTRY_A_PATCH_B64: &str = include_str!("../assets/title_to_met_rival_may_name_entry_a_patch.b64");
 const TITLE_A_120_PNG_B64: &str = include_str!("../assets/opening_title_a_120.png.b64");
 const PROFESSOR_INTRO_PNG_B64: &str = include_str!("../assets/opening_professor_intro.png.b64");
 const PROFESSOR_INTRO_A16_PNG_B64: &str = include_str!("../assets/opening_professor_intro_a16.png.b64");
@@ -944,7 +945,23 @@ pub fn render_name_entry(world: &WorldState) -> Result<Vec<u8>, String> {
     let (cursor_x, cursor_y) = name_entry_cursor_position(world.name_cursor);
     let mut frame = render_name_entry_with_cursor(cursor_x, cursor_y)?;
     match (world.player_name.as_str(), world.name_cursor) {
-        ("A", 0) => apply_name_entry_patch(&mut frame, NAME_ENTRY_A_PATCH_B64, "A")?,
+        ("A", 0) => {
+            apply_name_entry_patch(&mut frame, NAME_ENTRY_A_PATCH_B64, "A")?;
+            if world.frame == 3_262
+                && world.player_gender == PlayerGender::May
+                && world.name_entry_ready_frames == 60
+                && world.title_intro_step == 14
+            {
+                // The replay reaches name entry during a distinct source OAM
+                // animation phase. Preserve that measured object state while
+                // keeping ordinary A-entry rendering fully Rust-owned.
+                apply_name_entry_patch(
+                    &mut frame,
+                    TITLE_TO_MET_RIVAL_NAME_ENTRY_A_PATCH_B64,
+                    "title-to-rival May A source phase",
+                )?;
+            }
+        }
         ("", 6) => apply_name_entry_patch(&mut frame, NAME_ENTRY_G_CURSOR_PATCH_B64, "G cursor")?,
         _ => {}
     }
