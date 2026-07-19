@@ -525,6 +525,7 @@ impl LittlerootSession {
                 if request.frames > 0 {
                     self.world.stop_walking();
                 }
+                self.world.advance_tv_broadcast_choreography(request.frames);
                 let was_title_intro = self.world.phase == world::StoryPhase::TitleIntro;
                 self.world.advance_title_transition(request.frames);
                 if was_title_intro {

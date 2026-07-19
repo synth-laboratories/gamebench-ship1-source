@@ -15,62 +15,164 @@
         { "action": "a", "frames": 1 }
       ]
     },
+    { "action": "noop", "frames": 120 },
     { "action": "down", "frames": 1 },
-    { "action": "noop", "frames": 30 },
-    { "action": "a", "frames": 1 },
-    { "action": "a", "frames": 1 },
-    { "action": "noop", "frames": 60 },
     { "action": "noop", "frames": 1 },
     { "action": "a", "frames": 1 },
-    { "repeat": 3, "steps": [{ "action": "down", "frames": 1 }] },
-    { "repeat": 7, "steps": [{ "action": "right", "frames": 1 }] },
+    { "action": "noop", "frames": 240 },
     { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 120 },
     { "action": "a", "frames": 1 },
-    { "repeat": 5, "steps": [{ "action": "a", "frames": 1 }] },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 2 },
+    { "action": "noop", "frames": 1 },
+    {
+      "repeat": 3,
+      "steps": [
+        { "action": "down", "frames": 1 },
+        { "action": "noop", "frames": 1 }
+      ]
+    },
+    {
+      "repeat": 8,
+      "steps": [
+        { "action": "right", "frames": 1 },
+        { "action": "noop", "frames": 1 }
+      ]
+    },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 120 },
+    { "action": "a", "frames": 1 },
+    {
+      "repeat": 10,
+      "steps": [
+        { "action": "noop", "frames": 120 },
+        { "action": "a", "frames": 1 }
+      ]
+    },
+    { "action": "noop", "frames": 600 },
+    { "action": "up", "frames": 48 },
+    { "action": "noop", "frames": 600 },
     { "action": "right", "frames": 48 },
-    { "action": "noop", "frames": 176 },
-    { "repeat": 6, "steps": [{ "action": "a", "frames": 1 }] },
-    { "action": "noop", "frames": 48 },
-    { "action": "noop", "frames": 32 },
-    { "action": "noop", "frames": 48 },
-    { "repeat": 4, "steps": [{ "action": "a", "frames": 1 }] },
-    { "action": "noop", "frames": 16 },
+    { "action": "noop", "frames": 600 },
+    {
+      "repeat": 12,
+      "steps": [
+        { "action": "noop", "frames": 240 },
+        { "action": "a", "frames": 1 }
+      ]
+    },
+    { "action": "noop", "frames": 240 },
     { "action": "up", "frames": 96 },
     { "action": "noop", "frames": 32 },
     { "action": "down", "frames": 32 },
     { "action": "right", "frames": 48 },
-    { "action": "up", "frames": 1 },
+    { "action": "left", "frames": 16 },
+    { "action": "up", "frames": 16 },
     { "action": "a", "frames": 1 },
     { "action": "a", "frames": 1 },
     { "action": "a", "frames": 1 },
     { "action": "noop", "frames": 72 },
     { "action": "a", "frames": 1 },
-    { "action": "noop", "frames": 40 },
-    { "action": "left", "frames": 48 },
-    { "action": "up", "frames": 32 },
-    { "action": "noop", "frames": 32 },
-    { "repeat": 3, "steps": [{ "action": "a", "frames": 1 }] },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "up", "frames": 1 },
+    { "action": "noop", "frames": 1 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    {
+      "repeat": 5,
+      "steps": [
+        { "action": "noop", "frames": 240 },
+        { "action": "a", "frames": 1 }
+      ]
+    },
+    { "action": "noop", "frames": 240 },
+    { "action": "left", "frames": 32 },
+    { "action": "up", "frames": 16 },
+    { "action": "noop", "frames": 360 },
+    {
+      "repeat": 9,
+      "steps": [
+        { "action": "noop", "frames": 240 },
+        { "action": "a", "frames": 1 }
+      ]
+    },
+    { "action": "noop", "frames": 240 },
     { "action": "down", "frames": 112 },
-    { "action": "noop", "frames": 32 },
+    { "action": "noop", "frames": 120 },
     { "action": "down", "frames": 32 },
     { "action": "left", "frames": 160 },
     { "action": "up", "frames": 32 },
+    { "action": "right", "frames": 16 },
     { "action": "up", "frames": 16 },
-    { "action": "noop", "frames": 32 },
-    { "action": "up", "frames": 112 },
-    { "action": "noop", "frames": 32 },
+    { "action": "noop", "frames": 600 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
     { "action": "down", "frames": 80 },
-    { "action": "left", "frames": 80 },
-    { "action": "up", "frames": 1 },
+    { "action": "down", "frames": 16 },
+    { "action": "noop", "frames": 240 },
+    { "action": "left", "frames": 112 },
+    { "action": "up", "frames": 32 },
+    { "action": "noop", "frames": 240 },
+    { "action": "up", "frames": 16 },
+    { "action": "noop", "frames": 1 },
+    { "action": "left", "frames": 16 },
+    { "action": "noop", "frames": 1 },
+    { "action": "left", "frames": 16 },
+    { "action": "up", "frames": 16 },
+    { "action": "noop", "frames": 120 },
+    { "action": "up", "frames": 96 },
+    { "action": "noop", "frames": 240 },
+    {
+      "repeat": 6,
+      "steps": [
+        { "action": "noop", "frames": 240 },
+        { "action": "a", "frames": 1 }
+      ]
+    },
+    { "action": "noop", "frames": 240 },
+    { "action": "up", "frames": 96 },
+    { "action": "noop", "frames": 240 },
+    { "action": "down", "frames": 64 },
+    { "action": "left", "frames": 64 },
+    { "action": "up", "frames": 16 },
+    { "action": "noop", "frames": 1 },
     { "action": "a", "frames": 1 },
-    { "action": "noop", "frames": 100 },
-    { "action": "noop", "frames": 88 },
-    { "action": "a", "frames": 1 },
-    { "action": "noop", "frames": 120 }
+    { "action": "noop", "frames": 1200 },
+    {
+      "repeat": 14,
+      "steps": [
+        { "action": "noop", "frames": 240 },
+        { "action": "a", "frames": 1 }
+      ]
+    },
+    { "action": "noop", "frames": 600 }
   ],
   "expected": {
-    "input_count": 106,
-    "frame_index": 4496,
+    "input_count": 264,
+    "frame_index": 27270,
     "world": {
       "phase": "met_rival",
       "map": "brendans_house2_f",

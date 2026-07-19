@@ -1794,6 +1794,32 @@ impl WorldState {
         true
     }
 
+    /// The Petalburg Gym report is accompanied by `PlayerGoWatchTv`: the
+    /// player crosses the living room while Mom's first report pages remain
+    /// open. The text flow and movement are separate source script tracks.
+    pub fn advance_tv_broadcast_choreography(&mut self, frames: u32) {
+        if frames == 0
+            || self.phase != StoryPhase::TvBroadcast
+            || self.dialogue.is_none()
+        {
+            return;
+        }
+        let position = match (self.map, self.title_intro_step) {
+            // The first dismissed page starts the walk toward the television.
+            // The reference reaches the middle of the room during its next
+            // 240-frame idle window, then reaches the TV before page three.
+            (MapId::MaysHouse1F, 1) => Some(TilePosition { x: 5, y: 5 }),
+            (MapId::MaysHouse1F, 2..=7) => Some(TilePosition { x: 6, y: 5 }),
+            (MapId::BrendansHouse1F, 1) => Some(TilePosition { x: 5, y: 5 }),
+            (MapId::BrendansHouse1F, 2..=7) => Some(TilePosition { x: 4, y: 5 }),
+            _ => None,
+        };
+        if let Some(position) = position {
+            self.player = position;
+            self.facing = Facing::Up;
+        }
+    }
+
     /// After Mom's final arrival page, the source walks both characters to
     /// the house before beginning the fade; it is not an immediate warp.
     pub fn advance_truck_departure(&mut self, frames: u32) -> bool {
@@ -3238,7 +3264,7 @@ impl WorldState {
                 }
                 StoryPhase::TvBroadcast => {
                     let next = self.title_intro_step.saturating_add(1);
-                    if next < 3 {
+                    if next < TV_BROADCAST_PAGE_COUNT {
                         self.title_intro_step = next;
                         self.dialogue = Some(tv_broadcast_page(next, &self.player_name).to_owned());
                     } else {
@@ -3249,6 +3275,19 @@ impl WorldState {
                         // triggers the rival's Poké Ball.
                         self.title_intro_step = 0;
                         self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
+                    }
+                }
+                StoryPhase::MeetRival if self.is_rival_house() => {
+                    let next = self.title_intro_step.saturating_add(1);
+                    if next < RIVAL_MOM_PAGE_COUNT {
+                        self.title_intro_step = next;
+                        self.dialogue = Some(rival_mom_page(next, self.player_gender, &self.player_name));
+                    } else {
+                        // The house-state script only introduces the new
+                        // neighbor once. Keep its completion distinct from
+                        // the later bedroom-rival choreography, which also
+                        // uses this compact script cursor.
+                        self.title_intro_step = u8::MAX;
                     }
                 }
                 StoryPhase::BirchRescued if self.map == MapId::Route101 => {
@@ -3647,6 +3686,14 @@ impl WorldState {
         });
     }
 
+    fn is_rival_house(&self) -> bool {
+        matches!(
+            (self.player_gender, self.map),
+            (PlayerGender::May, MapId::BrendansHouse1F)
+                | (PlayerGender::Brendan, MapId::MaysHouse1F)
+        )
+    }
+
     fn map_dimensions(&self) -> (i16, i16) {
         match self.map {
             MapId::TitleScreen => (1, 1),
@@ -3720,6 +3767,20 @@ impl WorldState {
                 // The source map's on-frame script runs as soon as the
                 // player comes downstairs after setting the clock.
                 self.dialogue = Some(tv_broadcast_page(0, &self.player_name).to_owned());
+                // `PlayerGoWatchTv` begins with a single down step after
+                // returning from the upstairs warp. Its remaining movement
+                // runs concurrently with the report pages.
+                self.player.y += 1;
+            }
+            if self.phase == StoryPhase::MeetRival
+                && self.is_rival_house()
+                && self.title_intro_step != u8::MAX
+                && self.dialogue.is_none()
+            {
+                // The source house-state script locks input as the rival's
+                // Mom notices the player and delivers its six-page greeting.
+                self.title_intro_step = 0;
+                self.dialogue = Some(rival_mom_page(0, self.player_gender, &self.player_name));
             }
             if matches!(self.map, MapId::BrendansHouse1F | MapId::MaysHouse1F)
                 && self.phase == StoryPhase::NewHome
@@ -3765,9 +3826,15 @@ impl WorldState {
             (MapId::LittlerootTown, 5, 8) => Some((MapId::BrendansHouse1F, 8, 8)),
             (MapId::LittlerootTown, 7, 16) => Some((MapId::ProfessorBirchsLab, 6, 12)),
             (MapId::BrendansHouse1F, 8 | 9, 8) => Some((MapId::LittlerootTown, 5, 8)),
-            (MapId::BrendansHouse1F, 8, 2) => Some((MapId::BrendansHouse2F, 7, 1)),
+            // The stair warp's authored target is `(7, 1)`, but its source
+            // arrival script commits the player one tile south before the
+            // next input is observable.
+            (MapId::BrendansHouse1F, 8, 2) => Some((MapId::BrendansHouse2F, 7, 2)),
             (MapId::BrendansHouse2F, 7, 1) => Some((MapId::BrendansHouse1F, 8, 2)),
-            (MapId::MaysHouse1F, 1 | 2, 8) => Some((MapId::LittlerootTown, 14, 8)),
+            // The source completes the front-door fade one tile south of
+            // Little Root's May-house warp. Landing on `(14, 8)` immediately
+            // re-enters the door; `(14, 9)` is the observable field state.
+            (MapId::MaysHouse1F, 1 | 2, 8) => Some((MapId::LittlerootTown, 14, 9)),
             (MapId::MaysHouse1F, 2, 2) => Some((MapId::MaysHouse2F, 1, 1)),
             (MapId::MaysHouse2F, 1, 1) => Some((MapId::MaysHouse1F, 2, 2)),
             (MapId::ProfessorBirchsLab, 6 | 7, 12) => Some((MapId::LittlerootTown, 7, 16)),
@@ -4190,12 +4257,36 @@ fn dialogue_printer_duration(dialogue: &str) -> u16 {
     raw.saturating_add(15) / 16 * 16
 }
 
+const TV_BROADCAST_PAGE_COUNT: u8 = 8;
+const RIVAL_MOM_PAGE_COUNT: u8 = 6;
+
 fn tv_broadcast_page(page: u8, player_name: &str) -> String {
     match page {
-        0 => format!("MOM: Oh! {player_name}, {player_name}!\nCome quickly! Maybe your dad will be on!"),
-        1 => "REPORTER: We bring you this report from PETALBURG GYM. NORMAN has just finished another match!".to_owned(),
-        2 => format!("MOM: It's over. We missed him, {player_name}.\nGo introduce yourself to PROF. BIRCH next door."),
+        0 => format!("MOM: Oh! {player_name}, {player_name}!\nQuick! Come quickly!"),
+        1 => "MOM: Look! It's PETALBURG GYM!\nMaybe DAD will be on!".to_owned(),
+        2 => "INTERVIEWER: We brought you this\nreport from in front of PETALBURG GYM.".to_owned(),
+        3 => "MOM: Oh... It's over.".to_owned(),
+        4 => "I think DAD was on, but we missed him.\nToo bad.".to_owned(),
+        5 => "Oh, yes.\nOne of DAD's friends lives in town.".to_owned(),
+        6 => "PROF. BIRCH is his name.".to_owned(),
+        7 => "He lives right next door, so you should\ngo over and introduce yourself.".to_owned(),
         _ => unreachable!("TV broadcast page must be in range"),
+    }
+}
+
+fn rival_mom_page(page: u8, player_gender: PlayerGender, player_name: &str) -> String {
+    let child = match player_gender {
+        PlayerGender::Brendan => "daughter",
+        PlayerGender::May => "son",
+    };
+    match page {
+        0 => "Oh, hello. And you are?".to_owned(),
+        1 => "… … … … … … … … …\n… … … … … … … … …".to_owned(),
+        2 => format!("Oh, you're {player_name}, our new next-door\nneighbor! Hi!"),
+        3 => format!("We have a {child} about the same\nage as you."),
+        4 => format!("Our {child} was excited about making\na new friend."),
+        5 => format!("Our {child} is upstairs, I think."),
+        _ => unreachable!("rival Mom page must be in range"),
     }
 }
 

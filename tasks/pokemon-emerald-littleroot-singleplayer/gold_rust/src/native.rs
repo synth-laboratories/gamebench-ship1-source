@@ -2073,7 +2073,7 @@ fn emerald_glyph_id(character: char) -> Option<usize> {
         'A'..='Z' => 0xBB + (character as usize - 'A' as usize),
         'a'..='z' => 0xD5 + (character as usize - 'a' as usize),
         '0'..='9' => 0xA1 + (character as usize - '0' as usize),
-        '!' => 0xAB, '?' => 0xAC, '.' => 0xAD, '-' => 0xAE, ',' => 0xB8,
+        '!' => 0xAB, '?' => 0xAC, '.' => 0xAD, '-' => 0xAE, '…' => 0xB0, ',' => 0xB8,
         '/' => 0xBA, ':' => 0xF0, '\'' => 0xB4, '"' => 0xB2,
         '(' => 0x5C, ')' => 0x5D, '&' => 0x2D, '+' => 0x2E,
         'é' | 'É' => 0x06, '▶' => 0xEF,
@@ -2084,6 +2084,7 @@ fn emerald_glyph_id(character: char) -> Option<usize> {
 fn emerald_glyph_width(character: char) -> usize {
     match character {
         ' ' | 'I' | 'i' | 'l' | '!' | '.' | ',' | ':' | '\'' => 3,
+        '…' => 8,
         'M' | 'W' | 'm' | 'w' | '▶' => 8,
         _ => 6,
     }
