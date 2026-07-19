@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 
 const SOURCE_RIVAL_RUNNING_SHOES_TRIGGER: u8 = 6;
+/// `PetalburgGymReport{Male,Female}` spends one fast in-place turn, an
+/// exclamation emote, and `Common_Movement_Delay48` before Mom speaks.
+const TV_BROADCAST_INTRO_FRAMES: u16 = 88;
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -793,6 +796,10 @@ pub struct WorldState {
     /// clock editor closes before it creates Mom's upstairs object event.
     #[serde(default)]
     pub clock_settle_frames: Option<u8>,
+    /// Remaining source frames after the downstairs OnFrame event starts and
+    /// before Mom opens the first Petalburg Gym broadcast message.
+    #[serde(default)]
+    pub tv_broadcast_intro_frames: Option<u16>,
     /// Remaining frames in the source truck-arrival choreography before Mom
     /// opens her first Little Root dialogue. Input is locked throughout.
     #[serde(default)]
@@ -948,6 +955,7 @@ impl WorldState {
             field_dialogue_frames: None,
             clock_visit_frames: None,
             clock_settle_frames: None,
+            tv_broadcast_intro_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1058,6 +1066,7 @@ impl WorldState {
             field_dialogue_frames: None,
             clock_visit_frames: None,
             clock_settle_frames: None,
+            tv_broadcast_intro_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1171,6 +1180,7 @@ impl WorldState {
             field_dialogue_frames: None,
             clock_visit_frames: None,
             clock_settle_frames: None,
+            tv_broadcast_intro_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1280,6 +1290,7 @@ impl WorldState {
             field_dialogue_frames: None,
             clock_visit_frames: None,
             clock_settle_frames: None,
+            tv_broadcast_intro_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1418,6 +1429,7 @@ impl WorldState {
             field_dialogue_frames: None,
             clock_visit_frames: None,
             clock_settle_frames: None,
+            tv_broadcast_intro_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -2336,6 +2348,41 @@ impl WorldState {
             self.dialogue = Some(format!("MOM: {}, how do you like your new room?\nEverything's put away neatly downstairs, too. POKéMON movers are so convenient!", self.player_name));
         } else {
             self.clock_visit_frames = Some(next_remaining);
+        }
+        true
+    }
+
+    /// Runs the first locked portion of `PetalburgGymReport{Male,Female}`.
+    /// The map OnFrame script makes Mom turn toward the room, plays her
+    /// exclamation emote, and waits `Common_Movement_Delay48` before the
+    /// first "Oh! ... Come quickly!" message can open.
+    pub fn advance_tv_broadcast_intro(&mut self, frames: u32) -> bool {
+        let Some(remaining) = self.tv_broadcast_intro_frames else { return false; };
+        let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
+        let elapsed_before = TV_BROADCAST_INTRO_FRAMES.saturating_sub(remaining);
+        let elapsed_after = TV_BROADCAST_INTRO_FRAMES.saturating_sub(next_remaining);
+        // The report scripts begin with `walk_in_place_faster_{right,left}`.
+        // Preserve its eight-frame boundary independently from the emote and
+        // Delay48 hold that follow it.
+        if elapsed_before < 8 && 8 <= elapsed_after {
+            let turn = match self.map {
+                MapId::BrendansHouse1F => Facing::Right,
+                MapId::MaysHouse1F => Facing::Left,
+                _ => return false,
+            };
+            let map = self.map;
+            let position = self.npcs.iter()
+                .find(|npc| npc.id == "mom" && npc.map == map)
+                .expect("Mom must exist for the Petalburg Gym report")
+                .position
+                .clone();
+            self.move_fast_scripted_npc("mom", map, position, turn);
+        }
+        if next_remaining == 0 {
+            self.tv_broadcast_intro_frames = None;
+            self.dialogue = Some(tv_broadcast_page(0, &self.player_name).to_owned());
+        } else {
+            self.tv_broadcast_intro_frames = Some(next_remaining);
         }
         true
     }
@@ -4365,6 +4412,13 @@ impl WorldState {
                     self.clock_visit_frames = Some(40);
                 }
                 StoryPhase::TvBroadcast => {
+                    if self.title_intro_step == 0 {
+                        // `MomNoticeGymBroadcast` returns only after the
+                        // first message closes. The source then runs
+                        // `PlayerApproachTVForGym*`; retain the port's
+                        // compact first down-step at that script boundary.
+                        self.player.y += 1;
+                    }
                     let next = self.title_intro_step.saturating_add(1);
                     if next < TV_BROADCAST_PAGE_COUNT {
                         self.title_intro_step = next;
@@ -4575,7 +4629,7 @@ impl WorldState {
     /// separate so they cannot be mistaken for implemented behavior.
     pub fn walk_bounds(&mut self, facing: Facing, held_frames: u32) -> u32 {
         self.face(facing);
-        if self.menu_open || self.dialogue.is_some() || self.transition.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() {
+        if self.menu_open || self.dialogue.is_some() || self.transition.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() || self.tv_broadcast_intro_frames.is_some() {
             return 0;
         }
 
@@ -4945,12 +4999,9 @@ impl WorldState {
                 && self.dialogue.is_none()
             {
                 // The source map's on-frame script runs as soon as the
-                // player comes downstairs after setting the clock.
-                self.dialogue = Some(tv_broadcast_page(0, &self.player_name).to_owned());
-                // `PlayerGoWatchTv` begins with a single down step after
-                // returning from the upstairs warp. Its remaining movement
-                // runs concurrently with the report pages.
-                self.player.y += 1;
+                // player comes downstairs after setting the clock. Its first
+                // turn/emote/delay gate must finish before Mom's message.
+                self.tv_broadcast_intro_frames = Some(TV_BROADCAST_INTRO_FRAMES);
             }
             if self.phase == StoryPhase::MeetRival
                 && self.is_rival_house()
