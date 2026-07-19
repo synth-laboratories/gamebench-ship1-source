@@ -21,6 +21,10 @@ fn bedroom_rival_movement_frames(faster: bool) -> u16 {
 /// `PetalburgGymReport{Male,Female}` spends one faster in-place turn, an
 /// exclamation emote, and `Common_Movement_Delay48` before Mom speaks.
 const TV_BROADCAST_INTRO_FRAMES: u16 = 84;
+/// `MomApproachDoor` completes after its 24-frame pause and normal walk;
+/// `PlayerApproachDoor` adds a four-frame fast up-facing turn, which controls
+/// the shared `waitmovement` release.
+const TRUCK_DEPARTURE_FRAMES: u16 = 44;
 const NEW_HOME_FACE_PLAYER_FRAMES: u8 = 1;
 // `walk_in_place_faster_{left,right}` follows Mom's source `face_player`
 // action and lasts four frames, rather than the eight-frame fast cadence.
@@ -2905,15 +2909,16 @@ impl WorldState {
         let Some(remaining) = self.truck_departure_frames else { return false; };
         let elapsed = frames.min(u32::from(u16::MAX)) as u16;
         let next_remaining = remaining.saturating_sub(elapsed);
-        let elapsed_before = 48u16.saturating_sub(remaining);
-        let elapsed_after = 48u16.saturating_sub(next_remaining);
+        let elapsed_before = TRUCK_DEPARTURE_FRAMES.saturating_sub(remaining);
+        let elapsed_after = TRUCK_DEPARTURE_FRAMES.saturating_sub(next_remaining);
         let home_x = match self.player_gender {
             PlayerGender::Brendan => 5,
             PlayerGender::May => 14,
         };
         // `MomApproachDoor` and `PlayerApproachDoor` both pause for 24
-        // frames.  Mom then walks up as the player takes the final right
-        // step and fast up-facing turn toward the open door.
+        // frames. Mom then walks up as the player takes the final right
+        // step; the player's four-frame fast up-facing turn completes at
+        // frame 44 and releases the source `waitmovement`.
         if elapsed_before < 40 && 40 <= elapsed_after {
             self.move_scripted_npc(
                 "truck_arrival_mom", MapId::LittlerootTown,
@@ -2922,7 +2927,9 @@ impl WorldState {
             self.player.x += 1;
             self.facing = Facing::Right;
         }
-        if elapsed_before < 48 && 48 <= elapsed_after {
+        if elapsed_before < TRUCK_DEPARTURE_FRAMES
+            && TRUCK_DEPARTURE_FRAMES <= elapsed_after
+        {
             self.facing = Facing::Up;
         }
         if next_remaining == 0 {
@@ -4972,7 +4979,7 @@ impl WorldState {
                         self.dialogue = Some(dialogue);
                         return;
                     }
-                    self.truck_departure_frames = Some(48);
+                    self.truck_departure_frames = Some(TRUCK_DEPARTURE_FRAMES);
                 }
                 StoryPhase::NewHome => {
                     if self.title_intro_step == 0 {
