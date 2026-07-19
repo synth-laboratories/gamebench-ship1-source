@@ -2420,10 +2420,12 @@ impl WorldState {
         // through `DoExitMovement{1,2}`, then unconditionally applies the
         // same six steps before `removeobject`. South-edge triggers and a
         // direct interaction while not facing south also run the parallel
-        // 20-frame player watch movement (delay 8, delay 4, fast down turn).
+        // 16-frame player watch movement (delay 8, delay 4, faster down turn).
         let player_watches = (self.player.y == 19 && (8..=10).contains(&self.player.x))
             || self.facing != Facing::Down;
-        if player_watches && remaining > 172 && next_remaining <= 172 {
+        // `walk_in_place_faster_down` finishes at the same 16-frame boundary
+        // as the rival's first ordinary southward step.
+        if player_watches && remaining > 176 && next_remaining <= 176 {
             self.facing = Facing::Down;
         }
         // Each `OldaleTown_Movement_RivalExit` invocation has six ordinary
