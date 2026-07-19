@@ -1465,7 +1465,11 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
     // this small transient overlay owns only the authored attention cue.
     if world.map == MapId::Route103 {
         if let Some(remaining) = world.route103_rival_intro_frames {
-            if (49..=72).contains(&remaining) {
+            // `sSpriteAnim_Icons1` holds the source field-effect's
+            // exclamation frame for 60 frames. The existing prelude scheduler
+            // reaches 72 after its FacePlayer slice, so this inclusive window
+            // keeps the cue present for all 60 authored animation frames.
+            if (13..=72).contains(&remaining) {
                 if let Some(rival) = world.npcs.iter().find(|npc| npc.id == "rival" && npc.map == MapId::Route103) {
                     let x = (112 + i32::from(rival.position.x - world.player.x) * 16 + 7).max(0) as usize;
                     let y = (56 + i32::from(rival.position.y - world.player.y) * 16 - 14).max(0) as usize;
