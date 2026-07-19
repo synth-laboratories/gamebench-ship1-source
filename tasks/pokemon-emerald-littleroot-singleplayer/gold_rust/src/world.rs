@@ -21,6 +21,18 @@ fn bedroom_rival_movement_frames(faster: bool) -> u16 {
 /// `PetalburgGymReport{Male,Female}` spends one faster in-place turn, an
 /// exclamation emote, and `Common_Movement_Delay48` before Mom speaks.
 const TV_BROADCAST_INTRO_FRAMES: u16 = 84;
+/// `Common_Movement_ExclamationMark` completes its object movement in one
+/// tick, while the spawned field-effect icon stays animated for 60 frames.
+const RIVAL_MOM_EMOTE_MOVEMENT_FRAMES: u16 = 1;
+const RIVAL_MOM_EXCLAMATION_FRAMES: u8 = 60;
+const RIVAL_MOM_DELAY_FRAMES: u16 = 48;
+const RIVAL_MOM_NORMAL_STEP_FRAMES: u16 = 16;
+const RIVAL_MOM_APPROACH_FRAMES: u16 = RIVAL_MOM_NORMAL_STEP_FRAMES * 6;
+/// The map script waits for the one-tick emote, Delay48, and six normal
+/// movement actions before its first new-neighbor message can open.
+const RIVAL_MOM_INTRO_FRAMES: u16 = RIVAL_MOM_EMOTE_MOVEMENT_FRAMES
+    + RIVAL_MOM_DELAY_FRAMES
+    + RIVAL_MOM_APPROACH_FRAMES;
 /// `MomApproachDoor` completes after its 24-frame pause and normal walk;
 /// `PlayerApproachDoor` adds a four-frame fast up-facing turn, which controls
 /// the shared `waitmovement` release.
@@ -1124,6 +1136,14 @@ pub struct WorldState {
     /// before Mom opens the first Petalburg Gym broadcast message.
     #[serde(default)]
     pub tv_broadcast_intro_frames: Option<u16>,
+    /// Little Root rival-house OnFrame sequence: Mom's exclamation, Delay48,
+    /// and six-step approach before the new-neighbor greeting.
+    #[serde(default)]
+    pub rival_mom_intro_frames: Option<u16>,
+    /// The independent 60-frame source field-effect lifetime for Mom's
+    /// exclamation icon; it overlaps the tail of Delay48 and her first walk.
+    #[serde(default)]
+    pub rival_mom_exclamation_frames: Option<u8>,
     /// Remaining frames in the source truck-arrival choreography before Mom
     /// opens her first Little Root dialogue. Input is locked throughout.
     #[serde(default)]
@@ -1293,6 +1313,8 @@ impl WorldState {
             clock_visit_frames: None,
             clock_settle_frames: None,
             tv_broadcast_intro_frames: None,
+            rival_mom_intro_frames: None,
+            rival_mom_exclamation_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1410,6 +1432,8 @@ impl WorldState {
             clock_visit_frames: None,
             clock_settle_frames: None,
             tv_broadcast_intro_frames: None,
+            rival_mom_intro_frames: None,
+            rival_mom_exclamation_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1530,6 +1554,8 @@ impl WorldState {
             clock_visit_frames: None,
             clock_settle_frames: None,
             tv_broadcast_intro_frames: None,
+            rival_mom_intro_frames: None,
+            rival_mom_exclamation_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1646,6 +1672,8 @@ impl WorldState {
             clock_visit_frames: None,
             clock_settle_frames: None,
             tv_broadcast_intro_frames: None,
+            rival_mom_intro_frames: None,
+            rival_mom_exclamation_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1791,6 +1819,8 @@ impl WorldState {
             clock_visit_frames: None,
             clock_settle_frames: None,
             tv_broadcast_intro_frames: None,
+            rival_mom_intro_frames: None,
+            rival_mom_exclamation_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -2480,6 +2510,28 @@ impl WorldState {
     }
 
     fn move_scripted_npc_with_duration(&mut self, id: &str, map: MapId, position: TilePosition, facing: Facing, duration_frames: u8) {
+        self.move_scripted_npc_with_duration_at_frame(
+            id,
+            map,
+            position,
+            facing,
+            duration_frames,
+            self.frame,
+        );
+    }
+
+    /// A staged script can cross an object-event boundary within one held
+    /// request. Retain that source frame so the shared OBJ interpolator shows
+    /// the already-started stride instead of restarting it at request end.
+    fn move_scripted_npc_with_duration_at_frame(
+        &mut self,
+        id: &str,
+        map: MapId,
+        position: TilePosition,
+        facing: Facing,
+        duration_frames: u8,
+        frame: u64,
+    ) {
         if let Some(npc) = self.npcs.iter_mut().find(|npc| npc.id == id && npc.map == map) {
             if npc.position == position && npc.facing == facing { return; }
             npc.position = position;
@@ -2487,7 +2539,7 @@ impl WorldState {
             self.npc_walk_starts.retain(|walk| walk.id != id);
             self.npc_walk_starts.push(NpcWalkStart {
                 id: id.to_owned(),
-                frame: self.frame,
+                frame,
                 duration_frames,
                 sprite_facing: Some(facing),
             });
@@ -2789,6 +2841,86 @@ impl WorldState {
             self.dialogue = Some(tv_broadcast_page(0, &self.player_name).to_owned());
         } else {
             self.tv_broadcast_intro_frames = Some(next_remaining);
+        }
+        true
+    }
+
+    /// Runs `LittlerootTown_{Mays,Brendans}House_1F_EventScript_YoureNewNeighbor`
+    /// before its existing six-page greeting. The emote's object movement is
+    /// complete after one tick, but its independently animated 60-frame icon
+    /// continues through `Common_Movement_Delay48` and the first part of
+    /// Mom's normal approach.
+    pub fn advance_rival_mom_intro(&mut self, frames: u32) -> bool {
+        let Some(remaining) = self.rival_mom_intro_frames else { return false; };
+        let consumed = frames.min(u32::from(u16::MAX)) as u16;
+        let next_remaining = remaining.saturating_sub(consumed);
+        let elapsed_before = RIVAL_MOM_INTRO_FRAMES.saturating_sub(remaining);
+        let elapsed_after = RIVAL_MOM_INTRO_FRAMES.saturating_sub(next_remaining);
+
+        if let Some(emote_remaining) = self.rival_mom_exclamation_frames {
+            let next_emote = emote_remaining.saturating_sub(
+                frames.min(u32::from(u8::MAX)) as u8,
+            );
+            self.rival_mom_exclamation_frames = (next_emote != 0).then_some(next_emote);
+        }
+
+        let (player_turn, mom_side) = match self.map {
+            // Brendan's house has the counterpart Mom cross the room right,
+            // while the player turns left toward her.
+            MapId::BrendansHouse1F => (Facing::Left, Facing::Right),
+            // May's house is the mirrored source stream.
+            MapId::MaysHouse1F => (Facing::Right, Facing::Left),
+            _ => return false,
+        };
+        let approach_start = RIVAL_MOM_EMOTE_MOVEMENT_FRAMES + RIVAL_MOM_DELAY_FRAMES;
+        // `InitMoveInPlace` sets the source ObjectEvent direction when the
+        // four-frame player action begins, not when it finishes.
+        if elapsed_before < approach_start && approach_start <= elapsed_after {
+            self.facing = player_turn;
+        }
+
+        // Mom's six-action stream starts with `walk_down`, followed by five
+        // normal lateral walks toward the player. Object-event coordinates
+        // commit at each step start; retain the exact start frame for the
+        // dynamic object renderer when one request crosses more than one.
+        let directions = [
+            Facing::Down,
+            mom_side,
+            mom_side,
+            mom_side,
+            mom_side,
+            mom_side,
+        ];
+        for (index, direction) in directions.iter().enumerate() {
+            let step_start = approach_start
+                + u16::try_from(index).expect("rival Mom approach index fits")
+                    * RIVAL_MOM_NORMAL_STEP_FRAMES;
+            if elapsed_before < step_start && step_start <= elapsed_after {
+                let mom = self.npcs.iter()
+                    .find(|npc| npc.id == "mom" && npc.map == self.map)
+                    .expect("rival Mom must exist during the new-neighbor approach");
+                let position = stepped_position(&mom.position, *direction);
+                let start_frame = self.frame.saturating_sub(u64::from(
+                    elapsed_after.saturating_sub(step_start),
+                ));
+                self.move_scripted_npc_with_duration_at_frame(
+                    "mom",
+                    self.map,
+                    position,
+                    *direction,
+                    RIVAL_MOM_NORMAL_STEP_FRAMES as u8,
+                    start_frame,
+                );
+            }
+        }
+
+        if next_remaining == 0 {
+            self.rival_mom_intro_frames = None;
+            self.rival_mom_exclamation_frames = None;
+            self.title_intro_step = 0;
+            self.dialogue = Some(rival_mom_page(0, self.player_gender, &self.player_name));
+        } else {
+            self.rival_mom_intro_frames = Some(next_remaining);
         }
         true
     }
@@ -5599,6 +5731,10 @@ impl WorldState {
             return;
         }
         if transition.fading_in {
+            let carry = frames.saturating_sub(departing_frames);
+            if carry != 0 && self.rival_mom_intro_frames.is_some() {
+                self.advance_rival_mom_intro(carry);
+            }
             return;
         }
         {
@@ -5656,11 +5792,14 @@ impl WorldState {
                 && self.is_rival_house()
                 && self.title_intro_step != u8::MAX
                 && self.dialogue.is_none()
+                && self.rival_mom_intro_frames.is_none()
             {
-                // The source house-state script locks input as the rival's
-                // Mom notices the player and delivers its six-page greeting.
+                // The source house-state script first plays the rival Mom's
+                // emote, Delay48, and six-step approach. Its six greeting
+                // pages begin only after that locked movement stream ends.
                 self.title_intro_step = 0;
-                self.dialogue = Some(rival_mom_page(0, self.player_gender, &self.player_name));
+                self.rival_mom_intro_frames = Some(RIVAL_MOM_INTRO_FRAMES);
+                self.rival_mom_exclamation_frames = Some(RIVAL_MOM_EXCLAMATION_FRAMES);
             }
             if matches!(self.map, MapId::BrendansHouse1F | MapId::MaysHouse1F)
                 && self.phase == StoryPhase::NewHome
@@ -5680,6 +5819,14 @@ impl WorldState {
             // A single held input can span both 16-frame phases. Leaving an
             // already-complete fade-in installed makes the next input pay an
             // extra phantom transition frame.
+            // Once the rival-house fade is fully clear, the map OnFrame
+            // script owns any remaining held frames. Carry them into Mom's
+            // source movement gate rather than deferring its 60/48/96-frame
+            // sequence until an unrelated next request.
+            let carry = arrival_elapsed.saturating_sub(u32::from(transition.total_frames));
+            if carry != 0 && self.rival_mom_intro_frames.is_some() {
+                self.advance_rival_mom_intro(carry);
+            }
             return;
         }
         transition.frames_remaining = transition.total_frames - arrival_elapsed as u8;
