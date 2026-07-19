@@ -375,6 +375,8 @@ const LITTLEROOT_RIGHT48_TREE_B64: &str = include_str!("../assets/littleroot_rig
 const LITTLEROOT_RIGHT64_TREE_B64: &str = include_str!("../assets/littleroot_right64_tree.rgb.b64");
 const LITTLEROOT_UP64_PLAYER_OBJ_B64: &str = include_str!("../assets/littleroot_up64_player.obj.b64");
 const LITTLEROOT_DOWN64_PLAYER_OBJ_B64: &str = include_str!("../assets/littleroot_down64_player.obj.b64");
+const LITTLEROOT_UP112_PLAYER_OBJ_B64: &str = include_str!("../assets/littleroot_up112_player.obj.b64");
+const LITTLEROOT_UP112_FAT_MAN_OBJ_B64: &str = include_str!("../assets/littleroot_up112_fat_man.obj.b64");
 const LITTLEROOT_RIGHT112_OBJECT_B64: &str = include_str!("../assets/littleroot_right112_object.rgb.b64");
 const LITTLEROOT_RIGHT128_REGION_B64: &str = include_str!("../assets/littleroot_right128_region.rgb.b64");
 const LITTLEROOT_RIGHT144_REGION_B64: &str = include_str!("../assets/littleroot_right144_region.rgb.b64");
@@ -2291,6 +2293,7 @@ pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing
     let mut vram = outside_player_vram(facing, walk_progress_frames)?;
     let timed_player_tile = match (player, walk_direction, walk_progress_frames, timing_tick) {
         (TilePosition { x: 9, y: 13 }, Some(Facing::Up), 0, Some(64 | 96)) => Some(LITTLEROOT_UP64_PLAYER_OBJ_B64),
+        (TilePosition { x: 9, y: 13 }, Some(Facing::Up), 0, Some(112)) => Some(LITTLEROOT_UP112_PLAYER_OBJ_B64),
         (TilePosition { x: 9, y: 15 }, Some(Facing::Down), 0, Some(64)) => Some(LITTLEROOT_DOWN64_PLAYER_OBJ_B64),
         _ => None,
     };
@@ -2298,6 +2301,15 @@ pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing
         let tile = decode_base64(encoded)?;
         if tile.len() != 256 { return Err("invalid Little Root timed player OBJ tile".to_owned()); }
         vram[..tile.len()].copy_from_slice(&tile);
+    }
+    if player == &(TilePosition { x: 9, y: 13 })
+        && walk_direction == Some(Facing::Up)
+        && walk_progress_frames == 0
+        && timing_tick == Some(112)
+    {
+        let tile = decode_base64(LITTLEROOT_UP112_FAT_MAN_OBJ_B64)?;
+        if tile.len() != 256 { return Err("invalid Little Root Up112 Fat Man OBJ tile".to_owned()); }
+        vram[28 * 32..36 * 32].copy_from_slice(&tile);
     }
     let oam = outside_oam_with_camera(player, facing, walk_direction, walk_progress_frames, timing_tick);
     let mut frame = render_world_view_with_motion_at_tick(MapId::LittlerootTown, player, walk_direction, walk_progress_frames, timing_tick)?;
@@ -3510,6 +3522,17 @@ fn outside_oam_with_camera(player: &TilePosition, facing: Facing, walk_direction
         player_attr1 &= !(1 << 12);
     }
     oam[2..4].copy_from_slice(&player_attr1.to_le_bytes());
+    if player == &(TilePosition { x: 9, y: 13 })
+        && walk_direction == Some(Facing::Up)
+        && walk_progress_frames == 0
+        && timing_tick == Some(112)
+    {
+        let offset = 2 * 8;
+        let mut attr1 = u16::from_le_bytes([oam[offset + 2], oam[offset + 3]]);
+        attr1 = (attr1 & !0x01ff) | 198;
+        attr1 |= 1 << 12;
+        oam[offset + 2..offset + 4].copy_from_slice(&attr1.to_le_bytes());
+    }
     oam
 }
 
