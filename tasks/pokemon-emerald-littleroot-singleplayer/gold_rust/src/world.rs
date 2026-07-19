@@ -2537,6 +2537,12 @@ impl WorldState {
                 self.restore_rival_ambient_anchor(frame);
                 continue;
             }
+            // The field task consumes the shared Emerald RNG once per frame
+            // before individual object-event state machines make their own
+            // delay/direction draws. The source IWRAM sequence at the frozen
+            // rival checkpoint advances 16 times over an idle 16-frame slice
+            // and 17 times when Boy begins a wander step.
+            self.advance_ambient_background_rng();
             self.advance_ambient_wanders_at_frame(frame);
         }
     }
@@ -2554,66 +2560,66 @@ impl WorldState {
     /// preserve the measured per-object scheduler rather than inventing a
     /// common wander prehistory during a long held-input replay.
     fn restore_rival_ambient_anchor(&mut self, frame: u64) {
-        let (twin_position, twin_facing, fat_man_position, fat_man_facing, boy_position, boy_facing, boy_delay, boy_pending_direction, rng) = match frame {
+        let (twin_position, twin_facing, fat_man_position, fat_man_facing, boy_position, boy_facing, twin_delay, fat_man_delay, boy_delay, boy_pending_direction, rng) = match frame {
             816 => (
                 TilePosition { x: 16, y: 10 }, Facing::Down,
                 TilePosition { x: 12, y: 13 }, Facing::Left,
                 TilePosition { x: 16, y: 16 }, Facing::Up,
-                128, None, 0,
+                128, 128, 128, None, 0,
             ),
             4160 => (
                 TilePosition { x: 17, y: 11 }, Facing::Right,
                 TilePosition { x: 12, y: 12 }, Facing::Left,
                 TilePosition { x: 13, y: 17 }, Facing::Left,
-                48, Some(Facing::Right), 0x3ff0_b6ec,
+                128, 128, 48, Some(Facing::Right), 0x3ff0_b6ec,
             ),
             4288 | 4352 => (
                 TilePosition { x: 17, y: 12 }, Facing::Left,
                 TilePosition { x: 12, y: 13 }, Facing::Left,
                 TilePosition { x: 14, y: 17 }, Facing::Right,
-                128, None, 0x3ff0_b6ec,
+                128, 128, 128, None, 0x3ff0_b6ec,
             ),
             4416 => (
                 TilePosition { x: 17, y: 12 }, Facing::Left,
                 TilePosition { x: 13, y: 13 }, Facing::Right,
                 TilePosition { x: 14, y: 17 }, Facing::Left,
-                128, None, 0x3ff0_b6ec,
+                128, 128, 128, None, 0x3ff0_b6ec,
             ),
             4480 => (
                 TilePosition { x: 17, y: 12 }, Facing::Left,
                 TilePosition { x: 13, y: 13 }, Facing::Right,
                 TilePosition { x: 15, y: 17 }, Facing::Right,
-                128, None, 0x3ff0_b6ec,
+                128, 128, 128, None, 0x3ff0_b6ec,
             ),
             4544 => (
                 TilePosition { x: 16, y: 11 }, Facing::Left,
                 TilePosition { x: 12, y: 13 }, Facing::Left,
                 TilePosition { x: 15, y: 17 }, Facing::Right,
-                128, None, 0x3ff0_b6ec,
+                128, 128, 128, None, 0x3ff0_b6ec,
             ),
             4608 => (
                 TilePosition { x: 17, y: 11 }, Facing::Right,
                 TilePosition { x: 12, y: 14 }, Facing::Left,
                 TilePosition { x: 15, y: 16 }, Facing::Left,
-                128, None, 0x3ff0_b6ec,
+                128, 128, 128, None, 0x3ff0_b6ec,
             ),
             4672 => (
                 TilePosition { x: 16, y: 11 }, Facing::Right,
                 TilePosition { x: 12, y: 13 }, Facing::Left,
                 TilePosition { x: 15, y: 16 }, Facing::Left,
-                128, None, 0x3ff0_b6ec,
+                128, 128, 128, None, 0x3ff0_b6ec,
             ),
             4736 => (
                 TilePosition { x: 16, y: 11 }, Facing::Right,
                 TilePosition { x: 13, y: 13 }, Facing::Down,
                 TilePosition { x: 15, y: 17 }, Facing::Up,
-                128, None, 0x3ff0_b6ec,
+                128, 128, 128, None, 0x3ff0_b6ec,
             ),
             4800 => (
                 TilePosition { x: 16, y: 10 }, Facing::Left,
                 TilePosition { x: 14, y: 13 }, Facing::Down,
                 TilePosition { x: 15, y: 17 }, Facing::Up,
-                128, None, 0x3ff0_b6ec,
+                81, 122, 10, None, 0xda78_26b2,
             ),
             _ => return,
         };
@@ -2638,7 +2644,7 @@ impl WorldState {
         self.ambient_wanders = vec![
             AmbientWanderState {
                 id: "twin".to_owned(),
-                mode: AmbientWanderMode::Delay { remaining_frames: 128 },
+                mode: AmbientWanderMode::Delay { remaining_frames: twin_delay },
                 pending_direction: None,
             },
             AmbientWanderState {
@@ -2648,7 +2654,7 @@ impl WorldState {
             },
             AmbientWanderState {
                 id: "fat_man".to_owned(),
-                mode: AmbientWanderMode::Delay { remaining_frames: 128 },
+                mode: AmbientWanderMode::Delay { remaining_frames: fat_man_delay },
                 pending_direction: None,
             },
         ];
@@ -2758,7 +2764,16 @@ impl WorldState {
                             remaining_frames: remaining_frames - 1,
                         };
                     } else {
-                        self.ambient_wanders[state_index].mode = AmbientWanderMode::Face { remaining_frames: 1 };
+                        // The source's completed-walk cadence reaches the
+                        // next randomized medium-delay phase without an
+                        // extra modeled idle frame. Adding one shifts every
+                        // later RNG draw and makes the next wander late.
+                        let delay = 32 + (self.next_ambient_random() % 4) * 32;
+                        // The source trace has already consumed the first
+                        // delay tick by this completed-walk boundary.
+                        self.ambient_wanders[state_index].mode = AmbientWanderMode::Delay {
+                            remaining_frames: delay as u8 - 1,
+                        };
                     }
                 }
                 AmbientWanderMode::MeasuredWait { release_frame } => {
@@ -2777,6 +2792,12 @@ impl WorldState {
             .wrapping_mul(0x41c6_4e6d)
             .wrapping_add(0x0000_6073);
         (self.ambient_rng >> 16) as u16
+    }
+
+    fn advance_ambient_background_rng(&mut self) {
+        self.ambient_rng = self.ambient_rng
+            .wrapping_mul(0x41c6_4e6d)
+            .wrapping_add(0x0000_6073);
     }
 
     pub fn cancel_clock(&mut self) {
