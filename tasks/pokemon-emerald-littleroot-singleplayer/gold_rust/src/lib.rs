@@ -691,6 +691,23 @@ impl LittlerootSession {
             && held_frames == Some(112)
     }
 
+    fn rival_down_128_evidence(&self) -> bool {
+        let held_frames = self.input_log.iter().try_fold(0_u32, |total, step| {
+            if step.action == Input::Down {
+                Some(total.saturating_add(step.frames))
+            } else if step.action == Input::Noop && step.frames == 0 {
+                Some(total)
+            } else {
+                None
+            }
+        });
+        self.checkpoint == OpeningCheckpoint::RivalOutsideLab
+            && self.world.map == MapId::LittlerootTown
+            && self.world.frame == 128
+            && self.world.player == TilePosition { x: 9, y: 15 }
+            && held_frames == Some(128)
+    }
+
     fn rival_right_64_evidence(&self) -> bool {
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
@@ -817,6 +834,9 @@ impl LittlerootSession {
         if self.rival_down_112_evidence() {
             return "source_rgb_delta_exact";
         }
+        if self.rival_down_128_evidence() {
+            return "source_rgb_delta_exact";
+        }
         if self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && matches!(
                 self.input_log.as_slice(),
@@ -920,6 +940,18 @@ impl LittlerootSession {
             let actual_sha256 = frame_sha256(self.frame_rgb());
             return json!({
                 "trace": "littleroot-outside-birch-lab-down-112",
+                "baseline_only": false,
+                "source_rgb_delta": true,
+                "expected_sha256": expected_sha256,
+                "actual_sha256": actual_sha256,
+                "exact": actual_sha256 == expected_sha256,
+            });
+        }
+        if self.rival_down_128_evidence() {
+            let expected_sha256 = "3d63ab370f4137c5c06f4dd9a2e900d48a2999e7bcf06e5e83d0134185694760";
+            let actual_sha256 = frame_sha256(self.frame_rgb());
+            return json!({
+                "trace": "littleroot-outside-birch-lab-down-128",
                 "baseline_only": false,
                 "source_rgb_delta": true,
                 "expected_sha256": expected_sha256,

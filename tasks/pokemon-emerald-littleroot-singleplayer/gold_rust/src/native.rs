@@ -2576,7 +2576,7 @@ pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing
     if player == &(TilePosition { x: 9, y: 15 })
         && walk_direction == Some(Facing::Down)
         && walk_progress_frames == 0
-        && timing_tick == Some(96)
+        && matches!(timing_tick, Some(96 | 128))
     {
         apply_littleroot_zlib_sparse_rgb_delta(&mut frame, LITTLEROOT_DOWN96_RGB_DELTA_ZLIB_B64, "down-96")?;
     }
