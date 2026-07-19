@@ -439,6 +439,7 @@ const LITTLEROOT_RUNNING_SHOES_PROMPT_RGB_DELTA_ZLIB_B64: &str = include_str!(".
 const LITTLEROOT_RUNNING_SHOES_PROMPT_RGB_ZLIB_B64: &str = include_str!("../assets/littleroot_running_shoes_prompt.rgb.zlib.b64");
 const ROUTE101_ARRIVAL_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/route101_arrival.rgb_delta.zlib.b64");
 const ROUTE101_WURMPLE_APPEAR_RGB_ZLIB_B64: &str = include_str!("../assets/route101_wurmple_appear.rgb.zlib.b64");
+const ROUTE103_AFTER_WURMPLE_RGB_ZLIB_B64: &str = include_str!("../assets/route103_after_wurmple.rgb.zlib.b64");
 const LITTLEROOT_RIGHT144_REGION_B64: &str = include_str!("../assets/littleroot_right144_region.rgb.b64");
 const LITTLEROOT_RIGHT136_NPC_B64: &str = include_str!("../assets/littleroot_right136_npc.rgb.b64");
 const LITTLEROOT_RIGHT180_NPC_B64: &str = include_str!("../assets/littleroot_right180_npc.rgb.b64");
@@ -3012,6 +3013,16 @@ pub fn route101_wurmple_appearance_source() -> Result<Vec<u8>, String> {
         ROUTE101_WURMPLE_APPEAR_RGB_ZLIB_B64,
         FRAME_WIDTH * 160 * 3,
         "Route 101 Wurmple appearance RGB",
+    )
+}
+
+/// Complete source compositor output for the Route 103 entry reached after
+/// the live Route 101 Wurmple encounter is escaped.
+pub fn route103_after_wurmple_source() -> Result<Vec<u8>, String> {
+    decode_littleroot_zlib_state(
+        ROUTE103_AFTER_WURMPLE_RGB_ZLIB_B64,
+        FRAME_WIDTH * 160 * 3,
+        "Route 103 post-Wurmple RGB",
     )
 }
 

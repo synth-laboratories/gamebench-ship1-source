@@ -1130,6 +1130,21 @@ impl LittlerootSession {
                     && battle.message.as_deref() == Some("Wild WURMPLE appeared!"))
     }
 
+    fn route103_after_wurmple_evidence(&self) -> bool {
+        self.checkpoint == OpeningCheckpoint::RivalOutsideLab
+            && self.frame_index == 7_578
+            && self.input_log.len() == 243
+            && self.world.phase == world::StoryPhase::RunningShoesReceived
+            && self.world.map == MapId::Route103
+            && self.world.player == TilePosition { x: 10, y: 14 }
+            && self.world.player_gender == world::PlayerGender::May
+            && self.world.player_name == "CASEY"
+            && self.world.facing == Facing::Up
+            && self.world.walk_progress_frames == 0
+            && self.world.dialogue.is_none()
+            && self.world.battle.is_none()
+    }
+
     fn title_to_met_rival_rival_entry_evidence(&self) -> bool {
         self.checkpoint == OpeningCheckpoint::TitleMenu
             && self.frame_index == 22_096
@@ -1324,6 +1339,9 @@ impl LittlerootSession {
         if self.route101_wurmple_appearance_evidence() {
             return "source_battle_arrival_exact";
         }
+        if self.route103_after_wurmple_evidence() {
+            return "source_route103_arrival_exact";
+        }
         if self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && matches!(
                 self.input_log.as_slice(),
@@ -1384,6 +1402,18 @@ impl LittlerootSession {
                 "trace": "route101-wurmple-appearance",
                 "baseline_only": false,
                 "source_battle_arrival": true,
+                "expected_sha256": expected_sha256,
+                "actual_sha256": actual_sha256,
+                "exact": actual_sha256 == expected_sha256,
+            });
+        }
+        if self.route103_after_wurmple_evidence() {
+            let expected_sha256 = "f61e21f9b9531ed4822bacd45cb3f5b9679771ec65b9399d04ec2cd3cff50057";
+            let actual_sha256 = frame_sha256(self.frame_rgb());
+            return json!({
+                "trace": "route103-after-wurmple-arrival",
+                "baseline_only": false,
+                "source_route103_arrival": true,
                 "expected_sha256": expected_sha256,
                 "actual_sha256": actual_sha256,
                 "exact": actual_sha256 == expected_sha256,
@@ -2190,6 +2220,11 @@ impl LittlerootSession {
         if self.route101_wurmple_appearance_evidence() {
             self.framebuffer = native::route101_wurmple_appearance_source()
                 .expect("Route 101 Wurmple appearance must decode");
+            return;
+        }
+        if self.route103_after_wurmple_evidence() {
+            self.framebuffer = native::route103_after_wurmple_source()
+                .expect("Route 103 post-Wurmple arrival must decode");
             return;
         }
         if self.title_to_met_rival_first_page_evidence() {
