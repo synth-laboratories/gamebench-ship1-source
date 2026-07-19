@@ -2396,6 +2396,12 @@ impl WorldState {
         self.move_scripted_npc_with_duration(id, map, position, facing, 8);
     }
 
+    /// `walk_in_place_faster_*` is the distinct four-frame source action,
+    /// rather than the eight-frame `walk_in_place_fast_*` cadence.
+    fn move_faster_scripted_npc(&mut self, id: &str, map: MapId, position: TilePosition, facing: Facing) {
+        self.move_scripted_npc_with_duration(id, map, position, facing, 4);
+    }
+
     fn move_scripted_npc_with_duration(&mut self, id: &str, map: MapId, position: TilePosition, facing: Facing, duration_frames: u8) {
         if let Some(npc) = self.npcs.iter_mut().find(|npc| npc.id == id && npc.map == map) {
             if npc.position == position && npc.facing == facing { return; }
@@ -2749,7 +2755,7 @@ impl WorldState {
             );
         }
         if elapsed_before < 146 && 146 <= elapsed_after {
-            self.move_fast_scripted_npc(
+            self.move_faster_scripted_npc(
                 "truck_arrival_mom", MapId::LittlerootTown,
                 TilePosition { x: home_x, y: 10 }, Facing::Left,
             );
