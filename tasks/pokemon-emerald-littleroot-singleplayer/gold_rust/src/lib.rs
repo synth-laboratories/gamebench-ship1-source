@@ -717,6 +717,15 @@ impl LittlerootSession {
             && self.input_log.iter().map(|step| u32::from(step.frames)).sum::<u32>() == 144
     }
 
+    fn rival_down_160_evidence(&self) -> bool {
+        self.checkpoint == OpeningCheckpoint::RivalOutsideLab
+            && self.world.map == MapId::LittlerootTown
+            && self.world.frame == 160
+            && self.world.player == TilePosition { x: 9, y: 15 }
+            && self.input_log.iter().all(|step| step.action == Input::Down || (step.action == Input::Noop && step.frames == 0))
+            && self.input_log.iter().map(|step| u32::from(step.frames)).sum::<u32>() == 160
+    }
+
     fn rival_right_64_evidence(&self) -> bool {
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
@@ -847,6 +856,7 @@ impl LittlerootSession {
             return "source_rgb_delta_exact";
         }
         if self.rival_down_144_evidence() { return "source_rgb_delta_exact"; }
+        if self.rival_down_160_evidence() { return "source_rgb_delta_exact"; }
         if self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && matches!(
                 self.input_log.as_slice(),
@@ -973,6 +983,11 @@ impl LittlerootSession {
             let expected_sha256 = "bdcbfb11e721936abef20ddf307afb751b2681e447e67116691f525465702f53";
             let actual_sha256 = frame_sha256(self.frame_rgb());
             return json!({"trace":"littleroot-outside-birch-lab-down-144","baseline_only":false,"source_rgb_delta":true,"expected_sha256":expected_sha256,"actual_sha256":actual_sha256,"exact":actual_sha256 == expected_sha256});
+        }
+        if self.rival_down_160_evidence() {
+            let expected_sha256 = "3d63ab370f4137c5c06f4dd9a2e900d48a2999e7bcf06e5e83d0134185694760";
+            let actual_sha256 = frame_sha256(self.frame_rgb());
+            return json!({"trace":"littleroot-outside-birch-lab-down-160","baseline_only":false,"source_rgb_delta":true,"expected_sha256":expected_sha256,"actual_sha256":actual_sha256,"exact":actual_sha256 == expected_sha256});
         }
         if let Some(frame) = self.rival_ambient_noop_frame() {
             let reference = match frame {
