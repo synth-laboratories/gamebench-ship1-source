@@ -5,9 +5,9 @@ const SOURCE_RIVAL_RUNNING_SHOES_TRIGGER: u8 = 6;
 /// exclamation emote, and `Common_Movement_Delay48` before Mom speaks.
 const TV_BROADCAST_INTRO_FRAMES: u16 = 88;
 const NEW_HOME_FACE_PLAYER_FRAMES: u8 = 1;
-// Reuse the port's existing fast in-place turn cadence after the source
-// face-player action completes.
-const NEW_HOME_PLAYER_FAST_TURN_FRAMES: u8 = 8;
+// `walk_in_place_faster_{left,right}` follows Mom's source `face_player`
+// action and lasts four frames, rather than the eight-frame fast cadence.
+const NEW_HOME_PLAYER_FAST_TURN_FRAMES: u8 = 4;
 const NEW_HOME_ORIENTATION_FRAMES: u8 =
     NEW_HOME_FACE_PLAYER_FRAMES + NEW_HOME_PLAYER_FAST_TURN_FRAMES;
 /// Matches the port's existing post-input `MUS_OBTAIN_ITEM` receipt cadence.
@@ -2912,11 +2912,11 @@ impl WorldState {
             // actually completes.
             let elapsed_before = 16u16.saturating_sub(remaining);
             let elapsed_after = 16u16.saturating_sub(next_remaining);
-            if elapsed_before < 8 && 8 <= elapsed_after {
+            if elapsed_before < 4 && 4 <= elapsed_after {
                 let map = self.map;
                 let mom = self.npcs.iter().find(|npc| npc.id == "mom" && npc.map == map)
                     .expect("Mom must exist for the move-in turn");
-                self.move_fast_scripted_npc("mom", map, mom.position.clone(), Facing::Up);
+                self.move_faster_scripted_npc("mom", map, mom.position.clone(), Facing::Up);
             }
             if elapsed_before < 16 && 16 <= elapsed_after {
                 self.player.y -= 1;
