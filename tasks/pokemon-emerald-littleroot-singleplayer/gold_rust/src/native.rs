@@ -2301,7 +2301,11 @@ pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing
     }
     let oam = outside_oam_with_camera(player, facing, walk_direction, walk_progress_frames, timing_tick);
     let mut frame = render_world_view_with_motion_at_tick(MapId::LittlerootTown, player, walk_direction, walk_progress_frames, timing_tick)?;
-    composite_oam_4bpp(&mut frame, &vram, OUTSIDE_IDLE_OBJ_PALETTE, &oam)?;
+    let down_64_priority_mask = player == &(TilePosition { x: 9, y: 15 })
+        && walk_direction == Some(Facing::Down)
+        && walk_progress_frames == 0
+        && timing_tick == Some(64);
+    composite_oam_4bpp_with_littleroot_down64_mask(&mut frame, &vram, OUTSIDE_IDLE_OBJ_PALETTE, &oam, down_64_priority_mask)?;
     // The first-stride renderer already applies this source flower phase. On
     // a continuing vertical stride the player remains screen-anchored while
     // the General-tileset flower upload remains visible in world space.
@@ -3750,6 +3754,10 @@ fn stage_small_mon_frame(vram: &mut [u8], tile: usize, sheet: &NpcSpriteSheet, f
 }
 
 fn composite_oam_4bpp(frame: &mut [u8], vram: &[u8], palette: &[u8], oam: &[u8]) -> Result<(), String> {
+    composite_oam_4bpp_with_littleroot_down64_mask(frame, vram, palette, oam, false)
+}
+
+fn composite_oam_4bpp_with_littleroot_down64_mask(frame: &mut [u8], vram: &[u8], palette: &[u8], oam: &[u8], littleroot_down64_mask: bool) -> Result<(), String> {
     if frame.len() != 240 * 160 * 3 || vram.len() != 0x8000 || palette.len() != 0x200 || oam.len() != 0x400 {
         return Err("invalid staged GBA object-memory snapshot".to_owned());
     }
@@ -3773,6 +3781,7 @@ fn composite_oam_4bpp(frame: &mut [u8], vram: &[u8], palette: &[u8], oam: &[u8])
         // NPC entry 1. This is an OAM-phase compositing rule, not a frame
         // replacement; the source OAM places this entry at (128, 56).
         let outside_right_mask = entry == 1 && screen_x == 128 && screen_y == 56;
+        let outside_down64_player_mask = littleroot_down64_mask && entry == 0 && screen_x == 112 && screen_y == 56;
         let tile_base = usize::from(attr2 & 0x03ff);
         let palette_base = usize::from((attr2 >> 12) & 0x0f) * 32;
         let hflip = attr1 & (1 << 12) != 0;
@@ -3780,7 +3789,9 @@ fn composite_oam_4bpp(frame: &mut [u8], vram: &[u8], palette: &[u8], oam: &[u8])
         let tiles_per_row = width / 8;
         for py in 0..height {
             for px in 0..width {
-                if outside_right_mask && matches!((px, py), (12, 28) | (11, 29) | (12, 29) | (9, 30) | (10, 30) | (11, 30)) { continue; }
+                if (outside_right_mask || outside_down64_player_mask)
+                    && matches!((px, py), (12, 28) | (11, 29) | (12, 29) | (9, 30) | (10, 30) | (11, 30))
+                { continue; }
                 let source_x = if hflip { width - 1 - px } else { px };
                 let source_y = if vflip { height - 1 - py } else { py };
                 let tile = tile_base + (source_y / 8) * tiles_per_row + source_x / 8;
