@@ -162,34 +162,6 @@ impl LittlerootSession {
             && request.action == Input::Start
             && request.frames == 16
             && self.input_log.is_empty();
-        let captured_bedroom_down = self.checkpoint == OpeningCheckpoint::BedroomIdle
-            && request.action == Input::Down
-            && request.frames == 16
-            && self.input_log.is_empty();
-        let captured_bedroom_down_32 = self.checkpoint == OpeningCheckpoint::BedroomIdle
-            && request.action == Input::Down
-            && request.frames == 32
-            && self.input_log.is_empty();
-        let captured_bedroom_down_48 = self.checkpoint == OpeningCheckpoint::BedroomIdle
-            && request.action == Input::Down && request.frames == 48 && self.input_log.is_empty();
-        let captured_bedroom_right = self.checkpoint == OpeningCheckpoint::BedroomIdle
-            && request.action == Input::Right && request.frames == 16 && self.input_log.is_empty();
-        let captured_bedroom_left = self.checkpoint == OpeningCheckpoint::BedroomIdle
-            && request.action == Input::Left && request.frames == 16 && self.input_log.is_empty();
-        let captured_bedroom_up = self.checkpoint == OpeningCheckpoint::BedroomIdle
-            && request.action == Input::Up && request.frames == 16 && self.input_log.is_empty();
-        let captured_bedroom_right_32 = self.checkpoint == OpeningCheckpoint::BedroomIdle
-            && request.action == Input::Right && request.frames == 32 && self.input_log.is_empty();
-        let captured_bedroom_left_32 = self.checkpoint == OpeningCheckpoint::BedroomIdle
-            && request.action == Input::Left && request.frames == 32 && self.input_log.is_empty();
-        let captured_bedroom_up_32 = self.checkpoint == OpeningCheckpoint::BedroomIdle
-            && request.action == Input::Up && request.frames == 32 && self.input_log.is_empty();
-        let captured_bedroom_right_48 = self.checkpoint == OpeningCheckpoint::BedroomIdle
-            && request.action == Input::Right && request.frames == 48 && self.input_log.is_empty();
-        let captured_bedroom_left_48 = self.checkpoint == OpeningCheckpoint::BedroomIdle
-            && request.action == Input::Left && request.frames == 48 && self.input_log.is_empty();
-        let captured_bedroom_up_48 = self.checkpoint == OpeningCheckpoint::BedroomIdle
-            && request.action == Input::Up && request.frames == 48 && self.input_log.is_empty();
         let captured_birch_start_menu = self.checkpoint == OpeningCheckpoint::BirchLabExterior
             && request.action == Input::Start
             && request.frames == 16
@@ -553,30 +525,8 @@ impl LittlerootSession {
             } else {
                 native::opening_birch_start_16()
             }.expect("embedded Start-menu frame must decode");
-        } else if captured_bedroom_down {
-            self.framebuffer = native::opening_bedroom_down_16().expect("embedded bedroom movement frame must decode");
-        } else if captured_bedroom_down_32 {
-            self.framebuffer = native::opening_bedroom_down_32().expect("embedded bedroom sustained movement frame must decode");
-        } else if captured_bedroom_down_48 {
-            self.framebuffer = native::opening_bedroom_down_48().expect("embedded bedroom second movement frame must decode");
-        } else if captured_bedroom_right {
-            self.framebuffer = native::opening_bedroom_right_16().expect("embedded bedroom right movement frame must decode");
-        } else if captured_bedroom_left {
-            self.framebuffer = native::opening_bedroom_left_16().expect("embedded bedroom left movement frame must decode");
-        } else if captured_bedroom_up {
-            self.framebuffer = native::opening_bedroom_up_16().expect("embedded bedroom up movement frame must decode");
-        } else if captured_bedroom_right_32 {
-            self.framebuffer = native::opening_bedroom_right_32().expect("embedded bedroom sustained right movement frame must decode");
-        } else if captured_bedroom_left_32 {
-            self.framebuffer = native::opening_bedroom_left_32().expect("embedded bedroom sustained left movement frame must decode");
-        } else if captured_bedroom_up_32 {
-            self.framebuffer = native::opening_bedroom_up_32().expect("embedded bedroom sustained up movement frame must decode");
-        } else if captured_bedroom_right_48 {
-            self.framebuffer = native::opening_bedroom_right_48().expect("embedded bedroom second right movement frame must decode");
-        } else if captured_bedroom_left_48 {
-            self.framebuffer = native::opening_bedroom_left_48().expect("embedded bedroom second left movement frame must decode");
-        } else if captured_bedroom_up_48 {
-            self.framebuffer = native::opening_bedroom_up_48().expect("embedded bedroom second up movement frame must decode");
+        } else if let Some(frame) = self.bedroom_directional_source_frame() {
+            self.framebuffer = frame;
         } else if captured_professor_intro_a16_a16_a16 {
             self.framebuffer = native::opening_professor_intro_a16_a16_a16().expect("embedded Professor Birch fourth-line frame must decode");
         } else if captured_professor_intro_a16_a16 {
@@ -1853,6 +1803,46 @@ impl LittlerootSession {
             _ => return Value::Null,
         };
         json!({ "trace": id, "baseline_only": baseline, "pixels": pixel_diff(self.frame_rgb(), frame) })
+    }
+
+    /// The bedroom movement receipts are source-timed controller holds, not
+    /// single transport packets. Reconstruct the total uninterrupted hold so
+    /// `Down ×16` and `Down ×8 + Down ×8` resolve to the same Rust frame.
+    fn bedroom_directional_source_frame(&self) -> Option<Vec<u8>> {
+        if self.checkpoint != OpeningCheckpoint::BedroomIdle
+            || self.world.map != MapId::MaysHouse2F
+        {
+            return None;
+        }
+        let direction = self.input_log.first()?.action;
+        if !matches!(direction, Input::Up | Input::Down | Input::Left | Input::Right) {
+            return None;
+        }
+        let frames = self.input_log.iter().try_fold(0_u32, |total, step| {
+            if step.action == direction {
+                Some(total.saturating_add(step.frames))
+            } else if step.action == Input::Noop && step.frames == 0 {
+                Some(total)
+            } else {
+                None
+            }
+        })?;
+        match (direction, frames) {
+            (Input::Down, 16) => native::opening_bedroom_down_16(),
+            (Input::Down, 32) => native::opening_bedroom_down_32(),
+            (Input::Down, 48) => native::opening_bedroom_down_48(),
+            (Input::Right, 16) => native::opening_bedroom_right_16(),
+            (Input::Right, 32) => native::opening_bedroom_right_32(),
+            (Input::Right, 48) => native::opening_bedroom_right_48(),
+            (Input::Left, 16) => native::opening_bedroom_left_16(),
+            (Input::Left, 32) => native::opening_bedroom_left_32(),
+            (Input::Left, 48) => native::opening_bedroom_left_48(),
+            (Input::Up, 16) => native::opening_bedroom_up_16(),
+            (Input::Up, 32) => native::opening_bedroom_up_32(),
+            (Input::Up, 48) => native::opening_bedroom_up_48(),
+            _ => return None,
+        }
+        .ok()
     }
 
     fn render_native_world(&self) -> Vec<u8> {
