@@ -10,6 +10,13 @@ const NEW_HOME_FACE_PLAYER_FRAMES: u8 = 1;
 const NEW_HOME_PLAYER_FAST_TURN_FRAMES: u8 = 8;
 const NEW_HOME_ORIENTATION_FRAMES: u8 =
     NEW_HOME_FACE_PLAYER_FRAMES + NEW_HOME_PLAYER_FAST_TURN_FRAMES;
+/// `MomEnters{Male,Female}` takes 68 frames. The wall-clock script then
+/// waits for the player's four-frame `WalkInPlaceFaster` turn before Mom can
+/// open her upstairs message.
+const CLOCK_VISIT_MOM_ENTRY_FRAMES: u16 = 68;
+const CLOCK_VISIT_PLAYER_TURN_FRAMES: u16 = 4;
+const CLOCK_VISIT_ENTRY_FRAMES: u16 =
+    CLOCK_VISIT_MOM_ENTRY_FRAMES + CLOCK_VISIT_PLAYER_TURN_FRAMES;
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -1058,7 +1065,8 @@ pub struct WorldState {
     /// scripts with their own message sequencing retain dedicated clocks.
     #[serde(default)]
     pub field_dialogue_frames: Option<u16>,
-    /// Remaining frames in Mom's post-clock upstairs entry script.
+    /// Remaining frames in the post-clock upstairs entry, including the
+    /// player's final fast in-place turn before Mom's message opens.
     pub clock_visit_frames: Option<u16>,
     /// `PlayersHouse_2F_EventScript_WallClock` waits thirty frames after the
     /// clock editor closes before it creates Mom's upstairs object event.
@@ -2118,7 +2126,8 @@ impl WorldState {
             self.clock_confirming = false;
             // `PlayersHouse_2F_EventScript_WallClock` waits thirty frames
             // after `StartWallClock` before it creates Mom's upstairs object
-            // event, then runs her 72-frame entry movement.
+            // event, then runs Mom's 68-frame entry and the player's
+            // four-frame in-place turn before opening Mom's message.
             self.phase = StoryPhase::ClockVisit;
             self.clock_settle_frames = Some(30);
             self.clock_visit_frames = None;
@@ -2546,9 +2555,11 @@ impl WorldState {
         }
 
         self.clock_settle_frames = None;
-        // Source movement: delay_8 + walk_down + faster in-place turn +
-        // delay_16 + delay_8 + final lateral walk = 72 frames.
-        self.clock_visit_frames = Some(72);
+        // Mom's source movement is delay_8 + walk_down + faster in-place
+        // turn + delay_16 + delay_8 + final lateral walk = 68 frames. The
+        // script then waits for the player's four-frame faster turn before
+        // it opens Mom's room message.
+        self.clock_visit_frames = Some(CLOCK_VISIT_ENTRY_FRAMES);
         self.npcs = map_npcs(
             self.map,
             self.phase,
@@ -2565,7 +2576,8 @@ impl WorldState {
 
     /// Runs `PlayersHouse_2F_Movement_MomEnters{Male,Female}` after the wall
     /// clock: delay 8, step down, fast turn, delay 24, then step beside the
-    /// player. Input remains locked until her room dialogue opens.
+    /// player. The source then waits for the player's fast left/right turn;
+    /// input remains locked until Mom's room dialogue opens.
     pub fn advance_clock_visit(&mut self, frames: u32) -> bool {
         let Some(remaining) = self.clock_visit_frames else { return false; };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
@@ -2598,8 +2610,8 @@ impl WorldState {
             }
             return true;
         }
-        let elapsed_before = 72u16.saturating_sub(remaining);
-        let elapsed_after = 72u16.saturating_sub(next_remaining);
+        let elapsed_before = CLOCK_VISIT_ENTRY_FRAMES.saturating_sub(remaining);
+        let elapsed_after = CLOCK_VISIT_ENTRY_FRAMES.saturating_sub(next_remaining);
         let (down_position, final_position, side) = match self.map {
             MapId::BrendansHouse2F => (
                 TilePosition { x: 7, y: 2 }, TilePosition { x: 6, y: 2 }, Facing::Left,
@@ -2614,10 +2626,12 @@ impl WorldState {
         if elapsed_before < 24 && 24 <= elapsed_after {
             self.move_scripted_npc("mom", self.map, down_position.clone(), Facing::Down);
         }
-        if elapsed_before < 32 && 32 <= elapsed_after {
-            self.move_fast_scripted_npc("mom", self.map, down_position, side);
+        if elapsed_before < 28 && 28 <= elapsed_after {
+            self.move_scripted_npc_with_duration("mom", self.map, down_position, side, 4);
         }
-        if elapsed_before < 72 && 72 <= elapsed_after {
+        if elapsed_before < CLOCK_VISIT_MOM_ENTRY_FRAMES
+            && CLOCK_VISIT_MOM_ENTRY_FRAMES <= elapsed_after
+        {
             self.move_scripted_npc("mom", self.map, final_position, side);
         }
         if next_remaining == 0 {
