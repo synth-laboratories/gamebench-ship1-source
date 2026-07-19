@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
 
 const SOURCE_RIVAL_RUNNING_SHOES_TRIGGER: u8 = 6;
-/// `PetalburgGymReport{Male,Female}` spends one fast in-place turn, an
+/// `PetalburgGymReport{Male,Female}` spends one faster in-place turn, an
 /// exclamation emote, and `Common_Movement_Delay48` before Mom speaks.
-const TV_BROADCAST_INTRO_FRAMES: u16 = 88;
+const TV_BROADCAST_INTRO_FRAMES: u16 = 84;
 const NEW_HOME_FACE_PLAYER_FRAMES: u8 = 1;
 // Reuse the port's existing fast in-place turn cadence after the source
 // face-player action completes.
@@ -2683,9 +2683,9 @@ impl WorldState {
         let elapsed_before = TV_BROADCAST_INTRO_FRAMES.saturating_sub(remaining);
         let elapsed_after = TV_BROADCAST_INTRO_FRAMES.saturating_sub(next_remaining);
         // The report scripts begin with `walk_in_place_faster_{right,left}`.
-        // Preserve its eight-frame boundary independently from the emote and
+        // Preserve its four-frame boundary independently from the emote and
         // Delay48 hold that follow it.
-        if elapsed_before < 8 && 8 <= elapsed_after {
+        if elapsed_before < 4 && 4 <= elapsed_after {
             let turn = match self.map {
                 MapId::BrendansHouse1F => Facing::Right,
                 MapId::MaysHouse1F => Facing::Left,
@@ -2697,7 +2697,7 @@ impl WorldState {
                 .expect("Mom must exist for the Petalburg Gym report")
                 .position
                 .clone();
-            self.move_fast_scripted_npc("mom", map, position, turn);
+            self.move_faster_scripted_npc("mom", map, position, turn);
         }
         if next_remaining == 0 {
             self.tv_broadcast_intro_frames = None;
