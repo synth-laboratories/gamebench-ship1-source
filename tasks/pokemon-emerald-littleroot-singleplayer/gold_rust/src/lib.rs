@@ -491,9 +491,10 @@ impl LittlerootSession {
                 Input::Right => self.world.move_name_cursor(1, 0),
                 Input::A => self.world.select_name_cell(),
                 Input::B => self.world.delete_name_character(),
-                // The source keyboard ignores the physical Start button; its on-screen
-                // OK control must be selected with the grid cursor.
-                Input::Start | Input::Select | Input::Noop => {}
+                // `HandleKeyboardEvent` sends physical Start to the visible
+                // on-screen OK control before it waits for a later A press.
+                Input::Start => self.world.move_name_cursor_to_ok(),
+                Input::Select | Input::Noop => {}
             }
             self.input_log.push(request);
             self.redraw();

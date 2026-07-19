@@ -4397,6 +4397,14 @@ impl WorldState {
         self.name_cursor = STARTS[target_row] + target_column;
     }
 
+    /// Emerald's physical Start shortcut moves the keyboard cursor to its
+    /// on-screen OK button; it does not submit the text by itself.
+    pub fn move_name_cursor_to_ok(&mut self) {
+        if self.phase != StoryPhase::NameEntry { return; }
+        self.name_entry_touched = true;
+        self.name_cursor = 31;
+    }
+
     pub fn move_gender_cursor(&mut self, delta: i8) {
         if self.phase != StoryPhase::GenderSelect || delta == 0 { return; }
         // NewGameBirchSpeech_ProcessGenderMenuInput calls the no-wrap menu
