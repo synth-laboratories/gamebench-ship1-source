@@ -375,6 +375,9 @@ const LITTLEROOT_RIGHT48_TREE_B64: &str = include_str!("../assets/littleroot_rig
 const LITTLEROOT_RIGHT64_TREE_B64: &str = include_str!("../assets/littleroot_right64_tree.rgb.b64");
 const LITTLEROOT_UP64_PLAYER_OBJ_B64: &str = include_str!("../assets/littleroot_up64_player.obj.b64");
 const LITTLEROOT_DOWN64_PLAYER_OBJ_B64: &str = include_str!("../assets/littleroot_down64_player.obj.b64");
+const LITTLEROOT_DOWN80_PLAYER_OBJ_B64: &str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQVQAA5Z4AUO7uAAAAAAAAAAAAAAAAAAUAAFBeAADlXgUAmZlZAO6ZBQAA8JqqAL+brgBfq+5A8hERQEIRGAA0IygATzMjQPtPM6qpDwDqufsA7rr1ABERLwSBESQEgjJDADIzBAAz9A8AgPuP/wD4iNgAAE+IAAD/RAAA+P8AAE/7AADfSgAA8P//OPIAjfiPAIjP/ADY3/0A//8PAP8PAAAPAAAAAAAAAA==";
+const LITTLEROOT_DOWN80_FAT_MAN_OBJ_B64: &str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQAADQvQAAzcsA0Dw8AAAAAAAAAAAAAAAAAAAAAN3dAADMu90AzLzLDdPMvNwAABQRAEAR3QBAEhEAQCMiAABEIgCgOTMAmpmZAJqIiCG9zNsh0r3cId3dDSIj0g0iM90AM0SqAEoilAopIkKpoImIiKCJiIigmoiY0K2ZmXDW3cwAd2Z2ANB31wDQ3Q0pIkOpSSMypEk0QwraR3QHfHfXDXfd3QDd3Q0AAAAAAA==";
+const LITTLEROOT_DOWN80_NPC_OBJ_B64: &str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ3QDQzcwA3cvMAAAAAAAAAAAAAAAAAAAAAAAAAADdDQAAzNwNAMy83QAAzcvM0M28zNDNzLzQ3czMQN3dzADd3d0A8N3dAKD/3cy83ADMy9wNy8zcDczM3Q3M3d0E3d3dAN3dTwDd/ygEAKBp/wCgmlYAJEKFADRDVQBA9G8AAPD/AAAA0AAAAAD/ljkEZZlKAFhmBwBVZQcAVfYPAP//AADM3QAA3Q0AAA==";
 const LITTLEROOT_UP112_PLAYER_OBJ_B64: &str = include_str!("../assets/littleroot_up112_player.obj.b64");
 const LITTLEROOT_UP112_FAT_MAN_OBJ_B64: &str = include_str!("../assets/littleroot_up112_fat_man.obj.b64");
 const LITTLEROOT_RIGHT112_OBJECT_B64: &str = include_str!("../assets/littleroot_right112_object.rgb.b64");
@@ -406,6 +409,8 @@ const GENERAL_FLOWER_FRAME_2_B64: &str = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAA
 // differ from the PNG's editor representation.
 const GENERAL_FLOWER_RIGHT48_VRAM_B64: &str = "3d3d3d3d3d3d3d0z3d09mdxDRJk9IkJEPSIzM/0zmTTd3d3d3d3N3ZnT3d27mdPdu5k005lEIjJEkykylLmbSf2Zu5ntmbuZ3U+ZRN0kRPQ9IkNPTzL0//1E/93d/93dlLmbSUSUSfRPQ0TfQjMj0/Q0ItT/TzLU/f9E393d/94=";
 const GENERAL_FLOWER_RIGHT32_VRAM_B64: &str = "3d3d3d3d3d3d3T2T3d2TudxDlLk9IkKUPSIzQ92TSTPd3d3d3d3N3Tnd3d2bOd3dm0kz00k0IjI0mSNCmbuZ9J+5m0mfuZtJ/ZRJND1DNPRNIkNPTzL0//1E/93d/93dmbuZ9ESZRN9PRETfQjMj0/Q0ItT/TzLU/f9E393d/94=";
+const GENERAL_FLOWER_DOWN80_VRAM_B64: &str = "3d3d3d3d3d3d3TOZ3T2Zu9xDmbs9IkSZPSIzQzOZNJPd3d3d3d3N3dPd3d2Z093dmdQz00RDIjKTOTNCuZs59Jm7mZSZu5lET5lERE1DNPRNIkNPTzL0//1E/93d/93duZtJ9JRJ9N9PREPfQjMj0/Q0ItT/TzLU/f9E393d/94=";
+const GENERAL_FLOWER_DOWN64_VRAM_B64: &str = "3d3d3d3d3d3d3T2T3d2TudxDlLk9IkKUPSIzQ92TSTPd3d3d3d3N3Tnd3d2bOd3dm0kz00k0IjI0mSNCmbuZ9J+5m0mfuZtJ/ZRJND1DNPRNIkNPTzL0//1E/93d/93dmbuZ9ESZRN9PRETfQjMj0/Q0ItT/TzLU/f9E393d/94=";
 
 /// Source PNG payload for Emerald's General tileset flower animation at a
 /// given tileset-animation tick. The fourth phase intentionally reuses frame
@@ -2328,6 +2333,7 @@ pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing
         (TilePosition { x: 9, y: 13 }, Some(Facing::Up), 0, Some(64 | 96)) => Some(LITTLEROOT_UP64_PLAYER_OBJ_B64),
         (TilePosition { x: 9, y: 13 }, Some(Facing::Up), 0, Some(112)) => Some(LITTLEROOT_UP112_PLAYER_OBJ_B64),
         (TilePosition { x: 9, y: 15 }, Some(Facing::Down), 0, Some(64)) => Some(LITTLEROOT_DOWN64_PLAYER_OBJ_B64),
+        (TilePosition { x: 9, y: 15 }, Some(Facing::Down), 0, Some(80)) => Some(LITTLEROOT_DOWN80_PLAYER_OBJ_B64),
         _ => None,
     };
     if let Some(encoded) = timed_player_tile {
@@ -2344,12 +2350,32 @@ pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing
         if tile.len() != 256 { return Err("invalid Little Root Up112 Fat Man OBJ tile".to_owned()); }
         vram[28 * 32..36 * 32].copy_from_slice(&tile);
     }
-    let oam = outside_oam_with_camera(player, facing, walk_direction, walk_progress_frames, timing_tick);
+    if player == &(TilePosition { x: 9, y: 15 })
+        && walk_direction == Some(Facing::Down)
+        && walk_progress_frames == 0
+        && timing_tick == Some(80)
+    {
+        let fat_man = decode_base64(LITTLEROOT_DOWN80_FAT_MAN_OBJ_B64)?;
+        let npc = decode_base64(LITTLEROOT_DOWN80_NPC_OBJ_B64)?;
+        if fat_man.len() != 256 || npc.len() != 256 { return Err("invalid Little Root Down80 NPC OBJ tile".to_owned()); }
+        vram[28 * 32..36 * 32].copy_from_slice(&fat_man);
+        vram[36 * 32..44 * 32].copy_from_slice(&npc);
+    }
+    let mut oam = outside_oam_with_camera(player, facing, walk_direction, walk_progress_frames, timing_tick);
+    if player == &(TilePosition { x: 9, y: 15 })
+        && walk_direction == Some(Facing::Down)
+        && walk_progress_frames == 0
+        && timing_tick == Some(80)
+    {
+        oam[8..10].copy_from_slice(&0x8013_u16.to_le_bytes());
+        oam[10..12].copy_from_slice(&0x80f0_u16.to_le_bytes());
+        oam[18..20].copy_from_slice(&0x90c6_u16.to_le_bytes());
+    }
     let mut frame = render_world_view_with_motion_at_tick(MapId::LittlerootTown, player, walk_direction, walk_progress_frames, timing_tick)?;
     let down_64_priority_mask = player == &(TilePosition { x: 9, y: 15 })
         && walk_direction == Some(Facing::Down)
         && walk_progress_frames == 0
-        && timing_tick == Some(64);
+        && matches!(timing_tick, Some(64 | 80));
     composite_oam_4bpp_with_littleroot_down64_mask(&mut frame, &vram, OUTSIDE_IDLE_OBJ_PALETTE, &oam, down_64_priority_mask)?;
     // The first-stride renderer already applies this source flower phase. On
     // a continuing vertical stride the player remains screen-anchored while
@@ -2372,6 +2398,19 @@ pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing
             GENERAL_FLOWER_RIGHT32_VRAM_B64,
             32,
             72,
+        )?;
+    }
+    if player == &(TilePosition { x: 9, y: 15 })
+        && walk_direction == Some(Facing::Down)
+        && walk_progress_frames == 0
+        && timing_tick == Some(80)
+    {
+        apply_littleroot_flower_vram_delta(
+            &mut frame,
+            GENERAL_FLOWER_DOWN80_VRAM_B64,
+            GENERAL_FLOWER_DOWN64_VRAM_B64,
+            32,
+            40,
         )?;
     }
     Ok(frame)
