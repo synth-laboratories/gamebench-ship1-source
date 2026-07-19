@@ -3382,6 +3382,17 @@ impl WorldState {
             self.dialogue = Some("Wh-Where are you going?!\nDon't leave me like this!".to_owned());
             return false;
         }
+        if self.map == MapId::Route101
+            && matches!(self.phase, StoryPhase::PokedexReceived | StoryPhase::RunningShoesReceived)
+            && self.has_pokedex
+            && facing == Facing::Down
+            && self.player == (TilePosition { x: 10, y: 19 })
+        {
+            // The frozen post-Pokédex field state reaches Route 101's south
+            // edge at `(10,19)` but holds there under a continued Down
+            // input. Its map connection is not active in that source state.
+            return false;
+        }
         match (self.map, facing, self.player.x, self.player.y) {
             (MapId::LittlerootTown, Facing::Up, x, 0) if (10..=11).contains(&x) => {
                 if self.phase == StoryPhase::MeetRival {
