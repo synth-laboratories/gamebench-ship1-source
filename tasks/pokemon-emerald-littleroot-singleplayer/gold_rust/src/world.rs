@@ -1994,7 +1994,8 @@ impl WorldState {
     /// character per frame after Emerald's initial twelve-frame box delay.
     pub fn rendered_dialogue(&self) -> Option<String> {
         let dialogue = self.dialogue.as_ref()?;
-        let Some(remaining) = self.running_shoes_dialogue_frames
+        let Some(remaining) = self.running_shoes_wait_frames.map(u16::from)
+            .or(self.running_shoes_dialogue_frames)
             .or(self.truck_arrival_dialogue_frames)
         else {
             return Some(dialogue.clone());
@@ -2008,7 +2009,8 @@ impl WorldState {
     /// Source field message boxes add their advance marker only after their
     /// current page printer reaches its ready boundary.
     pub fn dialogue_printer_active(&self) -> bool {
-        self.running_shoes_dialogue_frames.is_some()
+        self.running_shoes_wait_frames.is_some()
+            || self.running_shoes_dialogue_frames.is_some()
             || self.truck_arrival_dialogue_frames.is_some()
     }
 
@@ -3160,7 +3162,7 @@ impl WorldState {
         {
             return;
         }
-        if self.truck_arrival_dialogue_frames.is_some() {
+        if self.truck_arrival_dialogue_frames.is_some() || self.running_shoes_wait_frames.is_some() {
             return;
         }
         if self.dialogue.take().is_some() {
@@ -4015,7 +4017,7 @@ impl WorldState {
                 || (self.player.y == 2 && (10..=11).contains(&self.player.x)))
             && self.dialogue.is_none() {
             self.pending_running_shoes = true;
-            self.running_shoes_wait_frames = Some(16);
+            self.running_shoes_wait_frames = None;
             self.running_shoes_item_shown = false;
             self.running_shoes_stage = 0;
             self.running_shoes_dialogue_page = 0;
@@ -4071,6 +4073,15 @@ impl WorldState {
                 });
             }
             self.dialogue = Some(format!("MOM: Wait, {}!", self.player_name));
+            // The initial interruption is a source field-message printer,
+            // not an opaque 16-frame lock. A held Left that reaches the
+            // trigger has 16 frames left: Emerald spends twelve opening the
+            // window, then exposes only `MOM:`. Keep its full 32-frame
+            // printer duration so the remaining request time is visible.
+            self.running_shoes_wait_frames = self.dialogue.as_deref().map(|dialogue| {
+                u8::try_from(dialogue_printer_duration(dialogue))
+                    .expect("initial Running Shoes prompt duration must fit u8")
+            });
         }
     }
 

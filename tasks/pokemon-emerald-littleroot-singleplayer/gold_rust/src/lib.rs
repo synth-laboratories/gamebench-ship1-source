@@ -221,9 +221,17 @@ impl LittlerootSession {
             };
             for _ in 0..request.frames {
                 let prior_frame = self.frame_index;
+                let running_shoes_printer_was_active = self.world.running_shoes_wait_frames.is_some();
                 self.frame_index += 1;
                 self.world.frame = self.frame_index;
                 self.world.walk_bounds(facing, 1);
+                // `walk_bounds` can start Mom's interruption mid-hold. The
+                // controller stays sampled for the rest of that packet, so
+                // consume only frames after the trigger as source text-printer
+                // time. The trigger frame itself still owns the box open.
+                if running_shoes_printer_was_active {
+                    self.world.advance_running_shoes_wait(1);
+                }
                 self.world.advance_npc_wander(prior_frame);
             }
             self.input_log.push(request);
