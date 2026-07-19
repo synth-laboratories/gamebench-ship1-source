@@ -70,6 +70,7 @@ pub enum StoryPhase {
     MetRival,
     BirchRescue,
     StarterSelect,
+    StarterConfirm,
     BirchBattle,
     StarterChosen,
     RivalBattle,
@@ -882,6 +883,8 @@ fn default_ambient_rng() -> u32 { 0x5eed_0001 }
 
 fn default_starter_lab_choice_yes() -> bool { true }
 
+fn default_starter_confirm_yes() -> bool { true }
+
 fn default_naming_target() -> NamingTarget { NamingTarget::Player }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -1123,6 +1126,11 @@ pub struct WorldState {
     /// Older snapshots lazily construct it from the selected starter.
     #[serde(default)]
     pub starter_party: Option<StarterPartyState>,
+    /// `Task_HandleConfirmStarterInput` starts its standard menu on YES.
+    /// Kept separately from Birch Lab's later YES/NO branches so a declined
+    /// Poké Ball returns to the bounded three-ball selector unchanged.
+    #[serde(default = "default_starter_confirm_yes")]
+    pub starter_confirm_yes: bool,
     /// Cursor state for Birch's Lab `GoSeeRival` / decline YES-NO branches.
     /// Old checkpoints predate the interactive menu and therefore resume on
     /// its source-default YES option.
@@ -1263,6 +1271,7 @@ impl WorldState {
             running: false,
             starter: None,
             starter_party: None,
+            starter_confirm_yes: true,
             starter_lab_choice_yes: true,
             has_pokedex: false,
             poke_balls: 0,
@@ -1378,6 +1387,7 @@ impl WorldState {
             running: false,
             starter: None,
             starter_party: None,
+            starter_confirm_yes: true,
             starter_lab_choice_yes: true,
             has_pokedex: false,
             poke_balls: 0,
@@ -1496,6 +1506,7 @@ impl WorldState {
             running: false,
             starter: None,
             starter_party: None,
+            starter_confirm_yes: true,
             starter_lab_choice_yes: true,
             has_pokedex: false,
             poke_balls: 0,
@@ -1610,6 +1621,7 @@ impl WorldState {
             running: false,
             starter: Some(StarterSpecies::Treecko),
             starter_party: None,
+            starter_confirm_yes: true,
             starter_lab_choice_yes: true,
             has_pokedex: false,
             poke_balls: 0,
@@ -1753,6 +1765,7 @@ impl WorldState {
             running: false,
             starter: Some(StarterSpecies::Treecko),
             starter_party: None,
+            starter_confirm_yes: true,
             starter_lab_choice_yes: true,
             has_pokedex: true,
             poke_balls: 5,
@@ -4312,8 +4325,37 @@ impl WorldState {
         }
     }
 
-    pub fn confirm_starter(&mut self) {
-        if self.phase == StoryPhase::StarterSelect {
+    /// `Task_HandleStarterChooseInput` opens the source's confirmation task
+    /// after A selects the currently bounded Poké Ball. The port deliberately
+    /// models only that logical task boundary, not its circle/sprite animation.
+    pub fn ask_confirm_starter(&mut self) {
+        if self.phase != StoryPhase::StarterSelect { return; }
+        self.starter.get_or_insert(StarterSpecies::Torchic);
+        self.starter_confirm_yes = true;
+        self.phase = StoryPhase::StarterConfirm;
+    }
+
+    pub fn move_starter_confirmation(&mut self) {
+        if self.phase == StoryPhase::StarterConfirm {
+            self.starter_confirm_yes = !self.starter_confirm_yes;
+        }
+    }
+
+    /// `Task_HandleConfirmStarterInput` returns the selected index only on
+    /// YES. Its NO and B paths destroy the temporary sprite and resume the
+    /// same bounded selector, preserving the selected ball.
+    pub fn respond_starter_confirmation(&mut self, accepted: bool) {
+        if self.phase != StoryPhase::StarterConfirm { return; }
+        if accepted {
+            self.confirm_starter();
+        } else {
+            self.starter_confirm_yes = true;
+            self.phase = StoryPhase::StarterSelect;
+        }
+    }
+
+    fn confirm_starter(&mut self) {
+        if self.phase == StoryPhase::StarterConfirm {
             self.starter.get_or_insert(StarterSpecies::Torchic);
             self.ensure_starter_party();
             self.phase = StoryPhase::BirchBattle;

@@ -559,8 +559,22 @@ impl LittlerootSession {
             match request.action {
                 Input::Left => self.world.move_starter_selection(-1),
                 Input::Right => self.world.move_starter_selection(1),
-                Input::A => self.world.confirm_starter(),
+                Input::A => self.world.ask_confirm_starter(),
                 Input::Up | Input::Down | Input::B | Input::Start | Input::Select | Input::Noop => {}
+            }
+            self.input_log.push(request);
+            self.redraw();
+            return;
+        }
+        if self.world.phase == world::StoryPhase::StarterConfirm {
+            match request.action {
+                Input::Up | Input::Down => self.world.move_starter_confirmation(),
+                Input::A => {
+                    let accepted = self.world.starter_confirm_yes;
+                    self.world.respond_starter_confirmation(accepted);
+                }
+                Input::B => self.world.respond_starter_confirmation(false),
+                Input::Left | Input::Right | Input::Start | Input::Select | Input::Noop => {}
             }
             self.input_log.push(request);
             self.redraw();
@@ -579,7 +593,7 @@ impl LittlerootSession {
                 } else if self.world.phase == world::StoryPhase::StarterSelect
                     && self.world.dialogue.is_none()
                 {
-                    self.world.confirm_starter();
+                    self.world.ask_confirm_starter();
                 } else if !self.world.interact_with_npc() {
                     self.world.advance_opening_script();
                     // Closing Mom's first move-in page starts the source's
