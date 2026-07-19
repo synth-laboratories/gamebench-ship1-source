@@ -330,6 +330,8 @@ const TITLE_TO_MET_RIVAL_NAME_ENTRY_OK_PATCH_B64: &str = include_str!("../assets
 const TITLE_TO_MET_RIVAL_NAME_CONFIRM_PNG_B64: &str = include_str!("../assets/title_to_met_rival_may_name_confirm.png.b64");
 const TITLE_TO_MET_RIVAL_TRUCK_IDLE_PNG_B64: &str = include_str!("../assets/title_to_met_rival_may_truck_idle.png.b64");
 const TITLE_TO_MET_RIVAL_TRUCK_UP_PNG_B64: &str = include_str!("../assets/title_to_met_rival_may_truck_up.png.b64");
+const TITLE_TO_MET_RIVAL_TRUCK_EXIT_PNG_B64: &str = include_str!("../assets/title_to_met_rival_may_truck_exit.png.b64");
+const TITLE_TO_MET_RIVAL_TRUCK_ARRIVAL_PNG_B64: &str = include_str!("../assets/title_to_met_rival_may_truck_arrival.png.b64");
 const TITLE_A_120_PNG_B64: &str = include_str!("../assets/opening_title_a_120.png.b64");
 const PROFESSOR_INTRO_PNG_B64: &str = include_str!("../assets/opening_professor_intro.png.b64");
 const PROFESSOR_INTRO_A16_PNG_B64: &str = include_str!("../assets/opening_professor_intro_a16.png.b64");
@@ -777,6 +779,14 @@ pub fn title_to_met_rival_truck_idle() -> Result<Vec<u8>, String> {
 
 pub fn title_to_met_rival_truck_up() -> Result<Vec<u8>, String> {
     decode_embedded_rgb_png(TITLE_TO_MET_RIVAL_TRUCK_UP_PNG_B64, "title-to-rival May truck up")
+}
+
+pub fn title_to_met_rival_truck_exit() -> Result<Vec<u8>, String> {
+    decode_embedded_rgb_png(TITLE_TO_MET_RIVAL_TRUCK_EXIT_PNG_B64, "title-to-rival May truck exit")
+}
+
+pub fn title_to_met_rival_truck_arrival() -> Result<Vec<u8>, String> {
+    decode_embedded_rgb_png(TITLE_TO_MET_RIVAL_TRUCK_ARRIVAL_PNG_B64, "title-to-rival May truck arrival")
 }
 
 fn route101_map() -> Result<&'static [u8], String> {

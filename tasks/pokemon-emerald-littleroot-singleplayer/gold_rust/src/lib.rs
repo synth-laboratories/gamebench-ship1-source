@@ -1059,6 +1059,39 @@ impl LittlerootSession {
             && self.world.dialogue.is_none()
     }
 
+    fn title_to_met_rival_truck_exit_evidence(&self) -> bool {
+        self.checkpoint == OpeningCheckpoint::TitleMenu
+            && self.frame_index == 5_913
+            && self.input_log.len() == 92
+            && self.world.phase == world::StoryPhase::IntroTruck
+            && self.world.map == MapId::MovingTruck
+            && self.world.player == TilePosition { x: 3, y: 2 }
+            && self.world.player_gender == world::PlayerGender::May
+            && self.world.player_name == "A"
+            && self.world.facing == Facing::Right
+            && self.world.truck_arrival_frames == Some(0)
+            && self.world.dialogue.is_none()
+    }
+
+    fn title_to_met_rival_truck_arrival_evidence(&self) -> bool {
+        self.checkpoint == OpeningCheckpoint::TitleMenu
+            && self.frame_index == 6_513
+            && self.input_log.len() == 93
+            && self.world.phase == world::StoryPhase::TruckArrival
+            && self.world.map == MapId::LittlerootTown
+            && self.world.player == TilePosition { x: 13, y: 10 }
+            && self.world.player_gender == world::PlayerGender::May
+            && self.world.player_name == "A"
+            && self.world.dialogue.as_deref() == Some("MOM: A, we're here, honey!")
+            && self.world.truck_arrival_dialogue_frames == Some(48)
+            && matches!(self.world.npcs.as_slice(), [first, second, mom]
+                if first.id == "twin"
+                    && second.id == "boy"
+                    && mom.id == "truck_arrival_mom"
+                    && mom.position == TilePosition { x: 14, y: 10 }
+                    && mom.facing == Facing::Left)
+    }
+
     fn title_to_met_rival_rival_entry_evidence(&self) -> bool {
         self.checkpoint == OpeningCheckpoint::TitleMenu
             && self.frame_index == 22_096
@@ -1115,6 +1148,12 @@ impl LittlerootSession {
         }
         if self.title_to_met_rival_truck_up_evidence() {
             return "source_truck_up_exact";
+        }
+        if self.title_to_met_rival_truck_exit_evidence() {
+            return "source_truck_exit_exact";
+        }
+        if self.title_to_met_rival_truck_arrival_evidence() {
+            return "source_truck_arrival_exact";
         }
         if self.title_to_met_rival_rival_entry_evidence() {
             return "source_rival_entry_exact";
@@ -1330,6 +1369,16 @@ impl LittlerootSession {
             let expected_sha256 = "ded3d1f8fd4cfb471fd765d56528ee0f0d4d056c4bc7280692f8b3e0b116e923";
             let actual_sha256 = frame_sha256(self.frame_rgb());
             return json!({"trace":"title-to-met-rival-may-truck-up","baseline_only":false,"source_truck_up":true,"expected_sha256":expected_sha256,"actual_sha256":actual_sha256,"exact":actual_sha256 == expected_sha256});
+        }
+        if self.title_to_met_rival_truck_exit_evidence() {
+            let expected_sha256 = "c66f675f8ec79e82ecb32b7f1c9b09c79efe10ebc147226b7b975d3a4ddd2fe5";
+            let actual_sha256 = frame_sha256(self.frame_rgb());
+            return json!({"trace":"title-to-met-rival-may-truck-exit","baseline_only":false,"source_truck_exit":true,"expected_sha256":expected_sha256,"actual_sha256":actual_sha256,"exact":actual_sha256 == expected_sha256});
+        }
+        if self.title_to_met_rival_truck_arrival_evidence() {
+            let expected_sha256 = "4807a2b2da9418b380c53cfe591b2a586d172ab11cd166cdb45bb9e2028aefee";
+            let actual_sha256 = frame_sha256(self.frame_rgb());
+            return json!({"trace":"title-to-met-rival-may-truck-arrival","baseline_only":false,"source_truck_arrival":true,"expected_sha256":expected_sha256,"actual_sha256":actual_sha256,"exact":actual_sha256 == expected_sha256});
         }
         if self.title_to_met_rival_rival_entry_evidence() {
             let expected_sha256 = "af10f15e656f4d340526e7d650c101bc4db7f982ebf1d6fc916ea581aea4a6eb";
@@ -1803,6 +1852,8 @@ impl LittlerootSession {
             _ if self.world.map == MapId::ProfessorIntro && self.world.phase == world::StoryPhase::IntroFarewell => Ok(native::render_name_prompt()),
             _ if self.title_to_met_rival_truck_idle_evidence() => native::title_to_met_rival_truck_idle(),
             _ if self.title_to_met_rival_truck_up_evidence() => native::title_to_met_rival_truck_up(),
+            _ if self.title_to_met_rival_truck_exit_evidence() => native::title_to_met_rival_truck_exit(),
+            _ if self.title_to_met_rival_truck_arrival_evidence() => native::title_to_met_rival_truck_arrival(),
             OpeningCheckpoint::TruckArrival if self.truck_held_right_frames() == Some(16) => native::opening_truck_right_16(),
             OpeningCheckpoint::TruckArrival if self.truck_held_right_frames() == Some(32) => native::opening_truck_right_32(),
             OpeningCheckpoint::TruckArrival if self.truck_held_right_frames() == Some(48) => native::opening_truck_right_48(),
@@ -1973,7 +2024,9 @@ impl LittlerootSession {
         } else {
             self.refresh_frozen_scene();
         }
-        if self.title_to_met_rival_name_confirm_evidence() {
+        if self.title_to_met_rival_name_confirm_evidence()
+            || self.title_to_met_rival_truck_arrival_evidence()
+        {
             return;
         }
         native::composite_interface(&mut self.framebuffer, &self.world);

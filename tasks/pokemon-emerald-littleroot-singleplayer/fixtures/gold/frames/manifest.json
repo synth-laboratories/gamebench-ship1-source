@@ -450,6 +450,22 @@
       "sha256": "660d26a21637df25c8350f6a2738a30ef494c85d38be88640f37e0df6de18e19"
     },
     {
+      "id": "title-to-met-rival-may-truck-exit",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/00_init/00_init.state",
+      "replay": "fixtures/gold/replays/title_to_met_rival_may.json",
+      "input_limit": 92,
+      "frame": "gold_rust/assets/title_to_met_rival_may_truck_exit.png.b64",
+      "sha256": "c66f675f8ec79e82ecb32b7f1c9b09c79efe10ebc147226b7b975d3a4ddd2fe5"
+    },
+    {
+      "id": "title-to-met-rival-may-truck-arrival",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/00_init/00_init.state",
+      "replay": "fixtures/gold/replays/title_to_met_rival_may.json",
+      "input_limit": 93,
+      "frame": "gold_rust/assets/title_to_met_rival_may_truck_arrival.png.b64",
+      "sha256": "4807a2b2da9418b380c53cfe591b2a586d172ab11cd166cdb45bb9e2028aefee"
+    },
+    {
       "id": "title-to-met-rival-may-truck-up",
       "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/00_init/00_init.state",
       "replay": "fixtures/gold/replays/title_to_met_rival_may.json",
