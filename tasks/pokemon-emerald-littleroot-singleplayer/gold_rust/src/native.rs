@@ -1429,6 +1429,14 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             return;
         }
         draw_overworld_dialogue(frame, &dialogue, !world.dialogue_printer_active());
+        if world.starter_lab_choice_active() {
+            // The Lab scripts use the standard field `MSGBOX_YESNO` window,
+            // layered over the lower-right of the ordinary message box.
+            draw_menu_window(frame, 168, 112, 64, 48);
+            draw_text(frame, 184, 120, "YES", 4);
+            draw_text(frame, 184, 136, "NO", 3);
+            draw_cursor(frame, 173, if world.starter_lab_choice_yes { 123 } else { 139 });
+        }
         return;
     }
     // `Common_Movement_ExclamationMark` sits between the rival's face turn
