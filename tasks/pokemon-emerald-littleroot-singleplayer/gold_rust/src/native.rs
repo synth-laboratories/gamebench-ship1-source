@@ -1425,12 +1425,17 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
     }
     if let Some(battle) = world.battle.as_ref() {
         if battle.entry_transition_frames > 0 {
-            // Emerald's encounter hand-off is a brief screen wipe. This
-            // staged version closes black bands from the top and bottom over
-            // the still-rendered field, then hands off to the battle scene.
-            const ENTRY_FRAMES: usize = 48;
-            let elapsed = ENTRY_FRAMES.saturating_sub(usize::from(battle.entry_transition_frames));
-            let band_height = (elapsed * 80 / ENTRY_FRAMES).min(80);
+            // The Route 101 Wurmple capture keeps field input locked through
+            // a 352-frame encounter hand-off; the other staged battles use
+            // Emerald's shorter 48-frame entry. The current renderer only
+            // approximates the final band-close phase of that longer wipe.
+            let entry_frames: usize = match battle.opponent {
+                crate::world::BattleOpponent::Wurmple => 352,
+                crate::world::BattleOpponent::Zigzagoon | crate::world::BattleOpponent::Rival => 48,
+            };
+            let elapsed = entry_frames.saturating_sub(usize::from(battle.entry_transition_frames));
+            let band_phase = elapsed.saturating_sub(entry_frames.saturating_sub(48));
+            let band_height = (band_phase * 80 / 48).min(80);
             draw_solid_rect(frame, 0, 0, 240, band_height, [0, 0, 0]);
             draw_solid_rect(frame, 0, 160 - band_height, 240, band_height, [0, 0, 0]);
             return;

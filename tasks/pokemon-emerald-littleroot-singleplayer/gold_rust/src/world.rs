@@ -148,7 +148,7 @@ pub struct BattleState {
     /// input. Keeping it on the battle itself makes an interrupted save/load
     /// resume the same encounter instead of dropping directly into a turn.
     #[serde(default)]
-    pub entry_transition_frames: u8,
+    pub entry_transition_frames: u16,
     /// Battle introduction message page: challenge/appearance, send-out, and
     /// starter send-out. Older serialized battle snapshots resume at the
     /// command screen rather than replaying a new introduction.
@@ -2712,7 +2712,7 @@ impl WorldState {
             move_cursor: 0,
             player_fainted: false,
             message: Some("Wild WURMPLE appeared!".to_owned()),
-            entry_transition_frames: 48,
+            entry_transition_frames: 352,
             intro_stage: 0,
         });
     }
@@ -2725,7 +2725,7 @@ impl WorldState {
         let Some(battle) = self.battle.as_mut() else { return false; };
         if battle.entry_transition_frames == 0 { return false; }
         battle.entry_transition_frames = battle.entry_transition_frames
-            .saturating_sub(frames.min(u32::from(u8::MAX)) as u8);
+            .saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         true
     }
 
