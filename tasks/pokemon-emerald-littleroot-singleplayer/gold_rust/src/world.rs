@@ -1,6 +1,18 @@
 use serde::{Deserialize, Serialize};
 
 const SOURCE_RIVAL_RUNNING_SHOES_TRIGGER: u8 = 6;
+/// The counterpart-rival approach and PC scripts use `walk_in_place_faster_*`
+/// for every compact turn, whose source object-event duration is four frames.
+const BEDROOM_RIVAL_FASTER_TURN_FRAMES: u16 = 4;
+
+fn bedroom_rival_movement_frames(faster: bool) -> u16 {
+    if faster {
+        BEDROOM_RIVAL_FASTER_TURN_FRAMES
+    } else {
+        16
+    }
+}
+
 /// `PetalburgGymReport{Male,Female}` spends one faster in-place turn, an
 /// exclamation emote, and `Common_Movement_Delay48` before Mom speaks.
 const TV_BROADCAST_INTRO_FRAMES: u16 = 84;
@@ -2180,18 +2192,18 @@ impl WorldState {
             let rival = self.npcs.iter().find(|npc| npc.id == "rival" && npc.map == self.map)
                 .expect("rival must exist during bedroom PC walk");
             let (steps, player_facing) = bedroom_rival_pc_route(self.map, &rival.position);
-            let total = steps.iter().map(|(_, fast)| if *fast { 8 } else { 16 }).sum::<u16>();
+            let total = steps.iter().map(|(_, faster)| bedroom_rival_movement_frames(*faster)).sum::<u16>();
             let elapsed_before = total.saturating_sub(remaining);
             let elapsed_after = total.saturating_sub(next_remaining);
             let mut boundary = 0u16;
-            for (direction, fast) in steps {
-                boundary += if *fast { 8 } else { 16 };
+            for (direction, faster) in steps {
+                boundary += bedroom_rival_movement_frames(*faster);
                 if elapsed_before < boundary && boundary <= elapsed_after {
                     let rival = self.npcs.iter().find(|npc| npc.id == "rival" && npc.map == self.map)
                         .expect("rival must remain during bedroom PC walk");
-                    let position = if *fast { rival.position.clone() } else { stepped_position(&rival.position, *direction) };
-                    if *fast {
-                        self.move_fast_scripted_npc("rival", self.map, position, *direction);
+                    let position = if *faster { rival.position.clone() } else { stepped_position(&rival.position, *direction) };
+                    if *faster {
+                        self.move_faster_scripted_npc("rival", self.map, position, *direction);
                     } else {
                         self.move_scripted_npc("rival", self.map, position, *direction);
                     }
@@ -2209,23 +2221,23 @@ impl WorldState {
         }
         if self.title_intro_step == 1 {
             let (steps, player_facing) = bedroom_rival_approach(self.map, self.facing);
-            let walk_frames = steps.iter().map(|(_, fast)| if *fast { 8 } else { 16 }).sum::<u16>();
-            let total = walk_frames + 8;
+            let walk_frames = steps.iter().map(|(_, faster)| bedroom_rival_movement_frames(*faster)).sum::<u16>();
+            let total = walk_frames + BEDROOM_RIVAL_FASTER_TURN_FRAMES;
             let elapsed_before = total.saturating_sub(remaining);
             let elapsed_after = total.saturating_sub(next_remaining);
             let mut boundary = 0u16;
-            for (direction, fast) in steps {
-                boundary += if *fast { 8 } else { 16 };
+            for (direction, faster) in steps {
+                boundary += bedroom_rival_movement_frames(*faster);
                 if elapsed_before < boundary && boundary <= elapsed_after {
                     let rival = self.npcs.iter().find(|npc| npc.id == "rival" && npc.map == self.map)
                         .expect("rival must exist during bedroom approach");
-                    let position = if *fast {
+                    let position = if *faster {
                         rival.position.clone()
                     } else {
                         stepped_position(&rival.position, *direction)
                     };
-                    if *fast {
-                        self.move_fast_scripted_npc("rival", self.map, position, *direction);
+                    if *faster {
+                        self.move_faster_scripted_npc("rival", self.map, position, *direction);
                     } else {
                         self.move_scripted_npc("rival", self.map, position, *direction);
                     }
@@ -2292,7 +2304,8 @@ impl WorldState {
             // player’s interaction facing. The message waits until that
             // stream and its player turn have completed.
             let (steps, _) = bedroom_rival_approach(self.map, self.facing);
-            let total = steps.iter().map(|(_, fast)| if *fast { 8 } else { 16 }).sum::<u16>() + 8;
+            let total = steps.iter().map(|(_, faster)| bedroom_rival_movement_frames(*faster)).sum::<u16>()
+                + BEDROOM_RIVAL_FASTER_TURN_FRAMES;
             self.title_intro_step = 1;
             self.rival_arrival_frames = Some(total);
             // Keep fixed-frame rollout semantics: an advance that crosses
@@ -5087,7 +5100,8 @@ impl WorldState {
                         .expect("rival must exist after bedroom introduction");
                     let (steps, _) = bedroom_rival_pc_route(self.map, &rival.position);
                     self.title_intro_step = 2;
-                    self.rival_arrival_frames = Some(steps.iter().map(|(_, fast)| if *fast { 8 } else { 16 }).sum());
+                    self.rival_arrival_frames = Some(steps.iter()
+                        .map(|(_, faster)| bedroom_rival_movement_frames(*faster)).sum());
                 }
                 _ => {}
             }
@@ -6368,8 +6382,8 @@ fn littleroot_town_npcs(phase: StoryPhase, player_gender: PlayerGender) -> Vec<N
 }
 
 /// Source `ApproachPlayer*` movement streams for the counterpart-rival
-/// bedroom scene. The boolean marks the compact `walk_in_place_faster_*`
-/// terminal turn; all other commands are 16-frame tile walks.
+/// bedroom scene. The boolean marks each compact `walk_in_place_faster_*`
+/// action; all other commands are 16-frame tile walks.
 fn bedroom_rival_approach(map: MapId, player_facing: Facing) -> (&'static [(Facing, bool)], Facing) {
     const B_NORTH: &[(Facing, bool)] = &[(Facing::Left, false), (Facing::Left, false), (Facing::Down, false), (Facing::Down, false), (Facing::Left, false)];
     const B_SOUTH: &[(Facing, bool)] = &[(Facing::Left, false), (Facing::Left, false), (Facing::Left, false)];
@@ -6393,7 +6407,8 @@ fn bedroom_rival_approach(map: MapId, player_facing: Facing) -> (&'static [(Faci
 }
 
 /// Source `WalkToPC*` streams selected by the unique end tile of the prior
-/// approach path. Their terminal fast command is an in-place facing change.
+/// approach path. Some contain an intermediate faster turn; each ends in an
+/// in-place facing change.
 fn bedroom_rival_pc_route(map: MapId, position: &TilePosition) -> (&'static [(Facing, bool)], Facing) {
     const B_NORTH: &[(Facing, bool)] = &[(Facing::Up, false), (Facing::Up, false), (Facing::Up, false), (Facing::Left, false), (Facing::Left, false), (Facing::Left, false), (Facing::Left, false), (Facing::Up, true)];
     const B_SOUTH: &[(Facing, bool)] = &[(Facing::Up, false), (Facing::Left, false), (Facing::Left, false), (Facing::Left, false), (Facing::Left, false), (Facing::Up, true)];
