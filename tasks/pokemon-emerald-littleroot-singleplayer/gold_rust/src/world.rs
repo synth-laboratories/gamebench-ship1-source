@@ -10,6 +10,8 @@ const NEW_HOME_FACE_PLAYER_FRAMES: u8 = 1;
 const NEW_HOME_PLAYER_FAST_TURN_FRAMES: u8 = 8;
 const NEW_HOME_ORIENTATION_FRAMES: u8 =
     NEW_HOME_FACE_PLAYER_FRAMES + NEW_HOME_PLAYER_FAST_TURN_FRAMES;
+/// Matches the port's existing post-input `MUS_OBTAIN_ITEM` receipt cadence.
+const POKE_BALL_GIFT_FANFARE_REMAINING_FRAMES: u16 = 144;
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -1003,6 +1005,14 @@ pub struct WorldState {
     /// Rival's approach after Birch explains the Pokédex.
     #[serde(default)]
     pub pokedex_rival_frames: Option<u16>,
+    /// Remaining source frames in the rival's `giveitem ITEM_POKE_BALL, 5`
+    /// obtain-item fanfare.
+    #[serde(default)]
+    pub pokedex_poke_ball_fanfare_frames: Option<u16>,
+    /// The fanfare has opened the source's pocket receipt; its close begins
+    /// Birch's following catch-explanation message.
+    #[serde(default)]
+    pub pokedex_poke_ball_pocket_receipt: bool,
     /// Direction of a Route 101 rescue-time exit guard after its message.
     #[serde(default)]
     pub route101_exit_push: Option<Facing>,
@@ -1205,6 +1215,8 @@ impl WorldState {
             route103_rival_departure_facing: None,
             pokedex_arrival_frames: None,
             pokedex_rival_frames: None,
+            pokedex_poke_ball_fanfare_frames: None,
+            pokedex_poke_ball_pocket_receipt: false,
             route101_exit_push: None,
             route101_wurmple_resolved: false,
             route101_poochyena_resolved: false,
@@ -1317,6 +1329,8 @@ impl WorldState {
             route103_rival_departure_facing: None,
             pokedex_arrival_frames: None,
             pokedex_rival_frames: None,
+            pokedex_poke_ball_fanfare_frames: None,
+            pokedex_poke_ball_pocket_receipt: false,
             route101_exit_push: None,
             route101_wurmple_resolved: false,
             route101_poochyena_resolved: false,
@@ -1432,6 +1446,8 @@ impl WorldState {
             route103_rival_departure_facing: None,
             pokedex_arrival_frames: None,
             pokedex_rival_frames: None,
+            pokedex_poke_ball_fanfare_frames: None,
+            pokedex_poke_ball_pocket_receipt: false,
             route101_exit_push: None,
             route101_wurmple_resolved: false,
             route101_poochyena_resolved: false,
@@ -1543,6 +1559,8 @@ impl WorldState {
             route103_rival_departure_facing: None,
             pokedex_arrival_frames: None,
             pokedex_rival_frames: None,
+            pokedex_poke_ball_fanfare_frames: None,
+            pokedex_poke_ball_pocket_receipt: false,
             route101_exit_push: None,
             route101_wurmple_resolved: false,
             route101_poochyena_resolved: false,
@@ -1683,6 +1701,8 @@ impl WorldState {
             route103_rival_departure_facing: None,
             pokedex_arrival_frames: None,
             pokedex_rival_frames: None,
+            pokedex_poke_ball_fanfare_frames: None,
+            pokedex_poke_ball_pocket_receipt: false,
             route101_exit_push: None,
             route101_wurmple_resolved: false,
             route101_poochyena_resolved: false,
@@ -3008,6 +3028,7 @@ impl WorldState {
             || self.truck_arrival_dialogue_frames.is_some()
             || self.oldale_mart_dialogue_frames.is_some()
             || self.oldale_mart_item_fanfare_frames.is_some()
+            || self.pokedex_poke_ball_fanfare_frames.is_some()
             || self.field_dialogue_frames.is_some()
     }
 
@@ -3325,6 +3346,26 @@ impl WorldState {
         self.facing = Facing::Right;
         self.title_intro_step = 3;
         self.dialogue = Some(pokedex_handoff_page(3, self.player_gender, &self.player_name));
+        true
+    }
+
+    /// Runs the `giveitem ITEM_POKE_BALL, 5` fanfare between the rival's
+    /// gift message and Birch's catch-explanation message. The source opens
+    /// the pocket receipt as soon as `waitfanfare` completes.
+    pub fn advance_pokedex_poke_ball_fanfare(&mut self, frames: u32) -> bool {
+        let Some(remaining) = self.pokedex_poke_ball_fanfare_frames else { return false; };
+        let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
+        if next_remaining != 0 {
+            self.pokedex_poke_ball_fanfare_frames = Some(next_remaining);
+            return true;
+        }
+
+        self.pokedex_poke_ball_fanfare_frames = None;
+        self.pokedex_poke_ball_pocket_receipt = true;
+        self.dialogue = Some(format!(
+            "{} put away the POKé BALLS\nin the POKé BALLS POCKET.",
+            self.player_name
+        ));
         true
     }
 
@@ -4547,6 +4588,7 @@ impl WorldState {
             || self.running_shoes_wait_frames.is_some()
             || self.oldale_mart_dialogue_frames.is_some()
             || self.oldale_mart_item_fanfare_frames.is_some()
+            || self.pokedex_poke_ball_fanfare_frames.is_some()
             || self.field_dialogue_frames.is_some()
         {
             return;
@@ -4818,23 +4860,30 @@ impl WorldState {
                     }
                 }
                 StoryPhase::PokedexHandoff => {
-                    if self.title_intro_step == 2 {
+                    if self.pokedex_poke_ball_pocket_receipt {
+                        self.pokedex_poke_ball_pocket_receipt = false;
+                        self.title_intro_step = 4;
+                        self.dialogue = Some(pokedex_handoff_page(4, self.player_gender, &self.player_name));
+                    } else if self.title_intro_step == 2 {
                         // Birch's explanation closes before the rival walks
                         // down to the player and the player turns right.
                         self.pokedex_rival_frames = Some(32);
+                    } else if self.title_intro_step == 3 {
+                        // `giveitem ITEM_POKE_BALL, 5` adds the balls before
+                        // its obtain-item receipt, then waits for the
+                        // fanfare before opening the pocket confirmation.
+                        self.poke_balls = self.poke_balls.saturating_add(5);
+                        self.pokedex_poke_ball_fanfare_frames =
+                            Some(POKE_BALL_GIFT_FANFARE_REMAINING_FRAMES);
+                        self.dialogue = Some("Obtained the POKé BALLS!".to_owned());
                     } else if self.title_intro_step < 4 {
                         let next = self.title_intro_step.saturating_add(1);
                         // Emerald sets the Pokédex flag immediately after
-                        // its receipt/fanfare and gives the five Poké Balls
-                        // immediately after the rival's gift message. Keep
-                        // those durable milestones ahead of later dialogue
-                        // so a checkpoint restored mid-explanation is true
-                        // to the source script.
+                        // its receipt/fanfare. Keep that durable milestone
+                        // ahead of later dialogue so a checkpoint restored
+                        // mid-explanation is true to the source script.
                         if next == 2 {
                             self.has_pokedex = true;
-                        }
-                        if next == 4 {
-                            self.poke_balls = self.poke_balls.saturating_add(5);
                         }
                         self.title_intro_step = next;
                         self.dialogue = Some(pokedex_handoff_page(next, self.player_gender, &self.player_name));
@@ -4979,7 +5028,7 @@ impl WorldState {
     /// separate so they cannot be mistaken for implemented behavior.
     pub fn walk_bounds(&mut self, facing: Facing, held_frames: u32) -> u32 {
         self.face(facing);
-        if self.menu_open || self.dialogue.is_some() || self.transition.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() || self.tv_broadcast_intro_frames.is_some() {
+        if self.menu_open || self.dialogue.is_some() || self.transition.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() || self.pokedex_poke_ball_fanfare_frames.is_some() || self.tv_broadcast_intro_frames.is_some() {
             return 0;
         }
 
@@ -5243,7 +5292,7 @@ impl WorldState {
             self.begin_route101_poochyena_encounter();
             self.begin_route101_wurmple_encounter();
             self.begin_route103_wingull_encounter();
-            if self.dialogue.is_some() || self.battle.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() { break; }
+            if self.dialogue.is_some() || self.battle.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() || self.pokedex_poke_ball_fanfare_frames.is_some() { break; }
         }
         moved
     }
@@ -5341,6 +5390,8 @@ impl WorldState {
                 // northward steps, then begins the Pokédex handoff.
                 self.phase = StoryPhase::PokedexHandoff;
                 self.pokedex_arrival_frames = Some(112);
+                self.pokedex_poke_ball_fanfare_frames = None;
+                self.pokedex_poke_ball_pocket_receipt = false;
                 self.dialogue = None;
                 self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
             }
