@@ -16,7 +16,7 @@ RGB frames from locally represented map, sprite, palette, and timing data.
 ## Current scope
 
 - Fixed 240×160 RGB framebuffer and SHA-256 frame fingerprinting.
-- Fifty-seven byte-identical mGBA oracle frames embedded in the Rust gold crate,
+- Sixty-one byte-identical mGBA oracle frames embedded in the Rust gold crate,
   covering title timing through the first Professor Birch-intro frame, staged
   checkpoint idles, all four bedroom movement directions at 16/32/48 frames,
   outdoor first-step movement, and the opening Pokédex navigation sequence.
@@ -44,6 +44,18 @@ cd tasks/pokemon-emerald-littleroot-singleplayer
 cargo run --manifest-path gold_rust/Cargo.toml --bin scenario
 cargo run --manifest-path gold_rust/Cargo.toml --bin emerald_gold -- --port 8103
 ```
+
+The committed continuous opening replay starts at the title screen, selects
+May, and reaches the rival encounter without checkpoint injection. It expands
+its compact repeat groups and verifies its expected terminal readout:
+
+```bash
+cargo run --manifest-path gold_rust/Cargo.toml --bin scenario < fixtures/gold/replays/title_to_met_rival_may.json
+```
+
+This is functional replay evidence, not a blanket pixel-parity claim: the
+individual exact frame traces remain listed in the frame manifest, while the
+continuous exterior compositor is still under active parity work.
 
 The HTTP service offers `/health`, `/info`, `POST /rollouts`,
 `POST /rollouts/{id}/step`, `POST /rollouts/{id}/checkpoint`,

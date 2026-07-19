@@ -2806,6 +2806,11 @@ impl WorldState {
                         self.dialogue = Some(tv_broadcast_page(next, &self.player_name).to_owned());
                     } else {
                         self.phase = StoryPhase::MeetRival;
+                        // `title_intro_step` is reused for timed bedroom
+                        // rival-entry stages. The TV page index must not
+                        // skip that entry sequence when the player later
+                        // triggers the rival's Poké Ball.
+                        self.title_intro_step = 0;
                         self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
                     }
                 }
