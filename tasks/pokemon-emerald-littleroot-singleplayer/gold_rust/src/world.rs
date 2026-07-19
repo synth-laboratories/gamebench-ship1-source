@@ -4824,6 +4824,7 @@ impl WorldState {
             moved += 1;
             self.begin_littleroot_warp();
             self.apply_littleroot_coordinate_trigger();
+            self.apply_route101_rescue_exit_guard();
             if self.running_shoes_wait_frames.is_some() {
                 // A held direction can cross the source Running Shoes
                 // trigger before its request ends. Those trailing frames
@@ -5032,8 +5033,9 @@ impl WorldState {
         if self.map == MapId::Route101
             && matches!(self.phase, StoryPhase::BirchRescue | StoryPhase::StarterSelect | StoryPhase::BirchBattle)
         {
-            // Route101_EventScript_PreventExit{South,West,North} pushes the
-            // player back into the rescue scene until Birch is safe.
+            // The same source guard also catches a map-edge attempt; its
+            // authored in-map coordinate events are applied after a tile
+            // commit in `apply_route101_rescue_exit_guard`.
             self.route101_exit_push = Some(facing);
             self.dialogue = Some("Wh-Where are you going?!\nDon't leave me like this!".to_owned());
             return false;
@@ -5113,6 +5115,32 @@ impl WorldState {
             total_frames: 16,
             fading_in: false,
         });
+    }
+
+    /// `Route101_EventScript_PreventExit{South,West,North}` is a set of
+    /// state-2 coordinate events, not just a map-connection guard. The
+    /// source displays its message after the player commits the trigger tile,
+    /// then applies the one-step reverse movement when that message closes.
+    fn apply_route101_rescue_exit_guard(&mut self) {
+        if self.map != MapId::Route101
+            || self.phase != StoryPhase::BirchRescue
+            || self.birch_rescue_stage != 3
+            || self.dialogue.is_some()
+            || self.route101_exit_push.is_some()
+        {
+            return;
+        }
+        let blocked_facing = match (self.player.x, self.player.y) {
+            // Route101_EventScript_PreventExitSouth → walk_up.
+            (10 | 11, 18) => Facing::Down,
+            // Route101_EventScript_PreventExitWest → walk_right.
+            (6, 15..=18) => Facing::Left,
+            // Route101_EventScript_PreventExitNorth → walk_down.
+            (7, 13) => Facing::Up,
+            _ => return,
+        };
+        self.route101_exit_push = Some(blocked_facing);
+        self.dialogue = Some("Wh-Where are you going?!\nDon't leave me like this!".to_owned());
     }
 
     fn apply_littleroot_coordinate_trigger(&mut self) {
