@@ -3207,7 +3207,7 @@ impl WorldState {
 
     /// Runs the small locked gesture that precedes the source's first Route
     /// 101 permission prompt. The Twin and player each perform the common
-    /// in-place fast turn before the message box opens.
+    /// in-place faster turn before the message box opens.
     pub fn advance_birch_prompt_scene(&mut self, frames: u32) -> bool {
         let Some(remaining) = self.birch_prompt_frames else { return false; };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
@@ -3228,12 +3228,16 @@ impl WorldState {
             }
             return true;
         }
-        let elapsed_before = 16u16.saturating_sub(remaining);
-        let elapsed_after = 16u16.saturating_sub(next_remaining);
-        // `GoSaveBirchTrigger` waits for Twin's fast right turn before
-        // applying the player's fast left turn; these are sequential, not a
-        // simultaneous gesture.
-        if elapsed_before < 16 && 16 <= elapsed_after {
+        let elapsed_before = LITTLEROOT_GO_SAVE_BIRCH_TURN_SEQUENCE_FRAMES
+            .saturating_sub(remaining);
+        let elapsed_after = LITTLEROOT_GO_SAVE_BIRCH_TURN_SEQUENCE_FRAMES
+            .saturating_sub(next_remaining);
+        // `GoSaveBirchTrigger` waits for Twin's four-frame faster right turn
+        // before applying the player's four-frame faster left turn; these are
+        // sequential, not a simultaneous gesture.
+        if elapsed_before < LITTLEROOT_GO_SAVE_BIRCH_FASTER_TURN_FRAMES
+            && LITTLEROOT_GO_SAVE_BIRCH_FASTER_TURN_FRAMES <= elapsed_after
+        {
             self.facing = Facing::Left;
         }
         if next_remaining == 0 {
@@ -3253,23 +3257,39 @@ impl WorldState {
         let Some(remaining) = self.no_pokemon_gate_frames else { return false; };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         let x = if self.no_pokemon_gate_right { 11 } else { 10 };
+        let returning = self.no_pokemon_gate_stage == 4;
         let (path, lead_frames) = match self.no_pokemon_gate_stage {
             1 => (no_pokemon_twin_path(self.no_pokemon_gate_right, false), 32),
             4 => (no_pokemon_twin_path(self.no_pokemon_gate_right, true), 0),
             _ => (&[][..], 0),
         };
         if !path.is_empty() {
-            let total = lead_frames + path.iter().map(|(_, fast)| if *fast { 8 } else { 16 }).sum::<u16>();
+            let total = lead_frames + no_pokemon_twin_path_frames(self.no_pokemon_gate_right, returning);
             let elapsed_before = total.saturating_sub(remaining);
             let elapsed_after = total.saturating_sub(next_remaining);
             let mut boundary = lead_frames;
-            for (direction, fast) in path {
-                boundary += if *fast { 8 } else { 16 };
+            for (index, (direction, fast)) in path.iter().enumerate() {
+                let terminal_faster_turn = returning && index + 1 == path.len();
+                boundary += no_pokemon_twin_path_step_frames(
+                    terminal_faster_turn,
+                    *fast,
+                );
                 if elapsed_before < boundary && boundary <= elapsed_after {
-                    let twin = self.npcs.iter().find(|npc| npc.id == "twin" && npc.map == MapId::LittlerootTown)
+                    let position = self.npcs.iter()
+                        .find(|npc| npc.id == "twin" && npc.map == MapId::LittlerootTown)
+                        .map(|twin| {
+                            if terminal_faster_turn {
+                                twin.position.clone()
+                            } else {
+                                stepped_position(&twin.position, *direction)
+                            }
+                        })
                         .expect("Twin must exist during Route 101 gate scene");
-                    let position = stepped_position(&twin.position, *direction);
-                    if *fast {
+                    if terminal_faster_turn {
+                        self.move_faster_scripted_npc(
+                            "twin", MapId::LittlerootTown, position, *direction,
+                        );
+                    } else if *fast {
                         self.move_fast_scripted_npc("twin", MapId::LittlerootTown, position, *direction);
                     } else {
                         self.move_scripted_npc("twin", MapId::LittlerootTown, position, *direction);
@@ -4844,8 +4864,10 @@ impl WorldState {
             }
             if self.no_pokemon_gate_stage == 3 && self.no_pokemon_gate_frames.is_none() {
                 self.no_pokemon_gate_stage = 4;
-                self.no_pokemon_gate_frames = Some(no_pokemon_twin_path(self.no_pokemon_gate_right, true)
-                    .iter().map(|(_, fast)| if *fast { 8 } else { 16 }).sum());
+                self.no_pokemon_gate_frames = Some(no_pokemon_twin_path_frames(
+                    self.no_pokemon_gate_right,
+                    true,
+                ));
                 return;
             }
             if self.birch_prompt_active && self.birch_prompt_frames.is_none() {
@@ -5803,8 +5825,10 @@ impl WorldState {
             self.no_pokemon_gate_stage = 1;
             // Both source approach streams begin with face/delay/jump/delay
             // (32 frames), then use their distinct `walk_fast_*` paths.
-            self.no_pokemon_gate_frames = Some(no_pokemon_twin_path(self.no_pokemon_gate_right, false)
-                .iter().map(|(_, fast)| if *fast { 8 } else { 16 }).sum::<u16>() + 32);
+            self.no_pokemon_gate_frames = Some(no_pokemon_twin_path_frames(
+                self.no_pokemon_gate_right,
+                false,
+            ) + 32);
             if let Some(twin) = self.npcs.iter_mut().find(|npc| npc.id == "twin" && npc.map == MapId::LittlerootTown) {
                 twin.position = TilePosition { x: 7, y: 2 };
                 twin.facing = Facing::Right;
@@ -5818,10 +5842,15 @@ impl WorldState {
             && !self.birch_prompt_complete
             && self.dialogue.is_none() {
             self.birch_prompt_active = true;
-            self.birch_prompt_frames = Some(16);
-            if let Some(twin) = self.npcs.iter_mut().find(|npc| npc.id == "twin" && npc.map == MapId::LittlerootTown) {
-                twin.facing = Facing::Right;
-            }
+            self.birch_prompt_frames = Some(LITTLEROOT_GO_SAVE_BIRCH_TURN_SEQUENCE_FRAMES);
+            let twin_position = self.npcs.iter()
+                .find(|npc| npc.id == "twin" && npc.map == MapId::LittlerootTown)
+                .expect("Twin must exist for the Little Root Birch prompt")
+                .position
+                .clone();
+            self.move_faster_scripted_npc(
+                "twin", MapId::LittlerootTown, twin_position, Facing::Right,
+            );
             return;
         }
         let source_rival_running_shoes = self.player == (TilePosition { x: 11, y: 9 })
@@ -6498,6 +6527,10 @@ fn bedroom_rival_pc_route(map: MapId, position: &TilePosition) -> (&'static [(Fa
     }
 }
 
+const LITTLEROOT_GO_SAVE_BIRCH_FASTER_TURN_FRAMES: u16 = 4;
+const LITTLEROOT_GO_SAVE_BIRCH_TURN_SEQUENCE_FRAMES: u16 =
+    LITTLEROOT_GO_SAVE_BIRCH_FASTER_TURN_FRAMES * 2;
+
 fn no_pokemon_twin_path(right_trigger: bool, returning: bool) -> &'static [(Facing, bool)] {
     const APPROACH_LEFT: &[(Facing, bool)] = &[(Facing::Right, true), (Facing::Right, true), (Facing::Right, true), (Facing::Right, true), (Facing::Up, true), (Facing::Up, true), (Facing::Left, true)];
     const APPROACH_RIGHT: &[(Facing, bool)] = &[(Facing::Right, true), (Facing::Right, true), (Facing::Right, true), (Facing::Up, true), (Facing::Up, true), (Facing::Right, true)];
@@ -6509,6 +6542,28 @@ fn no_pokemon_twin_path(right_trigger: bool, returning: bool) -> &'static [(Faci
         (false, true) => RETURN_LEFT,
         (true, true) => RETURN_RIGHT,
     }
+}
+
+/// The `TwinReturn*` streams end with `walk_in_place_faster_down`, unlike
+/// their preceding ordinary tile walks. Its four-frame action changes only
+/// the Twin's facing; source `walk_fast_*` approach actions remain eight.
+fn no_pokemon_twin_path_step_frames(terminal_faster_turn: bool, fast: bool) -> u16 {
+    if terminal_faster_turn {
+        4
+    } else if fast {
+        8
+    } else {
+        16
+    }
+}
+
+fn no_pokemon_twin_path_frames(right_trigger: bool, returning: bool) -> u16 {
+    let path = no_pokemon_twin_path(right_trigger, returning);
+    path.iter().enumerate()
+        .map(|(index, (_, fast))| {
+            no_pokemon_twin_path_step_frames(returning && index + 1 == path.len(), *fast)
+        })
+        .sum()
 }
 
 fn stepped_position(position: &TilePosition, direction: Facing) -> TilePosition {
