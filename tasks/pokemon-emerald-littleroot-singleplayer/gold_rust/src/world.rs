@@ -496,7 +496,7 @@ fn battle_critical_check(battle: &mut BattleState) -> bool {
     // `BATTLE_TYPE_FIRST_BATTLE` short-circuits before its `Random()` call.
     // The Birch-rescue Zigzagoon is that opening tutorial battle, so neither
     // side can crit nor consume a critical-roll RNG value there.
-    battle.opponent != BattleOpponent::Zigzagoon && battle_random(battle) % 16 == 0
+    battle.opponent != BattleOpponent::Zigzagoon && battle_random(battle).is_multiple_of(16)
 }
 
 fn apply_battle_damage_variance(battle: &mut BattleState, damage: u8) -> u8 {
