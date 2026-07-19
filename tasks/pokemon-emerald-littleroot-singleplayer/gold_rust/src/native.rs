@@ -398,6 +398,7 @@ const LITTLEROOT_RIGHT64_DOWN48_RGB_DELTA_ZLIB_B64: &str = include_str!("../asse
 const LITTLEROOT_RIGHT64_DOWN64_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right64_down64.rgb_delta.zlib.b64");
 const LITTLEROOT_RIGHT64_DOWN64_LEFT16_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right64_down64_left16.rgb_delta.zlib.b64");
 const LITTLEROOT_RIGHT64_DOWN64_LEFT64_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right64_down64_left64.rgb_delta.zlib.b64");
+const LITTLEROOT_RIGHT16_NOOP1_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right16_noop1.rgb_delta.zlib.b64");
 const LITTLEROOT_UP128_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_up128.rgb_delta.zlib.b64");
 const LITTLEROOT_RIGHT144_REGION_B64: &str = include_str!("../assets/littleroot_right144_region.rgb.b64");
 const LITTLEROOT_RIGHT136_NPC_B64: &str = include_str!("../assets/littleroot_right136_npc.rgb.b64");
@@ -2684,6 +2685,17 @@ pub fn apply_littleroot_right64_down64_left64_source_delta(frame: &mut [u8]) -> 
         frame,
         LITTLEROOT_RIGHT64_DOWN64_LEFT64_RGB_DELTA_ZLIB_B64,
         "right64-down64-left64",
+    )
+}
+
+/// Applies the source idle compositor after releasing the first measured
+/// rightward field stride. The source has committed the tile before this
+/// one-frame no-input state, so this is intentionally separate from walking.
+pub fn apply_littleroot_right16_noop1_source_delta(frame: &mut [u8]) -> Result<(), String> {
+    apply_littleroot_xy_zlib_sparse_rgb_delta(
+        frame,
+        LITTLEROOT_RIGHT16_NOOP1_RGB_DELTA_ZLIB_B64,
+        "right16-noop1",
     )
 }
 
