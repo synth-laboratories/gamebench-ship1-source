@@ -2111,6 +2111,20 @@ impl WorldState {
     pub fn rendered_dialogue(&self) -> Option<String> {
         let dialogue = self.dialogue.as_ref()?;
         if let Some(remaining) = self.oldale_mart_dialogue_frames {
+            if self.oldale_mart_scene_stage == 6 && self.oldale_mart_dialogue_page == 1 {
+                // `\\l` scrolls the previous second line into the top row,
+                // then prints the final line with an eight-frame lead. It
+                // is not a full clear or a new atomically drawn message.
+                let elapsed = 32_u16.saturating_sub(remaining);
+                let visible_characters = usize::from(elapsed.saturating_sub(8));
+                let (retained_line, continuation) = dialogue
+                    .split_once('\n')
+                    .expect("Potion scroll page must contain two source lines");
+                return Some(format!(
+                    "{retained_line}\n{}",
+                    continuation.chars().take(visible_characters).collect::<String>(),
+                ));
+            }
             let (total, lead_in) = match (self.oldale_mart_scene_stage, self.oldale_mart_dialogue_page) {
                 // The guide's carried movement frames open its first
                 // promotion page with `This is a` already visible.
@@ -2123,10 +2137,10 @@ impl WorldState {
                 // earlier than an ordinary field message: source frame 176
                 // already shows `CASEY put away the POTION\nI`.
                 (5, _) => (dialogue_printer_duration(dialogue), 5_u16),
-                // The following explanation opens with the same four-frame
+                // The first explanation page opens with the same four-frame
                 // lead as the item receipts: its source A×16 boundary reads
                 // `A POTION can`.
-                (6, _) => (dialogue_printer_duration(dialogue), 4_u16),
+                (6, 0) => (dialogue_printer_duration(dialogue), 4_u16),
                 _ => (32_u16, 4_u16),
             };
             let elapsed = total.saturating_sub(remaining);
@@ -3503,9 +3517,10 @@ impl WorldState {
                 }
                 5 => {
                     self.oldale_mart_scene_stage = 6;
-                    let dialogue = "A POTION can be used anytime, so it's\neven more useful than a POKéMON CENTER\nin certain situations.".to_owned();
+                    self.oldale_mart_dialogue_page = 0;
+                    let dialogue = "A POTION can be used anytime, so it's\neven more useful than a POKéMON CENTER".to_owned();
                     // The A that dismisses the receipt has already consumed
-                    // the first sample of the following source text printer.
+                    // the first sample of the first source explanation page.
                     self.oldale_mart_dialogue_frames = Some(
                         dialogue_printer_duration(&dialogue).saturating_sub(16),
                     );
@@ -3513,7 +3528,19 @@ impl WorldState {
                     return;
                 }
                 6 => {
+                    if self.oldale_mart_dialogue_page == 0 {
+                        // `OldaleTown_Text_PotionExplanation` uses `\\l`:
+                        // preserve its second line, scroll it upward, then
+                        // print the final line in the lower row.
+                        self.oldale_mart_dialogue_page = 1;
+                        self.oldale_mart_dialogue_frames = Some(16);
+                        self.dialogue = Some(
+                            "even more useful than a POKéMON CENTER\nin certain situations.".to_owned(),
+                        );
+                        return;
+                    }
                     self.oldale_mart_scene_stage = 0;
+                    self.oldale_mart_dialogue_page = 0;
                     self.oldale_mart_scene_route = None;
                     return;
                 }
