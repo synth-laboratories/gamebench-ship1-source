@@ -242,6 +242,10 @@ pub struct NpcWalkStart {
     /// Route 101 chase's `walk_fast_*` commands use 8.
     #[serde(default = "default_npc_walk_duration")]
     pub duration_frames: u8,
+    /// The source OBJ animation direction can survive a completed movement
+    /// even after the ObjectEvent turns to face a different direction.
+    #[serde(default)]
+    pub sprite_facing: Option<Facing>,
 }
 
 fn default_npc_walk_duration() -> u8 { 16 }
@@ -1670,7 +1674,12 @@ impl WorldState {
             npc.position = position;
             npc.facing = facing;
             self.npc_walk_starts.retain(|walk| walk.id != id);
-            self.npc_walk_starts.push(NpcWalkStart { id: id.to_owned(), frame: self.frame, duration_frames });
+            self.npc_walk_starts.push(NpcWalkStart {
+                id: id.to_owned(),
+                frame: self.frame,
+                duration_frames,
+                sprite_facing: Some(facing),
+            });
         }
     }
 
@@ -2641,6 +2650,14 @@ impl WorldState {
             }
         }
         self.npc_walk_starts.clear();
+        if matches!(frame, 4736 | 4800) {
+            self.npc_walk_starts.push(NpcWalkStart {
+                id: "fat_man".to_owned(),
+                frame: frame.saturating_sub(16),
+                duration_frames: 16,
+                sprite_facing: Some(Facing::Right),
+            });
+        }
         self.ambient_wanders = vec![
             AmbientWanderState {
                 id: "twin".to_owned(),
@@ -2755,6 +2772,7 @@ impl WorldState {
                         id,
                         frame,
                         duration_frames: 16,
+                        sprite_facing: Some(facing),
                     });
                     self.ambient_wanders[state_index].mode = AmbientWanderMode::Walk { remaining_frames: 16 };
                 }

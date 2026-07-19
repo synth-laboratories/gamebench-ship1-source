@@ -3762,7 +3762,11 @@ fn position_littleroot_stopped_right_npcs(
         let screen_y = 56 + i32::from(npc.position.y - player.y) * 16 + phase_y;
         attr0 = (attr0 & !0x00ff) | screen_y.rem_euclid(256) as u16;
         attr1 = (attr1 & !0x01ff) | screen_x.rem_euclid(512) as u16;
-        if littleroot_stopped_right_npc_hflip(frame, &npc.id, npc.facing) {
+        let sprite_facing = npc_walk_starts.iter().rev()
+            .find(|walk| walk.id == npc.id)
+            .and_then(|walk| walk.sprite_facing)
+            .unwrap_or(npc.facing);
+        if littleroot_stopped_right_npc_hflip(sprite_facing) {
             attr1 |= 1 << 12;
         } else {
             attr1 &= !(1 << 12);
@@ -3787,7 +3791,7 @@ fn littleroot_stopped_right_npc_oam_offset(
             let duration = i32::from(walk.duration_frames.max(1));
             if elapsed < duration {
                 let remaining = duration - elapsed;
-                return match npc.facing {
+                return match walk.sprite_facing.unwrap_or(npc.facing) {
                     Facing::Up => (0, remaining),
                     Facing::Down => (0, -remaining),
                     Facing::Left => (remaining, 0),
@@ -3808,8 +3812,8 @@ fn littleroot_stopped_right_npc_oam_offset(
 /// A walking object can retain its facing while the OBJ tile is still in the
 /// prior stride direction. The source 4736 capture keeps Fat Man down-facing
 /// in ObjectEvent state while its rightward walking tile remains mirrored.
-fn littleroot_stopped_right_npc_hflip(frame: u64, id: &str, facing: Facing) -> bool {
-    matches!((frame, id), (4736 | 4800 | 4816 | 4832 | 4848 | 4864, "fat_man")) || facing == Facing::Right
+fn littleroot_stopped_right_npc_hflip(sprite_facing: Facing) -> bool {
+    sprite_facing == Facing::Right
 }
 
 /// The captured player object has priority 2. At the stopped-camera phase,
@@ -4561,6 +4565,10 @@ fn dynamic_object_oam(
         let mut attr0 = u16::from_le_bytes([oam[target], oam[target + 1]]);
         let mut attr1 = u16::from_le_bytes([oam[target + 2], oam[target + 3]]);
         let mut attr2 = u16::from_le_bytes([oam[target + 4], oam[target + 5]]);
+        let latest_walk = npc_walk_starts.iter().rev().find(|walk| walk.id == npc.id);
+        let sprite_facing = latest_walk
+            .and_then(|walk| walk.sprite_facing)
+            .unwrap_or(npc.facing);
         let mut screen_x = 112 + i32::from(npc.position.x - player.x) * 16 + camera_phase_x;
         let mut screen_y = 56 + i32::from(npc.position.y - player.y) * 16;
         // The deterministic ambient scheduler commits the logical tile at
@@ -4569,12 +4577,12 @@ fn dynamic_object_oam(
         // Emerald's object-event walk cadence rather than snapping an OAM
         // entry directly by 16 pixels.
         if npc_uses_source_sheet(map_id, player_gender, &npc.id) {
-            if let Some(walk) = npc_walk_starts.iter().find(|walk| walk.id == npc.id) {
+            if let Some(walk) = latest_walk {
                 let elapsed = npc_animation_tick.saturating_sub(walk.frame) as i32;
                 let duration = i32::from(walk.duration_frames.max(1));
                 if elapsed < duration {
                     let remaining = duration - elapsed;
-                    match npc.facing {
+                    match sprite_facing {
                         Facing::Up => screen_y += remaining,
                         Facing::Down => screen_y -= remaining,
                         Facing::Left => screen_x += remaining,
@@ -4599,7 +4607,7 @@ fn dynamic_object_oam(
         }
         // Object-event sheets provide left-facing pixels; Emerald performs
         // the eastward pose with OBJ h-flip.
-        if npc.facing == Facing::Right {
+        if sprite_facing == Facing::Right {
             attr1 |= 1 << 12;
         } else {
             attr1 &= !(1 << 12);
@@ -4621,7 +4629,11 @@ fn apply_dynamic_npc_tiles(vram: &mut [u8], palette: &mut [u8], map_id: MapId, p
         let sheet = decode_npc_sprite_sheet(encoded).map_err(|error| {
             format!("failed to decode object-event sheet for {}: {error}", npc.id)
         })?;
-        let walking_frame = npc_walk_starts.iter().find(|walk| walk.id == npc.id)
+        let latest_walk = npc_walk_starts.iter().rev().find(|walk| walk.id == npc.id);
+        let sprite_facing = latest_walk
+            .and_then(|walk| walk.sprite_facing)
+            .unwrap_or(npc.facing);
+        let walking_frame = latest_walk
             .and_then(|walk| {
                 let elapsed = npc_animation_tick.saturating_sub(walk.frame);
                 (elapsed < u64::from(walk.duration_frames.max(1)))
@@ -4629,9 +4641,9 @@ fn apply_dynamic_npc_tiles(vram: &mut [u8], palette: &mut [u8], map_id: MapId, p
             })
             .unwrap_or(0);
         if npc_is_small_mon(map_id, &npc.id) {
-            stage_small_mon_frame(vram, 64 + entry * 8, &sheet, npc.facing)?;
+            stage_small_mon_frame(vram, 64 + entry * 8, &sheet, sprite_facing)?;
         } else {
-            stage_npc_sprite_frame(vram, 64 + entry * 8, &sheet, npc.facing, walking_frame)?;
+            stage_npc_sprite_frame(vram, 64 + entry * 8, &sheet, sprite_facing, walking_frame)?;
         }
         stage_npc_palette(palette, entry % 15 + 1, &sheet.palette)?;
     }
