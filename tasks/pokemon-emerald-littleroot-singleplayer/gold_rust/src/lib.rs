@@ -1991,6 +1991,7 @@ impl LittlerootSession {
             _ if self.world.map == MapId::ProfessorIntro && self.world.phase == world::StoryPhase::GenderSelect && self.world.gender_selection_touched => Ok(native::render_gender_select(&self.world)),
             _ if self.world.map == MapId::ProfessorIntro && self.world.phase == world::StoryPhase::NamePrompt => Ok(native::render_name_prompt()),
             _ if self.world.map == MapId::ProfessorIntro && self.world.phase == world::StoryPhase::NameEntry => native::render_name_entry(&self.world),
+            _ if self.world.map == MapId::ProfessorBirchsLab && self.world.is_starter_nickname_entry() => native::render_starter_nickname_entry(&self.world),
             _ if self.title_to_met_rival_name_confirm_evidence() => native::title_to_met_rival_name_confirm(),
             _ if self.world.map == MapId::ProfessorIntro && self.world.phase == world::StoryPhase::NameConfirm => Ok(native::render_name_confirm_base(self.world.player_gender)),
             _ if self.world.map == MapId::ProfessorIntro && self.world.phase == world::StoryPhase::IntroFarewell => Ok(native::render_name_prompt()),

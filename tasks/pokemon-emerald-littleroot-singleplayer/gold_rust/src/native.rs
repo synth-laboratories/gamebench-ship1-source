@@ -1,7 +1,7 @@
 use png::{ColorType, Decoder, Transformations};
 use flate2::read::ZlibDecoder;
 use crate::{FRAME_BYTES, FRAME_WIDTH};
-use crate::world::{ClockField, Facing, MapId, NpcState, NpcWalkStart, PlayerGender, StoryPhase, TilePosition, WorldState};
+use crate::world::{ClockField, Facing, MapId, NpcState, NpcWalkStart, PlayerGender, StarterSpecies, StoryPhase, TilePosition, WorldState};
 use std::io::{Cursor, Read};
 use std::sync::OnceLock;
 
@@ -1002,7 +1002,13 @@ fn render_name_entry_with_cursor(cursor_x: usize, cursor_y: usize) -> Result<Vec
 pub fn render_name_entry(world: &WorldState) -> Result<Vec<u8>, String> {
     let (cursor_x, cursor_y) = name_entry_cursor_position(world.name_cursor);
     let mut frame = render_name_entry_with_cursor(cursor_x, cursor_y)?;
-    match (world.player_name.as_str(), world.name_cursor) {
+    // These source patches are exact captures of the player-name title flow;
+    // the starter screen below reuses the keyboard art but has its own title
+    // and input line.
+    if !world.is_player_name_entry() {
+        return Ok(frame);
+    }
+    match (world.name_entry_text(), world.name_cursor) {
         ("A", 0) => {
             apply_name_entry_patch(&mut frame, NAME_ENTRY_A_PATCH_B64, "A")?;
             if world.frame == 3_262
@@ -1034,6 +1040,21 @@ pub fn render_name_entry(world: &WorldState) -> Result<Vec<u8>, String> {
         ("", 6) => apply_name_entry_patch(&mut frame, NAME_ENTRY_G_CURSOR_PATCH_B64, "G cursor")?,
         _ => {}
     }
+    Ok(frame)
+}
+
+/// `NAMING_SCREEN_NICKNAME` reuses the same keyboard controls as the player
+/// name screen. Its title/input buffer are a distinct source template.
+pub fn render_starter_nickname_entry(world: &WorldState) -> Result<Vec<u8>, String> {
+    let mut frame = render_name_entry(world)?;
+    let species = match world.starter.unwrap_or(StarterSpecies::Treecko) {
+        StarterSpecies::Treecko => "TREECKO",
+        StarterSpecies::Torchic => "TORCHIC",
+        StarterSpecies::Mudkip => "MUDKIP",
+    };
+    draw_window(&mut frame, 8, 8, 224, 48);
+    draw_text(&mut frame, 16, 15, &format!("{}'s NICKNAME?", species), 20);
+    draw_text(&mut frame, 16, 31, world.name_entry_text(), 10);
     Ok(frame)
 }
 
