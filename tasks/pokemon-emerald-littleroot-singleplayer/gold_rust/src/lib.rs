@@ -216,6 +216,27 @@ impl LittlerootSession {
         } else {
             self.held_direction = None;
         }
+        // In the frozen rival exterior, source controller movement and
+        // object-event movement share every video frame. Processing a long
+        // Right hold as one post-hoc player walk let Boy's lane-vacating
+        // movement happen too late (or too early) for collision. Keep this
+        // measured branch frame-coupled until the general field controller
+        // owns the same timing model.
+        if request.action == Input::Right
+            && self.can_replay_exterior_direction()
+            && self.world.phase == world::StoryPhase::PokedexReceived
+        {
+            for _ in 0..request.frames {
+                let prior_frame = self.frame_index;
+                self.frame_index += 1;
+                self.world.frame = self.frame_index;
+                self.world.walk_bounds(Facing::Right, 1);
+                self.world.advance_npc_wander(prior_frame);
+            }
+            self.input_log.push(request);
+            self.redraw();
+            return;
+        }
         self.frame_index += u64::from(request.frames);
         self.world.frame = self.frame_index;
         if self.world.transition.is_some() {

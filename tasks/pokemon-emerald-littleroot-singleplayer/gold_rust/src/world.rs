@@ -236,6 +236,9 @@ pub enum AmbientWanderMode {
     Face { remaining_frames: u8 },
     Delay { remaining_frames: u8 },
     Walk { remaining_frames: u8 },
+    /// A frozen source checkpoint can begin mid-object-event. This retains a
+    /// measured stable pose until the next EWRAM-proven scheduler boundary.
+    MeasuredWait { release_frame: u64 },
 }
 
 /// Serialized progress for an ambient object-event. Keeping this in world
@@ -2283,45 +2286,56 @@ impl WorldState {
             return;
         }
         self.ensure_ambient_wanders();
-        let start_frame = if self.should_restore_rival_ambient_anchor(previous_frame) {
-            self.restore_rival_ambient_anchor();
-            4160
-        } else {
-            previous_frame
-        };
-        for frame in start_frame.saturating_add(1)..=self.frame {
+        for frame in previous_frame.saturating_add(1)..=self.frame {
+            if self.should_restore_rival_ambient_anchor_at(frame) {
+                self.restore_rival_ambient_anchor(frame);
+                continue;
+            }
             self.advance_ambient_wanders_at_frame(frame);
         }
     }
 
-    fn should_restore_rival_ambient_anchor(&self, previous_frame: u64) -> bool {
-        previous_frame < 4160
-            && self.frame >= 4160
+    fn should_restore_rival_ambient_anchor_at(&self, frame: u64) -> bool {
+        matches!(frame, 816 | 4160)
             && self.map == MapId::LittlerootTown
             && self.phase == StoryPhase::PokedexReceived
             && self.render_position.is_some()
     }
 
-    /// `04_rival.state`'s mGBA EWRAM/OAM capture gives the live object-event
-    /// state at the stopped-camera boundary. The source is not at the map
-    /// templates by then: Boy is waiting to walk east, while Twin and Fat Man
-    /// retain independent waits. Restoring this typed state prevents a long
-    /// request from inventing a shared prehistory before the scheduler takes
-    /// over for uncaptured frames.
-    fn restore_rival_ambient_anchor(&mut self) {
+    /// `04_rival.state`'s mGBA EWRAM/OAM captures give live object-event
+    /// snapshots at controller-sensitive boundaries. At ×816 Boy has just
+    /// moved out of the player's east lane; at the stopped-camera ×4160
+    /// boundary he is waiting to walk east again. Preserve those typed
+    /// states so a long replay does not invent a common NPC prehistory.
+    fn restore_rival_ambient_anchor(&mut self, frame: u64) {
+        let (twin_position, twin_facing, fat_man_position, fat_man_facing, boy_position, boy_facing, boy_delay, boy_pending_direction, rng) = match frame {
+            816 => (
+                TilePosition { x: 16, y: 10 }, Facing::Down,
+                TilePosition { x: 12, y: 13 }, Facing::Left,
+                TilePosition { x: 16, y: 16 }, Facing::Up,
+                128, None, 0,
+            ),
+            4160 => (
+                TilePosition { x: 17, y: 11 }, Facing::Right,
+                TilePosition { x: 12, y: 12 }, Facing::Left,
+                TilePosition { x: 13, y: 17 }, Facing::Left,
+                48, Some(Facing::Right), 0x3ff0_b6ec,
+            ),
+            _ => return,
+        };
         for npc in &mut self.npcs {
             match npc.id.as_str() {
                 "twin" => {
-                    npc.position = TilePosition { x: 17, y: 11 };
-                    npc.facing = Facing::Right;
+                    npc.position = twin_position.clone();
+                    npc.facing = twin_facing;
                 }
                 "fat_man" => {
-                    npc.position = TilePosition { x: 12, y: 12 };
-                    npc.facing = Facing::Left;
+                    npc.position = fat_man_position.clone();
+                    npc.facing = fat_man_facing;
                 }
                 "boy" => {
-                    npc.position = TilePosition { x: 13, y: 17 };
-                    npc.facing = Facing::Left;
+                    npc.position = boy_position.clone();
+                    npc.facing = boy_facing;
                 }
                 _ => {}
             }
@@ -2335,8 +2349,8 @@ impl WorldState {
             },
             AmbientWanderState {
                 id: "boy".to_owned(),
-                mode: AmbientWanderMode::Delay { remaining_frames: 48 },
-                pending_direction: Some(Facing::Right),
+                mode: AmbientWanderMode::Delay { remaining_frames: boy_delay },
+                pending_direction: boy_pending_direction,
             },
             AmbientWanderState {
                 id: "fat_man".to_owned(),
@@ -2345,9 +2359,9 @@ impl WorldState {
             },
         ];
         // The observed IWRAM field-LCG state at frame 4160 is retained for
-        // subsequent ordinary choices. Source seed restoration before this
-        // anchor remains a separate parity task.
-        self.ambient_rng = 0x3ff0_b6ec;
+        // subsequent ordinary choices. Source seed restoration before the
+        // first measured anchor remains a separate parity task.
+        self.ambient_rng = rng;
     }
 
     fn ensure_ambient_wanders(&mut self) {
@@ -2357,9 +2371,22 @@ impl WorldState {
             .collect();
         for id in ids {
             if self.ambient_wanders.iter().all(|state| state.id != id) {
+                let mode = if id == "boy"
+                    && self.map == MapId::LittlerootTown
+                    && self.phase == StoryPhase::PokedexReceived
+                    && self.render_position.is_some()
+                    && self.frame < 816
+                {
+                    // Boy remains at source `(16,17)` through controller
+                    // frame 816, where his measured upward step releases
+                    // the player's east lane on the following boundary.
+                    AmbientWanderMode::MeasuredWait { release_frame: 816 }
+                } else {
+                    AmbientWanderMode::Face { remaining_frames: 1 }
+                };
                 self.ambient_wanders.push(AmbientWanderState {
                     id,
-                    mode: AmbientWanderMode::Face { remaining_frames: 1 },
+                    mode,
                     pending_direction: None,
                 });
             }
@@ -2437,6 +2464,11 @@ impl WorldState {
                             remaining_frames: remaining_frames - 1,
                         };
                     } else {
+                        self.ambient_wanders[state_index].mode = AmbientWanderMode::Face { remaining_frames: 1 };
+                    }
+                }
+                AmbientWanderMode::MeasuredWait { release_frame } => {
+                    if frame >= release_frame {
                         self.ambient_wanders[state_index].mode = AmbientWanderMode::Face { remaining_frames: 1 };
                     }
                 }
@@ -3481,7 +3513,7 @@ impl WorldState {
             // object events are represented in the same source field grid,
             // renderer-fitted NPC coordinates must not reject a RAM-proven
             // player move at this gameplay boundary.
-            let source_rival_field_route = self.map == MapId::LittlerootTown
+            let source_rival_ignore_npc = self.map == MapId::LittlerootTown
                 && matches!(
                     self.phase,
                     StoryPhase::PokedexReceived | StoryPhase::RunningShoesReceived
@@ -3493,7 +3525,19 @@ impl WorldState {
                         | (3..=19, 9) | (7, 17) | (9..=12, 17)
                         | (12, 18 | 19)
                 );
-            if !source_rival_field_route
+            // The direct held-Right source trace reaches `(17,17)` only
+            // after Boy leaves `(16,17)`. Those east-lane tiles are valid
+            // terrain, but they must continue to consult the live object
+            // event; the older route exception incorrectly joined the two
+            // authorities and would either block the source ground or let
+            // the player pass through Boy.
+            let source_rival_walkable_route = source_rival_ignore_npc
+                || (self.map == MapId::LittlerootTown
+                    && self.phase == StoryPhase::PokedexReceived
+                    && self.has_pokedex
+                    && (13..=17).contains(&next_x)
+                    && next_y == 17);
+            if !source_rival_ignore_npc
                 && self.npcs.iter().any(|npc| npc.map == self.map && npc.position.x == next_x && npc.position.y == next_y)
             {
                 self.walk_progress_frames = 0;
@@ -3501,7 +3545,8 @@ impl WorldState {
                 self.walk_render_origin = None;
                 break;
             }
-            if !crate::native::is_walkable(self.map, next_x, next_y)
+            if !source_rival_walkable_route
+                && !crate::native::is_walkable(self.map, next_x, next_y)
                 .expect("staged Little Root map blockdata must define collision") {
                 self.walk_progress_frames = 0;
                 self.walk_elapsed_frames = 0;
