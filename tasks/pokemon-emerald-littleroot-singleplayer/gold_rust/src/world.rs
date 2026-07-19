@@ -3276,6 +3276,16 @@ impl WorldState {
             moved += 1;
             self.begin_littleroot_warp();
             self.apply_littleroot_coordinate_trigger();
+            if self.running_shoes_wait_frames.is_some() {
+                // A held direction can cross the source Running Shoes
+                // trigger before its request ends. Those trailing frames
+                // belong to Mom's initial text-printer lock, exactly like a
+                // separate Noop after a 48-frame left hold.
+                let frames_to_trigger = u32::from(cadence)
+                    .saturating_sub(prior_walk_elapsed)
+                    .saturating_add(tile_index * u32::from(cadence));
+                self.advance_running_shoes_wait(held_frames.saturating_sub(frames_to_trigger));
+            }
             self.apply_oldale_rival_trigger();
             if self.dialogue.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() { break; }
         }
