@@ -510,6 +510,8 @@ pub struct AmbientWanderState {
 
 fn default_ambient_rng() -> u32 { 0x5eed_0001 }
 
+fn default_starter_lab_choice_yes() -> bool { true }
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct MapTransition {
     pub destination_map: MapId,
@@ -719,6 +721,11 @@ pub struct WorldState {
     /// Older snapshots lazily construct it from the selected starter.
     #[serde(default)]
     pub starter_party: Option<StarterPartyState>,
+    /// Cursor state for Birch's Lab `GoSeeRival` / decline YES-NO branches.
+    /// Old checkpoints predate the interactive menu and therefore resume on
+    /// its source-default YES option.
+    #[serde(default = "default_starter_lab_choice_yes")]
+    pub starter_lab_choice_yes: bool,
     /// Persistent opening progression awarded by Birch's Lab script.
     pub has_pokedex: bool,
     pub poke_balls: u8,
@@ -839,6 +846,7 @@ impl WorldState {
             running: false,
             starter: None,
             starter_party: None,
+            starter_lab_choice_yes: true,
             has_pokedex: false,
             poke_balls: 0,
             potions: 0,
@@ -944,6 +952,7 @@ impl WorldState {
             running: false,
             starter: None,
             starter_party: None,
+            starter_lab_choice_yes: true,
             has_pokedex: false,
             poke_balls: 0,
             potions: 0,
@@ -1052,6 +1061,7 @@ impl WorldState {
             running: false,
             starter: None,
             starter_party: None,
+            starter_lab_choice_yes: true,
             has_pokedex: false,
             poke_balls: 0,
             potions: 0,
@@ -1156,6 +1166,7 @@ impl WorldState {
             running: false,
             starter: Some(StarterSpecies::Treecko),
             starter_party: None,
+            starter_lab_choice_yes: true,
             has_pokedex: false,
             poke_balls: 0,
             potions: 0,
@@ -1289,6 +1300,7 @@ impl WorldState {
             running: false,
             starter: Some(StarterSpecies::Treecko),
             starter_party: None,
+            starter_lab_choice_yes: true,
             has_pokedex: true,
             poke_balls: 5,
             potions: 0,
@@ -3126,6 +3138,52 @@ impl WorldState {
         party.status_move_pp = profile.status_move.pp;
     }
 
+    /// The starter-nickname screen has not yet been ported, so the compact
+    /// route follows that source menu's NO branch into `GoSeeRival`. Unlike
+    /// the previous linear approximation, the following two YES/NO menus
+    /// retain their authored accept/decline behavior and gate Route 103.
+    pub fn starter_lab_choice_active(&self) -> bool {
+        self.phase == StoryPhase::StarterLab
+            && self.dialogue.is_some()
+            && matches!(self.title_intro_step, 1 | 3)
+    }
+
+    pub fn move_starter_lab_choice(&mut self) {
+        if self.starter_lab_choice_active() {
+            self.starter_lab_choice_yes = !self.starter_lab_choice_yes;
+        }
+    }
+
+    pub fn respond_starter_lab_choice(&mut self, yes: bool) {
+        if !self.starter_lab_choice_active() {
+            return;
+        }
+        self.starter_lab_choice_yes = yes;
+        match self.title_intro_step {
+            // `LittlerootTown_ProfessorBirchsLab_EventScript_GoSeeRival`.
+            1 if yes => {
+                self.title_intro_step = 2;
+                self.dialogue = Some(starter_lab_agree_to_see_rival_text(self.player_gender));
+            }
+            1 => {
+                self.title_intro_step = 3;
+                self.starter_lab_choice_yes = true;
+                self.dialogue = Some(starter_lab_decline_seeing_rival_text());
+            }
+            // `DeclineSeeingRival` loops its NO branch back to its own
+            // YES/NO message and reaches the common agreement path on YES.
+            3 if yes => {
+                self.title_intro_step = 2;
+                self.dialogue = Some(starter_lab_agree_to_see_rival_text(self.player_gender));
+            }
+            3 => {
+                self.starter_lab_choice_yes = true;
+                self.dialogue = Some(starter_lab_decline_seeing_rival_text());
+            }
+            _ => unreachable!("only source Lab choice stages are interactive"),
+        }
+    }
+
     pub fn choose_starter(&mut self, starter: StarterSpecies) {
         if self.phase == StoryPhase::StarterSelect {
             self.starter = Some(starter);
@@ -3789,6 +3847,11 @@ impl WorldState {
             }
             return;
         }
+        // `MSGBOX_YESNO` is input-owned: never let a generic dialogue-close
+        // skip Birch's Route 103 permission prompt or its decline loop.
+        if self.starter_lab_choice_active() {
+            return;
+        }
         if self.dialogue.is_some()
             && self.pending_running_shoes
             && matches!(self.running_shoes_stage, 2..=5)
@@ -4034,10 +4097,12 @@ impl WorldState {
                 StoryPhase::StarterLab => {
                     if self.title_intro_step == 0 {
                         self.title_intro_step = 1;
-                        self.dialogue = Some(format!("PROF. BIRCH: If you work at POKéMON and gain experience, I think you'll make an excellent TRAINER.\nYou should go see {}.", rival_name(self.player_gender)));
-                    } else {
+                        self.starter_lab_choice_yes = true;
+                        self.dialogue = Some(starter_lab_go_see_rival_text(self.player_gender, &self.player_name));
+                    } else if self.title_intro_step == 2 {
                         self.phase = StoryPhase::StarterChosen;
-                        self.dialogue = Some(format!("PROF. BIRCH: Great! {} should be happy, too. Get {} to teach you what it means to be a TRAINER.", rival_name(self.player_gender), rival_name(self.player_gender)));
+                        self.title_intro_step = 0;
+                        self.dialogue = None;
                         self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
                     }
                 }
@@ -4340,6 +4405,12 @@ impl WorldState {
                 let destination = match (next_x, next_y) {
                     (5, 8) => Some((MapId::BrendansHouse1F, TilePosition { x: 8, y: 8 })),
                     (14, 8) => Some((MapId::MaysHouse1F, TilePosition { x: 2, y: 8 })),
+                    // `LittlerootTown/map.json` has its third warp event at
+                    // `(7,16)`, targeting Birch Lab warp 0 at `(6,12)`. It
+                    // is a collision-blocked doorway, just like the two
+                    // homes above, so resolve the authored warp before the
+                    // terrain table rejects the entrance metatile.
+                    (7, 16) => Some((MapId::ProfessorBirchsLab, TilePosition { x: 6, y: 12 })),
                     _ => None,
                 };
                 if let Some((map, destination)) = destination {
@@ -5012,6 +5083,30 @@ fn rival_name(player_gender: PlayerGender) -> &'static str {
         PlayerGender::Brendan => "MAY",
         PlayerGender::May => "BRENDAN",
     }
+}
+
+/// `LittlerootTown_ProfessorBirchsLab_Text_MightBeGoodIdeaToGoSeeRival`.
+/// The preceding nickname picker remains an explicitly separate UI gap; the
+/// compact opening takes its NO path before presenting this real permission
+/// prompt.
+fn starter_lab_go_see_rival_text(player_gender: PlayerGender, player_name: &str) -> String {
+    let rival = rival_name(player_gender);
+    format!(
+        "PROF. BIRCH: If you work at POKéMON\nand gain experience, I think you'll make\nan extremely good TRAINER.\n\nMy kid, {rival}, is also studying\nPOKéMON while helping me out.\n\n{player_name}, don't you think it might be\na good idea to go see {rival}?"
+    )
+}
+
+/// `LittlerootTown_ProfessorBirchsLab_Text_GetRivalToTeachYou`.
+fn starter_lab_agree_to_see_rival_text(player_gender: PlayerGender) -> String {
+    let rival = rival_name(player_gender);
+    format!(
+        "PROF. BIRCH: Great!\n{rival} should be happy, too.\n\nGet {rival} to teach you what it\nmeans to be a TRAINER."
+    )
+}
+
+/// `LittlerootTown_ProfessorBirchsLab_Text_DontBeThatWay`.
+fn starter_lab_decline_seeing_rival_text() -> String {
+    "PROF. BIRCH: Oh, don't be that way.\nYou should go meet my kid.".to_owned()
 }
 
 fn running_shoes_approach_frames(trigger: u8, player_gender: PlayerGender) -> u16 {

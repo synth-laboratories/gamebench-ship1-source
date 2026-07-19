@@ -513,6 +513,22 @@ impl LittlerootSession {
             self.redraw();
             return;
         }
+        if self.world.starter_lab_choice_active() {
+            match request.action {
+                Input::Up | Input::Down => self.world.move_starter_lab_choice(),
+                Input::A => {
+                    let yes = self.world.starter_lab_choice_yes;
+                    self.world.respond_starter_lab_choice(yes);
+                }
+                // Emerald's standard YES/NO prompt treats B as declining
+                // the currently offered branch.
+                Input::B => self.world.respond_starter_lab_choice(false),
+                Input::Left | Input::Right | Input::Start | Input::Select | Input::Noop => {}
+            }
+            self.input_log.push(request);
+            self.redraw();
+            return;
+        }
         if self.world.phase == world::StoryPhase::IntroFarewell {
             if request.action == Input::A {
                 self.world.advance_opening_farewell();
