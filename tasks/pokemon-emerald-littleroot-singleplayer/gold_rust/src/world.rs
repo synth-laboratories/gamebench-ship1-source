@@ -420,6 +420,10 @@ pub struct WorldState {
     /// Active source message page within the Oldale Mart script.
     #[serde(default)]
     pub oldale_mart_dialogue_page: u8,
+    /// Remaining source frames in `giveitem ITEM_POTION`'s obtain-item
+    /// fanfare. It runs concurrently with the initial obtained-item text.
+    #[serde(default)]
+    pub oldale_mart_item_fanfare_frames: Option<u16>,
     /// Remaining frames while a regular overworld message prints. Story
     /// scripts with their own message sequencing retain dedicated clocks.
     #[serde(default)]
@@ -557,6 +561,7 @@ impl WorldState {
             oldale_mart_scene_route: None,
             oldale_mart_dialogue_frames: None,
             oldale_mart_dialogue_page: 0,
+            oldale_mart_item_fanfare_frames: None,
             field_dialogue_frames: None,
             clock_visit_frames: None,
             truck_arrival_frames: None,
@@ -658,6 +663,7 @@ impl WorldState {
             oldale_mart_scene_route: None,
             oldale_mart_dialogue_frames: None,
             oldale_mart_dialogue_page: 0,
+            oldale_mart_item_fanfare_frames: None,
             field_dialogue_frames: None,
             clock_visit_frames: None,
             truck_arrival_frames: None,
@@ -762,6 +768,7 @@ impl WorldState {
             oldale_mart_scene_route: None,
             oldale_mart_dialogue_frames: None,
             oldale_mart_dialogue_page: 0,
+            oldale_mart_item_fanfare_frames: None,
             field_dialogue_frames: None,
             clock_visit_frames: None,
             truck_arrival_frames: None,
@@ -859,6 +866,7 @@ impl WorldState {
             oldale_mart_scene_route: None,
             oldale_mart_dialogue_frames: None,
             oldale_mart_dialogue_page: 0,
+            oldale_mart_item_fanfare_frames: None,
             field_dialogue_frames: None,
             clock_visit_frames: None,
             truck_arrival_frames: None,
@@ -988,6 +996,7 @@ impl WorldState {
             oldale_mart_scene_route: None,
             oldale_mart_dialogue_frames: None,
             oldale_mart_dialogue_page: 0,
+            oldale_mart_item_fanfare_frames: None,
             field_dialogue_frames: None,
             clock_visit_frames: None,
             truck_arrival_frames: None,
@@ -1731,6 +1740,37 @@ impl WorldState {
         true
     }
 
+    /// Advances the obtain-item fanfare which runs after `Obtained the
+    /// POTION!`. The MIDI source lasts roughly 161 video frames; the opening
+    /// A has already consumed the first sixteen. The first receipt keeps
+    /// printing while this clock runs, and the second receipt begins as soon
+    /// as the fanfare ends without another player action.
+    pub fn advance_oldale_mart_item_fanfare(&mut self, frames: u32) -> bool {
+        let Some(remaining) = self.oldale_mart_item_fanfare_frames else { return false; };
+        let consumed = frames.min(u32::from(u16::MAX)) as u16;
+        let next = remaining.saturating_sub(consumed);
+        if let Some(printer_remaining) = self.oldale_mart_dialogue_frames {
+            let next_printer = printer_remaining.saturating_sub(consumed);
+            self.oldale_mart_dialogue_frames = (next_printer != 0).then_some(next_printer);
+        }
+        if next != 0 {
+            self.oldale_mart_item_fanfare_frames = Some(next);
+            return true;
+        }
+
+        let carried = frames.saturating_sub(u32::from(remaining));
+        let dialogue = format!("{} put away the POTION\nin the ITEMS POCKET.", self.player_name);
+        self.oldale_mart_item_fanfare_frames = None;
+        self.oldale_mart_scene_stage = 5;
+        self.oldale_mart_dialogue_page = 1;
+        self.oldale_mart_dialogue_frames = Some(
+            dialogue_printer_duration(&dialogue)
+                .saturating_sub(carried.min(u32::from(u16::MAX)) as u16),
+        );
+        self.dialogue = Some(dialogue);
+        true
+    }
+
     /// Advances a regular overworld message printer. The request that opens
     /// an interaction consumes its initial sample window here as it does on
     /// hardware, while later A presses remain locked until printing ends.
@@ -2080,9 +2120,13 @@ impl WorldState {
                 // reveal fourteen glyphs in the opening A×16 window and
                 // accept dismissal after a further Noop×64.
                 (3, _) => (80_u16, 2_u16),
-                // The explanation is a normal source message after the
-                // item receipt rather than an atomically rendered string.
-                (5, _) => (dialogue_printer_duration(dialogue), 12_u16),
+                // The obtain-item storage receipt starts seven glyphs
+                // earlier than an ordinary field message: source frame 176
+                // already shows `CASEY put away the POTION\nI`.
+                (5, _) => (dialogue_printer_duration(dialogue), 5_u16),
+                // The following explanation is a normal source message,
+                // not an atomically rendered string.
+                (6, _) => (dialogue_printer_duration(dialogue), 12_u16),
                 _ => (32_u16, 4_u16),
             };
             let elapsed = total.saturating_sub(remaining);
@@ -2109,6 +2153,7 @@ impl WorldState {
             || self.running_shoes_dialogue_frames.is_some()
             || self.truck_arrival_dialogue_frames.is_some()
             || self.oldale_mart_dialogue_frames.is_some()
+            || self.oldale_mart_item_fanfare_frames.is_some()
             || self.field_dialogue_frames.is_some()
     }
 
@@ -3328,6 +3373,7 @@ impl WorldState {
         if self.truck_arrival_dialogue_frames.is_some()
             || self.running_shoes_wait_frames.is_some()
             || self.oldale_mart_dialogue_frames.is_some()
+            || self.oldale_mart_item_fanfare_frames.is_some()
             || self.field_dialogue_frames.is_some()
         {
             return;
@@ -3442,12 +3488,21 @@ impl WorldState {
                     self.oldale_mart_scene_stage = 4;
                     self.oldale_mart_dialogue_page = 0;
                     self.potions = self.potions.saturating_add(1);
+                    // `mus_obtain_item.mid` ends at ~161 source frames;
+                    // the A that opened the first receipt has spent 16.
+                    self.oldale_mart_item_fanfare_frames = Some(144);
                     self.oldale_mart_dialogue_frames = Some(16);
                     self.dialogue = Some("Obtained the POTION!".to_owned());
                     return;
                 }
                 4 => {
-                    self.oldale_mart_scene_stage = 5;
+                    // Compatibility path for restored checkpoints written
+                    // before the explicit obtain-item fanfare was staged.
+                    self.oldale_mart_item_fanfare_frames = Some(0);
+                    return;
+                }
+                5 => {
+                    self.oldale_mart_scene_stage = 6;
                     let dialogue = "A POTION can be used anytime, so it's\neven more useful than a POKéMON CENTER\nin certain situations.".to_owned();
                     // The A that dismisses the receipt has already consumed
                     // the first sample of the following source text printer.
@@ -3457,7 +3512,7 @@ impl WorldState {
                     self.dialogue = Some(dialogue);
                     return;
                 }
-                5 => {
+                6 => {
                     self.oldale_mart_scene_stage = 0;
                     self.oldale_mart_scene_route = None;
                     return;

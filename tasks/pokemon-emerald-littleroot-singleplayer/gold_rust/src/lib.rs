@@ -261,6 +261,11 @@ impl LittlerootSession {
             self.redraw();
             return;
         }
+        if self.world.advance_oldale_mart_item_fanfare(request.frames) {
+            self.input_log.push(request);
+            self.redraw();
+            return;
+        }
         if self.world.advance_oldale_mart_dialogue_printer(request.frames) {
             self.input_log.push(request);
             self.redraw();
