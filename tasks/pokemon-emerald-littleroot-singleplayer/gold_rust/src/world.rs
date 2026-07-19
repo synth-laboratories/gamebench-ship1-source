@@ -4,6 +4,12 @@ const SOURCE_RIVAL_RUNNING_SHOES_TRIGGER: u8 = 6;
 /// `PetalburgGymReport{Male,Female}` spends one fast in-place turn, an
 /// exclamation emote, and `Common_Movement_Delay48` before Mom speaks.
 const TV_BROADCAST_INTRO_FRAMES: u16 = 88;
+const NEW_HOME_FACE_PLAYER_FRAMES: u8 = 1;
+// Reuse the port's existing fast in-place turn cadence after the source
+// face-player action completes.
+const NEW_HOME_PLAYER_FAST_TURN_FRAMES: u8 = 8;
+const NEW_HOME_ORIENTATION_FRAMES: u8 =
+    NEW_HOME_FACE_PLAYER_FRAMES + NEW_HOME_PLAYER_FAST_TURN_FRAMES;
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -1067,6 +1073,10 @@ pub struct WorldState {
     pub truck_arrival_dialogue_frames: Option<u16>,
     #[serde(default)]
     pub truck_departure_frames: Option<u16>,
+    /// The post-page-one movement gate after Mom immediately faces the
+    /// player and before the player's fast turn completes.
+    #[serde(default)]
+    pub new_home_orientation_frames: Option<u8>,
     #[serde(default)]
     pub new_home_arrival_frames: Option<u16>,
     pub transition: Option<MapTransition>,
@@ -1216,6 +1226,7 @@ impl WorldState {
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
+            new_home_orientation_frames: None,
             new_home_arrival_frames: None,
             transition: None,
             walk_progress_frames: 0,
@@ -1327,6 +1338,7 @@ impl WorldState {
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
+            new_home_orientation_frames: None,
             new_home_arrival_frames: None,
             transition: None,
             walk_progress_frames: 0,
@@ -1441,6 +1453,7 @@ impl WorldState {
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
+            new_home_orientation_frames: None,
             new_home_arrival_frames: None,
             transition: None,
             walk_progress_frames: 0,
@@ -1551,6 +1564,7 @@ impl WorldState {
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
+            new_home_orientation_frames: None,
             new_home_arrival_frames: None,
             transition: None,
             walk_progress_frames: 0,
@@ -1690,6 +1704,7 @@ impl WorldState {
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
+            new_home_orientation_frames: None,
             new_home_arrival_frames: None,
             transition: None,
             walk_progress_frames: 0,
@@ -2801,6 +2816,37 @@ impl WorldState {
             }
         } else {
             self.truck_departure_frames = Some(next_remaining);
+        }
+        true
+    }
+
+    /// Runs the post-initial-page player turn in
+    /// `PlayersHouse_1F_EventScript_EnterHouseMovingIn`. Mom's preceding
+    /// `face_player` action completed immediately when the page closed; its
+    /// one-frame action boundary then precedes the existing fast-turn gate.
+    pub fn advance_new_home_orientation(&mut self, frames: u32) -> bool {
+        let Some(remaining) = self.new_home_orientation_frames else { return false; };
+        let elapsed = frames.min(u32::from(u8::MAX)) as u8;
+        let next_remaining = remaining.saturating_sub(elapsed);
+        let elapsed_before = NEW_HOME_ORIENTATION_FRAMES.saturating_sub(remaining);
+        let elapsed_after = NEW_HOME_ORIENTATION_FRAMES.saturating_sub(next_remaining);
+        // `face_player` has already run. The next source action is the
+        // gender-specific fast in-place turn, which changes player facing at
+        // its first post-face-player action boundary.
+        if elapsed_before < NEW_HOME_FACE_PLAYER_FRAMES
+            && NEW_HOME_FACE_PLAYER_FRAMES <= elapsed_after
+        {
+            self.facing = match self.player_gender {
+                PlayerGender::Brendan => Facing::Right,
+                PlayerGender::May => Facing::Left,
+            };
+        }
+        if next_remaining == 0 {
+            self.new_home_orientation_frames = None;
+            self.title_intro_step = 1;
+            self.dialogue = Some(new_home_page(1, &self.player_name));
+        } else {
+            self.new_home_orientation_frames = Some(next_remaining);
         }
         true
     }
@@ -4681,6 +4727,21 @@ impl WorldState {
                     self.truck_departure_frames = Some(48);
                 }
                 StoryPhase::NewHome => {
+                    if self.title_intro_step == 0 {
+                        // `face_player` is an immediate source action. Its
+                        // one-frame completion precedes the player's
+                        // gender-specific fast turn before the movers text.
+                        let map = self.map;
+                        let mom_facing = match self.player_gender {
+                            PlayerGender::Brendan => Facing::Left,
+                            PlayerGender::May => Facing::Right,
+                        };
+                        let mom = self.npcs.iter_mut().find(|npc| npc.id == "mom" && npc.map == map)
+                            .expect("Mom must exist for the move-in face-player action");
+                        mom.facing = mom_facing;
+                        self.new_home_orientation_frames = Some(NEW_HOME_ORIENTATION_FRAMES);
+                        return;
+                    }
                     let next = usize::from(self.title_intro_step) + 1;
                     if next < NEW_HOME_PAGE_COUNT {
                         self.title_intro_step = next as u8;
@@ -5306,10 +5367,12 @@ impl WorldState {
                 && self.phase == StoryPhase::NewHome
                 && self.dialogue.is_none()
             {
-                // `...House_1F_OnFrame` dispatches the move-in script as
-                // soon as the truck-arrival warp finishes; it is not an
-                // interactable prompt.
-                self.new_home_arrival_frames = Some(48);
+                // `...House_1F_OnFrame` dispatches the move-in script on
+                // the first indoor frame. It begins with `msgbox`, so there
+                // is no additional house-entry movement lock before Mom's
+                // first page appears.
+                self.title_intro_step = 0;
+                self.dialogue = Some(new_home_page(0, &self.player_name));
             }
         }
         transition.fading_in = true;
@@ -5931,15 +5994,13 @@ fn map_npcs(map: MapId, phase: StoryPhase, potions: u8, oldale_rival_departed: b
         MapId::OldaleTown => oldale_town_npcs(phase, potions, oldale_rival_departed),
         MapId::Route103 => route103_npcs(phase),
         // The 1F map transition scripts reposition Mom for each opening
-        // beat: door during the move-in scene, stairs after the clock, and
-        // the TV seat for the Petalburg report.
+        // beat: door through the move-in/clock-set state, then the TV seat
+        // for the Petalburg report. The source does not move Mom away from
+        // the door when `EnterHouseMovingIn` releases control.
         MapId::BrendansHouse1F => vec![NpcState {
             id: "mom".to_owned(), map,
             position: match phase {
-                StoryPhase::NewHome => TilePosition { x: 9, y: 8 },
-                // Once Mom's move-in conversation ends, Emerald returns
-                // control downstairs and leaves the stair column clear.
-                StoryPhase::ClockSet => TilePosition { x: 4, y: 5 },
+                StoryPhase::NewHome | StoryPhase::ClockSet => TilePosition { x: 9, y: 8 },
                 StoryPhase::TvBroadcast | StoryPhase::MeetRival => TilePosition { x: 4, y: 5 },
                 _ => TilePosition { x: 8, y: 4 },
             },
@@ -5956,8 +6017,7 @@ fn map_npcs(map: MapId, phase: StoryPhase, potions: u8, oldale_rival_departed: b
         MapId::MaysHouse1F => vec![NpcState {
             id: "mom".to_owned(), map,
             position: match phase {
-                StoryPhase::NewHome => TilePosition { x: 1, y: 8 },
-                StoryPhase::ClockSet => TilePosition { x: 6, y: 5 },
+                StoryPhase::NewHome | StoryPhase::ClockSet => TilePosition { x: 1, y: 8 },
                 StoryPhase::TvBroadcast | StoryPhase::MeetRival => TilePosition { x: 6, y: 5 },
                 _ => TilePosition { x: 2, y: 4 },
             },
