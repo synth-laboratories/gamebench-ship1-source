@@ -417,7 +417,7 @@ pub struct WorldState {
     /// Remaining frames while the current Oldale Mart invitation page prints.
     #[serde(default)]
     pub oldale_mart_dialogue_frames: Option<u16>,
-    /// Invitation page before the Mart guide begins its scripted walk.
+    /// Active source message page within the Oldale Mart script.
     #[serde(default)]
     pub oldale_mart_dialogue_page: u8,
     /// Remaining frames while a regular overworld message prints. Story
@@ -1721,9 +1721,9 @@ impl WorldState {
         true
     }
 
-    /// Advances an Oldale Mart invitation page. The source has a short
-    /// four-frame lead-in, then reveals one glyph per frame; the A request
-    /// that opens the first page has already spent sixteen printer frames.
+    /// Advances an Oldale Mart script message. The source has a short
+    /// message-specific lead-in, then reveals one glyph per frame; opening
+    /// requests have already spent their first sixteen printer frames.
     pub fn advance_oldale_mart_dialogue_printer(&mut self, frames: u32) -> bool {
         let Some(remaining) = self.oldale_mart_dialogue_frames else { return false; };
         let next = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
@@ -2072,10 +2072,18 @@ impl WorldState {
     pub fn rendered_dialogue(&self) -> Option<String> {
         let dialogue = self.dialogue.as_ref()?;
         if let Some(remaining) = self.oldale_mart_dialogue_frames {
-            let (total, lead_in) = if self.oldale_mart_scene_stage == 3 {
-                (64_u16, 7_u16)
-            } else {
-                (32_u16, 4_u16)
+            let (total, lead_in) = match (self.oldale_mart_scene_stage, self.oldale_mart_dialogue_page) {
+                // The guide's carried movement frames open its first
+                // promotion page with `This is a` already visible.
+                (3, 0) => (64_u16, 7_u16),
+                // Fresh mGBA captures show both following promotion pages
+                // reveal fourteen glyphs in the opening A×16 window and
+                // accept dismissal after a further Noop×64.
+                (3, _) => (80_u16, 2_u16),
+                // The explanation is a normal source message after the
+                // item receipt rather than an atomically rendered string.
+                (5, _) => (dialogue_printer_duration(dialogue), 12_u16),
+                _ => (32_u16, 4_u16),
             };
             let elapsed = total.saturating_sub(remaining);
             let visible_characters = usize::from(elapsed.saturating_sub(lead_in));
@@ -3422,24 +3430,31 @@ impl WorldState {
                     };
                     if let Some(dialogue) = next_page {
                         self.oldale_mart_dialogue_page = self.oldale_mart_dialogue_page.saturating_add(1);
-                        // The A request that advances a completed page also
-                        // spends its first sixteen frames on the new printer.
-                        self.oldale_mart_dialogue_frames = Some(48);
+                        // The A request has already consumed sixteen of
+                        // the source's 80-frame printer for promotion pages
+                        // two and three.
+                        self.oldale_mart_dialogue_frames = Some(64);
                         self.dialogue = Some(dialogue.to_owned());
                         return;
                     }
-                    // `giveitem ITEM_POTION` opens its own receipt message;
-                    // the explanatory Mart text follows only after that box
-                    // has been dismissed.
+                    // `giveitem ITEM_POTION` supplies its own 32-frame
+                    // receipt before the explanatory Mart text can open.
                     self.oldale_mart_scene_stage = 4;
                     self.oldale_mart_dialogue_page = 0;
                     self.potions = self.potions.saturating_add(1);
-                    self.dialogue = Some(format!("{} put the POTION in the\nITEMS POCKET.", self.player_name));
+                    self.oldale_mart_dialogue_frames = Some(16);
+                    self.dialogue = Some("Obtained the POTION!".to_owned());
                     return;
                 }
                 4 => {
                     self.oldale_mart_scene_stage = 5;
-                    self.dialogue = Some("A POTION can be used anytime, so it's\neven more useful than a POKéMON CENTER\nin certain situations.".to_owned());
+                    let dialogue = "A POTION can be used anytime, so it's\neven more useful than a POKéMON CENTER\nin certain situations.".to_owned();
+                    // The A that dismisses the receipt has already consumed
+                    // the first sample of the following source text printer.
+                    self.oldale_mart_dialogue_frames = Some(
+                        dialogue_printer_duration(&dialogue).saturating_sub(16),
+                    );
+                    self.dialogue = Some(dialogue);
                     return;
                 }
                 5 => {
