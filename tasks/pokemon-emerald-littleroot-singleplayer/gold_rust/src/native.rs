@@ -1608,7 +1608,7 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
         draw_gender_select(frame, world);
         return;
     }
-    if world.phase == StoryPhase::StarterSelect {
+    if matches!(world.phase, StoryPhase::StarterSelect | StoryPhase::StarterConfirm) {
         draw_window(frame, 42, 44, 156, 72);
         draw_text(frame, 56, 54, "CHOOSE STARTER", 20);
         let selected = match world.starter {
@@ -1618,7 +1618,14 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             None => "TORCHIC",
         };
         draw_text(frame, 66, 76, selected, 12);
-        draw_text(frame, 56, 96, "LEFT/RIGHT: SELECT", 24);
+        if world.phase == StoryPhase::StarterConfirm {
+            draw_text(frame, 46, 88, "Do you choose this POKéMON?", 27);
+            draw_text(frame, 96, 100, "YES", 4);
+            draw_text(frame, 96, 108, "NO", 3);
+            draw_cursor(frame, 86, if world.starter_confirm_yes { 100 } else { 108 });
+        } else {
+            draw_text(frame, 56, 96, "LEFT/RIGHT: SELECT", 24);
+        }
         return;
     }
     if let Some(field) = world.clock_editing {
