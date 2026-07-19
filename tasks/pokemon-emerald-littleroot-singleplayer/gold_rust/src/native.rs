@@ -133,6 +133,7 @@ const LITTLEROOT_RIGHT_4352_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/li
 const LITTLEROOT_RIGHT_4416_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4416.obj_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4544_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4544.obj_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4608_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4608.obj_vram.zlib.b64");
+const LITTLEROOT_RIGHT_4672_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4672.obj_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4160_OAM_B64: &str = include_str!("../assets/littleroot_right_4160.oam.b64");
 const LITTLEROOT_RIGHT_4224_OAM_B64: &str = include_str!("../assets/littleroot_right_4224.oam.b64");
 const LITTLEROOT_RIGHT_4288_OAM_B64: &str = include_str!("../assets/littleroot_right_4288.oam.b64");
@@ -141,6 +142,7 @@ const LITTLEROOT_RIGHT_4416_OAM_B64: &str = include_str!("../assets/littleroot_r
 const LITTLEROOT_RIGHT_4480_OAM_B64: &str = include_str!("../assets/littleroot_right_4480.oam.b64");
 const LITTLEROOT_RIGHT_4544_OAM_B64: &str = include_str!("../assets/littleroot_right_4544.oam.b64");
 const LITTLEROOT_RIGHT_4608_OAM_B64: &str = include_str!("../assets/littleroot_right_4608.oam.b64");
+const LITTLEROOT_RIGHT_4672_OAM_B64: &str = include_str!("../assets/littleroot_right_4672.oam.b64");
 const LITTLEROOT_RIGHT_192_OAM_B64: &str = include_str!("../assets/littleroot_right_192.oam.b64");
 const LITTLEROOT_RIGHT_192_OBJ_TILES_B64: &str = include_str!("../assets/littleroot_right_192.obj_tiles.b64");
 const LITTLEROOT_RIGHT_208_OAM_B64: &str = include_str!("../assets/littleroot_right_208.oam.b64");
@@ -3705,6 +3707,7 @@ fn littleroot_stopped_right_phase_state(frame: u64) -> Option<(&'static str, &'s
         4480 => Some((LITTLEROOT_RIGHT_4224_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4416_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4480_OAM_B64)),
         4544 => Some((LITTLEROOT_RIGHT_4160_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4544_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4544_OAM_B64)),
         4608 => Some((LITTLEROOT_RIGHT_4224_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4608_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4608_OAM_B64)),
+        4672 => Some((LITTLEROOT_RIGHT_4160_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4672_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4672_OAM_B64)),
         _ => None,
     }
 }
