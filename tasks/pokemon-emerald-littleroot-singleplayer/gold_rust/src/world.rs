@@ -92,7 +92,7 @@ pub enum StarterSpecies { Treecko, Torchic, Mudkip }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum BattleOpponent { Zigzagoon, Wurmple, Rival }
+pub enum BattleOpponent { Zigzagoon, Poochyena, Wurmple, Rival }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct BattleState {
@@ -141,7 +141,7 @@ pub struct BattleState {
     /// phase; trainer and Birch-rescue battles remain locked.
     #[serde(default)]
     pub escaped: bool,
-    /// Distinguishes an ordinary Route 101 wild Zigzagoon from the scripted
+    /// Distinguishes an ordinary Route 101 wild Poochyena from the scripted
     /// Birch-rescue Zigzagoon battle, which has a different post-battle path.
     #[serde(default)]
     pub wild: bool,
@@ -175,6 +175,7 @@ fn default_battle_intro_stage() -> u8 { 2 }
 fn battle_opponent_name(opponent: BattleOpponent) -> &'static str {
     match opponent {
         BattleOpponent::Zigzagoon => "ZIGZAGOON",
+        BattleOpponent::Poochyena => "POOCHYENA",
         BattleOpponent::Wurmple => "WURMPLE",
         BattleOpponent::Rival => "your RIVAL",
     }
@@ -408,7 +409,7 @@ pub struct WorldState {
     /// The pre-Oldale Zigzagoon encounter from the 03_birch source path is
     /// resolved and must not retrigger when the player remains in its grass.
     #[serde(default)]
-    pub route101_zigzagoon_resolved: bool,
+    pub route101_poochyena_resolved: bool,
     pub pending_rival_meeting: bool,
     /// Remaining source-script frames before the rival arrival dialogue opens.
     pub rival_arrival_frames: Option<u16>,
@@ -568,7 +569,7 @@ impl WorldState {
             pokedex_rival_frames: None,
             route101_exit_push: None,
             route101_wurmple_resolved: false,
-            route101_zigzagoon_resolved: false,
+            route101_poochyena_resolved: false,
             pending_rival_meeting: false,
             rival_arrival_frames: None,
             rival_departure_frames: None,
@@ -671,7 +672,7 @@ impl WorldState {
             pokedex_rival_frames: None,
             route101_exit_push: None,
             route101_wurmple_resolved: false,
-            route101_zigzagoon_resolved: false,
+            route101_poochyena_resolved: false,
             pending_rival_meeting: false,
             rival_arrival_frames: None,
             rival_departure_frames: None,
@@ -777,7 +778,7 @@ impl WorldState {
             pokedex_rival_frames: None,
             route101_exit_push: None,
             route101_wurmple_resolved: false,
-            route101_zigzagoon_resolved: false,
+            route101_poochyena_resolved: false,
             pending_rival_meeting: false,
             rival_arrival_frames: None,
             rival_departure_frames: None,
@@ -879,7 +880,7 @@ impl WorldState {
             pokedex_rival_frames: None,
             route101_exit_push: None,
             route101_wurmple_resolved: false,
-            route101_zigzagoon_resolved: false,
+            route101_poochyena_resolved: false,
             pending_rival_meeting: false,
             rival_arrival_frames: None,
             rival_departure_frames: None,
@@ -1010,7 +1011,7 @@ impl WorldState {
             pokedex_rival_frames: None,
             route101_exit_push: None,
             route101_wurmple_resolved: false,
-            route101_zigzagoon_resolved: false,
+            route101_poochyena_resolved: false,
             pending_rival_meeting: false,
             rival_arrival_frames: None,
             rival_departure_frames: None,
@@ -2846,21 +2847,21 @@ impl WorldState {
 
     /// The freshly replayed `03_birch` route reaches the grass tile `(15,5)`
     /// on Route 101 before Oldale. Its deterministic source RNG opens a
-    /// normal wild Zigzagoon encounter there; this is distinct from the
-    /// earlier scripted Birch-rescue battle against the same species.
-    fn begin_route101_zigzagoon_encounter(&mut self) {
+    /// normal wild Poochyena encounter there; this is distinct from the
+    /// earlier scripted Birch-rescue battle against Zigzagoon.
+    fn begin_route101_poochyena_encounter(&mut self) {
         if self.map != MapId::Route101
             || self.phase != StoryPhase::BirchRescued
             || self.player != (TilePosition { x: 15, y: 5 })
-            || self.route101_zigzagoon_resolved
+            || self.route101_poochyena_resolved
             || self.battle.is_some()
         {
             return;
         }
         let (_, player_hp, player_move_damage, player_move_name, player_move_pp, player_status_move_name, player_status_move_pp) = starter_battle_profile(self.starter);
         self.battle = Some(BattleState {
-            opponent: BattleOpponent::Zigzagoon,
-            opponent_species: "ZIGZAGOON".to_owned(),
+            opponent: BattleOpponent::Poochyena,
+            opponent_species: "POOCHYENA".to_owned(),
             opponent_move_name: "TACKLE".to_owned(),
             opponent_move_damage: 4,
             player_hp,
@@ -2881,8 +2882,8 @@ impl WorldState {
             wild: true,
             move_cursor: 0,
             player_fainted: false,
-            message: Some("Wild ZIGZAGOON appeared!".to_owned()),
-            entry_transition_frames: 48,
+            message: Some("Wild POOCHYENA appeared!".to_owned()),
+            entry_transition_frames: 224,
             intro_stage: 0,
         });
     }
@@ -2997,6 +2998,7 @@ impl WorldState {
             _ => battle.message = Some(match battle.opponent {
                 BattleOpponent::Rival => "No! There's no running from a TRAINER battle!".to_owned(),
                 BattleOpponent::Zigzagoon => "Can't escape!".to_owned(),
+                BattleOpponent::Poochyena => unreachable!("Route 101 Poochyena is wild"),
                 BattleOpponent::Wurmple => unreachable!("all Wurmple encounters are wild"),
             }),
         }
@@ -3032,6 +3034,7 @@ impl WorldState {
             let opponent = match battle.opponent {
                 BattleOpponent::Rival => "RIVAL",
                 BattleOpponent::Zigzagoon => "ZIGZAGOON",
+                BattleOpponent::Poochyena => "POOCHYENA",
                 BattleOpponent::Wurmple => "WURMPLE",
             };
             battle.player_fainted = battle.player_hp == 0;
@@ -3064,9 +3067,9 @@ impl WorldState {
                 self.battle = None;
                 if escaped && wild {
                     match opponent {
-                        BattleOpponent::Zigzagoon => self.route101_zigzagoon_resolved = true,
+                        BattleOpponent::Poochyena => self.route101_poochyena_resolved = true,
                         BattleOpponent::Wurmple => self.route101_wurmple_resolved = true,
-                        BattleOpponent::Rival => unreachable!("rival battles are not wild"),
+                        BattleOpponent::Rival | BattleOpponent::Zigzagoon => unreachable!("trainer and rescue battles are not wild"),
                     }
                 }
                 if !escaped {
@@ -3076,6 +3079,7 @@ impl WorldState {
                         match opponent {
                             BattleOpponent::Rival => "Your POKéMON needs another try against your RIVAL.".to_owned(),
                             BattleOpponent::Zigzagoon => "PROF. BIRCH: Try again! My POKéMON still needs help!".to_owned(),
+                            BattleOpponent::Poochyena => unreachable!("Route 101 Poochyena is wild"),
                             BattleOpponent::Wurmple => unreachable!("all Wurmple encounters are wild"),
                         }
                     });
@@ -3109,7 +3113,6 @@ impl WorldState {
         battle.selecting_move = false;
         if battle.rival_hp == 0 {
             let opponent = battle.opponent;
-            let wild = battle.wild;
             self.battle = None;
             match opponent {
                 BattleOpponent::Rival => {
@@ -3118,10 +3121,6 @@ impl WorldState {
                     self.dialogue = Some(rival_defeated_text(self.player_gender, &self.player_name));
                 }
                 BattleOpponent::Zigzagoon => {
-                    if wild {
-                        self.route101_zigzagoon_resolved = true;
-                        return;
-                    }
                     self.phase = StoryPhase::BirchRescued;
                     // Route101_EventScript_BirchsBag resumes on Route 101
                     // after the battle, fixes the player at (6,13), and has
@@ -3135,6 +3134,9 @@ impl WorldState {
                     }
                     self.title_intro_step = 0;
                     self.dialogue = Some(birch_rescue_after_battle_page(0, &self.player_name));
+                }
+                BattleOpponent::Poochyena => {
+                    self.route101_poochyena_resolved = true;
                 }
                 BattleOpponent::Wurmple => {
                     self.route101_wurmple_resolved = true;
@@ -3150,6 +3152,7 @@ impl WorldState {
         let opponent = match battle.opponent {
             BattleOpponent::Rival => "RIVAL",
             BattleOpponent::Zigzagoon => "ZIGZAGOON",
+            BattleOpponent::Poochyena => "POOCHYENA",
             BattleOpponent::Wurmple => "WURMPLE",
         };
         if battle.player_hp == 0 {
@@ -4132,7 +4135,7 @@ impl WorldState {
                 self.advance_running_shoes_wait(held_frames.saturating_sub(frames_to_trigger));
             }
             self.apply_oldale_rival_trigger();
-            self.begin_route101_zigzagoon_encounter();
+            self.begin_route101_poochyena_encounter();
             self.begin_route101_wurmple_encounter();
             if self.dialogue.is_some() || self.battle.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() { break; }
         }
