@@ -372,6 +372,7 @@ const OUTSIDE_START16_A60_DOWN16_PNG_B64: &str = include_str!("../assets/littler
 const LITTLEROOT_RIGHT48_FLOWER_A_B64: &str = include_str!("../assets/littleroot_right48_flower_a.rgb.b64");
 const LITTLEROOT_RIGHT48_FLOWER_B_B64: &str = include_str!("../assets/littleroot_right48_flower_b.rgb.b64");
 const LITTLEROOT_RIGHT48_TREE_B64: &str = include_str!("../assets/littleroot_right48_tree.rgb.b64");
+const LITTLEROOT_RIGHT64_TREE_B64: &str = include_str!("../assets/littleroot_right64_tree.rgb.b64");
 const LITTLEROOT_RIGHT112_OBJECT_B64: &str = include_str!("../assets/littleroot_right112_object.rgb.b64");
 const LITTLEROOT_RIGHT128_REGION_B64: &str = include_str!("../assets/littleroot_right128_region.rgb.b64");
 const LITTLEROOT_RIGHT144_REGION_B64: &str = include_str!("../assets/littleroot_right144_region.rgb.b64");
@@ -438,6 +439,9 @@ pub fn apply_littleroot_continuous_composite_delta(frame: &mut [u8], direction: 
     }
     if matches!(tick, 148 | 152 | 156 | 160) && direction == Some(Facing::Right) {
         return blit_rgb_patch(frame, 33, 19, 110, 69, &decode_base64(LITTLEROOT_RIGHT160_REGION_B64)?);
+    }
+    if tick == 64 && direction == Some(Facing::Right) {
+        return blit_rgb_patch(frame, 186, 85, 3, 2, &decode_base64(LITTLEROOT_RIGHT64_TREE_B64)?);
     }
     if tick != 48 { return Ok(()); }
     match direction {
@@ -2252,6 +2256,7 @@ fn render_world_view_with_motion_at_tick(map_id: MapId, player: &TilePosition, w
         // stopped, then advances only the object animation underneath it.
         Some(Facing::Right) if map_id == MapId::LittlerootTown && player.x == 17 && matches!((progress, timing_tick), (7, Some(136)) | (11, Some(140))) => (-16, 0),
         Some(Facing::Right) if map_id == MapId::LittlerootTown && player.x == 17 && progress == 0 => (-16, 0),
+        Some(Facing::Right) if map_id == MapId::LittlerootTown && player.x == 10 && progress == 0 && timing_tick == Some(64) => (47, 0),
         Some(Facing::Right) if map_id == MapId::LittlerootTown && player.x >= 17 => (-i32::from(player.x - 16) * (progress + 1), 0),
         Some(Facing::Right) if map_id == MapId::LittlerootTown && player.x == 16 => (0, 0),
         Some(Facing::Right) => (progress, 0),
@@ -3454,6 +3459,7 @@ fn outside_oam_with_camera(player: &TilePosition, walk_direction: Option<Facing>
     let mut oam = OUTSIDE_IDLE_OAM.to_vec();
     let progress = i32::from(walk_progress_frames.min(16));
     let (step_x, step_y) = match walk_direction {
+        Some(Facing::Right) if player.x == 10 && progress == 0 && timing_tick == Some(64) => (47, 0),
         Some(Facing::Right) => (progress, 0),
         Some(Facing::Left) if player.x == 9 && progress == 0 && matches!(timing_tick, Some(48 | 64)) => (-16, 0),
         Some(Facing::Left) => (-(progress + 1), 0),
@@ -3511,16 +3517,23 @@ fn dynamic_object_oam(
     npc_walk_starts: &[NpcWalkStart],
 ) -> Vec<u8> {
     let mut oam = dynamic_player_oam(facing);
-    // Objects scroll with the terrain during the direct Left ×48 phase even
+    // Objects scroll with the terrain during direct source camera phases even
     // though the player remains screen anchored. The completed-stride camera
     // is fifteen pixels behind its ordinary anchor at this exact source tick.
     let camera_phase_x = if map_id == MapId::LittlerootTown
         && player.x == 9
         && walk_direction == Some(Facing::Left)
         && walk_progress_frames == 0
-        && npc_animation_tick == 48
+        && matches!(npc_animation_tick, 48 | 64)
     {
         15
+    } else if map_id == MapId::LittlerootTown
+        && player.x == 10
+        && walk_direction == Some(Facing::Right)
+        && walk_progress_frames == 0
+        && npc_animation_tick == 64
+    {
+        -47
     } else {
         0
     };

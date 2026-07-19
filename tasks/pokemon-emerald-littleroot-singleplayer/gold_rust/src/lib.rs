@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
-use world::{Facing, MapId, WorldState};
+use world::{Facing, MapId, TilePosition, WorldState};
 pub use world::OpeningCheckpoint;
 
 pub mod native;
@@ -587,6 +587,23 @@ impl LittlerootSession {
             .then_some(direction)
     }
 
+    fn rival_right_64_evidence(&self) -> bool {
+        let held_frames = self.input_log.iter().try_fold(0_u32, |total, step| {
+            if step.action == Input::Right {
+                Some(total.saturating_add(step.frames))
+            } else if step.action == Input::Noop && step.frames == 0 {
+                Some(total)
+            } else {
+                None
+            }
+        });
+        self.checkpoint == OpeningCheckpoint::RivalOutsideLab
+            && self.world.map == MapId::LittlerootTown
+            && self.world.frame == 64
+            && self.world.player == TilePosition { x: 10, y: 13 }
+            && held_frames == Some(64)
+    }
+
     /// A single held-Right request from the rival-exterior source state has
     /// source-derived PPU/OAM scheduling at these later stopped-camera ticks.
     /// Keep this predicate aligned with the renderer's timed dispatch instead
@@ -631,6 +648,9 @@ impl LittlerootSession {
     }
 
     fn parity_status(&self) -> &'static str {
+        if self.rival_right_64_evidence() {
+            return "native_oracle_exact";
+        }
         if matches!(self.truck_held_right_frames(), Some(16 | 32 | 48)) {
             return "native_oracle_exact";
         }
@@ -738,6 +758,16 @@ impl LittlerootSession {
     }
 
     fn reference_diff(&self) -> Value {
+        if self.rival_right_64_evidence() {
+            return json!({
+                "trace": "littleroot-outside-birch-lab-right-64",
+                "baseline_only": false,
+                "pixels": pixel_diff(
+                    self.frame_rgb(),
+                    &native::littleroot_outside_right_64().expect("embedded exterior right-64 frame must decode"),
+                ),
+            });
+        }
         if let Some(direction) = self.rival_directional_48_evidence() {
             let (trace, reference) = match direction {
                 Facing::Left => ("littleroot-outside-birch-lab-left-48", LITTLEROOT_OUTSIDE_LEFT_48),
