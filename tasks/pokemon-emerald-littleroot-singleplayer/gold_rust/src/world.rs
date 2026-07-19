@@ -19,6 +19,16 @@ const CLOCK_VISIT_MOM_ENTRY_FRAMES: u16 = 68;
 const CLOCK_VISIT_PLAYER_TURN_FRAMES: u16 = 4;
 const CLOCK_VISIT_ENTRY_FRAMES: u16 =
     CLOCK_VISIT_MOM_ENTRY_FRAMES + CLOCK_VISIT_PLAYER_TURN_FRAMES;
+/// Route103's north watcher spends 44 frames in its authored movement while
+/// the rival's first two normal steps take 32. `waitmovement` then releases
+/// the 112-frame ledge stream (`jump_2_down`, `delay_16`, four walks).
+const ROUTE103_RIVAL_EXIT_NORTH_FRAMES: u16 = 156;
+/// The east/west watcher delays 16 frames then makes a four-frame turn, so
+/// its first parallel movement stream holds the shared ledge exit for 20.
+const ROUTE103_RIVAL_EXIT_SIDE_FRAMES: u16 = 116;
+/// A south-facing player has no watcher movement; the first rival step holds
+/// the second stream for its normal 16-frame duration.
+const ROUTE103_RIVAL_EXIT_SOUTH_FRAMES: u16 = 112;
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -2309,46 +2319,58 @@ impl WorldState {
     }
 
     /// Runs Route103_EventScript_RivalExit once its two post-battle messages
-    /// have closed. The north-facing branch first moves left/down so the
-    /// rival clears the player before taking the shared southern ledge path.
+    /// have closed. `route103_rival_departure_facing` and the serialized
+    /// countdown retain the selected source branch across checkpoint restore;
+    /// source watcher movements run alongside the rival's first stream before
+    /// `waitmovement` can release the southern ledge path.
     pub fn advance_rival_departure(&mut self, frames: u32) -> bool {
         let Some(remaining) = self.rival_departure_frames else { return false; };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         let departure_facing = self.route103_rival_departure_facing.unwrap_or(self.facing);
         let player_faced_north = departure_facing == Facing::Up;
         let player_faced_sideways = matches!(departure_facing, Facing::Left | Facing::Right);
-        // Route103_Movement_WatchRivalExitFacingNorth turns the player left,
-        // then down; the east/west branch turns down after its Delay16.
-        if player_faced_north && remaining > 112 && next_remaining <= 112 {
+        // `WatchRivalExitFacingNorth` is `delay_16`, `delay_4`, a
+        // four-frame left turn, `delay_16`, then a four-frame down turn.
+        // The east/west watcher is `delay_16` plus its four-frame down turn.
+        // Commit facing when each in-place action completes, matching the
+        // duration boundary used for other staged source turns.
+        if player_faced_north && remaining > 132 && next_remaining <= 132 {
             self.facing = Facing::Left;
         }
-        if player_faced_north && remaining > 80 && next_remaining <= 80 {
+        if player_faced_north && remaining > 112 && next_remaining <= 112 {
             self.facing = Facing::Down;
         }
-        if player_faced_sideways && remaining > 80 && next_remaining <= 80 {
+        if player_faced_sideways && remaining > 96 && next_remaining <= 96 {
             self.facing = Facing::Down;
         }
-        // Every authored movement command is one 16-frame object-event
-        // step. Model them individually so held input can cross several
-        // command boundaries without teleporting the rival to the ledge.
-        let path: &[(u16, i16, i16)] = if player_faced_north {
-            &[
-                (112, 9, 3),
-                (96, 9, 4),
+        // Normal walks are 16 frames and `jump_2_down` is 32. Keep each
+        // authored destination, but use the post-`waitmovement` timestamps
+        // from the selected source branch so a large held request cannot
+        // shorten the watcher or ledge choreography.
+        let path: &[(u16, i16, i16)] = match departure_facing {
+            Facing::Up => &[
+                (140, 9, 3),
+                (124, 9, 4),
                 (80, 9, 6),
                 (48, 9, 7),
                 (32, 9, 8),
                 (16, 9, 9),
                 (0, 9, 10),
-            ]
-        } else {
-            &[
-                (80, 10, 4),
+            ],
+            Facing::Left | Facing::Right => &[
+                (100, 10, 4),
                 (64, 10, 6),
                 (32, 10, 7),
                 (16, 10, 8),
                 (0, 10, 9),
-            ]
+            ],
+            Facing::Down => &[
+                (96, 10, 4),
+                (64, 10, 6),
+                (32, 10, 7),
+                (16, 10, 8),
+                (0, 10, 9),
+            ],
         };
         for &(boundary, x, y) in path {
             if remaining > boundary && next_remaining <= boundary {
@@ -5016,12 +5038,17 @@ impl WorldState {
                         self.title_intro_step = 1;
                         self.dialogue = Some(rival_head_back_text(self.player_gender, &self.player_name));
                     } else {
-                        // Route103_EventScript_RivalExit has a six-unit
-                        // ordinary branch (down, ledge jump, delay, then
-                        // three downs). Only the north-facing branch adds a
-                        // left/down detour and fourth final down-step.
+                        // Capture the source `VAR_FACING` before the
+                        // watcher movement can change the visible player
+                        // direction. The branch owns a persisted whole-stream
+                        // duration: north has a 44-frame watcher, east/west
+                        // have a 20-frame watcher, and south has none.
                         self.route103_rival_departure_facing = Some(self.facing);
-                        self.rival_departure_frames = Some(if self.facing == Facing::Up { 128 } else { 96 });
+                        self.rival_departure_frames = Some(match self.facing {
+                            Facing::Up => ROUTE103_RIVAL_EXIT_NORTH_FRAMES,
+                            Facing::Left | Facing::Right => ROUTE103_RIVAL_EXIT_SIDE_FRAMES,
+                            Facing::Down => ROUTE103_RIVAL_EXIT_SOUTH_FRAMES,
+                        });
                     }
                 }
                 StoryPhase::RivalDefeated if self.map == MapId::OldaleTown
