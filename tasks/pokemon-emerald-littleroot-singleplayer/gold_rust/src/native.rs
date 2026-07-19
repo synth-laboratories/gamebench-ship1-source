@@ -135,6 +135,7 @@ const LITTLEROOT_RIGHT_4544_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/li
 const LITTLEROOT_RIGHT_4608_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4608.obj_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4672_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4672.obj_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4736_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4736.obj_vram.zlib.b64");
+const LITTLEROOT_RIGHT_4800_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4800.obj_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4160_OAM_B64: &str = include_str!("../assets/littleroot_right_4160.oam.b64");
 const LITTLEROOT_RIGHT_4224_OAM_B64: &str = include_str!("../assets/littleroot_right_4224.oam.b64");
 const LITTLEROOT_RIGHT_4288_OAM_B64: &str = include_str!("../assets/littleroot_right_4288.oam.b64");
@@ -145,6 +146,7 @@ const LITTLEROOT_RIGHT_4544_OAM_B64: &str = include_str!("../assets/littleroot_r
 const LITTLEROOT_RIGHT_4608_OAM_B64: &str = include_str!("../assets/littleroot_right_4608.oam.b64");
 const LITTLEROOT_RIGHT_4672_OAM_B64: &str = include_str!("../assets/littleroot_right_4672.oam.b64");
 const LITTLEROOT_RIGHT_4736_OAM_B64: &str = include_str!("../assets/littleroot_right_4736.oam.b64");
+const LITTLEROOT_RIGHT_4800_OAM_B64: &str = include_str!("../assets/littleroot_right_4800.oam.b64");
 const LITTLEROOT_RIGHT_192_OAM_B64: &str = include_str!("../assets/littleroot_right_192.oam.b64");
 const LITTLEROOT_RIGHT_192_OBJ_TILES_B64: &str = include_str!("../assets/littleroot_right_192.obj_tiles.b64");
 const LITTLEROOT_RIGHT_208_OAM_B64: &str = include_str!("../assets/littleroot_right_208.oam.b64");
@@ -3711,6 +3713,7 @@ fn littleroot_stopped_right_phase_state(frame: u64) -> Option<(&'static str, &'s
         4608 => Some((LITTLEROOT_RIGHT_4224_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4608_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4608_OAM_B64)),
         4672 => Some((LITTLEROOT_RIGHT_4160_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4672_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4672_OAM_B64)),
         4736 => Some((LITTLEROOT_RIGHT_4224_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4736_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4736_OAM_B64)),
+        4800 => Some((LITTLEROOT_RIGHT_4160_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4800_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4800_OAM_B64)),
         _ => None,
     }
 }
@@ -3764,7 +3767,7 @@ fn littleroot_stopped_right_npc_oam_offset(frame: u64, id: &str) -> (i32, i32) {
 /// prior stride direction. The source 4736 capture keeps Fat Man down-facing
 /// in ObjectEvent state while its rightward walking tile remains mirrored.
 fn littleroot_stopped_right_npc_hflip(frame: u64, id: &str, facing: Facing) -> bool {
-    matches!((frame, id), (4736, "fat_man")) || facing == Facing::Right
+    matches!((frame, id), (4736 | 4800, "fat_man")) || facing == Facing::Right
 }
 
 /// The captured player object has priority 2. At the stopped-camera phase,
