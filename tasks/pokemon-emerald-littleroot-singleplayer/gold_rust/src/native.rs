@@ -2073,6 +2073,9 @@ pub fn is_walkable(map_id: MapId, x: i16, y: i16) -> Result<bool, String> {
     if map_id == MapId::LittlerootTown {
         match (x, y) {
             (9, 12) => return Ok(false),
+            // The post-Pokédex field route reaches local `(14, 5)` from the
+            // south and remains pressed against this northern obstruction.
+            (14, 4) => return Ok(false),
             // The direct Right×64 → Down trace reaches two field tiles and
             // then keeps pressing against this raised-flower obstruction.
             // Its Porymap export does not retain that runtime permission.
@@ -2082,7 +2085,7 @@ pub fn is_walkable(map_id: MapId, x: i16, y: i16) -> Result<bool, String> {
             // collision bits reject several of those source-walkable tiles.
             // Keep these explicit permissions at the map-collision boundary
             // rather than teaching the renderer to invent movement.
-            (8, 13) | (10..=13, 13) | (13, 14 | 15) | (10..=12, 15) => return Ok(true),
+            (8, 13) | (10..=13, 13) | (13, 14 | 15) | (10..=12, 15) | (14, 5..=9) => return Ok(true),
             // The lower flower path is walkable in the source checkpoint
             // even though Porymap marks these two blocks with collision 1.
             // They are the two committed tiles in the captured Down×48 walk.

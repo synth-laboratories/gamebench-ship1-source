@@ -3075,7 +3075,10 @@ impl WorldState {
             // metatile. Resolve an upward approach before normal collision
             // rejects the tile, while keeping the player on the walkable
             // doorstep until the fade begins.
-            if self.map == MapId::LittlerootTown && facing == Facing::Up {
+            if self.map == MapId::LittlerootTown
+                && self.phase != StoryPhase::PokedexReceived
+                && facing == Facing::Up
+            {
                 let destination = match (next_x, next_y) {
                     (5, 8) => Some((MapId::BrendansHouse1F, TilePosition { x: 8, y: 8 })),
                     (14, 8) => Some((MapId::MaysHouse1F, TilePosition { x: 2, y: 8 })),
@@ -3088,20 +3091,20 @@ impl WorldState {
                     break;
                 }
             }
-            // The direct post-Pokédex source trace walks through this narrow
-            // exterior corridor while its nearby object-event coordinates
-            // advance on a different scheduler. Until those object events
-            // are represented in the same source field grid, the renderer's
-            // fitted NPC coordinates must not reject a RAM-proven player
-            // move at this gameplay boundary.
-            let source_rival_corridor = self.map == MapId::LittlerootTown
+            // The direct post-Pokédex source path crosses the lower exterior
+            // corridor and the May-house doorstep while nearby object-event
+            // coordinates advance on a different scheduler. Until those
+            // object events are represented in the same source field grid,
+            // renderer-fitted NPC coordinates must not reject a RAM-proven
+            // player move at this gameplay boundary.
+            let source_rival_field_route = self.map == MapId::LittlerootTown
                 && self.phase == StoryPhase::PokedexReceived
                 && self.has_pokedex
                 && matches!(
                     (next_x, next_y),
-                    (8, 13) | (10..=13, 13) | (13, 14 | 15) | (9..=12, 15)
+                    (14, 9) | (8, 13) | (10..=13, 13) | (13, 14 | 15) | (9..=12, 15)
                 );
-            if !source_rival_corridor
+            if !source_rival_field_route
                 && self.npcs.iter().any(|npc| npc.map == self.map && npc.position.x == next_x && npc.position.y == next_y)
             {
                 self.walk_progress_frames = 0;
@@ -3266,6 +3269,13 @@ impl WorldState {
 
     fn begin_littleroot_warp(&mut self) {
         if self.transition.is_some() { return; }
+        // In the frozen post-Pokédex exterior source state, the field stream
+        // walks through the Porymap-projected May-house warp tile and stops
+        // farther north without a transition. Do not let that projection
+        // override the source field owner for this state.
+        if self.map == MapId::LittlerootTown && self.phase == StoryPhase::PokedexReceived {
+            return;
+        }
         let destination = match (self.map, self.player.x, self.player.y) {
             (MapId::LittlerootTown, 14, 8) => Some((MapId::MaysHouse1F, 2, 8)),
             (MapId::LittlerootTown, 5, 8) => Some((MapId::BrendansHouse1F, 8, 8)),
