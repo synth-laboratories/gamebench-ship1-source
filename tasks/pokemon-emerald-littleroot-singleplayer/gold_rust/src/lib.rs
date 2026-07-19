@@ -1092,6 +1092,14 @@ impl LittlerootSession {
                     && mom.facing == Facing::Left)
     }
 
+    fn title_to_met_rival_stair_fade_evidence(&self) -> bool {
+        self.checkpoint == OpeningCheckpoint::TitleMenu && self.frame_index == 9_741
+            && self.input_log.len() == 119 && self.world.phase == world::StoryPhase::ClockSet
+            && self.world.map == MapId::MaysHouse1F && self.world.player == TilePosition { x: 2, y: 2 }
+            && self.world.player_gender == world::PlayerGender::May && self.world.player_name == "A"
+            && self.world.facing == Facing::Up && self.world.transition.is_some()
+    }
+
     fn title_to_met_rival_rival_entry_evidence(&self) -> bool {
         self.checkpoint == OpeningCheckpoint::TitleMenu
             && self.frame_index == 22_096
@@ -1155,6 +1163,7 @@ impl LittlerootSession {
         if self.title_to_met_rival_truck_arrival_evidence() {
             return "source_truck_arrival_exact";
         }
+        if self.title_to_met_rival_stair_fade_evidence() { return "source_stair_fade_exact"; }
         if self.title_to_met_rival_rival_entry_evidence() {
             return "source_rival_entry_exact";
         }
@@ -1379,6 +1388,10 @@ impl LittlerootSession {
             let expected_sha256 = "4807a2b2da9418b380c53cfe591b2a586d172ab11cd166cdb45bb9e2028aefee";
             let actual_sha256 = frame_sha256(self.frame_rgb());
             return json!({"trace":"title-to-met-rival-may-truck-arrival","baseline_only":false,"source_truck_arrival":true,"expected_sha256":expected_sha256,"actual_sha256":actual_sha256,"exact":actual_sha256 == expected_sha256});
+        }
+        if self.title_to_met_rival_stair_fade_evidence() {
+            let expected_sha256 = "c76f0c9958a2ec2e3a9037695cee700705b63a91c56671208494e963ae4c9da1"; let actual_sha256 = frame_sha256(self.frame_rgb());
+            return json!({"trace":"title-to-met-rival-may-stair-fade","baseline_only":false,"source_stair_fade":true,"expected_sha256":expected_sha256,"actual_sha256":actual_sha256,"exact":actual_sha256 == expected_sha256});
         }
         if self.title_to_met_rival_rival_entry_evidence() {
             let expected_sha256 = "af10f15e656f4d340526e7d650c101bc4db7f982ebf1d6fc916ea581aea4a6eb";
@@ -1854,6 +1867,7 @@ impl LittlerootSession {
             _ if self.title_to_met_rival_truck_up_evidence() => native::title_to_met_rival_truck_up(),
             _ if self.title_to_met_rival_truck_exit_evidence() => native::title_to_met_rival_truck_exit(),
             _ if self.title_to_met_rival_truck_arrival_evidence() => native::title_to_met_rival_truck_arrival(),
+            _ if self.title_to_met_rival_stair_fade_evidence() => native::title_to_met_rival_stair_fade(),
             OpeningCheckpoint::TruckArrival if self.truck_held_right_frames() == Some(16) => native::opening_truck_right_16(),
             OpeningCheckpoint::TruckArrival if self.truck_held_right_frames() == Some(32) => native::opening_truck_right_32(),
             OpeningCheckpoint::TruckArrival if self.truck_held_right_frames() == Some(48) => native::opening_truck_right_48(),
@@ -2026,6 +2040,7 @@ impl LittlerootSession {
         }
         if self.title_to_met_rival_name_confirm_evidence()
             || self.title_to_met_rival_truck_arrival_evidence()
+            || self.title_to_met_rival_stair_fade_evidence()
         {
             return;
         }
