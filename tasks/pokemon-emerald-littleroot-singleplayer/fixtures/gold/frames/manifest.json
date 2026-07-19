@@ -432,6 +432,22 @@
       "input": [{ "action": "noop", "frames": 960 }],
       "frame": "gold_rust/assets/littleroot_outside_noop_960.rgb.b64",
       "sha256": "b9f725d96a61e61205124199f1aa4dbe4032b031b4413dd11b3744a8234a9c58"
+    },
+    {
+      "id": "title-to-met-rival-may-rival-entry",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/00_init/00_init.state",
+      "replay": "fixtures/gold/replays/title_to_met_rival_may.json",
+      "input_limit": 234,
+      "frame": "gold_rust/assets/title_to_met_rival_may_rival_entry.png.b64",
+      "sha256": "af10f15e656f4d340526e7d650c101bc4db7f982ebf1d6fc916ea581aea4a6eb"
+    },
+    {
+      "id": "title-to-met-rival-may-terminal",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/00_init/00_init.state",
+      "replay": "fixtures/gold/replays/title_to_met_rival_may.json",
+      "input_limit": 264,
+      "frame": "gold_rust/assets/title_to_met_rival_may_terminal.png.b64",
+      "sha256": "a34c8a5ed64638ba671374a7af2aee5938c6714bfdc47050441d45b1790ddbf1"
     }
   ]
 }

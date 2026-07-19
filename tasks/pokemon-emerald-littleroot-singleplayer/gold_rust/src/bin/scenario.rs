@@ -17,7 +17,12 @@ struct FrameManifest {
 struct FrameTrace {
     id: String,
     source_state: String,
+    #[serde(default)]
     input: Vec<StepRequest>,
+    #[serde(default)]
+    replay: Option<String>,
+    #[serde(default)]
+    input_limit: Option<usize>,
     frame: String,
     sha256: String,
 }
@@ -117,7 +122,7 @@ fn verify_manifest(manifest_path: &Path) -> Result<(), String> {
     for trace in &manifest.traces {
         let checkpoint = checkpoint_for_source_state(&trace.source_state)?;
         let mut session = LittlerootSession::from_checkpoint(checkpoint);
-        for input in trace.input.clone() {
+        for input in trace_inputs(trace, task_root)? {
             session.step(input);
         }
         let actual_sha256 = frame_sha256(session.frame_rgb());
@@ -147,6 +152,39 @@ fn verify_manifest(manifest_path: &Path) -> Result<(), String> {
     } else {
         Err(format!("{} manifest traces failed", failures.len()))
     }
+}
+
+fn trace_inputs(trace: &FrameTrace, task_root: &Path) -> Result<Vec<StepRequest>, String> {
+    let Some(replay) = trace.replay.as_deref() else {
+        if trace.input_limit.is_some() {
+            return Err(format!("{} sets input_limit without replay", trace.id));
+        }
+        return Ok(trace.input.clone());
+    };
+    if !trace.input.is_empty() {
+        return Err(format!("{} mixes direct input and replay input", trace.id));
+    }
+    let replay_path = task_root.join(replay);
+    let replay: Value = serde_json::from_slice(
+        &std::fs::read(&replay_path).map_err(|error| format!("{}: {error}", replay_path.display()))?,
+    )
+    .map_err(|error| format!("{}: {error}", replay_path.display()))?;
+    let program = replay
+        .get("program")
+        .and_then(Value::as_array)
+        .ok_or_else(|| format!("{} has no replay program", replay_path.display()))?;
+    let mut inputs = expand_program(program)?
+        .into_iter()
+        .map(serde_json::from_value)
+        .collect::<Result<Vec<StepRequest>, _>>()
+        .map_err(|error| format!("{} contains an invalid step: {error}", replay_path.display()))?;
+    if let Some(limit) = trace.input_limit {
+        if limit > inputs.len() {
+            return Err(format!("{} input_limit exceeds {} replay steps", trace.id, inputs.len()));
+        }
+        inputs.truncate(limit);
+    }
+    Ok(inputs)
 }
 
 fn expand_program(steps: &[Value]) -> Result<Vec<Value>, String> {

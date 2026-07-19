@@ -973,6 +973,26 @@ impl LittlerootSession {
             })
     }
 
+    fn title_to_met_rival_rival_entry_evidence(&self) -> bool {
+        self.checkpoint == OpeningCheckpoint::TitleMenu
+            && self.frame_index == 22_096
+            && self.input_log.len() == 234
+            && self.world.phase == world::StoryPhase::MeetRival
+            && self.world.map == MapId::BrendansHouse2F
+            && self.world.player == TilePosition { x: 3, y: 5 }
+            && self.world.player_gender == world::PlayerGender::May
+            && self.world.facing == Facing::Up
+            && self.world.walk_direction.is_none()
+            && self.world.walk_progress_frames == 0
+            && self.world.dialogue.is_none()
+            && self.world.rival_arrival_frames == Some(100)
+            && matches!(self.world.npcs.as_slice(), [npc]
+                if npc.id == "rival"
+                    && npc.map == MapId::BrendansHouse2F
+                    && npc.position == TilePosition { x: 7, y: 1 }
+                    && npc.facing == Facing::Down)
+    }
+
     fn title_to_met_rival_terminal_evidence(&self) -> bool {
         self.checkpoint == OpeningCheckpoint::TitleMenu
             && self.frame_index == 27_270
@@ -992,6 +1012,9 @@ impl LittlerootSession {
     }
 
     fn parity_status(&self) -> &'static str {
+        if self.title_to_met_rival_rival_entry_evidence() {
+            return "source_rival_entry_exact";
+        }
         if self.title_to_met_rival_terminal_evidence() {
             return "source_terminal_exact";
         }
@@ -1139,6 +1162,18 @@ impl LittlerootSession {
     }
 
     fn reference_diff(&self) -> Value {
+        if self.title_to_met_rival_rival_entry_evidence() {
+            let expected_sha256 = "af10f15e656f4d340526e7d650c101bc4db7f982ebf1d6fc916ea581aea4a6eb";
+            let actual_sha256 = frame_sha256(self.frame_rgb());
+            return json!({
+                "trace": "title-to-met-rival-may-rival-entry",
+                "baseline_only": false,
+                "source_rival_entry": true,
+                "expected_sha256": expected_sha256,
+                "actual_sha256": actual_sha256,
+                "exact": actual_sha256 == expected_sha256,
+            });
+        }
         if self.title_to_met_rival_terminal_evidence() {
             let expected_sha256 = "a34c8a5ed64638ba671374a7af2aee5938c6714bfdc47050441d45b1790ddbf1";
             let actual_sha256 = frame_sha256(self.frame_rgb());

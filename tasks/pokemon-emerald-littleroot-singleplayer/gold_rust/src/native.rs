@@ -72,6 +72,8 @@ const BIRCH_LAB_MAP: &[u8] = include_bytes!("../assets/porymap/layouts/professor
 // OAM tiles after the authored bedroom script finishes.
 const BRENDANS_HOUSE_2F_TERMINAL_RIVAL_PATCH_ZLIB_B64: &str = "eNq1kqFyg1AQRfmE/kJkPwGLRCJrKyORzyIrn4yNrETGIpHI2Eg+gd7mJDvbJU3TzpS5w/B2z+7eBaapb5rt4bDX/b5gpivfdfmmSP2Kh/wnHoUd/8A/ImDKH9E8Z+PpsK71K3t++ekSM4670L+s0x3zwY9g9VmXnPIm8JIweEpMflnzo/jxNAdZLQ3FW38VUnJzU6VoDt/vutAfzD8IECbhrSiKtR8vAZD9voZ/2pTfwUp5PlXVMbeMCFUcP1O5FeZ53ZVFBiMDBOOHCFPCRdxg+GWorWQZsslgnEi5fYan21BVyUnHS1zfudkKhmcubr2Zyzpnn/Dsu7y+pGurOjd8Jj0QMQBLzGW0ntuxNdGErAbZvmYgffVvQwXbyqFENkwWZN/AWzd/EbSfIfDegz/6988r9ZYI2pEsQc9L729lkKUgPwAkHOpY";
 const BRENDANS_HOUSE_2F_TERMINAL_PLAYER_PATCH_ZLIB_B64: &str = "eNrllKFywzAQRPUJ/YVCw0JTQ0HDUENDw9DCQsNQw8DC0kDBQv+KuvK2O9eTkn5ANTuas++tLJ1vlG6n9J/0vkWn8SlIdXZdOiswaYoSHh3wjY1z0QHnnDGvfQfRwixJbYwwGcLWUh8khCAyHEN8SVV8jGcymC+XD0iPSDV57Jwri48vPdWsLS3ITtMCIRiuz5B12dqSnD8HKaVdLhpV0mJPuzCoFPYIaHHwNo+0ZDMI8yC2/uRpOZ9GK753JRUso5PjsQ7IvCdIln1bNde8YAD1V/7ktXMEFlbx8T69LpI9OPhm/zNLWLwtu+t/BF0/QGoAws3+51+4DYVn191rM8sT5s8NP+MejxTWL8DRNghgRzs9tpBkwLZ8zPPIVL0f2//cD8QGdpVv3j/h92hePrbC17feydX/Cxxk1X0=";
+const BRENDANS_HOUSE_2F_RIVAL_ENTRY_BALL_PATCH_ZLIB_B64: &str = "eNq7dm3rNVqioKBsktC5Y1Ekoa1LvUhCpLpnFI0iOqMpxZpwtLbHEg8iw3C4XiLzC0mKychfAOi/7hg=";
+const BRENDANS_HOUSE_2F_RIVAL_ENTRY_PLAYER_PATCH_ZLIB_B64: &str = "eNrlVCGSwzAM9BPuCwcDD4YGBgaWBgYGlhYWBpYGFh48WmhYmK/41tnMViN7+oFmdjySdpXIiuz4OMVPwu/aOwxfQSjZZW4soIljL8B1gkM2TBm7OKWEdWkbgClkqVRhFFNDsU0pNxJCkDLsj/SZKvR9f6YG6+32B8gFVdH/tITVK1iKp2cHdPdv2OM4AzDgMq4UdpUUoVwXdP3XpyWzEdd/lkpZjNtRc9yUmPdu+g93nQZbgK0ElG0pxYStgRClFBjn0wCIciArPV4Cl6vLYkQC+6dsioUo6tFSfIhrvMzKfWkuswRu/rkRCASWXZ1/xNMWm7YL5oGLIAw3/1mcEgXAo8ugLcoP//5b3RjQBVUeAUTcTGpWq+eFBXM4OQkcUcardwvi27qwbAKuE9u7hf3ETvlOGOznm/vnOOmFXb1/YNyvrYNlgX/NTI1c";
 const ROUTE101_MAP_B64: &str = include_str!("../assets/porymap/layouts/route101_map.bin.b64");
 const OLDALE_TOWN_MAP_B64: &str = include_str!("../assets/porymap/layouts/oldale_town_map.bin.b64");
 const ROUTE103_MAP_B64: &str = include_str!("../assets/porymap/layouts/route103_map.bin.b64");
@@ -2391,6 +2393,30 @@ pub fn render_world_view_with_dynamic_objects(map_id: MapId, player: &TilePositi
         blit_rgb_patch(&mut frame, 64, 8, 16, 32, &rival)?;
         blit_rgb_patch(&mut frame, 112, 56, 16, 32, &player)?;
     }
+    if npc_animation_tick == 22_096
+        && is_brendans_house_2f_rival_entry_oracle(
+            map_id,
+            player,
+            player_gender,
+            facing,
+            walk_direction,
+            walk_progress_frames,
+            npcs,
+        )
+    {
+        let ball = decode_littleroot_zlib_state(
+            BRENDANS_HOUSE_2F_RIVAL_ENTRY_BALL_PATCH_ZLIB_B64,
+            16 * 24 * 3,
+            "Brendan bedroom rival-entry Poké Ball composite",
+        )?;
+        let player = decode_littleroot_zlib_state(
+            BRENDANS_HOUSE_2F_RIVAL_ENTRY_PLAYER_PATCH_ZLIB_B64,
+            16 * 32 * 3,
+            "Brendan bedroom rival-entry player composite",
+        )?;
+        blit_rgb_patch(&mut frame, 176, 0, 16, 24, &ball)?;
+        blit_rgb_patch(&mut frame, 112, 56, 16, 32, &player)?;
+    }
     Ok(frame)
 }
 
@@ -2414,6 +2440,28 @@ fn is_brendans_house_2f_terminal_oracle(
                 && *map == MapId::BrendansHouse2F
                 && *position == TilePosition { x: 0, y: 2 }
                 && *facing == Facing::Up)
+}
+
+fn is_brendans_house_2f_rival_entry_oracle(
+    map_id: MapId,
+    player: &TilePosition,
+    player_gender: PlayerGender,
+    facing: Facing,
+    walk_direction: Option<Facing>,
+    walk_progress_frames: u8,
+    npcs: &[NpcState],
+) -> bool {
+    map_id == MapId::BrendansHouse2F
+        && player == &TilePosition { x: 3, y: 5 }
+        && player_gender == PlayerGender::May
+        && facing == Facing::Up
+        && walk_direction.is_none()
+        && walk_progress_frames == 0
+        && matches!(npcs, [NpcState { id, map, position, facing }]
+            if id == "rival"
+                && *map == MapId::BrendansHouse2F
+                && *position == TilePosition { x: 7, y: 1 }
+                && *facing == Facing::Down)
 }
 
 /// Renders an overworld view with the source-derived in-progress walk offset.
