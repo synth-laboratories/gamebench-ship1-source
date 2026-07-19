@@ -1005,6 +1005,10 @@ pub struct WorldState {
     pub birch_rescue_frames: Option<u16>,
     #[serde(default)]
     pub birch_rescue_stage: u8,
+    /// `Route101_EventScript_BirchsBag` waits for Birch's one-tile normal
+    /// approach after the starter battle before opening his rescue dialogue.
+    #[serde(default)]
+    pub birch_post_battle_frames: Option<u8>,
     /// Route103 rival face/exclamation/delay sequence before its challenge.
     #[serde(default)]
     pub route103_rival_intro_frames: Option<u16>,
@@ -1232,6 +1236,7 @@ impl WorldState {
             no_pokemon_gate_right: false,
             birch_rescue_frames: None,
             birch_rescue_stage: 0,
+            birch_post_battle_frames: None,
             route103_rival_intro_frames: None,
             route103_rival_intro_stage: 0,
             route103_rival_departure_facing: None,
@@ -1348,6 +1353,7 @@ impl WorldState {
             no_pokemon_gate_right: false,
             birch_rescue_frames: None,
             birch_rescue_stage: 0,
+            birch_post_battle_frames: None,
             route103_rival_intro_frames: None,
             route103_rival_intro_stage: 0,
             route103_rival_departure_facing: None,
@@ -1467,6 +1473,7 @@ impl WorldState {
             no_pokemon_gate_right: false,
             birch_rescue_frames: None,
             birch_rescue_stage: 0,
+            birch_post_battle_frames: None,
             route103_rival_intro_frames: None,
             route103_rival_intro_stage: 0,
             route103_rival_departure_facing: None,
@@ -1582,6 +1589,7 @@ impl WorldState {
             no_pokemon_gate_right: false,
             birch_rescue_frames: None,
             birch_rescue_stage: 0,
+            birch_post_battle_frames: None,
             route103_rival_intro_frames: None,
             route103_rival_intro_stage: 0,
             route103_rival_departure_facing: None,
@@ -1726,6 +1734,7 @@ impl WorldState {
             no_pokemon_gate_right: false,
             birch_rescue_frames: None,
             birch_rescue_stage: 0,
+            birch_post_battle_frames: None,
             route103_rival_intro_frames: None,
             route103_rival_intro_stage: 0,
             route103_rival_departure_facing: None,
@@ -3343,6 +3352,24 @@ impl WorldState {
         true
     }
 
+    /// Finishes the source's `Route101_Movement_BirchApproachPlayer` after
+    /// `ChooseStarter` returns. The destination tile is committed when the
+    /// scripted normal walk starts so the shared object renderer can
+    /// interpolate the stride; the following message waits for all 16
+    /// frames, exactly as `waitmovement 0` does in the map script.
+    pub fn advance_birch_post_battle_approach(&mut self, frames: u32) -> bool {
+        let Some(remaining) = self.birch_post_battle_frames else { return false; };
+        let next_remaining = remaining.saturating_sub(frames.min(u32::from(u8::MAX)) as u8);
+        if next_remaining != 0 {
+            self.birch_post_battle_frames = Some(next_remaining);
+            return true;
+        }
+        self.birch_post_battle_frames = None;
+        self.title_intro_step = 0;
+        self.dialogue = Some(birch_rescue_after_battle_page(0, &self.player_name));
+        true
+    }
+
     /// Runs the Route103 rival's `FacePlayer`, exclamation, and Delay48
     /// field sequence between their observation and trainer battle prompt.
     pub fn advance_route103_rival_intro(&mut self, frames: u32) -> bool {
@@ -4228,11 +4255,19 @@ impl WorldState {
                     self.elevation = crate::native::tile_elevation(self.map, 6, 13)
                         .expect("Route 101 post-battle tile must be staged");
                     if let Some(birch) = self.npcs.iter_mut().find(|npc| npc.id == "birch" && npc.map == MapId::Route101) {
-                        birch.position = TilePosition { x: 5, y: 13 };
+                        // `Route101_Movement_BirchApproachPlayer` has one
+                        // ordinary `walk_right` from the chase endpoint.
+                        birch.position = TilePosition { x: 4, y: 13 };
                         birch.facing = Facing::Right;
                     }
-                    self.title_intro_step = 0;
-                    self.dialogue = Some(birch_rescue_after_battle_page(0, &self.player_name));
+                    self.move_scripted_npc(
+                        "birch",
+                        MapId::Route101,
+                        TilePosition { x: 5, y: 13 },
+                        Facing::Right,
+                    );
+                    self.birch_post_battle_frames = Some(16);
+                    self.dialogue = None;
                 }
                 BattleOpponent::Poochyena => {
                     self.route101_poochyena_resolved = true;
@@ -5141,7 +5176,7 @@ impl WorldState {
     /// separate so they cannot be mistaken for implemented behavior.
     pub fn walk_bounds(&mut self, facing: Facing, held_frames: u32) -> u32 {
         self.face(facing);
-        if self.menu_open || self.dialogue.is_some() || self.transition.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() || self.pokedex_poke_ball_fanfare_frames.is_some() || self.tv_broadcast_intro_frames.is_some() {
+        if self.menu_open || self.dialogue.is_some() || self.transition.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.birch_post_battle_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() || self.pokedex_poke_ball_fanfare_frames.is_some() || self.tv_broadcast_intro_frames.is_some() {
             return 0;
         }
 
