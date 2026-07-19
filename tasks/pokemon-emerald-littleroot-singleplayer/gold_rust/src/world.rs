@@ -97,6 +97,8 @@ pub enum BattleOpponent { Zigzagoon, Poochyena, Wingull, Wurmple, Rival }
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct BattleState {
     pub opponent: BattleOpponent,
+    #[serde(default = "default_player_species")]
+    pub player_species: String,
     #[serde(default = "default_opponent_species")]
     pub opponent_species: String,
     #[serde(default = "default_opponent_move_name")]
@@ -106,9 +108,33 @@ pub struct BattleState {
     pub player_hp: u8,
     #[serde(default = "default_player_battle_hp")]
     pub player_max_hp: u8,
+    #[serde(default = "default_battle_level")]
+    pub player_level: u8,
+    #[serde(default = "default_battle_stat")]
+    pub player_attack: u8,
+    #[serde(default = "default_battle_stat")]
+    pub player_defense: u8,
+    #[serde(default = "default_battle_stat")]
+    pub player_speed: u8,
+    #[serde(default = "default_battle_stat")]
+    pub player_special_attack: u8,
+    #[serde(default = "default_battle_stat")]
+    pub player_special_defense: u8,
     pub rival_hp: u8,
     #[serde(default = "default_opponent_battle_hp")]
     pub opponent_max_hp: u8,
+    #[serde(default = "default_battle_level")]
+    pub opponent_level: u8,
+    #[serde(default = "default_battle_stat")]
+    pub opponent_attack: u8,
+    #[serde(default = "default_battle_stat")]
+    pub opponent_defense: u8,
+    #[serde(default = "default_battle_stat")]
+    pub opponent_speed: u8,
+    #[serde(default = "default_battle_stat")]
+    pub opponent_special_attack: u8,
+    #[serde(default = "default_battle_stat")]
+    pub opponent_special_defense: u8,
     #[serde(default = "default_player_move_damage")]
     pub player_move_damage: u8,
     #[serde(default = "default_player_move_name")]
@@ -171,6 +197,9 @@ fn default_opponent_species() -> String { "ZIGZAGOON".to_owned() }
 fn default_opponent_move_name() -> String { "TACKLE".to_owned() }
 fn default_opponent_move_damage() -> u8 { 4 }
 fn default_battle_intro_stage() -> u8 { 2 }
+fn default_player_species() -> String { "TREECKO".to_owned() }
+fn default_battle_level() -> u8 { 5 }
+fn default_battle_stat() -> u8 { 10 }
 
 fn battle_opponent_name(opponent: BattleOpponent) -> &'static str {
     match opponent {
@@ -197,19 +226,185 @@ fn fast_path_position(start: TilePosition, path: &[Facing], completed: usize, id
     (position, facing)
 }
 
-fn starter_battle_profile(starter: Option<StarterSpecies>) -> (&'static str, u8, u8, &'static str, u8, &'static str, u8) {
-    match starter.unwrap_or(StarterSpecies::Treecko) {
-        StarterSpecies::Treecko => ("TREECKO", 24, 8, "POUND", 35, "LEER", 30),
-        StarterSpecies::Torchic => ("TORCHIC", 25, 9, "SCRATCH", 35, "GROWL", 40),
-        StarterSpecies::Mudkip => ("MUDKIP", 27, 9, "TACKLE", 35, "GROWL", 40),
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum BattleType { Normal, Grass, Fire, Water, Dark, Bug, Flying }
+
+#[derive(Clone, Copy)]
+struct SpeciesBattleProfile {
+    name: &'static str, base_hp: u8, base_attack: u8, base_defense: u8,
+    base_speed: u8, base_special_attack: u8, base_special_defense: u8,
+    types: (BattleType, BattleType),
+}
+
+#[derive(Clone, Copy)]
+struct MoveBattleProfile { name: &'static str, power: u8, pp: u8, move_type: BattleType, special: bool }
+
+#[derive(Clone, Copy)]
+struct CombatantBattleProfile {
+    species: SpeciesBattleProfile, level: u8, max_hp: u8, attack: u8, defense: u8, speed: u8,
+    special_attack: u8, special_defense: u8, physical_move: MoveBattleProfile, status_move: MoveBattleProfile,
+}
+
+#[derive(Clone, Copy)]
+struct StatIvs { hp: u8, attack: u8, defense: u8, speed: u8, special_attack: u8, special_defense: u8 }
+
+#[derive(Clone, Copy)]
+struct NatureModifiers { attack: (u8, u8), defense: (u8, u8), speed: (u8, u8), special_attack: (u8, u8), special_defense: (u8, u8) }
+
+const NEUTRAL_NATURE: NatureModifiers = NatureModifiers { attack: (1, 1), defense: (1, 1), speed: (1, 1), special_attack: (1, 1), special_defense: (1, 1) };
+
+fn species_battle_profile(name: &str) -> SpeciesBattleProfile {
+    // Source: src/data/pokemon/species_info.h. This is deliberately limited
+    // to species reachable in the scoped opening route.
+    match name {
+        "TORCHIC" => SpeciesBattleProfile { name: "TORCHIC", base_hp: 45, base_attack: 60, base_defense: 40, base_speed: 45, base_special_attack: 70, base_special_defense: 50, types: (BattleType::Fire, BattleType::Fire) },
+        "MUDKIP" => SpeciesBattleProfile { name: "MUDKIP", base_hp: 50, base_attack: 70, base_defense: 50, base_speed: 40, base_special_attack: 50, base_special_defense: 50, types: (BattleType::Water, BattleType::Water) },
+        "ZIGZAGOON" => SpeciesBattleProfile { name: "ZIGZAGOON", base_hp: 38, base_attack: 30, base_defense: 41, base_speed: 60, base_special_attack: 30, base_special_defense: 41, types: (BattleType::Normal, BattleType::Normal) },
+        "POOCHYENA" => SpeciesBattleProfile { name: "POOCHYENA", base_hp: 35, base_attack: 55, base_defense: 35, base_speed: 35, base_special_attack: 30, base_special_defense: 30, types: (BattleType::Dark, BattleType::Dark) },
+        "WURMPLE" => SpeciesBattleProfile { name: "WURMPLE", base_hp: 45, base_attack: 45, base_defense: 35, base_speed: 20, base_special_attack: 20, base_special_defense: 30, types: (BattleType::Bug, BattleType::Bug) },
+        "WINGULL" => SpeciesBattleProfile { name: "WINGULL", base_hp: 40, base_attack: 30, base_defense: 30, base_speed: 85, base_special_attack: 55, base_special_defense: 30, types: (BattleType::Water, BattleType::Flying) },
+        _ => SpeciesBattleProfile { name: "TREECKO", base_hp: 40, base_attack: 45, base_defense: 35, base_speed: 70, base_special_attack: 65, base_special_defense: 55, types: (BattleType::Grass, BattleType::Grass) },
     }
 }
 
-fn rival_battle_profile(starter: Option<StarterSpecies>) -> (&'static str, u8, &'static str, u8) {
+fn move_battle_profile(name: &str) -> MoveBattleProfile {
+    // Source: src/data/battle_moves.h.
+    match name {
+        "POUND" => MoveBattleProfile { name: "POUND", power: 40, pp: 35, move_type: BattleType::Normal, special: false },
+        "SCRATCH" => MoveBattleProfile { name: "SCRATCH", power: 40, pp: 35, move_type: BattleType::Normal, special: false },
+        "LEER" => MoveBattleProfile { name: "LEER", power: 0, pp: 30, move_type: BattleType::Normal, special: false },
+        "GROWL" => MoveBattleProfile { name: "GROWL", power: 0, pp: 40, move_type: BattleType::Normal, special: false },
+        "WATER GUN" => MoveBattleProfile { name: "WATER GUN", power: 40, pp: 25, move_type: BattleType::Water, special: true },
+        _ => MoveBattleProfile { name: "TACKLE", power: 35, pp: 35, move_type: BattleType::Normal, special: false },
+    }
+}
+
+fn starter_species_name(starter: Option<StarterSpecies>) -> &'static str {
     match starter.unwrap_or(StarterSpecies::Treecko) {
-        StarterSpecies::Treecko => ("TORCHIC", 22, "SCRATCH", 5),
-        StarterSpecies::Torchic => ("MUDKIP", 24, "TACKLE", 5),
-        StarterSpecies::Mudkip => ("TREECKO", 20, "POUND", 4),
+        StarterSpecies::Treecko => "TREECKO", StarterSpecies::Torchic => "TORCHIC", StarterSpecies::Mudkip => "MUDKIP",
+    }
+}
+
+fn source_random(state: &mut u32) -> u16 {
+    *state = state.wrapping_mul(0x41c6_4e6d).wrapping_add(0x0000_6073);
+    (*state >> 16) as u16
+}
+
+fn source_random32(state: &mut u32) -> u32 { u32::from(source_random(state)) | (u32::from(source_random(state)) << 16) }
+
+fn nature_modifiers(nature: u8) -> NatureModifiers {
+    // gNatureStatTable order: Atk, Def, Speed, Sp.Atk, Sp.Def.
+    const TABLE: [(Option<usize>, Option<usize>); 25] = [
+        (None,None),(Some(0),Some(1)),(Some(0),Some(2)),(Some(0),Some(3)),(Some(0),Some(4)),
+        (Some(1),Some(0)),(None,None),(Some(1),Some(2)),(Some(1),Some(3)),(Some(1),Some(4)),
+        (Some(2),Some(0)),(Some(2),Some(1)),(None,None),(Some(2),Some(3)),(Some(2),Some(4)),
+        (Some(3),Some(0)),(Some(3),Some(1)),(Some(3),Some(2)),(None,None),(Some(3),Some(4)),
+        (Some(4),Some(0)),(Some(4),Some(1)),(Some(4),Some(2)),(Some(4),Some(3)),(None,None),
+    ];
+    let (raise, lower) = TABLE[usize::from(nature % 25)];
+    let mut stats = [(1, 1); 5];
+    if let Some(stat) = raise { stats[stat] = (110, 100); }
+    if let Some(stat) = lower { stats[stat] = (90, 100); }
+    NatureModifiers { attack: stats[0], defense: stats[1], speed: stats[2], special_attack: stats[3], special_defense: stats[4] }
+}
+
+fn source_random_ivs(seed: u32) -> (StatIvs, NatureModifiers) {
+    // ScriptGiveMon → CreateMon(... USE_RANDOM_IVS ...): Random32 for the
+    // personality followed by two packed six-IV Random calls.
+    let mut rng = seed;
+    let personality = source_random32(&mut rng);
+    let first = u32::from(source_random(&mut rng));
+    let second = u32::from(source_random(&mut rng));
+    (StatIvs { hp: (first & 31) as u8, attack: ((first >> 5) & 31) as u8, defense: ((first >> 10) & 31) as u8, speed: (second & 31) as u8, special_attack: ((second >> 5) & 31) as u8, special_defense: ((second >> 10) & 31) as u8 }, nature_modifiers((personality % 25) as u8))
+}
+
+fn source_stat(base: u8, iv: u8, level: u8, modifier: (u8, u8)) -> u8 {
+    let raw = ((u16::from(2 * base + iv) * u16::from(level)) / 100) + 5;
+    ((raw * u16::from(modifier.0)) / u16::from(modifier.1)) as u8
+}
+
+fn source_hp(base: u8, iv: u8, level: u8) -> u8 { (((u16::from(2 * base + iv) * u16::from(level)) / 100) + u16::from(level) + 10) as u8 }
+
+fn combatant_profile(species: SpeciesBattleProfile, level: u8, ivs: StatIvs, nature: NatureModifiers, physical: &str, status: &str) -> CombatantBattleProfile {
+    CombatantBattleProfile {
+        species, level, max_hp: source_hp(species.base_hp, ivs.hp, level),
+        attack: source_stat(species.base_attack, ivs.attack, level, nature.attack), defense: source_stat(species.base_defense, ivs.defense, level, nature.defense), speed: source_stat(species.base_speed, ivs.speed, level, nature.speed),
+        special_attack: source_stat(species.base_special_attack, ivs.special_attack, level, nature.special_attack), special_defense: source_stat(species.base_special_defense, ivs.special_defense, level, nature.special_defense),
+        physical_move: move_battle_profile(physical), status_move: move_battle_profile(status),
+    }
+}
+
+fn starter_battle_profile(starter: Option<StarterSpecies>) -> CombatantBattleProfile {
+    let (ivs, nature) = source_random_ivs(default_ambient_rng());
+    let (physical, status) = match starter.unwrap_or(StarterSpecies::Treecko) {
+        StarterSpecies::Treecko => ("POUND", "LEER"), StarterSpecies::Torchic => ("SCRATCH", "GROWL"), StarterSpecies::Mudkip => ("TACKLE", "GROWL"),
+    };
+    combatant_profile(species_battle_profile(starter_species_name(starter)), 5, ivs, nature, physical, status)
+}
+
+fn rival_battle_profile(starter: Option<StarterSpecies>, player_gender: PlayerGender) -> CombatantBattleProfile {
+    // Route 103's trainer tables use level 5, IV 0, default moves. The
+    // source name-hashed trainer personality determines the shown nature.
+    let name = match starter.unwrap_or(StarterSpecies::Treecko) { StarterSpecies::Treecko => "TORCHIC", StarterSpecies::Torchic => "MUDKIP", StarterSpecies::Mudkip => "TREECKO" };
+    let nature = match (player_gender, name) {
+        (PlayerGender::Brendan, "TREECKO") => nature_modifiers(1), (PlayerGender::Brendan, "TORCHIC") => nature_modifiers(20), (PlayerGender::Brendan, "MUDKIP") => nature_modifiers(17),
+        (PlayerGender::May, "TREECKO") => nature_modifiers(20), (PlayerGender::May, "TORCHIC") => nature_modifiers(14), (PlayerGender::May, "MUDKIP") => nature_modifiers(11), _ => NEUTRAL_NATURE,
+    };
+    let (physical, status) = match name { "TREECKO" => ("POUND", "LEER"), "TORCHIC" => ("SCRATCH", "GROWL"), _ => ("TACKLE", "GROWL") };
+    combatant_profile(species_battle_profile(name), 5, StatIvs { hp: 0, attack: 0, defense: 0, speed: 0, special_attack: 0, special_defense: 0 }, nature, physical, status)
+}
+
+fn wild_battle_profile(name: &str, level: u8, physical: &str, status: &str) -> CombatantBattleProfile {
+    let name_hash = name.bytes().fold(0u32, |hash, byte| hash.wrapping_mul(31).wrapping_add(u32::from(byte)));
+    let (ivs, nature) = source_random_ivs(default_ambient_rng() ^ u32::from(level) ^ name_hash);
+    combatant_profile(species_battle_profile(name), level, ivs, nature, physical, status)
+}
+
+fn source_stage_stat(stat: u8, stage: i8) -> u8 {
+    let stage = stage.clamp(-6, 6);
+    if stage >= 0 { ((u16::from(stat) * (2 + stage) as u16) / 2) as u8 } else { ((u16::from(stat) * 2) / (2 - stage) as u16) as u8 }
+}
+
+fn type_multiplier(move_type: BattleType, types: (BattleType, BattleType)) -> (u8, u8) {
+    let mut numerator = 1;
+    let mut denominator = 1;
+    for (index, defending) in [types.0, types.1].iter().enumerate() {
+        if index == 1 && types.0 == types.1 { break; }
+        let (up, down) = match (move_type, *defending) { (BattleType::Water, BattleType::Grass | BattleType::Water) => (1, 2), (BattleType::Water, BattleType::Fire) => (2, 1), _ => (1, 1) };
+        numerator *= up; denominator *= down;
+    }
+    (numerator, denominator)
+}
+
+fn source_move_damage(level: u8, attacker: SpeciesBattleProfile, attack: u8, special_attack: u8, attacker_stage: i8, defender: SpeciesBattleProfile, defense: u8, special_defense: u8, defender_stage: i8, move_data: MoveBattleProfile) -> u8 {
+    if move_data.power == 0 { return 0; }
+    let attacking = source_stage_stat(if move_data.special { special_attack } else { attack }, attacker_stage);
+    let defending = source_stage_stat(if move_data.special { special_defense } else { defense }, defender_stage).max(1);
+    let scaled = (u32::from(2 * level / 5 + 2) * u32::from(move_data.power) * u32::from(attacking)) / u32::from(defending);
+    let mut damage = ((scaled / 50) + 2) as u16;
+    if attacker.types.0 == move_data.move_type || attacker.types.1 == move_data.move_type { damage = (damage * 15) / 10; }
+    let (numerator, denominator) = type_multiplier(move_data.move_type, defender.types);
+    damage = (damage * u16::from(numerator)) / u16::from(denominator);
+    damage.max(1) as u8
+}
+
+fn player_battle_damage(battle: &BattleState) -> u8 {
+    source_move_damage(battle.player_level, species_battle_profile(&battle.player_species), battle.player_attack, battle.player_special_attack, 0, species_battle_profile(&battle.opponent_species), battle.opponent_defense, battle.opponent_special_defense, battle.opponent_defense_stage, move_battle_profile(&battle.player_move_name))
+}
+
+fn opponent_battle_damage(battle: &BattleState) -> u8 {
+    source_move_damage(battle.opponent_level, species_battle_profile(&battle.opponent_species), battle.opponent_attack, battle.opponent_special_attack, battle.opponent_attack_stage, species_battle_profile(&battle.player_species), battle.player_defense, battle.player_special_defense, 0, move_battle_profile(&battle.opponent_move_name))
+}
+
+fn opening_battle_state(opponent: BattleOpponent, player: CombatantBattleProfile, enemy: CombatantBattleProfile, wild: bool, message: String, entry_transition_frames: u16) -> BattleState {
+    let player_move_damage = source_move_damage(player.level, player.species, player.attack, player.special_attack, 0, enemy.species, enemy.defense, enemy.special_defense, 0, player.physical_move);
+    let opponent_move_damage = source_move_damage(enemy.level, enemy.species, enemy.attack, enemy.special_attack, 0, player.species, player.defense, player.special_defense, 0, enemy.physical_move);
+    BattleState {
+        opponent, player_species: player.species.name.to_owned(), opponent_species: enemy.species.name.to_owned(), opponent_move_name: enemy.physical_move.name.to_owned(), opponent_move_damage,
+        player_hp: player.max_hp, player_max_hp: player.max_hp, player_level: player.level, player_attack: player.attack, player_defense: player.defense, player_speed: player.speed, player_special_attack: player.special_attack, player_special_defense: player.special_defense,
+        rival_hp: enemy.max_hp, opponent_max_hp: enemy.max_hp, opponent_level: enemy.level, opponent_attack: enemy.attack, opponent_defense: enemy.defense, opponent_speed: enemy.speed, opponent_special_attack: enemy.special_attack, opponent_special_defense: enemy.special_defense,
+        player_move_damage, player_move_name: player.physical_move.name.to_owned(), player_status_move_name: player.status_move.name.to_owned(), player_move_pp: player.physical_move.pp, player_status_move_pp: player.status_move.pp,
+        opponent_attack_stage: 0, opponent_defense_stage: 0, command_cursor: 0, selecting_move: false, party_screen_open: false, escaped: false, wild, move_cursor: 0, player_fainted: false, message: Some(message), entry_transition_frames, intro_stage: 0,
     }
 }
 
@@ -2847,68 +3042,13 @@ impl WorldState {
     /// of treating the battle as an automatic story jump.
     pub fn begin_rival_battle(&mut self) {
         if self.phase == StoryPhase::RivalBattle && self.battle.is_none() {
-            let (_, player_hp, player_move_damage, player_move_name, player_move_pp, player_status_move_name, player_status_move_pp) = starter_battle_profile(self.starter);
-            let (opponent_species, opponent_hp, opponent_move_name, opponent_move_damage) = rival_battle_profile(self.starter);
-            self.battle = Some(BattleState {
-                opponent: BattleOpponent::Rival,
-                opponent_species: opponent_species.to_owned(),
-                opponent_move_name: opponent_move_name.to_owned(),
-                opponent_move_damage,
-                player_hp,
-                player_max_hp: player_hp,
-                rival_hp: opponent_hp,
-                opponent_max_hp: opponent_hp,
-                player_move_damage,
-                player_move_name: player_move_name.to_owned(),
-                player_move_pp,
-                player_status_move_name: player_status_move_name.to_owned(),
-                player_status_move_pp,
-                opponent_attack_stage: 0,
-                opponent_defense_stage: 0,
-                command_cursor: 0,
-                selecting_move: false,
-                party_screen_open: false,
-                escaped: false,
-                wild: false,
-                move_cursor: 0,
-                player_fainted: false,
-                message: Some(format!("RIVAL {} would like to battle!", rival_trainer_name(self.player_gender))),
-                entry_transition_frames: 48,
-                intro_stage: 0,
-            });
+            self.battle = Some(opening_battle_state(BattleOpponent::Rival, starter_battle_profile(self.starter), rival_battle_profile(self.starter, self.player_gender), false, format!("RIVAL {} would like to battle!", rival_trainer_name(self.player_gender)), 48));
         }
     }
 
     pub fn begin_birch_battle(&mut self) {
         if self.phase == StoryPhase::BirchBattle && self.battle.is_none() {
-            let (_, player_hp, player_move_damage, player_move_name, player_move_pp, player_status_move_name, player_status_move_pp) = starter_battle_profile(self.starter);
-            self.battle = Some(BattleState {
-                opponent: BattleOpponent::Zigzagoon,
-                opponent_species: "ZIGZAGOON".to_owned(),
-                opponent_move_name: "TACKLE".to_owned(),
-                opponent_move_damage: 4,
-                player_hp,
-                player_max_hp: player_hp,
-                rival_hp: 18,
-                opponent_max_hp: 18,
-                player_move_damage,
-                player_move_name: player_move_name.to_owned(),
-                player_move_pp,
-                player_status_move_name: player_status_move_name.to_owned(),
-                player_status_move_pp,
-                opponent_attack_stage: 0,
-                opponent_defense_stage: 0,
-                command_cursor: 0,
-                selecting_move: false,
-                party_screen_open: false,
-                escaped: false,
-                wild: false,
-                move_cursor: 0,
-                player_fainted: false,
-                message: Some("Wild ZIGZAGOON appeared!".to_owned()),
-                entry_transition_frames: 48,
-                intro_stage: 0,
-            });
+            self.battle = Some(opening_battle_state(BattleOpponent::Zigzagoon, starter_battle_profile(self.starter), wild_battle_profile("ZIGZAGOON", 2, "TACKLE", "GROWL"), false, "Wild ZIGZAGOON appeared!".to_owned(), 48));
         }
     }
 
@@ -2925,34 +3065,7 @@ impl WorldState {
         {
             return;
         }
-        let (_, player_hp, player_move_damage, player_move_name, player_move_pp, player_status_move_name, player_status_move_pp) = starter_battle_profile(self.starter);
-        self.battle = Some(BattleState {
-            opponent: BattleOpponent::Poochyena,
-            opponent_species: "POOCHYENA".to_owned(),
-            opponent_move_name: "TACKLE".to_owned(),
-            opponent_move_damage: 4,
-            player_hp,
-            player_max_hp: player_hp,
-            rival_hp: 18,
-            opponent_max_hp: 18,
-            player_move_damage,
-            player_move_name: player_move_name.to_owned(),
-            player_move_pp,
-            player_status_move_name: player_status_move_name.to_owned(),
-            player_status_move_pp,
-            opponent_attack_stage: 0,
-            opponent_defense_stage: 0,
-            command_cursor: 0,
-            selecting_move: false,
-            party_screen_open: false,
-            escaped: false,
-            wild: true,
-            move_cursor: 0,
-            player_fainted: false,
-            message: Some("Wild POOCHYENA appeared!".to_owned()),
-            entry_transition_frames: 224,
-            intro_stage: 0,
-        });
+        self.battle = Some(opening_battle_state(BattleOpponent::Poochyena, starter_battle_profile(self.starter), wild_battle_profile("POOCHYENA", 2, "TACKLE", "TACKLE"), true, "Wild POOCHYENA appeared!".to_owned(), 224));
     }
 
     /// The reproducible post-Running-Shoes Route 101 field path stops at
@@ -2969,34 +3082,7 @@ impl WorldState {
         {
             return;
         }
-        let (_, player_hp, player_move_damage, player_move_name, player_move_pp, player_status_move_name, player_status_move_pp) = starter_battle_profile(self.starter);
-        self.battle = Some(BattleState {
-            opponent: BattleOpponent::Wurmple,
-            opponent_species: "WURMPLE".to_owned(),
-            opponent_move_name: "TACKLE".to_owned(),
-            opponent_move_damage: 3,
-            player_hp,
-            player_max_hp: player_hp,
-            rival_hp: 12,
-            opponent_max_hp: 12,
-            player_move_damage,
-            player_move_name: player_move_name.to_owned(),
-            player_move_pp,
-            player_status_move_name: player_status_move_name.to_owned(),
-            player_status_move_pp,
-            opponent_attack_stage: 0,
-            opponent_defense_stage: 0,
-            command_cursor: 0,
-            selecting_move: false,
-                party_screen_open: false,
-                escaped: false,
-                wild: true,
-                move_cursor: 0,
-            player_fainted: false,
-            message: Some("Wild WURMPLE appeared!".to_owned()),
-            entry_transition_frames: 352,
-            intro_stage: 0,
-        });
+        self.battle = Some(opening_battle_state(BattleOpponent::Wurmple, starter_battle_profile(self.starter), wild_battle_profile("WURMPLE", 2, "TACKLE", "TACKLE"), true, "Wild WURMPLE appeared!".to_owned(), 352));
     }
 
     /// From the fresh `03_birch` state, the eastern Route 103 grass at
@@ -3011,34 +3097,7 @@ impl WorldState {
         {
             return;
         }
-        let (_, player_hp, player_move_damage, player_move_name, player_move_pp, player_status_move_name, player_status_move_pp) = starter_battle_profile(self.starter);
-        self.battle = Some(BattleState {
-            opponent: BattleOpponent::Wingull,
-            opponent_species: "WINGULL".to_owned(),
-            opponent_move_name: "WATER GUN".to_owned(),
-            opponent_move_damage: 4,
-            player_hp,
-            player_max_hp: player_hp,
-            rival_hp: 18,
-            opponent_max_hp: 18,
-            player_move_damage,
-            player_move_name: player_move_name.to_owned(),
-            player_move_pp,
-            player_status_move_name: player_status_move_name.to_owned(),
-            player_status_move_pp,
-            opponent_attack_stage: 0,
-            opponent_defense_stage: 0,
-            command_cursor: 0,
-            selecting_move: false,
-            party_screen_open: false,
-            escaped: false,
-            wild: true,
-            move_cursor: 0,
-            player_fainted: false,
-            message: Some("Wild WINGULL appeared!".to_owned()),
-            entry_transition_frames: 224,
-            intro_stage: 0,
-        });
+        self.battle = Some(opening_battle_state(BattleOpponent::Wingull, starter_battle_profile(self.starter), wild_battle_profile("WINGULL", 3, "WATER GUN", "GROWL"), true, "Wild WINGULL appeared!".to_owned(), 224));
     }
 
     /// Advances the encounter wipe and reports whether it consumed this
@@ -3115,7 +3174,7 @@ impl WorldState {
     }
 
     pub fn close_battle_party_screen(&mut self, choose_active: bool) {
-        let starter_name = starter_battle_profile(self.starter).0;
+        let starter_name = starter_battle_profile(self.starter).species.name;
         if let Some(battle) = self.battle.as_mut() {
             if !battle.party_screen_open { return; }
             battle.party_screen_open = false;
@@ -3139,7 +3198,8 @@ impl WorldState {
             self.potions -= 1;
             let battle = self.battle.as_mut().expect("Potion action requires an active battle");
             battle.player_hp = battle.player_hp.saturating_add(20).min(battle.player_max_hp);
-            let retaliation = (i16::from(battle.opponent_move_damage) + i16::from(battle.opponent_attack_stage)).max(1) as u8;
+            let retaliation = opponent_battle_damage(battle);
+            battle.opponent_move_damage = retaliation;
             battle.player_hp = battle.player_hp.saturating_sub(retaliation);
             let opponent = match battle.opponent {
                 BattleOpponent::Rival => "RIVAL",
@@ -3157,7 +3217,7 @@ impl WorldState {
             battle.selecting_move = false;
             return;
         }
-        let starter_name = starter_battle_profile(self.starter).0;
+        let starter_name = starter_battle_profile(self.starter).species.name;
         let trainer_name = rival_trainer_name(self.player_gender);
         let Some(battle) = self.battle.as_mut() else { return; };
         if battle.message.take().is_some() {
@@ -3204,15 +3264,31 @@ impl WorldState {
             return;
         }
         if !battle.selecting_move { return; }
+        // Normal-priority moves use the source-calculated battle speeds. The
+        // compact renderer remains player-first on a speed tie until its full
+        // battle RNG command scheduler is modeled.
+        let opponent_moves_first = battle.opponent_speed > battle.player_speed;
+        if opponent_moves_first {
+            let retaliation = opponent_battle_damage(battle);
+            battle.opponent_move_damage = retaliation;
+            battle.player_hp = battle.player_hp.saturating_sub(retaliation);
+            if battle.player_hp == 0 {
+                battle.player_fainted = true;
+                battle.selecting_move = false;
+                battle.message = Some(format!("{} used {}. Your POKéMON fainted!", battle_opponent_name(battle.opponent), battle.opponent_move_name));
+                return;
+            }
+        }
         let move_name = if battle.move_cursor == 0 {
             if battle.player_move_pp == 0 {
                 battle.message = Some("But there was no PP left for that move!".to_owned());
                 return;
             }
             battle.player_move_pp -= 1;
-            let defense_bonus = (-battle.opponent_defense_stage).clamp(0, 6) as u8;
-            battle.rival_hp = battle.rival_hp.saturating_sub(battle.player_move_damage.saturating_add(defense_bonus));
-            battle.player_move_name.as_str()
+            let damage = player_battle_damage(battle);
+            battle.player_move_damage = damage;
+            battle.rival_hp = battle.rival_hp.saturating_sub(damage);
+            battle.player_move_name.clone()
         } else {
             if battle.player_status_move_pp == 0 {
                 battle.message = Some("But there was no PP left for that move!".to_owned());
@@ -3224,7 +3300,7 @@ impl WorldState {
             } else {
                 battle.opponent_attack_stage = (battle.opponent_attack_stage - 1).max(-6);
             }
-            battle.player_status_move_name.as_str()
+            battle.player_status_move_name.clone()
         };
         battle.selecting_move = false;
         if battle.rival_hp == 0 {
@@ -3263,11 +3339,13 @@ impl WorldState {
             }
             return;
         }
-        // The compact opening battle model has no full species/stat engine
-        // yet, but it does preserve Growl's source behavior: it lowers the
-        // opponent's later physical retaliation rather than dealing damage.
-        let retaliation = (i16::from(battle.opponent_move_damage) + i16::from(battle.opponent_attack_stage)).max(1) as u8;
-        battle.player_hp = battle.player_hp.saturating_sub(retaliation);
+        if !opponent_moves_first {
+            // Growl lowers the source opponent's physical attack stage; the
+            // shared source damage calculation consumes that stage here.
+            let retaliation = opponent_battle_damage(battle);
+            battle.opponent_move_damage = retaliation;
+            battle.player_hp = battle.player_hp.saturating_sub(retaliation);
+        }
         let opponent = match battle.opponent {
             BattleOpponent::Rival => "RIVAL",
             BattleOpponent::Zigzagoon => "ZIGZAGOON",
@@ -3277,9 +3355,17 @@ impl WorldState {
         };
         if battle.player_hp == 0 {
             battle.player_fainted = true;
-            battle.message = Some(format!("{move_name} was used! {opponent} used {}. Your POKéMON fainted!", battle.opponent_move_name));
+            battle.message = Some(if opponent_moves_first {
+                format!("{opponent} used {}. {move_name} was used! Your POKéMON fainted!", battle.opponent_move_name)
+            } else {
+                format!("{move_name} was used! {opponent} used {}. Your POKéMON fainted!", battle.opponent_move_name)
+            });
         } else {
-            battle.message = Some(format!("{move_name} was used! {opponent} used {}.", battle.opponent_move_name));
+            battle.message = Some(if opponent_moves_first {
+                format!("{opponent} used {}. {move_name} was used!", battle.opponent_move_name)
+            } else {
+                format!("{move_name} was used! {opponent} used {}.", battle.opponent_move_name)
+            });
         }
     }
 
