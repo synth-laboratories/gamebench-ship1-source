@@ -2984,6 +2984,17 @@ impl WorldState {
         self.walk_render_origin.as_ref().unwrap_or(&self.player)
     }
 
+    /// Ends a released directional hold after its final visible stride. The
+    /// field coordinate is already committed; subsequent no-input frames use
+    /// that tile as their idle terrain/camera origin.
+    pub fn stop_walking(&mut self) {
+        self.walk_progress_frames = 0;
+        self.walk_elapsed_frames = 0;
+        self.walk_direction = None;
+        self.walk_render_origin = None;
+        self.camera_handoff_from = None;
+    }
+
     /// Applies overworld movement at Emerald's 16-frame walking cadence.
     ///
     /// This enforces authored layout bounds and applies source-derived Little
