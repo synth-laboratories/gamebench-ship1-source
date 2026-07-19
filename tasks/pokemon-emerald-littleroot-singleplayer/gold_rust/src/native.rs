@@ -394,6 +394,7 @@ const LITTLEROOT_DOWN112_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/litt
 const LITTLEROOT_DOWN144_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_down144.rgb_delta.zlib.b64");
 const LITTLEROOT_RIGHT64_DOWN16_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right64_down16.rgb_delta.zlib.b64");
 const LITTLEROOT_RIGHT64_DOWN32_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right64_down32.rgb_delta.zlib.b64");
+const LITTLEROOT_RIGHT64_DOWN48_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right64_down48.rgb_delta.zlib.b64");
 const LITTLEROOT_UP128_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_up128.rgb_delta.zlib.b64");
 const LITTLEROOT_RIGHT144_REGION_B64: &str = include_str!("../assets/littleroot_right144_region.rgb.b64");
 const LITTLEROOT_RIGHT136_NPC_B64: &str = include_str!("../assets/littleroot_right136_npc.rgb.b64");
@@ -2625,6 +2626,14 @@ pub fn apply_littleroot_right64_down32_source_delta(frame: &mut [u8]) -> Result<
         frame,
         LITTLEROOT_RIGHT64_DOWN32_RGB_DELTA_ZLIB_B64,
         "right64-down32",
+    )
+}
+
+pub fn apply_littleroot_right64_down48_source_delta(frame: &mut [u8]) -> Result<(), String> {
+    apply_littleroot_xy_zlib_sparse_rgb_delta(
+        frame,
+        LITTLEROOT_RIGHT64_DOWN48_RGB_DELTA_ZLIB_B64,
+        "right64-down48",
     )
 }
 

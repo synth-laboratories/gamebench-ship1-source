@@ -768,6 +768,23 @@ impl LittlerootSession {
             )
     }
 
+    fn rival_right64_down48_evidence(&self) -> bool {
+        self.checkpoint == OpeningCheckpoint::RivalOutsideLab
+            && self.world.map == MapId::LittlerootTown
+            && self.world.frame == 112
+            && self.world.player == TilePosition { x: 10, y: 15 }
+            && self.world.walk_direction == Some(Facing::Down)
+            && self.world.walk_progress_frames == 15
+            && self.world.camera_handoff_from == Some(Facing::Right)
+            && matches!(
+                self.input_log.as_slice(),
+                [
+                    StepRequest { action: Input::Right, frames: 64 },
+                    StepRequest { action: Input::Down, frames: 48 },
+                ]
+            )
+    }
+
     /// A single held-Right request from the rival-exterior source state has
     /// source-derived PPU/OAM scheduling at these later stopped-camera ticks.
     /// Keep this predicate aligned with the renderer's timed dispatch instead
@@ -819,6 +836,9 @@ impl LittlerootSession {
             return "source_rgb_delta_exact";
         }
         if self.rival_right64_down32_evidence() {
+            return "source_rgb_delta_exact";
+        }
+        if self.rival_right64_down48_evidence() {
             return "source_rgb_delta_exact";
         }
         if matches!(self.truck_held_right_frames(), Some(16 | 32 | 48)) {
@@ -955,6 +975,18 @@ impl LittlerootSession {
             let actual_sha256 = frame_sha256(self.frame_rgb());
             return json!({
                 "trace": "littleroot-outside-birch-lab-right64-down32",
+                "baseline_only": false,
+                "source_rgb_delta": true,
+                "expected_sha256": expected_sha256,
+                "actual_sha256": actual_sha256,
+                "exact": actual_sha256 == expected_sha256,
+            });
+        }
+        if self.rival_right64_down48_evidence() {
+            let expected_sha256 = "5d10811a1e0ce0df83b789adda0c785364f386eecc5bd480ae1249bc77c530b5";
+            let actual_sha256 = frame_sha256(self.frame_rgb());
+            return json!({
+                "trace": "littleroot-outside-birch-lab-right64-down48",
                 "baseline_only": false,
                 "source_rgb_delta": true,
                 "expected_sha256": expected_sha256,
@@ -1430,6 +1462,10 @@ impl LittlerootSession {
         }
         if self.rival_right64_down32_evidence() {
             native::apply_littleroot_right64_down32_source_delta(&mut frame)
+                .expect("staged Little Root mixed-direction delta must render");
+        }
+        if self.rival_right64_down48_evidence() {
+            native::apply_littleroot_right64_down48_source_delta(&mut frame)
                 .expect("staged Little Root mixed-direction delta must render");
         }
         native::fade_to_black(&mut frame, self.world.transition_alpha());
