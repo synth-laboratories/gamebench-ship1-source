@@ -245,6 +245,24 @@ struct CombatantBattleProfile {
     special_attack: u8, special_defense: u8, physical_move: MoveBattleProfile, status_move: MoveBattleProfile,
 }
 
+/// Persistent source-shaped party state for the one Pokémon reachable in the
+/// opening slice. BattleState remains an active combat projection; this owns
+/// HP and PP between encounters just as gPlayerParty does.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct StarterPartyState {
+    pub species: StarterSpecies,
+    pub level: u8,
+    pub hp: u8,
+    pub max_hp: u8,
+    pub attack: u8,
+    pub defense: u8,
+    pub speed: u8,
+    pub special_attack: u8,
+    pub special_defense: u8,
+    pub physical_move_pp: u8,
+    pub status_move_pp: u8,
+}
+
 #[derive(Clone, Copy)]
 struct StatIvs { hp: u8, attack: u8, defense: u8, speed: u8, special_attack: u8, special_defense: u8 }
 
@@ -340,6 +358,23 @@ fn starter_battle_profile(starter: Option<StarterSpecies>) -> CombatantBattlePro
         StarterSpecies::Treecko => ("POUND", "LEER"), StarterSpecies::Torchic => ("SCRATCH", "GROWL"), StarterSpecies::Mudkip => ("TACKLE", "GROWL"),
     };
     combatant_profile(species_battle_profile(starter_species_name(starter)), 5, ivs, nature, physical, status)
+}
+
+fn starter_party_state(starter: StarterSpecies) -> StarterPartyState {
+    let profile = starter_battle_profile(Some(starter));
+    StarterPartyState {
+        species: starter,
+        level: profile.level,
+        hp: profile.max_hp,
+        max_hp: profile.max_hp,
+        attack: profile.attack,
+        defense: profile.defense,
+        speed: profile.speed,
+        special_attack: profile.special_attack,
+        special_defense: profile.special_defense,
+        physical_move_pp: profile.physical_move.pp,
+        status_move_pp: profile.status_move.pp,
+    }
 }
 
 fn rival_battle_profile(starter: Option<StarterSpecies>, player_gender: PlayerGender) -> CombatantBattleProfile {
@@ -680,6 +715,10 @@ pub struct WorldState {
     pub walk_render_origin: Option<TilePosition>,
     pub running: bool,
     pub starter: Option<StarterSpecies>,
+    /// The source's gPlayerParty[0] projection for the opening starter.
+    /// Older snapshots lazily construct it from the selected starter.
+    #[serde(default)]
+    pub starter_party: Option<StarterPartyState>,
     /// Persistent opening progression awarded by Birch's Lab script.
     pub has_pokedex: bool,
     pub poke_balls: u8,
@@ -799,6 +838,7 @@ impl WorldState {
             walk_render_origin: None,
             running: false,
             starter: None,
+            starter_party: None,
             has_pokedex: false,
             poke_balls: 0,
             potions: 0,
@@ -903,6 +943,7 @@ impl WorldState {
             walk_render_origin: None,
             running: false,
             starter: None,
+            starter_party: None,
             has_pokedex: false,
             poke_balls: 0,
             potions: 0,
@@ -1010,6 +1051,7 @@ impl WorldState {
             walk_render_origin: None,
             running: false,
             starter: None,
+            starter_party: None,
             has_pokedex: false,
             poke_balls: 0,
             potions: 0,
@@ -1113,6 +1155,7 @@ impl WorldState {
             walk_render_origin: None,
             running: false,
             starter: Some(StarterSpecies::Treecko),
+            starter_party: None,
             has_pokedex: false,
             poke_balls: 0,
             potions: 0,
@@ -1245,6 +1288,7 @@ impl WorldState {
             walk_render_origin: None,
             running: false,
             starter: Some(StarterSpecies::Treecko),
+            starter_party: None,
             has_pokedex: true,
             poke_balls: 5,
             potions: 0,
@@ -3030,9 +3074,62 @@ impl WorldState {
         }
     }
 
+    fn ensure_starter_party(&mut self) {
+        let starter = self.starter.unwrap_or(StarterSpecies::Treecko);
+        if !self.starter_party.as_ref().is_some_and(|party| party.species == starter) {
+            self.starter_party = Some(starter_party_state(starter));
+        }
+    }
+
+    fn apply_starter_party_to_battle(&mut self, battle: &mut BattleState) {
+        self.ensure_starter_party();
+        let party = self.starter_party.as_ref().expect("starter party must exist after construction");
+        battle.player_species = starter_species_name(Some(party.species)).to_owned();
+        battle.player_hp = party.hp;
+        battle.player_max_hp = party.max_hp;
+        battle.player_level = party.level;
+        battle.player_attack = party.attack;
+        battle.player_defense = party.defense;
+        battle.player_speed = party.speed;
+        battle.player_special_attack = party.special_attack;
+        battle.player_special_defense = party.special_defense;
+        battle.player_move_pp = party.physical_move_pp;
+        battle.player_status_move_pp = party.status_move_pp;
+    }
+
+    fn sync_starter_party_from_battle(&mut self) {
+        let Some(battle) = self.battle.as_ref() else { return; };
+        let (hp, max_hp, level, attack, defense, speed, special_attack, special_defense, physical_move_pp, status_move_pp) = (
+            battle.player_hp, battle.player_max_hp, battle.player_level, battle.player_attack, battle.player_defense,
+            battle.player_speed, battle.player_special_attack, battle.player_special_defense, battle.player_move_pp, battle.player_status_move_pp,
+        );
+        self.ensure_starter_party();
+        let party = self.starter_party.as_mut().expect("starter party must exist after construction");
+        party.hp = hp;
+        party.max_hp = max_hp;
+        party.level = level;
+        party.attack = attack;
+        party.defense = defense;
+        party.speed = speed;
+        party.special_attack = special_attack;
+        party.special_defense = special_defense;
+        party.physical_move_pp = physical_move_pp;
+        party.status_move_pp = status_move_pp;
+    }
+
+    fn heal_starter_party(&mut self) {
+        self.ensure_starter_party();
+        let party = self.starter_party.as_mut().expect("starter party must exist after construction");
+        let profile = starter_battle_profile(Some(party.species));
+        party.hp = party.max_hp;
+        party.physical_move_pp = profile.physical_move.pp;
+        party.status_move_pp = profile.status_move.pp;
+    }
+
     pub fn choose_starter(&mut self, starter: StarterSpecies) {
         if self.phase == StoryPhase::StarterSelect {
             self.starter = Some(starter);
+            self.starter_party = None;
         }
     }
 
@@ -3042,13 +3139,17 @@ impl WorldState {
     /// of treating the battle as an automatic story jump.
     pub fn begin_rival_battle(&mut self) {
         if self.phase == StoryPhase::RivalBattle && self.battle.is_none() {
-            self.battle = Some(opening_battle_state(BattleOpponent::Rival, starter_battle_profile(self.starter), rival_battle_profile(self.starter, self.player_gender), false, format!("RIVAL {} would like to battle!", rival_trainer_name(self.player_gender)), 48));
+            let mut battle = opening_battle_state(BattleOpponent::Rival, starter_battle_profile(self.starter), rival_battle_profile(self.starter, self.player_gender), false, format!("RIVAL {} would like to battle!", rival_trainer_name(self.player_gender)), 48);
+            self.apply_starter_party_to_battle(&mut battle);
+            self.battle = Some(battle);
         }
     }
 
     pub fn begin_birch_battle(&mut self) {
         if self.phase == StoryPhase::BirchBattle && self.battle.is_none() {
-            self.battle = Some(opening_battle_state(BattleOpponent::Zigzagoon, starter_battle_profile(self.starter), wild_battle_profile("ZIGZAGOON", 2, "TACKLE", "GROWL"), false, "Wild ZIGZAGOON appeared!".to_owned(), 48));
+            let mut battle = opening_battle_state(BattleOpponent::Zigzagoon, starter_battle_profile(self.starter), wild_battle_profile("ZIGZAGOON", 2, "TACKLE", "GROWL"), false, "Wild ZIGZAGOON appeared!".to_owned(), 48);
+            self.apply_starter_party_to_battle(&mut battle);
+            self.battle = Some(battle);
         }
     }
 
@@ -3065,7 +3166,9 @@ impl WorldState {
         {
             return;
         }
-        self.battle = Some(opening_battle_state(BattleOpponent::Poochyena, starter_battle_profile(self.starter), wild_battle_profile("POOCHYENA", 2, "TACKLE", "TACKLE"), true, "Wild POOCHYENA appeared!".to_owned(), 224));
+        let mut battle = opening_battle_state(BattleOpponent::Poochyena, starter_battle_profile(self.starter), wild_battle_profile("POOCHYENA", 2, "TACKLE", "TACKLE"), true, "Wild POOCHYENA appeared!".to_owned(), 224);
+        self.apply_starter_party_to_battle(&mut battle);
+        self.battle = Some(battle);
     }
 
     /// The reproducible post-Running-Shoes Route 101 field path stops at
@@ -3082,7 +3185,9 @@ impl WorldState {
         {
             return;
         }
-        self.battle = Some(opening_battle_state(BattleOpponent::Wurmple, starter_battle_profile(self.starter), wild_battle_profile("WURMPLE", 2, "TACKLE", "TACKLE"), true, "Wild WURMPLE appeared!".to_owned(), 352));
+        let mut battle = opening_battle_state(BattleOpponent::Wurmple, starter_battle_profile(self.starter), wild_battle_profile("WURMPLE", 2, "TACKLE", "TACKLE"), true, "Wild WURMPLE appeared!".to_owned(), 352);
+        self.apply_starter_party_to_battle(&mut battle);
+        self.battle = Some(battle);
     }
 
     /// From the fresh `03_birch` state, the eastern Route 103 grass at
@@ -3097,7 +3202,9 @@ impl WorldState {
         {
             return;
         }
-        self.battle = Some(opening_battle_state(BattleOpponent::Wingull, starter_battle_profile(self.starter), wild_battle_profile("WINGULL", 3, "WATER GUN", "GROWL"), true, "Wild WINGULL appeared!".to_owned(), 224));
+        let mut battle = opening_battle_state(BattleOpponent::Wingull, starter_battle_profile(self.starter), wild_battle_profile("WINGULL", 3, "WATER GUN", "GROWL"), true, "Wild WINGULL appeared!".to_owned(), 224);
+        self.apply_starter_party_to_battle(&mut battle);
+        self.battle = Some(battle);
     }
 
     /// Advances the encounter wipe and reports whether it consumed this
@@ -3215,6 +3322,7 @@ impl WorldState {
                 format!("Used a POTION! {opponent} used {}.", battle.opponent_move_name)
             });
             battle.selecting_move = false;
+            self.sync_starter_party_from_battle();
             return;
         }
         let starter_name = starter_battle_profile(self.starter).species.name;
@@ -3238,6 +3346,7 @@ impl WorldState {
                 let opponent = battle.opponent;
                 let wild = battle.wild;
                 let escaped = battle.escaped;
+                self.sync_starter_party_from_battle();
                 self.battle = None;
                 if escaped && wild {
                     match opponent {
@@ -3276,6 +3385,7 @@ impl WorldState {
                 battle.player_fainted = true;
                 battle.selecting_move = false;
                 battle.message = Some(format!("{} used {}. Your POKéMON fainted!", battle_opponent_name(battle.opponent), battle.opponent_move_name));
+                self.sync_starter_party_from_battle();
                 return;
             }
         }
@@ -3305,6 +3415,7 @@ impl WorldState {
         battle.selecting_move = false;
         if battle.rival_hp == 0 {
             let opponent = battle.opponent;
+            self.sync_starter_party_from_battle();
             self.battle = None;
             match opponent {
                 BattleOpponent::Rival => {
@@ -3314,6 +3425,9 @@ impl WorldState {
                 }
                 BattleOpponent::Zigzagoon => {
                     self.phase = StoryPhase::BirchRescued;
+                    // Route101_EventScript_BirchsBag calls HealPlayerParty
+                    // before the post-battle Route 101 staging resumes.
+                    self.heal_starter_party();
                     // Route101_EventScript_BirchsBag resumes on Route 101
                     // after the battle, fixes the player at (6,13), and has
                     // Birch approach before the Lab warp is allowed.
@@ -3367,6 +3481,7 @@ impl WorldState {
                 format!("{move_name} was used! {opponent} used {}.", battle.opponent_move_name)
             });
         }
+        self.sync_starter_party_from_battle();
     }
 
     /// Tracks held title input while the distinct source transition frames are
@@ -3414,6 +3529,7 @@ impl WorldState {
     pub fn confirm_starter(&mut self) {
         if self.phase == StoryPhase::StarterSelect {
             self.starter.get_or_insert(StarterSpecies::Treecko);
+            self.ensure_starter_party();
             self.phase = StoryPhase::BirchBattle;
             self.dialogue = Some("Go! Your new POKéMON!".to_owned());
             self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
