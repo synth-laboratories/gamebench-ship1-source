@@ -530,6 +530,39 @@ pub fn apply_littleroot_right48_flower_upload(frame: &mut [u8], player: &TilePos
     Ok(())
 }
 
+fn apply_littleroot_flower_vram_delta(frame: &mut [u8], source_encoded: &str, prior_encoded: &str, origin_x: i32, origin_y: i32) -> Result<(), String> {
+    let vram = decode_base64(source_encoded)?;
+    let prior_vram = decode_base64(prior_encoded)?;
+    if vram.len() != 4 * 32 || prior_vram.len() != 4 * 32 { return Err("invalid staged General flower VRAM delta".to_owned()); }
+    let palette = parse_palette(GENERAL_PALETTES[2])?;
+    for row in 0..2_i32 {
+        for column in 0..3_i32 {
+            for tile in 0..4_i32 {
+                let tile_bytes = &vram[tile as usize * 32..(tile as usize + 1) * 32];
+                let tile_x = origin_x + column * 16 + (tile % 2) * 8;
+                let tile_y = origin_y + row * 16 + (tile / 2) * 8;
+                for y in 0..8_i32 {
+                    for pair in 0..4_i32 {
+                        let packed = tile_bytes[(y * 4 + pair) as usize];
+                        let prior_packed = prior_vram[tile as usize * 32 + (y * 4 + pair) as usize];
+                        for nibble in 0..2_i32 {
+                            let index = if nibble == 0 { packed & 0x0f } else { packed >> 4 } as usize;
+                            let prior_index = if nibble == 0 { prior_packed & 0x0f } else { prior_packed >> 4 } as usize;
+                            if index == prior_index { continue; }
+                            let x = tile_x + pair * 2 + nibble;
+                            let y = tile_y + y;
+                            if !(0..240).contains(&x) || !(0..160).contains(&y) { continue; }
+                            let offset = (y as usize * FRAME_WIDTH + x as usize) * 3;
+                            frame[offset..offset + 3].copy_from_slice(&palette[index]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
 const LITTLEROOT_RUNTIME_BORDER_METATILES: usize = 8;
 const HOUSE_RUNTIME_BORDER_METATILES: usize = 8;
 const HOUSE_RUNTIME_BORDER: [u8; 8] = [0x1f, 0x02, 0x1f, 0x02, 0x1f, 0x02, 0x1f, 0x02];
@@ -2327,6 +2360,19 @@ pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing
         && timing_tick == Some(80);
     if matches!(walk_direction, Some(Facing::Up | Facing::Down)) && (walk_progress_frames > 0 || up_80_flower_phase) {
         apply_littleroot_flower_animation(&mut frame, player, facing, 0);
+    }
+    if player == &(TilePosition { x: 9, y: 13 })
+        && walk_direction == Some(Facing::Up)
+        && walk_progress_frames == 0
+        && timing_tick == Some(112)
+    {
+        apply_littleroot_flower_vram_delta(
+            &mut frame,
+            GENERAL_FLOWER_RIGHT48_VRAM_B64,
+            GENERAL_FLOWER_RIGHT32_VRAM_B64,
+            32,
+            72,
+        )?;
     }
     Ok(frame)
 }
