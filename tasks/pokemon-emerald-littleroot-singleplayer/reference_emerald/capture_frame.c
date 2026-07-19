@@ -85,6 +85,8 @@ int main(int argc, char** argv) {
     if (!dump_memory(core, prefix, "bg_vram", 0x06000000, 0x10000)
         || !dump_memory(core, prefix, "bg_palette", 0x05000000, 0x200)
         || !dump_memory(core, prefix, "io", 0x04000000, 0x100)
+        || !dump_memory(core, prefix, "ewram", 0x02000000, 0x40000)
+        || !dump_memory(core, prefix, "iwram", 0x03000000, 0x8000)
         || !dump_memory(core, prefix, "obj_vram", 0x06010000, 0x8000)
         || !dump_memory(core, prefix, "obj_palette", 0x05000200, 0x200)
         || !dump_memory(core, prefix, "oam", 0x07000000, 0x400)) {

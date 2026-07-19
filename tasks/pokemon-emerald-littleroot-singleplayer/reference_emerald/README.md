@@ -25,7 +25,7 @@ with key mask `0x10` (`GBA_KEY_RIGHT`) from
 `splits/04_rival/04_rival.state`.
 
 When invoked with an object-dump prefix, `capture_frame.c` also writes the
-display-register block, active BG VRAM/palette, and OBJ VRAM/palette/OAM
-snapshots. These are reference-extraction inputs for staging Rust-owned tile,
-palette, animation, priority, and scene-layout data; they are never read by
-the runtime from an emulator or ROM.
+display-register block, active BG VRAM/palette, OBJ VRAM/palette/OAM, and
+EWRAM/IWRAM snapshots. These are reference-extraction inputs for staging
+Rust-owned tile, palette, animation, priority, scene-layout, and field-state
+provenance; they are never read by the runtime from an emulator or ROM.
