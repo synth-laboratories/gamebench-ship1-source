@@ -1900,7 +1900,10 @@ impl WorldState {
         let mut world = Self::rival_outside_birch_lab();
         world.map = MapId::Route101;
         world.phase = StoryPhase::BirchRescue;
-        world.player = TilePosition { x: 7, y: 15 };
+        // The north Little Root connection delivers the source scene into
+        // Route 101's authored x=10 lane. `StartBirchRescue` then owns the
+        // four fast northward player strides from this south-edge tile.
+        world.player = TilePosition { x: 10, y: 19 };
         world.render_position = None;
         world.elevation = crate::native::tile_elevation(world.map, world.player.x, world.player.y)
             .expect("Route 101 rescue start must be on staged terrain");
@@ -3652,7 +3655,10 @@ impl WorldState {
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         if self.birch_rescue_stage == 1 {
             // The source's `walk_fast_*` commands advance on eight-frame
-            // beats: six entry moves, then thirty circular chase moves.
+            // beats. The entry stream has six moves; Birch then has thirty
+            // circular moves while Zigzagoon has thirty-two. The latter two
+            // source steps are what leave Zigzagoon at (4,12), facing left,
+            // before the Bag prompt opens.
             const BIRCH_ENTRY: [Facing; 6] = [Facing::Right, Facing::Right, Facing::Right, Facing::Right, Facing::Up, Facing::Up];
             const ZIGZAGOON_ENTRY: [Facing; 6] = [Facing::Up, Facing::Right, Facing::Right, Facing::Right, Facing::Right, Facing::Up];
             const BIRCH_CIRCLE: [Facing; 30] = [
@@ -3660,16 +3666,18 @@ impl WorldState {
                 Facing::Up, Facing::Up, Facing::Right, Facing::Right, Facing::Right, Facing::Down, Facing::Down, Facing::Left, Facing::Left, Facing::Left,
                 Facing::Up, Facing::Up, Facing::Right, Facing::Right, Facing::Right, Facing::Down, Facing::Down, Facing::Left, Facing::Left, Facing::Left,
             ];
-            const ZIGZAGOON_CIRCLE: [Facing; 30] = [
+            const ZIGZAGOON_CIRCLE: [Facing; 32] = [
                 Facing::Up, Facing::Up, Facing::Up, Facing::Right, Facing::Right, Facing::Right, Facing::Down, Facing::Down, Facing::Left, Facing::Left,
                 Facing::Left, Facing::Up, Facing::Up, Facing::Right, Facing::Right, Facing::Right, Facing::Down, Facing::Down, Facing::Left, Facing::Left,
                 Facing::Left, Facing::Up, Facing::Up, Facing::Up, Facing::Right, Facing::Right, Facing::Right, Facing::Down, Facing::Down, Facing::Left,
+                Facing::Left, Facing::Left,
             ];
-            let completed = usize::from(344_u16.saturating_sub(next_remaining) / 8);
+            let elapsed = 344_u16.saturating_sub(next_remaining);
+            let completed = usize::from(elapsed / 8);
             // `Route101_Movement_EnterScene` brings the player north four
-            // tiles before the actors finish their chase, then performs a
-            // fast left-facing turn. Keep this in the same clock as the
-            // actors instead of deferring it to the prompt.
+            // tiles in 32 frames, then performs its four-frame faster left
+            // turn. Keep this in the same clock as the actors instead of
+            // deferring it to the prompt.
             let player_steps = (completed as i16).min(4);
             let player_y = 19 - player_steps;
             if self.player.y != player_y {
@@ -3677,8 +3685,8 @@ impl WorldState {
                 self.elevation = crate::native::tile_elevation(self.map, self.player.x, self.player.y)
                     .expect("Route 101 rescue player path must be staged");
             }
-            self.facing = if completed >= 5 { Facing::Left } else { Facing::Up };
-            let (birch_position, birch_facing) = if completed <= BIRCH_ENTRY.len() {
+            self.facing = if elapsed >= 32 { Facing::Left } else { Facing::Up };
+            let (birch_position, mut birch_facing) = if completed <= BIRCH_ENTRY.len() {
                 fast_path_position(TilePosition { x: 0, y: 15 }, &BIRCH_ENTRY, completed, Facing::Right)
             } else {
                 fast_path_position(TilePosition { x: 4, y: 13 }, &BIRCH_CIRCLE, (completed - BIRCH_ENTRY.len()).min(BIRCH_CIRCLE.len()), Facing::Up)
@@ -3688,6 +3696,13 @@ impl WorldState {
             } else {
                 fast_path_position(TilePosition { x: 4, y: 14 }, &ZIGZAGOON_CIRCLE, (completed - ZIGZAGOON_ENTRY.len()).min(ZIGZAGOON_CIRCLE.len()), Facing::Up)
             };
+            // After both circular streams finish, Birch performs the
+            // source's distinct four-frame faster right turn before the
+            // paired fast face-each-other actions. Zigzagoon is already
+            // left-facing at the end of its 32-step stream.
+            if elapsed >= 304 {
+                birch_facing = Facing::Right;
+            }
             self.move_fast_scripted_npc("birch", MapId::Route101, birch_position, birch_facing);
             self.move_fast_scripted_npc("zigzagoon", MapId::Route101, zigzagoon_position, zigzagoon_facing);
         }
@@ -3708,7 +3723,7 @@ impl WorldState {
             // The final face commands occur at the source circle endpoints,
             // rather than beside the Bag.
             self.move_scripted_npc("birch", MapId::Route101, TilePosition { x: 4, y: 13 }, Facing::Right);
-            self.move_scripted_npc("zigzagoon", MapId::Route101, TilePosition { x: 5, y: 12 }, Facing::Left);
+            self.move_scripted_npc("zigzagoon", MapId::Route101, TilePosition { x: 4, y: 12 }, Facing::Left);
             self.birch_rescue_stage = 2;
             self.dialogue = Some("Hello! You over there!\nPlease! Help!\n\nIn my BAG!\nThere's a POKé BALL!".to_owned());
         }
