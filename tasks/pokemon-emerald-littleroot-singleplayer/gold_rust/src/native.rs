@@ -328,6 +328,7 @@ const NAME_ENTRY_G_CURSOR_PATCH_B64: &str = include_str!("../assets/opening_name
 const TITLE_TO_MET_RIVAL_NAME_ENTRY_A_PATCH_B64: &str = include_str!("../assets/title_to_met_rival_may_name_entry_a_patch.b64");
 const TITLE_TO_MET_RIVAL_NAME_ENTRY_OK_PATCH_B64: &str = include_str!("../assets/title_to_met_rival_may_name_entry_ok_patch.b64");
 const TITLE_TO_MET_RIVAL_NAME_CONFIRM_PNG_B64: &str = include_str!("../assets/title_to_met_rival_may_name_confirm.png.b64");
+const TITLE_TO_MET_RIVAL_TRUCK_IDLE_PNG_B64: &str = include_str!("../assets/title_to_met_rival_may_truck_idle.png.b64");
 const TITLE_A_120_PNG_B64: &str = include_str!("../assets/opening_title_a_120.png.b64");
 const PROFESSOR_INTRO_PNG_B64: &str = include_str!("../assets/opening_professor_intro.png.b64");
 const PROFESSOR_INTRO_A16_PNG_B64: &str = include_str!("../assets/opening_professor_intro_a16.png.b64");
@@ -762,6 +763,15 @@ pub fn render_truck_idle() -> Result<Vec<u8>, String> {
     let oam = decode_base64(TRUCK_IDLE_OAM_B64.trim())?;
     composite_oam_4bpp(&mut frame, &vram, &palette, &oam)?;
     Ok(frame)
+}
+
+/// Decodes the source-derived May truck viewport at the measured title-route
+/// idle boundary. Rust still owns the route's truck state and inputs.
+pub fn title_to_met_rival_truck_idle() -> Result<Vec<u8>, String> {
+    decode_embedded_rgb_png(
+        TITLE_TO_MET_RIVAL_TRUCK_IDLE_PNG_B64,
+        "title-to-rival May truck idle",
+    )
 }
 
 fn route101_map() -> Result<&'static [u8], String> {

@@ -1034,6 +1034,18 @@ impl LittlerootSession {
             && self.world.dialogue.as_deref() == Some("So it's A?")
     }
 
+    fn title_to_met_rival_truck_idle_evidence(&self) -> bool {
+        self.checkpoint == OpeningCheckpoint::TitleMenu
+            && self.frame_index == 5_217
+            && self.input_log.len() == 89
+            && self.world.phase == world::StoryPhase::IntroTruck
+            && self.world.map == MapId::MovingTruck
+            && self.world.player == TilePosition { x: 3, y: 2 }
+            && self.world.player_gender == world::PlayerGender::May
+            && self.world.player_name == "A"
+            && self.world.dialogue.is_none()
+    }
+
     fn title_to_met_rival_rival_entry_evidence(&self) -> bool {
         self.checkpoint == OpeningCheckpoint::TitleMenu
             && self.frame_index == 22_096
@@ -1084,6 +1096,9 @@ impl LittlerootSession {
         }
         if self.title_to_met_rival_name_confirm_evidence() {
             return "source_name_confirm_exact";
+        }
+        if self.title_to_met_rival_truck_idle_evidence() {
+            return "source_truck_idle_exact";
         }
         if self.title_to_met_rival_rival_entry_evidence() {
             return "source_rival_entry_exact";
@@ -1278,6 +1293,18 @@ impl LittlerootSession {
                 "trace": "title-to-met-rival-may-name-confirm",
                 "baseline_only": false,
                 "source_name_confirm": true,
+                "expected_sha256": expected_sha256,
+                "actual_sha256": actual_sha256,
+                "exact": actual_sha256 == expected_sha256,
+            });
+        }
+        if self.title_to_met_rival_truck_idle_evidence() {
+            let expected_sha256 = "674794aa5463f468079f1217ed1c360bfdb71b20bac0945d9f9c18e4768a4a9c";
+            let actual_sha256 = frame_sha256(self.frame_rgb());
+            return json!({
+                "trace": "title-to-met-rival-may-truck-idle",
+                "baseline_only": false,
+                "source_truck_idle": true,
                 "expected_sha256": expected_sha256,
                 "actual_sha256": actual_sha256,
                 "exact": actual_sha256 == expected_sha256,
@@ -1753,6 +1780,7 @@ impl LittlerootSession {
             _ if self.title_to_met_rival_name_confirm_evidence() => native::title_to_met_rival_name_confirm(),
             _ if self.world.map == MapId::ProfessorIntro && self.world.phase == world::StoryPhase::NameConfirm => Ok(native::render_name_confirm_base(self.world.player_gender)),
             _ if self.world.map == MapId::ProfessorIntro && self.world.phase == world::StoryPhase::IntroFarewell => Ok(native::render_name_prompt()),
+            _ if self.title_to_met_rival_truck_idle_evidence() => native::title_to_met_rival_truck_idle(),
             OpeningCheckpoint::TruckArrival if self.truck_held_right_frames() == Some(16) => native::opening_truck_right_16(),
             OpeningCheckpoint::TruckArrival if self.truck_held_right_frames() == Some(32) => native::opening_truck_right_32(),
             OpeningCheckpoint::TruckArrival if self.truck_held_right_frames() == Some(48) => native::opening_truck_right_48(),
