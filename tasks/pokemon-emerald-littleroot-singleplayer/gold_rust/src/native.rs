@@ -1474,6 +1474,22 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             }
         }
     }
+    // `PetalburgGymReport{Male,Female}` makes Mom turn, then invokes
+    // `Common_Movement_ExclamationMark` before its Delay48. The source icon
+    // sprite holds its exclamation animation for 60 frames, so reuse the
+    // same renderer-owned field-effect cue while the modeled intro timer
+    // moves through the notice and into its quiet delay.
+    if matches!(world.map, MapId::BrendansHouse1F | MapId::MaysHouse1F) {
+        if let Some(remaining) = world.tv_broadcast_intro_frames {
+            if (21..=80).contains(&remaining) {
+                if let Some(mom) = world.npcs.iter().find(|npc| npc.id == "mom" && npc.map == world.map) {
+                    let x = (112 + i32::from(mom.position.x - world.player.x) * 16 + 7).max(0) as usize;
+                    let y = (56 + i32::from(mom.position.y - world.player.y) * 16 - 14).max(0) as usize;
+                    draw_exclamation_marker(frame, x, y);
+                }
+            }
+        }
+    }
     if let Some(battle) = world.battle.as_ref() {
         if battle.entry_transition_frames > 0 {
             // The Route 101 Wurmple capture keeps field input locked through
