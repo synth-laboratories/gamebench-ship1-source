@@ -4,6 +4,11 @@ const SOURCE_RIVAL_RUNNING_SHOES_TRIGGER: u8 = 6;
 /// The counterpart-rival approach and PC scripts use `walk_in_place_faster_*`
 /// for every compact turn, whose source object-event duration is four frames.
 const BEDROOM_RIVAL_FASTER_TURN_FRAMES: u16 = 4;
+/// The 2F doorway rail previously treated its terminal
+/// `walk_in_place_faster_*` turn as the eight-frame fast variant. Both
+/// counterpart scripts use the four-frame faster action, so this preserves
+/// the existing entry beat while releasing the approach four frames sooner.
+const BEDROOM_RIVAL_ENTRY_FRAMES: u16 = 96;
 
 fn bedroom_rival_movement_frames(faster: bool) -> u16 {
     if faster {
@@ -1923,7 +1928,7 @@ impl WorldState {
             self.pending_rival_meeting = true;
             // The 2F source script holds the doorway for ten frames before
             // creating the rival and immediately starting `*Enters`.
-            self.rival_arrival_frames = Some(100);
+            self.rival_arrival_frames = Some(BEDROOM_RIVAL_ENTRY_FRAMES);
             return true;
         }
         if let Some(text) = self.house_background_text(x, y) {
@@ -2279,10 +2284,10 @@ impl WorldState {
             return true;
         }
         // Both 2F scripts delay ten frames before `addobject`, then begin
-        // the two down steps and an 8-frame turn immediately. Preserve the
+        // the two down steps and a four-frame faster turn immediately. Preserve the
         // doorway boundary rather than exposing the rival at the Poké Ball.
-        let elapsed_before = 100u16.saturating_sub(remaining);
-        let elapsed_after = 100u16.saturating_sub(next_remaining);
+        let elapsed_before = BEDROOM_RIVAL_ENTRY_FRAMES.saturating_sub(remaining);
+        let elapsed_after = BEDROOM_RIVAL_ENTRY_FRAMES.saturating_sub(next_remaining);
         let initial = match self.map {
             MapId::BrendansHouse2F => TilePosition { x: 7, y: 1 },
             MapId::MaysHouse2F => TilePosition { x: 1, y: 1 },
@@ -2312,8 +2317,8 @@ impl WorldState {
                 TilePosition { x: initial.x, y: initial.y + 2 }, Facing::Down,
             );
         }
-        if elapsed_before < 50 && 50 <= elapsed_after {
-            self.move_fast_scripted_npc(
+        if elapsed_before < 46 && 46 <= elapsed_after {
+            self.move_faster_scripted_npc(
                 "rival", self.map,
                 TilePosition { x: initial.x, y: initial.y + 2 }, side,
             );
