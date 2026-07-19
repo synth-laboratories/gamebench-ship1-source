@@ -1949,7 +1949,17 @@ fn draw_gender_select(frame: &mut [u8], world: &WorldState) {
     } else {
         draw_gender_character_at(frame, world.player_gender, 148);
     }
-    draw_professor_dialogue(frame, "Are you a boy?\nOr are you a girl?");
+    draw_gender_dialogue(frame);
+}
+
+/// The selector prompt is a fixed two-line title-scene page.  The source
+/// frame uses the normal font's proportional glyph advances and a 16-pixel
+/// row stride, unlike the compact character-column layout used by the
+/// general-purpose Birch text wrapper.
+fn draw_gender_dialogue(frame: &mut [u8]) {
+    draw_professor_dialogue(frame, "");
+    draw_birch_text(frame, 16, 121, "Are you a boy?", 14);
+    draw_birch_text(frame, 16, 137, "Or are you a girl?", 18);
 }
 
 fn draw_gender_menu_window(frame: &mut [u8]) {
