@@ -242,7 +242,15 @@ pub struct MapTransition {
 pub struct WorldState {
     pub map: MapId,
     pub phase: StoryPhase,
+    /// Gameplay position in the authored map's coordinate space. For the
+    /// frozen rival checkpoint this is Emerald's `ObjectEvent.currentCoords`
+    /// minus `MAP_OFFSET`, not the separately fitted camera coordinate.
     pub player: TilePosition,
+    /// Optional source-fitted terrain/camera coordinate. The rival exterior
+    /// reference begins at logical `(8,17)` while its captured compositor is
+    /// fitted at `(9,13)`; all ordinary maps render the gameplay position.
+    #[serde(default)]
+    pub render_position: Option<TilePosition>,
     pub elevation: u8,
     pub npcs: Vec<NpcState>,
     #[serde(default)]
@@ -421,6 +429,7 @@ impl WorldState {
             map: MapId::TitleScreen,
             phase: StoryPhase::Title,
             player: TilePosition { x: 0, y: 0 },
+            render_position: None,
             elevation: 0,
             npcs: Vec::new(),
             npc_walk_starts: Vec::new(),
@@ -510,6 +519,7 @@ impl WorldState {
             // the right-hand warp tiles at x=4. The viewport is offset when
             // rendered, but gameplay coordinates remain the authored 5×5.
             player: TilePosition { x: 3, y: 2 },
+            render_position: None,
             elevation: 0,
             npcs: Vec::new(),
             npc_walk_starts: Vec::new(),
@@ -602,6 +612,7 @@ impl WorldState {
             // The 02_starter reference's stitched map identifies this as
             // May's upstairs bedroom at the authored [1, 1] spawn tile.
             player: TilePosition { x: 1, y: 1 },
+            render_position: None,
             elevation: 3,
             npcs: Vec::new(),
             npc_walk_starts: Vec::new(),
@@ -687,6 +698,7 @@ impl WorldState {
             map: MapId::LittlerootTown,
             phase: StoryPhase::BirchRescued,
             player: TilePosition { x: 7, y: 16 },
+            render_position: None,
             elevation: 3,
             npcs: littleroot_town_npcs(StoryPhase::BirchRescued, PlayerGender::May),
             npc_walk_starts: Vec::new(),
@@ -771,7 +783,13 @@ impl WorldState {
         Self {
             map: MapId::LittlerootTown,
             phase: StoryPhase::PokedexReceived,
-            player: TilePosition { x: 9, y: 13 },
+            // EWRAM `ObjectEvent.currentCoords` is `(15,24)` here. Emerald
+            // stores map-grid coordinates with `MAP_OFFSET = 7`, so gameplay
+            // begins at authored `(8,17)`.
+            player: TilePosition { x: 8, y: 17 },
+            // The source-fitted native compositor keeps its distinct camera
+            // pose while logical movement and collision use the map grid.
+            render_position: Some(TilePosition { x: 9, y: 13 }),
             elevation: 3,
             npcs: littleroot_town_npcs(StoryPhase::PokedexReceived, PlayerGender::May),
             npc_walk_starts: Vec::new(),
@@ -860,6 +878,7 @@ impl WorldState {
         world.map = MapId::Route101;
         world.phase = StoryPhase::BirchRescue;
         world.player = TilePosition { x: 7, y: 15 };
+        world.render_position = None;
         world.elevation = crate::native::tile_elevation(world.map, world.player.x, world.player.y)
             .expect("Route 101 rescue start must be on staged terrain");
         world.facing = Facing::Up;
@@ -876,6 +895,7 @@ impl WorldState {
         world.map = MapId::Route103;
         world.phase = StoryPhase::StarterChosen;
         world.player = TilePosition { x: 10, y: 4 };
+        world.render_position = None;
         world.elevation = crate::native::tile_elevation(world.map, world.player.x, world.player.y)
             .expect("Route 103 rival start must be on staged terrain");
         world.facing = Facing::Up;
@@ -891,6 +911,7 @@ impl WorldState {
         let mut world = Self::rival_outside_birch_lab();
         world.phase = StoryPhase::PokedexReceived;
         world.player = TilePosition { x: 7, y: 9 };
+        world.render_position = None;
         world.elevation = crate::native::tile_elevation(world.map, world.player.x, world.player.y)
             .expect("running-shoes start must be on staged Littleroot terrain");
         world.facing = Facing::Right;
@@ -3001,7 +3022,10 @@ impl WorldState {
     /// source's 16-frame boundary, but the final displayed frame still shows
     /// the previous tile plus its 15-pixel walk phase.
     pub fn render_player(&self) -> &TilePosition {
-        self.walk_render_origin.as_ref().unwrap_or(&self.player)
+        self.walk_render_origin
+            .as_ref()
+            .or(self.render_position.as_ref())
+            .unwrap_or(&self.player)
     }
 
     /// Ends a released directional hold after its final visible stride. The
@@ -3057,7 +3081,7 @@ impl WorldState {
             self.walk_direction = Some(facing);
             self.walk_progress_frames = 0;
             self.walk_elapsed_frames = 0;
-            self.walk_render_origin = Some(self.player.clone());
+            self.walk_render_origin = Some(self.render_player().clone());
         }
 
         let mut moved = 0;
@@ -3125,9 +3149,9 @@ impl WorldState {
                 && self.has_pokedex
                 && matches!(
                     (next_x, next_y),
-                    (14, 9) | (12, 5..=15) | (3..=12, 15) | (3, 5..=14)
-                        | (4..=20, 5) | (8, 13) | (10..=13, 13)
-                        | (13, 14 | 15)
+                    (13, 13) | (11, 9..=19) | (2..=11, 19) | (2, 9..=18)
+                        | (3..=19, 9) | (9..=12, 17)
+                        | (12, 18 | 19)
                 );
             if !source_rival_field_route
                 && self.npcs.iter().any(|npc| npc.map == self.map && npc.position.x == next_x && npc.position.y == next_y)
@@ -3151,8 +3175,17 @@ impl WorldState {
                 self.walk_render_origin = None;
                 break;
             }
-            self.walk_render_origin = Some(self.player.clone());
+            let prior_player = self.player.clone();
+            let prior_render = self
+                .render_position
+                .clone()
+                .unwrap_or_else(|| prior_player.clone());
+            self.walk_render_origin = Some(prior_render);
             self.player = TilePosition { x: next_x, y: next_y };
+            if let Some(render_position) = self.render_position.as_mut() {
+                render_position.x += next_x - prior_player.x;
+                render_position.y += next_y - prior_player.y;
+            }
             // Map elevation selects object-layer priority. Collision, not an
             // equality comparison against the prior tile, determines whether
             // the player may enter the next metatile.
@@ -3194,10 +3227,7 @@ impl WorldState {
             MapId::TitleScreen => (1, 1),
             MapId::ProfessorIntro => (1, 1),
             MapId::MovingTruck => (5, 5),
-            // The post-shoes reference route occupies source-proven runtime
-            // border tile `(20,5)` before its eastward collision; ordinary
-            // off-layout tiles remain rejected by native collision.
-            MapId::LittlerootTown => (21, 20),
+            MapId::LittlerootTown => (20, 20),
             MapId::Route101 => (20, 20),
             MapId::OldaleTown => (20, 20),
             MapId::Route103 => (80, 22),
@@ -3221,6 +3251,7 @@ impl WorldState {
         {
             self.map = transition.destination_map;
             self.player = transition.destination.clone();
+            self.render_position = None;
             self.walk_progress_frames = 0;
             self.walk_elapsed_frames = 0;
             self.walk_render_origin = None;
@@ -3422,7 +3453,8 @@ impl WorldState {
             }
             return;
         }
-        let source_rival_running_shoes = self.player == (TilePosition { x: 12, y: 5 });
+        let source_rival_running_shoes = self.player == (TilePosition { x: 11, y: 9 })
+            && self.render_position.is_some();
         if self.map == MapId::LittlerootTown
             && self.phase == StoryPhase::PokedexReceived
             && (source_rival_running_shoes
@@ -3436,7 +3468,7 @@ impl WorldState {
                 // The frozen rival-exterior source state enters through a
                 // distinct, measured Mom approach rather than a Porymap
                 // coordinate branch.
-                (12, 5) => SOURCE_RIVAL_RUNNING_SHOES_TRIGGER,
+                (11, 9) if self.render_position.is_some() => SOURCE_RIVAL_RUNNING_SHOES_TRIGGER,
                 (10, 2) => 0,
                 (11, 2) => 1,
                 (10, 9) => 2,
@@ -3447,10 +3479,10 @@ impl WorldState {
             };
             self.running_shoes_trigger = Some(trigger);
             let position = match trigger {
-                // EWRAM records Mom at raw `(12,16)`, projected by this
-                // checkpoint renderer to `(6,5)`. Five rightward commits
-                // place her beside the player at `(11,5)`.
-                SOURCE_RIVAL_RUNNING_SHOES_TRIGGER => TilePosition { x: 6, y: 5 },
+                // EWRAM records Mom at MapGrid `(12,16)`, or authored
+                // Little Root `(5,9)` after `MAP_OFFSET = 7`. Five rightward
+                // commits place her beside the player at `(10,9)`.
+                SOURCE_RIVAL_RUNNING_SHOES_TRIGGER => TilePosition { x: 5, y: 9 },
                 0 => TilePosition { x: 10, y: 9 },
                 1 => TilePosition { x: 11, y: 9 },
                 _ => match self.player_gender {

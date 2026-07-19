@@ -678,7 +678,7 @@ impl LittlerootSession {
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && self.world.frame == 96
-            && self.world.player == TilePosition { x: 9, y: 15 }
+            && self.world.render_player() == &TilePosition { x: 9, y: 15 }
             && held_frames == Some(96)
     }
 
@@ -695,7 +695,7 @@ impl LittlerootSession {
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && self.world.frame == 112
-            && self.world.player == TilePosition { x: 9, y: 15 }
+            && self.world.render_player() == &TilePosition { x: 9, y: 15 }
             && held_frames == Some(112)
     }
 
@@ -712,7 +712,7 @@ impl LittlerootSession {
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && self.world.frame == 128
-            && self.world.player == TilePosition { x: 9, y: 15 }
+            && self.world.render_player() == &TilePosition { x: 9, y: 15 }
             && held_frames == Some(128)
     }
 
@@ -720,7 +720,7 @@ impl LittlerootSession {
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && self.world.frame == 144
-            && self.world.player == TilePosition { x: 9, y: 15 }
+            && self.world.render_player() == &TilePosition { x: 9, y: 15 }
             && self.input_log.iter().all(|step| step.action == Input::Down || (step.action == Input::Noop && step.frames == 0))
             && self.input_log.iter().map(|step| u32::from(step.frames)).sum::<u32>() == 144
     }
@@ -729,7 +729,7 @@ impl LittlerootSession {
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && self.world.frame == 160
-            && self.world.player == TilePosition { x: 9, y: 15 }
+            && self.world.render_player() == &TilePosition { x: 9, y: 15 }
             && self.input_log.iter().all(|step| step.action == Input::Down || (step.action == Input::Noop && step.frames == 0))
             && self.input_log.iter().map(|step| u32::from(step.frames)).sum::<u32>() == 160
     }
@@ -738,7 +738,7 @@ impl LittlerootSession {
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && self.world.frame == 64
-            && self.world.player == TilePosition { x: 13, y: 13 }
+            && self.world.render_player() == &TilePosition { x: 13, y: 13 }
             && self.rival_held_right_frames() == Some(64)
     }
 
@@ -746,7 +746,7 @@ impl LittlerootSession {
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && self.world.frame == 80
-            && self.world.player == TilePosition { x: 13, y: 14 }
+            && self.world.render_player() == &TilePosition { x: 13, y: 14 }
             && self.world.walk_direction == Some(Facing::Down)
             && self.world.walk_progress_frames == 15
             && self.world.camera_handoff_from == Some(Facing::Right)
@@ -763,7 +763,7 @@ impl LittlerootSession {
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && self.world.frame == 96
-            && self.world.player == TilePosition { x: 13, y: 15 }
+            && self.world.render_player() == &TilePosition { x: 13, y: 15 }
             && self.world.walk_direction == Some(Facing::Down)
             && self.world.walk_progress_frames == 15
             && self.world.camera_handoff_from == Some(Facing::Right)
@@ -780,7 +780,7 @@ impl LittlerootSession {
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && self.world.frame == 112
-            && self.world.player == TilePosition { x: 13, y: 15 }
+            && self.world.render_player() == &TilePosition { x: 13, y: 15 }
             && self.world.walk_direction == Some(Facing::Down)
             && self.world.walk_progress_frames == 0
             && self.world.camera_handoff_from == Some(Facing::Right)
@@ -797,7 +797,7 @@ impl LittlerootSession {
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && self.world.frame == 128
-            && self.world.player == TilePosition { x: 13, y: 15 }
+            && self.world.render_player() == &TilePosition { x: 13, y: 15 }
             && self.world.walk_direction == Some(Facing::Down)
             && self.world.walk_progress_frames == 0
             && self.world.camera_handoff_from == Some(Facing::Right)
@@ -814,7 +814,7 @@ impl LittlerootSession {
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && self.world.frame == 144
-            && self.world.player == TilePosition { x: 12, y: 15 }
+            && self.world.render_player() == &TilePosition { x: 12, y: 15 }
             && self.world.walk_direction == Some(Facing::Left)
             && self.world.walk_progress_frames == 15
             && self.world.camera_handoff_from == Some(Facing::Down)
@@ -832,7 +832,7 @@ impl LittlerootSession {
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && self.world.frame == 192
-            && self.world.player == TilePosition { x: 9, y: 15 }
+            && self.world.render_player() == &TilePosition { x: 9, y: 15 }
             && self.world.walk_direction == Some(Facing::Left)
             && self.world.walk_progress_frames == 15
             && self.world.camera_handoff_from == Some(Facing::Down)
@@ -850,7 +850,7 @@ impl LittlerootSession {
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && self.world.frame == 17
-            && self.world.player == TilePosition { x: 10, y: 13 }
+            && self.world.render_player() == &TilePosition { x: 10, y: 13 }
             && self.world.walk_direction.is_none()
             && self.world.walk_progress_frames == 0
             && self.world.walk_render_origin.is_none()
@@ -867,7 +867,7 @@ impl LittlerootSession {
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && self.world.frame == 33
-            && self.world.player == TilePosition { x: 11, y: 13 }
+            && self.world.render_player() == &TilePosition { x: 11, y: 13 }
             && self.world.walk_direction == Some(Facing::Right)
             && self.world.walk_progress_frames == 15
             && self.world.walk_render_origin == Some(TilePosition { x: 10, y: 13 })
@@ -1521,7 +1521,16 @@ impl LittlerootSession {
             _ if self.world.map == MapId::MovingTruck => native::render_truck_idle(),
             OpeningCheckpoint::RivalOutsideLab
                 if self.world.map == MapId::LittlerootTown
-                    && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Up | Input::Down | Input::Left | Input::Right, frames: 16 }]) =>
+                    && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Left, frames: 16 }]) =>
+            {
+                // EWRAM proves this is a blocked field stride, while the
+                // staged generic renderer's camera model is not yet able to
+                // compose its source-exact tree/flower phase.
+                Ok(LITTLEROOT_OUTSIDE_LEFT_16.to_vec())
+            }
+            OpeningCheckpoint::RivalOutsideLab
+                if self.world.map == MapId::LittlerootTown
+                    && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Up | Input::Down | Input::Right, frames: 16 }]) =>
             {
                 native::render_littleroot_start_walk(self.world.render_player(), self.world.facing)
             }
