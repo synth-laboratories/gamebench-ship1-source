@@ -1564,19 +1564,8 @@ impl WorldState {
         }
         if self.phase == StoryPhase::MeetRival && self.is_rival_pokeball(x, y) {
             self.pending_rival_meeting = true;
-            let position = match self.map {
-                // These are the rival object-event entry positions in the
-                // authored bedroom maps; the full scripted walk-in remains
-                // an animation-timing task.
-                MapId::BrendansHouse2F => TilePosition { x: 7, y: 1 },
-                MapId::MaysHouse2F => TilePosition { x: 1, y: 1 },
-                _ => unreachable!("only rival bedrooms contain the trigger"),
-            };
-            self.npcs.push(NpcState {
-                id: "rival".to_owned(), map: self.map, position, facing: Facing::Down,
-            });
-            // 10-frame delay, entry steps, exclamation pause, and final
-            // 10-frame delay from the authored bedroom script.
+            // The 2F source script holds the doorway for ten frames before
+            // creating the rival and immediately starting `*Enters`.
             self.rival_arrival_frames = Some(100);
             return true;
         }
@@ -1931,9 +1920,9 @@ impl WorldState {
             }
             return true;
         }
-        // Both authored entry scripts delay 10 frames, then walk the newly
-        // added rival down twice before an 8-frame turn. Preserve each
-        // individual step rather than jumping to the approach row.
+        // Both 2F scripts delay ten frames before `addobject`, then begin
+        // the two down steps and an 8-frame turn immediately. Preserve the
+        // doorway boundary rather than exposing the rival at the Poké Ball.
         let elapsed_before = 100u16.saturating_sub(remaining);
         let elapsed_after = 100u16.saturating_sub(next_remaining);
         let initial = match self.map {
@@ -1946,6 +1935,13 @@ impl WorldState {
             MapId::MaysHouse2F => Facing::Right,
             _ => unreachable!(),
         };
+        if elapsed_before < 10 && 10 <= elapsed_after
+            && !self.npcs.iter().any(|npc| npc.id == "rival" && npc.map == self.map)
+        {
+            self.npcs.push(NpcState {
+                id: "rival".to_owned(), map: self.map, position: initial.clone(), facing: Facing::Down,
+            });
+        }
         if elapsed_before < 26 && 26 <= elapsed_after {
             self.move_scripted_npc(
                 "rival", self.map,
