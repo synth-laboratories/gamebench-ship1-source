@@ -3398,7 +3398,7 @@ impl WorldState {
                     self.oldale_mart_scene_stage = 4;
                     self.oldale_mart_dialogue_page = 0;
                     self.potions = self.potions.saturating_add(1);
-                    self.dialogue = Some("{PLAYER} put the POTION in the\nITEMS POCKET.".to_owned());
+                    self.dialogue = Some(format!("{} put the POTION in the\nITEMS POCKET.", self.player_name));
                     return;
                 }
                 4 => {
