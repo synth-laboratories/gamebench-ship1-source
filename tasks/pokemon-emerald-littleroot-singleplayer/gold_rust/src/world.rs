@@ -1688,7 +1688,10 @@ impl WorldState {
             self.walk_progress_frames = 0;
             self.oldale_mart_scene_frames = None;
             self.oldale_mart_scene_stage = 3;
-            self.dialogue = Some("This is a POKéMON MART.\nJust look for our blue roof.\n\nWe sell a variety of goods including\nPOKé BALLS for catching POKéMON.\n\nHere, I'd like you to have this as\na promotional item.".to_owned());
+            self.oldale_mart_dialogue_page = 0;
+            self.oldale_mart_dialogue_frames = Some(64);
+            self.dialogue = Some("This is a POKéMON MART.\nJust look for our blue roof.".to_owned());
+            self.advance_oldale_mart_dialogue_printer(frames.saturating_sub(u32::from(remaining)));
         } else {
             self.oldale_mart_scene_frames = Some(next_remaining);
         }
@@ -2036,8 +2039,13 @@ impl WorldState {
     pub fn rendered_dialogue(&self) -> Option<String> {
         let dialogue = self.dialogue.as_ref()?;
         if let Some(remaining) = self.oldale_mart_dialogue_frames {
-            let elapsed = 32_u16.saturating_sub(remaining);
-            let visible_characters = usize::from(elapsed.saturating_sub(4));
+            let (total, lead_in) = if self.oldale_mart_scene_stage == 3 {
+                (64_u16, 7_u16)
+            } else {
+                (32_u16, 4_u16)
+            };
+            let elapsed = total.saturating_sub(remaining);
+            let visible_characters = usize::from(elapsed.saturating_sub(lead_in));
             return Some(dialogue.chars().take(visible_characters).collect());
         }
         let Some(remaining) = self.running_shoes_wait_frames.map(u16::from)
@@ -3371,10 +3379,24 @@ impl WorldState {
                     return;
                 }
                 3 => {
+                    let next_page = match self.oldale_mart_dialogue_page {
+                        0 => Some("We sell a variety of goods including\nPOKé BALLS for catching POKéMON."),
+                        1 => Some("Here, I'd like you to have this as\na promotional item."),
+                        _ => None,
+                    };
+                    if let Some(dialogue) = next_page {
+                        self.oldale_mart_dialogue_page = self.oldale_mart_dialogue_page.saturating_add(1);
+                        // The A request that advances a completed page also
+                        // spends its first sixteen frames on the new printer.
+                        self.oldale_mart_dialogue_frames = Some(48);
+                        self.dialogue = Some(dialogue.to_owned());
+                        return;
+                    }
                     // `giveitem ITEM_POTION` opens its own receipt message;
                     // the explanatory Mart text follows only after that box
                     // has been dismissed.
                     self.oldale_mart_scene_stage = 4;
+                    self.oldale_mart_dialogue_page = 0;
                     self.potions = self.potions.saturating_add(1);
                     self.dialogue = Some("{PLAYER} put the POTION in the\nITEMS POCKET.".to_owned());
                     return;
