@@ -305,6 +305,7 @@ impl LittlerootSession {
             return;
         }
         if self.world.advance_truck_departure(request.frames)
+            || self.world.advance_new_home_orientation(request.frames)
             || self.world.advance_new_home_arrival(request.frames)
         {
             self.input_log.push(request);
@@ -560,6 +561,9 @@ impl LittlerootSession {
                     self.world.confirm_starter();
                 } else if !self.world.interact_with_npc() {
                     self.world.advance_opening_script();
+                    // Closing Mom's first move-in page starts the source's
+                    // two serialized turns in this same A-input window.
+                    self.world.advance_new_home_orientation(request.frames);
                     // The wall-clock background event opens its first source
                     // message during this A sample window. Its printer must
                     // consume that same request, just like ordinary object
