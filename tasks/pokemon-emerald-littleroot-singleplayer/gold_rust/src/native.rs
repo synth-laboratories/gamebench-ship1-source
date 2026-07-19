@@ -2079,6 +2079,9 @@ pub fn is_walkable(map_id: MapId, x: i16, y: i16) -> Result<bool, String> {
             // The post-Running-Shoes field route reaches `(3,15)` from the
             // east, then turns north; source holds there under further Left.
             (2, 15) => return Ok(false),
+            // The same route reaches `(3,5)` under Up x160 and remains on
+            // that north-row tile through Up x256 before its eastward run.
+            (3, 4) => return Ok(false),
             // The direct Right×64 → Down trace reaches two field tiles and
             // then keeps pressing against this raised-flower obstruction.
             // Its Porymap export does not retain that runtime permission.
@@ -2091,9 +2094,15 @@ pub fn is_walkable(map_id: MapId, x: i16, y: i16) -> Result<bool, String> {
             (8, 13) | (10..=13, 13) | (13, 14 | 15) | (10..=12, 15)
             // The post-Pokédex field route turns left from the northern
             // obstruction, commits `(13,5)` then `(12,5)`, and begins Mom's
-            // running-shoes scene on the latter tile.
-            | (12..=14, 5) | (12, 6..=15) | (3..=12, 15) | (3, 11..=14)
+            // running-shoes scene on the latter tile. After the item scene,
+            // its source field state turns north at `(3,15)` and then runs
+            // east across the north row, stopping before `(21,5)`.
+            | (12..=14, 5) | (12, 6..=15) | (3..=12, 15) | (3, 5..=14)
+            | (4..=20, 5)
             | (14, 6..=9) => return Ok(true),
+            // The measured post-shoes north-row run reaches `(20,5)` under
+            // Right x320 and remains there through Right x512.
+            (21, 5) => return Ok(false),
             // The lower flower path is walkable in the source checkpoint
             // even though Porymap marks these two blocks with collision 1.
             // The first is the committed tile in the captured Down×48 walk;
@@ -2119,6 +2128,12 @@ pub fn is_walkable(map_id: MapId, x: i16, y: i16) -> Result<bool, String> {
 }
 
 pub fn tile_elevation(map_id: MapId, x: i16, y: i16) -> Result<u8, String> {
+    // Emerald permits the measured post-shoes route to occupy the east
+    // runtime-border metatile at `(20,5)`, one column beyond Porymap's
+    // authored 20x20 layout. It retains the town's exterior object layer.
+    if map_id == MapId::LittlerootTown && (x, y) == (20, 5) {
+        return Ok(3);
+    }
     let (map, width, height) = map_blockdata(map_id)?;
     if x < 0 || y < 0 || x >= width as i16 || y >= height as i16 {
         return Err("tile position outside staged map blockdata".to_owned());
@@ -2129,6 +2144,11 @@ pub fn tile_elevation(map_id: MapId, x: i16, y: i16) -> Result<u8, String> {
 }
 
 pub fn tile_behavior(map_id: MapId, x: i16, y: i16) -> Result<u8, String> {
+    // The source-proven east runtime-border tile is ordinary ground, not a
+    // ledge trigger. Its collision permission is defined in `is_walkable`.
+    if map_id == MapId::LittlerootTown && (x, y) == (20, 5) {
+        return Ok(0);
+    }
     let (map, width, height) = map_blockdata(map_id)?;
     if x < 0 || y < 0 || x >= width as i16 || y >= height as i16 {
         return Err("tile position outside staged map blockdata".to_owned());

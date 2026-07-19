@@ -3125,8 +3125,8 @@ impl WorldState {
                 && self.has_pokedex
                 && matches!(
                     (next_x, next_y),
-                    (14, 9) | (12, 5..=15) | (3..=12, 15) | (3, 11..=14)
-                        | (8, 13) | (10..=13, 13)
+                    (14, 9) | (12, 5..=15) | (3..=12, 15) | (3, 5..=14)
+                        | (4..=20, 5) | (8, 13) | (10..=13, 13)
                         | (13, 14 | 15)
                 );
             if !source_rival_field_route
@@ -3194,7 +3194,10 @@ impl WorldState {
             MapId::TitleScreen => (1, 1),
             MapId::ProfessorIntro => (1, 1),
             MapId::MovingTruck => (5, 5),
-            MapId::LittlerootTown => (20, 20),
+            // The post-shoes reference route occupies source-proven runtime
+            // border tile `(20,5)` before its eastward collision; ordinary
+            // off-layout tiles remain rejected by native collision.
+            MapId::LittlerootTown => (21, 20),
             MapId::Route101 => (20, 20),
             MapId::OldaleTown => (20, 20),
             MapId::Route103 => (80, 22),
