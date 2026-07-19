@@ -1283,7 +1283,7 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             }
             return;
         }
-        draw_overworld_dialogue(frame, &dialogue);
+        draw_overworld_dialogue(frame, &dialogue, !world.dialogue_printer_active());
         return;
     }
     // `Common_Movement_ExclamationMark` sits between the rival's face turn
@@ -1877,10 +1877,12 @@ fn draw_professor_dialogue(frame: &mut [u8], text: &str) {
 /// font palette, but it must retain the actual tile border rather than the
 /// earlier debug rectangle so home, town, and Lab scripts remain visually
 /// consistent with Emerald's dialogue cadence.
-fn draw_overworld_dialogue(frame: &mut [u8], text: &str) {
+fn draw_overworld_dialogue(frame: &mut [u8], text: &str, show_advance_marker: bool) {
     draw_standard_message_box(frame);
     draw_overworld_wrapped_text(frame, 16, 121, text);
-    draw_text(frame, 216, 140, "A", 1);
+    if show_advance_marker {
+        draw_text(frame, 216, 140, "A", 1);
+    }
 }
 
 fn draw_overworld_wrapped_text(frame: &mut [u8], x: usize, y: usize, text: &str) {

@@ -254,6 +254,11 @@ impl LittlerootSession {
             self.redraw();
             return;
         }
+        if self.world.advance_truck_arrival_dialogue_printer(request.frames) {
+            self.input_log.push(request);
+            self.redraw();
+            return;
+        }
         if self.world.advance_truck_departure(request.frames)
             || self.world.advance_new_home_arrival(request.frames)
         {

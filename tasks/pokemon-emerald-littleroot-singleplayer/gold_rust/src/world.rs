@@ -376,6 +376,10 @@ pub struct WorldState {
     /// opens her first Little Root dialogue. Input is locked throughout.
     #[serde(default)]
     pub truck_arrival_frames: Option<u16>,
+    /// Remaining frames while the active Little Root truck-arrival page
+    /// prints. The source accepts page dismissal only after this completes.
+    #[serde(default)]
+    pub truck_arrival_dialogue_frames: Option<u16>,
     #[serde(default)]
     pub truck_departure_frames: Option<u16>,
     #[serde(default)]
@@ -492,6 +496,7 @@ impl WorldState {
             oldale_mart_scene_route: None,
             clock_visit_frames: None,
             truck_arrival_frames: None,
+            truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
             new_home_arrival_frames: None,
             transition: None,
@@ -585,6 +590,7 @@ impl WorldState {
             oldale_mart_scene_route: None,
             clock_visit_frames: None,
             truck_arrival_frames: None,
+            truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
             new_home_arrival_frames: None,
             transition: None,
@@ -681,6 +687,7 @@ impl WorldState {
             oldale_mart_scene_route: None,
             clock_visit_frames: None,
             truck_arrival_frames: None,
+            truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
             new_home_arrival_frames: None,
             transition: None,
@@ -770,6 +777,7 @@ impl WorldState {
             oldale_mart_scene_route: None,
             clock_visit_frames: None,
             truck_arrival_frames: None,
+            truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
             new_home_arrival_frames: None,
             transition: None,
@@ -867,6 +875,7 @@ impl WorldState {
             oldale_mart_scene_route: None,
             clock_visit_frames: None,
             truck_arrival_frames: None,
+            truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
             new_home_arrival_frames: None,
             transition: None,
@@ -1699,9 +1708,19 @@ impl WorldState {
             self.truck_arrival_frames = None;
             self.title_intro_step = 0;
             self.dialogue = Some(truck_arrival_page(0, &self.player_name));
+            self.truck_arrival_dialogue_frames = self.dialogue.as_deref()
+                .map(dialogue_printer_duration);
         } else {
             self.truck_arrival_frames = Some(next_remaining);
         }
+        true
+    }
+
+    /// Advances the source printer on a Little Root truck-arrival page.
+    pub fn advance_truck_arrival_dialogue_printer(&mut self, frames: u32) -> bool {
+        let Some(remaining) = self.truck_arrival_dialogue_frames else { return false; };
+        let next = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
+        self.truck_arrival_dialogue_frames = (next != 0).then_some(next);
         true
     }
 
@@ -1817,7 +1836,7 @@ impl WorldState {
             &self.player_name,
         );
         self.running_shoes_dialogue_frames = self.dialogue.as_deref()
-            .map(running_shoes_dialogue_duration);
+            .map(dialogue_printer_duration);
     }
 
     /// Reveals the next source message page without advancing the scene
@@ -1835,7 +1854,7 @@ impl WorldState {
             return false;
         };
         self.running_shoes_dialogue_page = next_page;
-        self.running_shoes_dialogue_frames = Some(running_shoes_dialogue_duration(&dialogue));
+        self.running_shoes_dialogue_frames = Some(dialogue_printer_duration(&dialogue));
         self.dialogue = Some(dialogue);
         true
     }
@@ -1849,19 +1868,26 @@ impl WorldState {
         true
     }
 
-    /// Returns the currently visible text. Running Shoes pages reveal one
+    /// Returns the currently visible text. Source field pages reveal one
     /// character per frame after Emerald's initial twelve-frame box delay.
-    /// Other dialogue remains fully visible until its own source printer is
-    /// modeled.
     pub fn rendered_dialogue(&self) -> Option<String> {
         let dialogue = self.dialogue.as_ref()?;
-        let Some(remaining) = self.running_shoes_dialogue_frames else {
+        let Some(remaining) = self.running_shoes_dialogue_frames
+            .or(self.truck_arrival_dialogue_frames)
+        else {
             return Some(dialogue.clone());
         };
-        let total = running_shoes_dialogue_duration(dialogue);
+        let total = dialogue_printer_duration(dialogue);
         let elapsed = total.saturating_sub(remaining);
         let visible_characters = usize::from(elapsed.saturating_sub(12));
         Some(dialogue.chars().take(visible_characters).collect())
+    }
+
+    /// Source field message boxes add their advance marker only after their
+    /// current page printer reaches its ready boundary.
+    pub fn dialogue_printer_active(&self) -> bool {
+        self.running_shoes_dialogue_frames.is_some()
+            || self.truck_arrival_dialogue_frames.is_some()
     }
 
     pub fn advance_running_shoes_scene(&mut self, frames: u32) -> bool {
@@ -2818,6 +2844,9 @@ impl WorldState {
         {
             return;
         }
+        if self.truck_arrival_dialogue_frames.is_some() {
+            return;
+        }
         if self.dialogue.take().is_some() {
             if let Some(blocked_facing) = self.route101_exit_push.take() {
                 match blocked_facing {
@@ -2931,7 +2960,9 @@ impl WorldState {
                     let next = usize::from(self.title_intro_step) + 1;
                     if next < TRUCK_ARRIVAL_PAGE_COUNT {
                         self.title_intro_step = next as u8;
-                        self.dialogue = Some(truck_arrival_page(next, &self.player_name));
+                        let dialogue = truck_arrival_page(next, &self.player_name);
+                        self.truck_arrival_dialogue_frames = Some(dialogue_printer_duration(&dialogue));
+                        self.dialogue = Some(dialogue);
                         return;
                     }
                     self.truck_departure_frames = Some(48);
@@ -3891,7 +3922,7 @@ fn running_shoes_dialogue_page(stage: u8, page: u8, player_name: &str) -> Option
 /// Emerald delays the first glyph in a field message box, then prints one
 /// glyph each frame. Input samples use 16-frame windows, so round the source
 /// printer's ready boundary up to its next observable request boundary.
-fn running_shoes_dialogue_duration(dialogue: &str) -> u16 {
+fn dialogue_printer_duration(dialogue: &str) -> u16 {
     let glyph_frames = dialogue.chars().count().min(usize::from(u16::MAX)) as u16;
     let raw = glyph_frames.saturating_add(12);
     raw.saturating_add(15) / 16 * 16
