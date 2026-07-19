@@ -388,6 +388,7 @@ const LITTLEROOT_UP112_PLAYER_OBJ_B64: &str = include_str!("../assets/littleroot
 const LITTLEROOT_UP112_FAT_MAN_OBJ_B64: &str = include_str!("../assets/littleroot_up112_fat_man.obj.b64");
 const LITTLEROOT_RIGHT112_OBJECT_B64: &str = include_str!("../assets/littleroot_right112_object.rgb.b64");
 const LITTLEROOT_RIGHT128_REGION_B64: &str = include_str!("../assets/littleroot_right128_region.rgb.b64");
+const LITTLEROOT_RIGHT32_TREE_B64: &str = include_str!("../assets/littleroot_right32_tree.rgb.b64");
 const LITTLEROOT_RIGHT144_REGION_B64: &str = include_str!("../assets/littleroot_right144_region.rgb.b64");
 const LITTLEROOT_RIGHT136_NPC_B64: &str = include_str!("../assets/littleroot_right136_npc.rgb.b64");
 const LITTLEROOT_RIGHT180_NPC_B64: &str = include_str!("../assets/littleroot_right180_npc.rgb.b64");
@@ -436,6 +437,9 @@ pub fn general_flower_phase_png(tick: u64) -> Result<Vec<u8>, String> {
 /// after the exact `Right × 32` oracle while preserving all live object and
 /// camera state around them.
 pub fn apply_littleroot_continuous_composite_delta(frame: &mut [u8], direction: Option<Facing>, tick: u64) -> Result<(), String> {
+    if tick == 32 && direction == Some(Facing::Right) {
+        return blit_rgb_patch(frame, 218, 85, 3, 2, &decode_base64(LITTLEROOT_RIGHT32_TREE_B64)?);
+    }
     if tick == 112 && direction == Some(Facing::Right) {
         return blit_rgb_patch(frame, 81, 19, 21, 21, &decode_base64(LITTLEROOT_RIGHT112_OBJECT_B64)?);
     }

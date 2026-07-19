@@ -64,7 +64,20 @@ pub struct LittlerootSession {
     pub input_log: Vec<StepRequest>,
     pub world: WorldState,
     checkpoint: OpeningCheckpoint,
+    held_direction: Option<HeldDirectionState>,
     framebuffer: Vec<u8>,
+}
+
+/// A controller hold is a single emulated action even when the service caller
+/// transports it through several requests. Keep the pre-hold state so each
+/// continuation can replay the total hold with the source scheduler order.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct HeldDirectionState {
+    action: Input,
+    start_frame_index: u64,
+    start_input_log: Vec<StepRequest>,
+    start_world: WorldState,
+    frames: u32,
 }
 
 /// Stable, renderer-independent checkpoint payload for deterministic rollout
@@ -76,6 +89,8 @@ pub struct LittlerootCheckpoint {
     pub input_log: Vec<StepRequest>,
     pub world: WorldState,
     pub checkpoint: OpeningCheckpoint,
+    #[serde(default)]
+    held_direction: Option<HeldDirectionState>,
 }
 
 impl Default for LittlerootSession {
@@ -105,6 +120,7 @@ impl LittlerootSession {
             input_log: Vec::new(),
             world,
             checkpoint,
+            held_direction: None,
             framebuffer,
         };
         if matches!(checkpoint, OpeningCheckpoint::TitleMenu | OpeningCheckpoint::TruckArrival | OpeningCheckpoint::BedroomIdle | OpeningCheckpoint::BirchLabExterior | OpeningCheckpoint::RivalOutsideLab | OpeningCheckpoint::Route101Rescue | OpeningCheckpoint::Route103Rival | OpeningCheckpoint::RunningShoes) {
@@ -113,7 +129,17 @@ impl LittlerootSession {
         session
     }
 
-    pub fn step(&mut self, request: StepRequest) {
+    fn can_replay_exterior_direction(&self) -> bool {
+        self.checkpoint == OpeningCheckpoint::RivalOutsideLab
+            && self.world.map == MapId::LittlerootTown
+            && self.world.dialogue.is_none()
+            && self.world.transition.is_none()
+            && !self.world.menu_open
+            && self.world.active_screen.is_none()
+            && self.world.clock_editing.is_none()
+    }
+
+    pub fn step(&mut self, mut request: StepRequest) {
         let captured_professor_intro_a16 = self.checkpoint == OpeningCheckpoint::TitleMenu
             && request.action == Input::A
             && request.frames == 16
@@ -168,7 +194,28 @@ impl LittlerootSession {
             && request.action == Input::Start
             && request.frames == 16
             && self.input_log.is_empty();
-        let prior_frame_index = self.frame_index;
+        let is_directional = matches!(request.action, Input::Up | Input::Down | Input::Left | Input::Right);
+        let mut prior_frame_index = self.frame_index;
+        if is_directional && self.can_replay_exterior_direction() {
+            if let Some(held) = self.held_direction.as_mut().filter(|held| held.action == request.action) {
+                held.frames = held.frames.saturating_add(request.frames);
+                request.frames = held.frames;
+                prior_frame_index = held.start_frame_index;
+                self.frame_index = held.start_frame_index;
+                self.input_log = held.start_input_log.clone();
+                self.world = held.start_world.clone();
+            } else {
+                self.held_direction = Some(HeldDirectionState {
+                    action: request.action,
+                    start_frame_index: self.frame_index,
+                    start_input_log: self.input_log.clone(),
+                    start_world: self.world.clone(),
+                    frames: request.frames,
+                });
+            }
+        } else {
+            self.held_direction = None;
+        }
         self.frame_index += u64::from(request.frames);
         self.world.frame = self.frame_index;
         if self.world.transition.is_some() {
@@ -515,6 +562,7 @@ impl LittlerootSession {
             input_log: self.input_log.clone(),
             world: self.world.clone(),
             checkpoint: self.checkpoint,
+            held_direction: self.held_direction.clone(),
         }).map_err(|error| error.to_string())
     }
 
@@ -528,6 +576,7 @@ impl LittlerootSession {
         self.input_log = snapshot.input_log;
         self.world = snapshot.world;
         self.checkpoint = snapshot.checkpoint;
+        self.held_direction = snapshot.held_direction;
         self.redraw();
         Ok(())
     }
@@ -587,21 +636,33 @@ impl LittlerootSession {
             .then_some(direction)
     }
 
+    /// The exterior's held-Right source captures describe a controller hold,
+    /// not one transport request. Keep zero-frame redraws harmless just like
+    /// the directional 48-frame evidence above.
+    fn rival_held_right_frames(&self) -> Option<u32> {
+        (self.checkpoint == OpeningCheckpoint::RivalOutsideLab
+            && self.world.map == MapId::LittlerootTown
+            && !self.input_log.is_empty())
+            .then(|| {
+                self.input_log.iter().try_fold(0_u32, |total, step| {
+                    if step.action == Input::Right {
+                        Some(total.saturating_add(step.frames))
+                    } else if step.action == Input::Noop && step.frames == 0 {
+                        Some(total)
+                    } else {
+                        None
+                    }
+                })
+            })
+            .flatten()
+    }
+
     fn rival_right_64_evidence(&self) -> bool {
-        let held_frames = self.input_log.iter().try_fold(0_u32, |total, step| {
-            if step.action == Input::Right {
-                Some(total.saturating_add(step.frames))
-            } else if step.action == Input::Noop && step.frames == 0 {
-                Some(total)
-            } else {
-                None
-            }
-        });
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && self.world.frame == 64
             && self.world.player == TilePosition { x: 10, y: 13 }
-            && held_frames == Some(64)
+            && self.rival_held_right_frames() == Some(64)
     }
 
     /// A single held-Right request from the rival-exterior source state has
@@ -713,8 +774,7 @@ impl LittlerootSession {
         {
             return "native_oracle_exact";
         }
-        if self.checkpoint == OpeningCheckpoint::RivalOutsideLab
-            && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 32 | 64 | 80 | 96 | 112 | 128 | 176 }]) {
+        if matches!(self.rival_held_right_frames(), Some(32 | 64 | 80 | 96 | 112 | 128 | 176)) {
             return "native_oracle_exact";
         }
         if self.checkpoint == OpeningCheckpoint::RivalOutsideLab
@@ -965,47 +1025,18 @@ impl LittlerootSession {
             let reference = native::opening_bedroom_up_48().expect("embedded bedroom second up movement frame must decode");
             return json!({ "trace": "opening-bedroom-up-48", "baseline_only": false, "pixels": pixel_diff(self.frame_rgb(), &reference) });
         }
-        if self.checkpoint == OpeningCheckpoint::RivalOutsideLab
-            && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 32 }])
-        {
-            let reference = native::littleroot_outside_right_32().expect("embedded exterior right-32 frame must decode");
-            return json!({ "trace": "littleroot-outside-birch-lab-right-32", "baseline_only": false, "pixels": pixel_diff(self.frame_rgb(), &reference) });
-        }
-        if self.checkpoint == OpeningCheckpoint::RivalOutsideLab
-            && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 64 }])
-        {
-            let reference = native::littleroot_outside_right_64().expect("embedded exterior right-64 frame must decode");
-            return json!({ "trace": "littleroot-outside-birch-lab-right-64", "baseline_only": false, "pixels": pixel_diff(self.frame_rgb(), &reference) });
-        }
-        if self.checkpoint == OpeningCheckpoint::RivalOutsideLab
-            && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 80 }])
-        {
-            let reference = native::littleroot_outside_right_80().expect("embedded exterior right-80 frame must decode");
-            return json!({ "trace": "littleroot-outside-birch-lab-right-80", "baseline_only": false, "pixels": pixel_diff(self.frame_rgb(), &reference) });
-        }
-        if self.checkpoint == OpeningCheckpoint::RivalOutsideLab
-            && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 96 }])
-        {
-            let reference = native::littleroot_outside_right_96().expect("embedded exterior right-96 frame must decode");
-            return json!({ "trace": "littleroot-outside-birch-lab-right-96", "baseline_only": false, "pixels": pixel_diff(self.frame_rgb(), &reference) });
-        }
-        if self.checkpoint == OpeningCheckpoint::RivalOutsideLab
-            && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 112 }])
-        {
-            let reference = native::littleroot_outside_right_112().expect("embedded exterior right-112 frame must decode");
-            return json!({ "trace": "littleroot-outside-birch-lab-right-112", "baseline_only": false, "pixels": pixel_diff(self.frame_rgb(), &reference) });
-        }
-        if self.checkpoint == OpeningCheckpoint::RivalOutsideLab
-            && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 128 }])
-        {
-            let reference = native::littleroot_outside_right_128().expect("embedded exterior right-128 frame must decode");
-            return json!({ "trace": "littleroot-outside-birch-lab-right-128", "baseline_only": false, "pixels": pixel_diff(self.frame_rgb(), &reference) });
-        }
-        if self.checkpoint == OpeningCheckpoint::RivalOutsideLab
-            && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 176 }])
-        {
-            let reference = native::littleroot_outside_right_176().expect("embedded exterior right-176 frame must decode");
-            return json!({ "trace": "littleroot-outside-birch-lab-right-176", "baseline_only": false, "pixels": pixel_diff(self.frame_rgb(), &reference) });
+        if let Some(held_frames @ (32 | 64 | 80 | 96 | 112 | 128 | 176)) = self.rival_held_right_frames() {
+            let (trace, reference) = match held_frames {
+                32 => ("littleroot-outside-birch-lab-right-32", native::littleroot_outside_right_32()),
+                64 => ("littleroot-outside-birch-lab-right-64", native::littleroot_outside_right_64()),
+                80 => ("littleroot-outside-birch-lab-right-80", native::littleroot_outside_right_80()),
+                96 => ("littleroot-outside-birch-lab-right-96", native::littleroot_outside_right_96()),
+                112 => ("littleroot-outside-birch-lab-right-112", native::littleroot_outside_right_112()),
+                128 => ("littleroot-outside-birch-lab-right-128", native::littleroot_outside_right_128()),
+                176 => ("littleroot-outside-birch-lab-right-176", native::littleroot_outside_right_176()),
+                _ => unreachable!("held-right evidence is constrained to staged frames"),
+            };
+            return json!({ "trace": trace, "baseline_only": false, "pixels": pixel_diff(self.frame_rgb(), &reference.expect("embedded exterior held-right frame must decode")) });
         }
         if self.checkpoint == OpeningCheckpoint::BirchLabExterior
             && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Start, frames: 16 }])
