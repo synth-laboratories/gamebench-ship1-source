@@ -21,6 +21,10 @@ fn bedroom_rival_movement_frames(faster: bool) -> u16 {
 /// `PetalburgGymReport{Male,Female}` spends one faster in-place turn, an
 /// exclamation emote, and `Common_Movement_Delay48` before Mom speaks.
 const TV_BROADCAST_INTRO_FRAMES: u16 = 84;
+/// `PlayerApproachTVForGym{Male,Female}` is five ordinary 16-frame strides
+/// after Mom's first Gym-report message closes.
+const TV_BROADCAST_APPROACH_FRAMES: u16 = 80;
+const TV_BROADCAST_APPROACH_STEP_FRAMES: u16 = 16;
 /// `MomApproachDoor` completes after its 24-frame pause and normal walk;
 /// `PlayerApproachDoor` adds a four-frame fast up-facing turn, which controls
 /// the shared `waitmovement` release.
@@ -1124,6 +1128,11 @@ pub struct WorldState {
     /// before Mom opens the first Petalburg Gym broadcast message.
     #[serde(default)]
     pub tv_broadcast_intro_frames: Option<u16>,
+    /// Remaining source frames in `PlayerApproachTVForGym{Male,Female}`.
+    /// The locked five-step stream runs after Mom's first report message and
+    /// before `MaybeDadWillBeOn` opens.
+    #[serde(default)]
+    pub tv_broadcast_approach_frames: Option<u16>,
     /// Remaining frames in the source truck-arrival choreography before Mom
     /// opens her first Little Root dialogue. Input is locked throughout.
     #[serde(default)]
@@ -1293,6 +1302,7 @@ impl WorldState {
             clock_visit_frames: None,
             clock_settle_frames: None,
             tv_broadcast_intro_frames: None,
+            tv_broadcast_approach_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1410,6 +1420,7 @@ impl WorldState {
             clock_visit_frames: None,
             clock_settle_frames: None,
             tv_broadcast_intro_frames: None,
+            tv_broadcast_approach_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1530,6 +1541,7 @@ impl WorldState {
             clock_visit_frames: None,
             clock_settle_frames: None,
             tv_broadcast_intro_frames: None,
+            tv_broadcast_approach_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1646,6 +1658,7 @@ impl WorldState {
             clock_visit_frames: None,
             clock_settle_frames: None,
             tv_broadcast_intro_frames: None,
+            tv_broadcast_approach_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1791,6 +1804,7 @@ impl WorldState {
             clock_visit_frames: None,
             clock_settle_frames: None,
             tv_broadcast_intro_frames: None,
+            tv_broadcast_approach_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -2793,6 +2807,53 @@ impl WorldState {
         true
     }
 
+    /// Runs the `PlayerApproachTVForGym{Male,Female}` stream after Mom's
+    /// first Gym-report message closes. `waitmovement 0` keeps input locked
+    /// across the five normal 16-frame player strides before the next report
+    /// message can open.
+    pub fn advance_tv_broadcast_approach(&mut self, frames: u32) -> bool {
+        let Some(remaining) = self.tv_broadcast_approach_frames else { return false; };
+        let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
+        let elapsed_before = TV_BROADCAST_APPROACH_FRAMES.saturating_sub(remaining);
+        let elapsed_after = TV_BROADCAST_APPROACH_FRAMES.saturating_sub(next_remaining);
+        let directions = match self.player_gender {
+            // `PlayerApproachTVForGymMale`: down, down, left ×3.
+            PlayerGender::Brendan => [
+                Facing::Down,
+                Facing::Down,
+                Facing::Left,
+                Facing::Left,
+                Facing::Left,
+            ],
+            // `PlayerApproachTVForGymFemale`: down, down, right ×3.
+            PlayerGender::May => [
+                Facing::Down,
+                Facing::Down,
+                Facing::Right,
+                Facing::Right,
+                Facing::Right,
+            ],
+        };
+        for (index, direction) in directions.into_iter().enumerate() {
+            let boundary = TV_BROADCAST_APPROACH_STEP_FRAMES * (index as u16 + 1);
+            if elapsed_before < boundary && boundary <= elapsed_after {
+                let player = stepped_position(&self.player, direction);
+                self.elevation = crate::native::tile_elevation(self.map, player.x, player.y)
+                    .expect("TV approach destination must be inside the staged house map");
+                self.player = player;
+                self.facing = direction;
+            }
+        }
+        if next_remaining == 0 {
+            self.tv_broadcast_approach_frames = None;
+            self.title_intro_step = 1;
+            self.dialogue = Some(tv_broadcast_page(1, &self.player_name).to_owned());
+        } else {
+            self.tv_broadcast_approach_frames = Some(next_remaining);
+        }
+        true
+    }
+
     /// Runs the scripted Little Root truck-arrival choreography. The source
     /// holds player input while the player steps off the truck and Mom exits
     /// the selected home, walks down to the truck row, and turns toward the
@@ -2877,32 +2938,6 @@ impl WorldState {
         let next = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         self.truck_arrival_dialogue_frames = (next != 0).then_some(next);
         true
-    }
-
-    /// The Petalburg Gym report is accompanied by `PlayerGoWatchTv`: the
-    /// player crosses the living room while Mom's first report pages remain
-    /// open. The text flow and movement are separate source script tracks.
-    pub fn advance_tv_broadcast_choreography(&mut self, frames: u32) {
-        if frames == 0
-            || self.phase != StoryPhase::TvBroadcast
-            || self.dialogue.is_none()
-        {
-            return;
-        }
-        let position = match (self.map, self.title_intro_step) {
-            // The first dismissed page starts the walk toward the television.
-            // The reference reaches the middle of the room during its next
-            // 240-frame idle window, then reaches the TV before page three.
-            (MapId::MaysHouse1F, 1) => Some(TilePosition { x: 5, y: 5 }),
-            (MapId::MaysHouse1F, 2..=7) => Some(TilePosition { x: 6, y: 5 }),
-            (MapId::BrendansHouse1F, 1) => Some(TilePosition { x: 5, y: 5 }),
-            (MapId::BrendansHouse1F, 2..=7) => Some(TilePosition { x: 4, y: 5 }),
-            _ => None,
-        };
-        if let Some(position) = position {
-            self.player = position;
-            self.facing = Facing::Up;
-        }
     }
 
     /// After Mom's final arrival page, the source walks both characters to
@@ -5046,10 +5081,31 @@ impl WorldState {
                 StoryPhase::TvBroadcast => {
                     if self.title_intro_step == 0 {
                         // `MomNoticeGymBroadcast` returns only after the
-                        // first message closes. The source then runs
-                        // `PlayerApproachTVForGym*`; retain the port's
-                        // compact first down-step at that script boundary.
-                        self.player.y += 1;
+                        // first message closes. The next source command is
+                        // the complete five-step player stream, whose
+                        // `waitmovement` releases `MaybeDadWillBeOn`.
+                        self.tv_broadcast_approach_frames =
+                            Some(TV_BROADCAST_APPROACH_FRAMES);
+                        return;
+                    }
+                    if self.title_intro_step == 1 {
+                        // `MaybeDadWillBeOn` closes before the source's
+                        // gender-specific `PlayerMoveToTV*` stride and the
+                        // `WatchGymBroadcast` fast up-facing turn. Keep this
+                        // later one-tile endpoint without reviving the old
+                        // premature page-one teleport.
+                        let direction = match self.player_gender {
+                            PlayerGender::Brendan => Facing::Left,
+                            PlayerGender::May => Facing::Right,
+                        };
+                        let player = stepped_position(&self.player, direction);
+                        self.elevation = crate::native::tile_elevation(self.map, player.x, player.y)
+                            .expect("TV destination must be inside the staged house map");
+                        self.player = player;
+                        self.facing = Facing::Up;
+                        self.title_intro_step = 2;
+                        self.dialogue = Some(tv_broadcast_page(2, &self.player_name).to_owned());
+                        return;
                     }
                     let next = self.title_intro_step.saturating_add(1);
                     if next < TV_BROADCAST_PAGE_COUNT {
@@ -5276,7 +5332,7 @@ impl WorldState {
     /// separate so they cannot be mistaken for implemented behavior.
     pub fn walk_bounds(&mut self, facing: Facing, held_frames: u32) -> u32 {
         self.face(facing);
-        if self.menu_open || self.dialogue.is_some() || self.transition.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.birch_post_battle_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() || self.pokedex_poke_ball_fanfare_frames.is_some() || self.tv_broadcast_intro_frames.is_some() {
+        if self.menu_open || self.dialogue.is_some() || self.transition.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.birch_post_battle_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() || self.pokedex_poke_ball_fanfare_frames.is_some() || self.tv_broadcast_intro_frames.is_some() || self.tv_broadcast_approach_frames.is_some() {
             return 0;
         }
 
