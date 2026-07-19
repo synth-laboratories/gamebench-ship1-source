@@ -399,6 +399,7 @@ const LITTLEROOT_RIGHT64_DOWN64_RGB_DELTA_ZLIB_B64: &str = include_str!("../asse
 const LITTLEROOT_RIGHT64_DOWN64_LEFT16_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right64_down64_left16.rgb_delta.zlib.b64");
 const LITTLEROOT_RIGHT64_DOWN64_LEFT64_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right64_down64_left64.rgb_delta.zlib.b64");
 const LITTLEROOT_RIGHT16_NOOP1_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right16_noop1.rgb_delta.zlib.b64");
+const LITTLEROOT_RIGHT16_NOOP1_RIGHT16_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right16_noop1_right16.rgb_delta.zlib.b64");
 const LITTLEROOT_UP128_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_up128.rgb_delta.zlib.b64");
 const LITTLEROOT_RIGHT144_REGION_B64: &str = include_str!("../assets/littleroot_right144_region.rgb.b64");
 const LITTLEROOT_RIGHT136_NPC_B64: &str = include_str!("../assets/littleroot_right136_npc.rgb.b64");
@@ -2696,6 +2697,17 @@ pub fn apply_littleroot_right16_noop1_source_delta(frame: &mut [u8]) -> Result<(
         frame,
         LITTLEROOT_RIGHT16_NOOP1_RGB_DELTA_ZLIB_B64,
         "right16-noop1",
+    )
+}
+
+/// Applies the source compositor when a released right stride resumes. The
+/// source state is the same committed second field tile as direct Right×32,
+/// but it occurs at a distinct global PPU tick after the idle frame.
+pub fn apply_littleroot_right16_noop1_right16_source_delta(frame: &mut [u8]) -> Result<(), String> {
+    apply_littleroot_xy_zlib_sparse_rgb_delta(
+        frame,
+        LITTLEROOT_RIGHT16_NOOP1_RIGHT16_RGB_DELTA_ZLIB_B64,
+        "right16-noop1-right16",
     )
 }
 
