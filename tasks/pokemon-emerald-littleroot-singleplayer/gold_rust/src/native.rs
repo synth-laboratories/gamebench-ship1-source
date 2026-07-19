@@ -2076,6 +2076,9 @@ pub fn is_walkable(map_id: MapId, x: i16, y: i16) -> Result<bool, String> {
             // The post-Pokédex field route reaches local `(14, 5)` from the
             // south and remains pressed against this northern obstruction.
             (14, 4) => return Ok(false),
+            // The post-Running-Shoes field route reaches `(3,15)` from the
+            // east, then turns north; source holds there under further Left.
+            (2, 15) => return Ok(false),
             // The direct Right×64 → Down trace reaches two field tiles and
             // then keeps pressing against this raised-flower obstruction.
             // Its Porymap export does not retain that runtime permission.
@@ -2089,11 +2092,13 @@ pub fn is_walkable(map_id: MapId, x: i16, y: i16) -> Result<bool, String> {
             // The post-Pokédex field route turns left from the northern
             // obstruction, commits `(13,5)` then `(12,5)`, and begins Mom's
             // running-shoes scene on the latter tile.
-            | (12..=14, 5) | (12, 6..=15) | (14, 6..=9) => return Ok(true),
+            | (12..=14, 5) | (12, 6..=15) | (3..=12, 15) | (3, 11..=14)
+            | (14, 6..=9) => return Ok(true),
             // The lower flower path is walkable in the source checkpoint
             // even though Porymap marks these two blocks with collision 1.
-            // They are the two committed tiles in the captured Down×48 walk.
-            (9, 14 | 15) => return Ok(true),
+            // The first is the committed tile in the captured Down×48 walk;
+            // the second is covered by the post-shoes source corridor above.
+            (9, 14) => return Ok(true),
             // The source's held-Right route commits the sign tile after the
             // exterior checkpoint despite its exported Porymap collision bit.
             (15, 13) => return Ok(true),
