@@ -414,6 +414,12 @@ pub struct WorldState {
     /// Player-facing branch selected by the Mart employee script.
     #[serde(default)]
     pub oldale_mart_scene_route: Option<Facing>,
+    /// Remaining frames while the current Oldale Mart invitation page prints.
+    #[serde(default)]
+    pub oldale_mart_dialogue_frames: Option<u16>,
+    /// Invitation page before the Mart guide begins its scripted walk.
+    #[serde(default)]
+    pub oldale_mart_dialogue_page: u8,
     /// Remaining frames in Mom's post-clock upstairs entry script.
     pub clock_visit_frames: Option<u16>,
     /// Remaining frames in the source truck-arrival choreography before Mom
@@ -545,6 +551,8 @@ impl WorldState {
             oldale_mart_scene_frames: None,
             oldale_mart_scene_stage: 0,
             oldale_mart_scene_route: None,
+            oldale_mart_dialogue_frames: None,
+            oldale_mart_dialogue_page: 0,
             clock_visit_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
@@ -643,6 +651,8 @@ impl WorldState {
             oldale_mart_scene_frames: None,
             oldale_mart_scene_stage: 0,
             oldale_mart_scene_route: None,
+            oldale_mart_dialogue_frames: None,
+            oldale_mart_dialogue_page: 0,
             clock_visit_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
@@ -744,6 +754,8 @@ impl WorldState {
             oldale_mart_scene_frames: None,
             oldale_mart_scene_stage: 0,
             oldale_mart_scene_route: None,
+            oldale_mart_dialogue_frames: None,
+            oldale_mart_dialogue_page: 0,
             clock_visit_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
@@ -838,6 +850,8 @@ impl WorldState {
             oldale_mart_scene_frames: None,
             oldale_mart_scene_stage: 0,
             oldale_mart_scene_route: None,
+            oldale_mart_dialogue_frames: None,
+            oldale_mart_dialogue_page: 0,
             clock_visit_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
@@ -964,6 +978,8 @@ impl WorldState {
             oldale_mart_scene_frames: None,
             oldale_mart_scene_stage: 0,
             oldale_mart_scene_route: None,
+            oldale_mart_dialogue_frames: None,
+            oldale_mart_dialogue_page: 0,
             clock_visit_frames: None,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
@@ -1146,7 +1162,9 @@ impl WorldState {
             "mart_employee" if self.potions == 0 => {
                 self.oldale_mart_scene_stage = 1;
                 self.oldale_mart_scene_route = Some(self.facing);
-                "Hi!\nI work at a POKéMON MART.\n\nCan I get you to come with me?".to_owned()
+                self.oldale_mart_dialogue_frames = Some(16);
+                self.oldale_mart_dialogue_page = 0;
+                "Hi!\nI work at a POKéMON MART.".to_owned()
             }
             "mart_employee" => "A POTION can be used anytime, so it's\neven more useful than a POKéMON CENTER\nin certain situations.".to_owned(),
             // `FLAG_ADVENTURE_STARTED` is set by Birch only after the
@@ -1677,6 +1695,16 @@ impl WorldState {
         true
     }
 
+    /// Advances an Oldale Mart invitation page. The source has a short
+    /// four-frame lead-in, then reveals one glyph per frame; the A request
+    /// that opens the first page has already spent sixteen printer frames.
+    pub fn advance_oldale_mart_dialogue_printer(&mut self, frames: u32) -> bool {
+        let Some(remaining) = self.oldale_mart_dialogue_frames else { return false; };
+        let next = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
+        self.oldale_mart_dialogue_frames = (next != 0).then_some(next);
+        true
+    }
+
     /// Runs `PlayersHouse_2F_Movement_MomEnters{Male,Female}` after the wall
     /// clock: delay 8, step down, fast turn, delay 24, then step beside the
     /// player. Input remains locked until her room dialogue opens.
@@ -2007,6 +2035,11 @@ impl WorldState {
     /// character per frame after Emerald's initial twelve-frame box delay.
     pub fn rendered_dialogue(&self) -> Option<String> {
         let dialogue = self.dialogue.as_ref()?;
+        if let Some(remaining) = self.oldale_mart_dialogue_frames {
+            let elapsed = 32_u16.saturating_sub(remaining);
+            let visible_characters = usize::from(elapsed.saturating_sub(4));
+            return Some(dialogue.chars().take(visible_characters).collect());
+        }
         let Some(remaining) = self.running_shoes_wait_frames.map(u16::from)
             .or(self.running_shoes_dialogue_frames)
             .or(self.truck_arrival_dialogue_frames)
@@ -2025,6 +2058,7 @@ impl WorldState {
         self.running_shoes_wait_frames.is_some()
             || self.running_shoes_dialogue_frames.is_some()
             || self.truck_arrival_dialogue_frames.is_some()
+            || self.oldale_mart_dialogue_frames.is_some()
     }
 
     pub fn advance_running_shoes_scene(&mut self, frames: u32) -> bool {
@@ -3240,7 +3274,10 @@ impl WorldState {
         {
             return;
         }
-        if self.truck_arrival_dialogue_frames.is_some() || self.running_shoes_wait_frames.is_some() {
+        if self.truck_arrival_dialogue_frames.is_some()
+            || self.running_shoes_wait_frames.is_some()
+            || self.oldale_mart_dialogue_frames.is_some()
+        {
             return;
         }
         if self.dialogue.take().is_some() {
@@ -3313,10 +3350,17 @@ impl WorldState {
             }
             match self.oldale_mart_scene_stage {
                 1 => {
+                    if self.oldale_mart_dialogue_page == 0 {
+                        self.oldale_mart_dialogue_page = 1;
+                        self.oldale_mart_dialogue_frames = Some(16);
+                        self.dialogue = Some("Can I get you to come with me?".to_owned());
+                        return;
+                    }
                     // The invitation closes before source movement begins.
                     // South contains four delay-16 units plus five steps;
                     // north/east use seven ordinary steps.
                     self.oldale_mart_scene_stage = 2;
+                    self.oldale_mart_dialogue_page = 0;
                     self.oldale_mart_scene_frames = Some(match self.oldale_mart_scene_route {
                         Some(Facing::Down) => 144,
                         Some(Facing::Up | Facing::Right) => 112,
