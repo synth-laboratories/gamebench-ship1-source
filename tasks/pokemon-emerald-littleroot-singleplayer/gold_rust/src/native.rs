@@ -127,6 +127,9 @@ static BATTLE_WURMPLE_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 const LITTLEROOT_RIGHT_192_BG_STATE_B64: &str = include_str!("../assets/littleroot_right_192.bg_state.b64");
 const LITTLEROOT_RIGHT_4160_BG_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4160.bg_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4224_BG_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4224.bg_vram.zlib.b64");
+const LITTLEROOT_RIGHT_4816_BG_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4816.bg_vram.zlib.b64");
+const LITTLEROOT_RIGHT_4832_BG_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4832.bg_vram.zlib.b64");
+const LITTLEROOT_RIGHT_4848_BG_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4848.bg_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4864_BG_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4864.bg_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4160_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4160.obj_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4288_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4288.obj_vram.zlib.b64");
@@ -137,6 +140,9 @@ const LITTLEROOT_RIGHT_4608_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/li
 const LITTLEROOT_RIGHT_4672_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4672.obj_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4736_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4736.obj_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4800_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4800.obj_vram.zlib.b64");
+const LITTLEROOT_RIGHT_4816_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4816.obj_vram.zlib.b64");
+const LITTLEROOT_RIGHT_4832_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4832.obj_vram.zlib.b64");
+const LITTLEROOT_RIGHT_4848_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4848.obj_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4864_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4864.obj_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4160_OAM_B64: &str = include_str!("../assets/littleroot_right_4160.oam.b64");
 const LITTLEROOT_RIGHT_4224_OAM_B64: &str = include_str!("../assets/littleroot_right_4224.oam.b64");
@@ -149,6 +155,9 @@ const LITTLEROOT_RIGHT_4608_OAM_B64: &str = include_str!("../assets/littleroot_r
 const LITTLEROOT_RIGHT_4672_OAM_B64: &str = include_str!("../assets/littleroot_right_4672.oam.b64");
 const LITTLEROOT_RIGHT_4736_OAM_B64: &str = include_str!("../assets/littleroot_right_4736.oam.b64");
 const LITTLEROOT_RIGHT_4800_OAM_B64: &str = include_str!("../assets/littleroot_right_4800.oam.b64");
+const LITTLEROOT_RIGHT_4816_OAM_B64: &str = include_str!("../assets/littleroot_right_4816.oam.b64");
+const LITTLEROOT_RIGHT_4832_OAM_B64: &str = include_str!("../assets/littleroot_right_4832.oam.b64");
+const LITTLEROOT_RIGHT_4848_OAM_B64: &str = include_str!("../assets/littleroot_right_4848.oam.b64");
 const LITTLEROOT_RIGHT_4864_OAM_B64: &str = include_str!("../assets/littleroot_right_4864.oam.b64");
 const LITTLEROOT_RIGHT_192_OAM_B64: &str = include_str!("../assets/littleroot_right_192.oam.b64");
 const LITTLEROOT_RIGHT_192_OBJ_TILES_B64: &str = include_str!("../assets/littleroot_right_192.obj_tiles.b64");
@@ -3701,7 +3710,7 @@ fn render_littleroot_stopped_right_phase(
         }
         position_littleroot_stopped_right_npcs(&mut oam, player, npcs, npc_walk_starts, frame);
         composite_oam_4bpp(&mut image, &vram, OUTSIDE_IDLE_OBJ_PALETTE, &oam)?;
-        restore_littleroot_stopped_right_player_priority_pixels(&mut image, &terrain);
+        restore_littleroot_stopped_right_player_priority_pixels(&mut image, &terrain, frame);
         Ok(image)
     })())
 }
@@ -3719,6 +3728,9 @@ fn littleroot_stopped_right_phase_state(frame: u64) -> Option<(&'static str, &'s
         4672 => Some((LITTLEROOT_RIGHT_4160_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4672_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4672_OAM_B64)),
         4736 => Some((LITTLEROOT_RIGHT_4224_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4736_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4736_OAM_B64)),
         4800 => Some((LITTLEROOT_RIGHT_4160_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4800_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4800_OAM_B64)),
+        4816 => Some((LITTLEROOT_RIGHT_4816_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4816_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4816_OAM_B64)),
+        4832 => Some((LITTLEROOT_RIGHT_4832_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4832_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4832_OAM_B64)),
+        4848 => Some((LITTLEROOT_RIGHT_4848_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4848_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4848_OAM_B64)),
         4864 => Some((LITTLEROOT_RIGHT_4864_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4864_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4864_OAM_B64)),
         _ => None,
     }
@@ -3769,7 +3781,7 @@ fn littleroot_stopped_right_npc_oam_offset(
     npc: &NpcState,
     npc_walk_starts: &[NpcWalkStart],
 ) -> (i32, i32) {
-    if frame >= 4864 {
+    if frame >= 4816 {
         if let Some(walk) = npc_walk_starts.iter().find(|walk| walk.id == npc.id) {
             let elapsed = frame.saturating_sub(walk.frame) as i32;
             let duration = i32::from(walk.duration_frames.max(1));
@@ -3797,15 +3809,33 @@ fn littleroot_stopped_right_npc_oam_offset(
 /// prior stride direction. The source 4736 capture keeps Fat Man down-facing
 /// in ObjectEvent state while its rightward walking tile remains mirrored.
 fn littleroot_stopped_right_npc_hflip(frame: u64, id: &str, facing: Facing) -> bool {
-    matches!((frame, id), (4736 | 4800 | 4864, "fat_man")) || facing == Facing::Right
+    matches!((frame, id), (4736 | 4800 | 4816 | 4832 | 4848 | 4864, "fat_man")) || facing == Facing::Right
 }
 
 /// The captured player object has priority 2. At the stopped-camera phase,
 /// seven player pixels pass behind the foreground BG layer. Preserve that
 /// hardware priority outcome from the pre-OBJ terrain rather than applying
 /// a post-frame RGB correction.
-fn restore_littleroot_stopped_right_player_priority_pixels(frame: &mut [u8], terrain: &[u8]) {
-    for (x, y) in [(114_usize, 84_usize), (115, 84), (114, 85), (115, 85), (116, 85), (115, 86), (116, 86)] {
+fn restore_littleroot_stopped_right_player_priority_pixels(
+    frame: &mut [u8],
+    terrain: &[u8],
+    phase: u64,
+) {
+    let mut pixels = vec![
+        (114_usize, 84_usize),
+        (115, 84),
+        (114, 85),
+        (115, 85),
+        (116, 85),
+        (115, 86),
+        (116, 86),
+    ];
+    match phase {
+        4816 | 4848 => pixels.push((118, 86)),
+        4832 => pixels.extend([(117, 86), (118, 86), (116, 87), (117, 87)]),
+        _ => {}
+    }
+    for (x, y) in pixels {
         let offset = (y * FRAME_WIDTH + x) * 3;
         frame[offset..offset + 3].copy_from_slice(&terrain[offset..offset + 3]);
     }
