@@ -1272,9 +1272,9 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             return;
         }
     }
-    if let Some(dialogue) = world.dialogue.as_deref() {
+    if let Some(dialogue) = world.rendered_dialogue() {
         if world.map == MapId::ProfessorIntro {
-            draw_professor_dialogue(frame, dialogue);
+            draw_professor_dialogue(frame, &dialogue);
             if world.phase == StoryPhase::NameConfirm {
                 draw_menu_window(frame, 16, 8, 56, 40);
                 draw_text(frame, 32, 17, "YES", 3);
@@ -1283,7 +1283,7 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             }
             return;
         }
-        draw_overworld_dialogue(frame, dialogue);
+        draw_overworld_dialogue(frame, &dialogue);
         return;
     }
     // `Common_Movement_ExclamationMark` sits between the rival's face turn

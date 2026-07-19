@@ -301,6 +301,10 @@ pub struct WorldState {
     /// stage. The field engine only advances the stage after its final page.
     #[serde(default)]
     pub running_shoes_dialogue_page: u8,
+    /// Remaining source frames while the current Running Shoes page prints.
+    /// A request that reaches zero is still consumed by the text engine.
+    #[serde(default)]
+    pub running_shoes_dialogue_frames: Option<u16>,
     #[serde(default)]
     pub running_shoes_trigger: Option<u8>,
     /// Remaining frames in the source Little Root Twin warning gesture before
@@ -463,6 +467,7 @@ impl WorldState {
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
             running_shoes_dialogue_page: 0,
+            running_shoes_dialogue_frames: None,
             running_shoes_trigger: None,
             birch_prompt_frames: None,
             birch_prompt_active: false,
@@ -555,6 +560,7 @@ impl WorldState {
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
             running_shoes_dialogue_page: 0,
+            running_shoes_dialogue_frames: None,
             running_shoes_trigger: None,
             birch_prompt_frames: None,
             birch_prompt_active: false,
@@ -650,6 +656,7 @@ impl WorldState {
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
             running_shoes_dialogue_page: 0,
+            running_shoes_dialogue_frames: None,
             running_shoes_trigger: None,
             birch_prompt_frames: None,
             birch_prompt_active: false,
@@ -738,6 +745,7 @@ impl WorldState {
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
             running_shoes_dialogue_page: 0,
+            running_shoes_dialogue_frames: None,
             running_shoes_trigger: None,
             birch_prompt_frames: None,
             birch_prompt_active: false,
@@ -834,6 +842,7 @@ impl WorldState {
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
             running_shoes_dialogue_page: 0,
+            running_shoes_dialogue_frames: None,
             running_shoes_trigger: None,
             birch_prompt_frames: None,
             birch_prompt_active: false,
@@ -1807,6 +1816,8 @@ impl WorldState {
             self.running_shoes_dialogue_page,
             &self.player_name,
         );
+        self.running_shoes_dialogue_frames = self.dialogue.as_deref()
+            .map(running_shoes_dialogue_duration);
     }
 
     /// Reveals the next source message page without advancing the scene
@@ -1820,11 +1831,37 @@ impl WorldState {
             &self.player_name,
         ) else {
             self.running_shoes_dialogue_page = 0;
+            self.running_shoes_dialogue_frames = None;
             return false;
         };
         self.running_shoes_dialogue_page = next_page;
+        self.running_shoes_dialogue_frames = Some(running_shoes_dialogue_duration(&dialogue));
         self.dialogue = Some(dialogue);
         true
+    }
+
+    /// Advances a source page printer. The frame that completes the text is
+    /// still owned by the printer; a later A is the first valid dismissal.
+    pub fn advance_running_shoes_dialogue_printer(&mut self, frames: u32) -> bool {
+        let Some(remaining) = self.running_shoes_dialogue_frames else { return false; };
+        let next = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
+        self.running_shoes_dialogue_frames = (next != 0).then_some(next);
+        true
+    }
+
+    /// Returns the currently visible text. Running Shoes pages reveal one
+    /// character per frame after Emerald's initial twelve-frame box delay.
+    /// Other dialogue remains fully visible until its own source printer is
+    /// modeled.
+    pub fn rendered_dialogue(&self) -> Option<String> {
+        let dialogue = self.dialogue.as_ref()?;
+        let Some(remaining) = self.running_shoes_dialogue_frames else {
+            return Some(dialogue.clone());
+        };
+        let total = running_shoes_dialogue_duration(dialogue);
+        let elapsed = total.saturating_sub(remaining);
+        let visible_characters = usize::from(elapsed.saturating_sub(12));
+        Some(dialogue.chars().take(visible_characters).collect())
     }
 
     pub fn advance_running_shoes_scene(&mut self, frames: u32) -> bool {
@@ -1866,6 +1903,7 @@ impl WorldState {
                 1 => {
                     self.running_shoes_stage = 2;
                     self.begin_running_shoes_dialogue();
+                    self.advance_running_shoes_dialogue_printer(frames.saturating_sub(u32::from(remaining)));
                 }
                 6 => {
                     if fast_return_turn {
@@ -1878,6 +1916,7 @@ impl WorldState {
                     self.running_shoes_item_shown = true;
                     self.running_shoes_stage = 0;
                     self.running_shoes_dialogue_page = 0;
+                    self.running_shoes_dialogue_frames = None;
                     self.running_shoes_trigger = None;
                     self.npcs.retain(|npc| npc.id != "mom_outside");
                     self.phase = StoryPhase::RunningShoesReceived;
@@ -3039,6 +3078,7 @@ impl WorldState {
                                 self.running_shoes_item_shown = true;
                                 self.running_shoes_stage = 0;
                                 self.running_shoes_dialogue_page = 0;
+                                self.running_shoes_dialogue_frames = None;
                                 self.running_shoes_trigger = None;
                                 self.phase = StoryPhase::RunningShoesReceived;
                             } else {
@@ -3569,6 +3609,7 @@ impl WorldState {
             self.running_shoes_item_shown = false;
             self.running_shoes_stage = 0;
             self.running_shoes_dialogue_page = 0;
+            self.running_shoes_dialogue_frames = None;
             let trigger = match (self.player.x, self.player.y) {
                 // The frozen rival-exterior source state enters through a
                 // distinct, measured Mom approach rather than a Porymap
@@ -3845,6 +3886,15 @@ fn running_shoes_dialogue_page(stage: u8, page: u8, player_name: &str) -> Option
         _ => return None,
     };
     Some(text)
+}
+
+/// Emerald delays the first glyph in a field message box, then prints one
+/// glyph each frame. Input samples use 16-frame windows, so round the source
+/// printer's ready boundary up to its next observable request boundary.
+fn running_shoes_dialogue_duration(dialogue: &str) -> u16 {
+    let glyph_frames = dialogue.chars().count().min(usize::from(u16::MAX)) as u16;
+    let raw = glyph_frames.saturating_add(12);
+    raw.saturating_add(15) / 16 * 16
 }
 
 fn tv_broadcast_page(page: u8, player_name: &str) -> String {

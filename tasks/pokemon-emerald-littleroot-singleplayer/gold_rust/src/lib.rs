@@ -266,6 +266,11 @@ impl LittlerootSession {
             self.redraw();
             return;
         }
+        if self.world.advance_running_shoes_dialogue_printer(request.frames) {
+            self.input_log.push(request);
+            self.redraw();
+            return;
+        }
         if self.world.advance_running_shoes_scene(request.frames) {
             self.input_log.push(request);
             self.redraw();
