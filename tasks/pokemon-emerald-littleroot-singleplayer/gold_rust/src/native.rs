@@ -2313,7 +2313,7 @@ fn render_world_view_with_motion_at_tick(map_id: MapId, player: &TilePosition, w
         // while the camera remains fifteen pixels behind the usual completed
         // stride anchor. This is distinct from the generic in-progress-left
         // phase below and keeps the Lab/flower viewport aligned at `(9, 13)`.
-        Some(Facing::Left) if map_id == MapId::LittlerootTown && player.x == 9 && progress == 0 && matches!(timing_tick, Some(48 | 64 | 80 | 96 | 112 | 128 | 144 | 160)) => (-16, 0),
+        Some(Facing::Left) if map_id == MapId::LittlerootTown && player.x == 9 && progress == 0 && matches!(timing_tick, Some(48 | 64 | 80 | 96 | 112 | 128 | 144 | 160 | 176)) => (-16, 0),
         Some(Facing::Left) => (-(progress + 1), 0),
         Some(Facing::Down) => (0, 0),
         Some(Facing::Up) => (0, 0),
@@ -2347,6 +2347,7 @@ pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing
         (TilePosition { x: 9, y: 13 }, Some(Facing::Left), 0, Some(128)) => Some(LITTLEROOT_LEFT128_PLAYER_OBJ_B64),
         (TilePosition { x: 9, y: 13 }, Some(Facing::Left), 0, Some(144)) => Some(LITTLEROOT_LEFT112_PLAYER_OBJ_B64),
         (TilePosition { x: 9, y: 13 }, Some(Facing::Left), 0, Some(160)) => Some(LITTLEROOT_LEFT96_PLAYER_OBJ_B64),
+        (TilePosition { x: 9, y: 13 }, Some(Facing::Left), 0, Some(176)) => Some(LITTLEROOT_LEFT112_PLAYER_OBJ_B64),
         _ => None,
     };
     if let Some(encoded) = timed_player_tile {
@@ -2399,6 +2400,15 @@ pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing
         if tile.len() != 256 { return Err("invalid Little Root Left160 Fat Man OBJ tile".to_owned()); }
         vram[28 * 32..36 * 32].copy_from_slice(&tile);
     }
+    if player == &(TilePosition { x: 9, y: 13 })
+        && walk_direction == Some(Facing::Left)
+        && walk_progress_frames == 0
+        && timing_tick == Some(176)
+    {
+        let tile = decode_base64(LITTLEROOT_LEFT128_FAT_MAN_OBJ_B64)?;
+        if tile.len() != 256 { return Err("invalid Little Root Left176 Fat Man OBJ tile".to_owned()); }
+        vram[28 * 32..36 * 32].copy_from_slice(&tile);
+    }
     if player == &(TilePosition { x: 9, y: 15 })
         && walk_direction == Some(Facing::Down)
         && walk_progress_frames == 0
@@ -2432,6 +2442,14 @@ pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing
         && walk_direction == Some(Facing::Left)
         && walk_progress_frames == 0
         && timing_tick == Some(160)
+    {
+        oam[8..16].copy_from_slice(&[0x08, 0x80, 0xe0, 0x90, 0x1c, 0x28, 0, 0]);
+        oam[16..24].copy_from_slice(&[0xa0, 0x00, 0x30, 0x01, 0, 0x0c, 0, 0]);
+    }
+    if player == &(TilePosition { x: 9, y: 13 })
+        && walk_direction == Some(Facing::Left)
+        && walk_progress_frames == 0
+        && timing_tick == Some(176)
     {
         oam[8..16].copy_from_slice(&[0x08, 0x80, 0xe0, 0x90, 0x1c, 0x28, 0, 0]);
         oam[16..24].copy_from_slice(&[0xa0, 0x00, 0x30, 0x01, 0, 0x0c, 0, 0]);
@@ -2478,6 +2496,19 @@ pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing
             GENERAL_FLOWER_RIGHT48_VRAM_B64,
             GENERAL_FLOWER_RIGHT32_VRAM_B64,
             32,
+            72,
+        )?;
+    }
+    if player == &(TilePosition { x: 9, y: 13 })
+        && walk_direction == Some(Facing::Left)
+        && walk_progress_frames == 0
+        && timing_tick == Some(176)
+    {
+        apply_littleroot_flower_vram_delta(
+            &mut frame,
+            GENERAL_FLOWER_RIGHT48_VRAM_B64,
+            GENERAL_FLOWER_DOWN64_VRAM_B64,
+            48,
             72,
         )?;
     }
@@ -3698,7 +3729,7 @@ fn outside_oam_with_camera(player: &TilePosition, facing: Facing, walk_direction
     let (step_x, step_y) = match walk_direction {
         Some(Facing::Right) if player.x == 10 && progress == 0 && timing_tick == Some(64) => (47, 0),
         Some(Facing::Right) => (progress, 0),
-        Some(Facing::Left) if player.x == 9 && progress == 0 && matches!(timing_tick, Some(48 | 64 | 80 | 96 | 112 | 128 | 144 | 160)) => (-16, 0),
+        Some(Facing::Left) if player.x == 9 && progress == 0 && matches!(timing_tick, Some(48 | 64 | 80 | 96 | 112 | 128 | 144 | 160 | 176)) => (-16, 0),
         Some(Facing::Left) => (-(progress + 1), 0),
         Some(Facing::Down) => (0, 0),
         Some(Facing::Up) => (0, 0),
