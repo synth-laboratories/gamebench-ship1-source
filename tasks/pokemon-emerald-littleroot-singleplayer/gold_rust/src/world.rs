@@ -3050,15 +3050,18 @@ impl WorldState {
         let trainer_name = rival_trainer_name(self.player_gender);
         let Some(battle) = self.battle.as_mut() else { return; };
         if battle.message.take().is_some() {
-            if battle.intro_stage < 2 {
-                battle.intro_stage += 1;
-                battle.message = Some(match battle.intro_stage {
-                    1 if battle.opponent == BattleOpponent::Rival => {
-                        format!("RIVAL {trainer_name} sent out {}!", battle.opponent_species)
-                    }
-                    _ => format!("Go! {starter_name}!"),
-                });
-                return;
+            match (battle.opponent, battle.intro_stage) {
+                (BattleOpponent::Rival, 0) => {
+                    battle.intro_stage = 1;
+                    battle.message = Some(format!("RIVAL {trainer_name} sent out {}!", battle.opponent_species));
+                    return;
+                }
+                (_, 0) | (BattleOpponent::Rival, 1) => {
+                    battle.intro_stage += 1;
+                    battle.message = Some(format!("Go! {starter_name}!"));
+                    return;
+                }
+                _ => battle.intro_stage = 2,
             }
             if battle.player_fainted || battle.escaped {
                 let opponent = battle.opponent;
