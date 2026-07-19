@@ -1763,10 +1763,9 @@ impl WorldState {
         self.oldale_mart_item_fanfare_frames = None;
         self.oldale_mart_scene_stage = 5;
         self.oldale_mart_dialogue_page = 1;
-        self.oldale_mart_dialogue_frames = Some(
-            dialogue_printer_duration(&dialogue)
-                .saturating_sub(carried.min(u32::from(u16::MAX)) as u16),
-        );
+        let printer_remaining = dialogue_printer_duration(&dialogue)
+            .saturating_sub(carried.min(u32::from(u16::MAX)) as u16);
+        self.oldale_mart_dialogue_frames = (printer_remaining != 0).then_some(printer_remaining);
         self.dialogue = Some(dialogue);
         true
     }
@@ -2124,9 +2123,10 @@ impl WorldState {
                 // earlier than an ordinary field message: source frame 176
                 // already shows `CASEY put away the POTION\nI`.
                 (5, _) => (dialogue_printer_duration(dialogue), 5_u16),
-                // The following explanation is a normal source message,
-                // not an atomically rendered string.
-                (6, _) => (dialogue_printer_duration(dialogue), 12_u16),
+                // The following explanation opens with the same four-frame
+                // lead as the item receipts: its source A×16 boundary reads
+                // `A POTION can`.
+                (6, _) => (dialogue_printer_duration(dialogue), 4_u16),
                 _ => (32_u16, 4_u16),
             };
             let elapsed = total.saturating_sub(remaining);
