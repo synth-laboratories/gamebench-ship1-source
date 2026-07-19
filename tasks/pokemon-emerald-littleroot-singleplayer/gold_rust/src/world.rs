@@ -286,6 +286,10 @@ pub struct WorldState {
     pub clock_confirming: bool,
     pub clock_confirm_yes: bool,
     pub pending_running_shoes: bool,
+    /// Source frames before Mom's initial Running Shoes `Wait` box accepts a
+    /// dismiss input. The trigger frame itself is not a valid close.
+    #[serde(default)]
+    pub running_shoes_wait_frames: Option<u8>,
     /// Remaining frames in Mom's scripted approach before the item dialogue.
     pub running_shoes_frames: Option<u16>,
     /// True once Mom's item message has been presented in the current scene.
@@ -454,6 +458,7 @@ impl WorldState {
             clock_confirming: false,
             clock_confirm_yes: true,
             pending_running_shoes: false,
+            running_shoes_wait_frames: None,
             running_shoes_frames: None,
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
@@ -545,6 +550,7 @@ impl WorldState {
             clock_confirming: false,
             clock_confirm_yes: true,
             pending_running_shoes: false,
+            running_shoes_wait_frames: None,
             running_shoes_frames: None,
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
@@ -639,6 +645,7 @@ impl WorldState {
             clock_confirming: false,
             clock_confirm_yes: true,
             pending_running_shoes: false,
+            running_shoes_wait_frames: None,
             running_shoes_frames: None,
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
@@ -726,6 +733,7 @@ impl WorldState {
             clock_confirming: false,
             clock_confirm_yes: true,
             pending_running_shoes: false,
+            running_shoes_wait_frames: None,
             running_shoes_frames: None,
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
@@ -821,6 +829,7 @@ impl WorldState {
             clock_confirming: false,
             clock_confirm_yes: true,
             pending_running_shoes: false,
+            running_shoes_wait_frames: None,
             running_shoes_frames: None,
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
@@ -1778,6 +1787,16 @@ impl WorldState {
         true
     }
 
+    /// Advances the short source text-printer gate on Mom's initial `Wait`
+    /// box. A request that spans this boundary is consumed by the printer;
+    /// the following request is the first one allowed to dismiss the box.
+    pub fn advance_running_shoes_wait(&mut self, frames: u32) -> bool {
+        let Some(remaining) = self.running_shoes_wait_frames else { return false; };
+        let next = remaining.saturating_sub(frames.min(u32::from(u8::MAX)) as u8);
+        self.running_shoes_wait_frames = (next != 0).then_some(next);
+        true
+    }
+
     /// Advances the locked outdoor portion of the source Running Shoes scene.
     /// The script first calls Mom from the front door, then has her approach
     /// the player before displaying the item message.
@@ -1855,6 +1874,7 @@ impl WorldState {
                         self.move_fast_scripted_npc("mom_outside", MapId::LittlerootTown, mom.position.clone(), Facing::Up);
                     }
                     self.pending_running_shoes = false;
+                    self.running_shoes_wait_frames = None;
                     self.running_shoes_item_shown = true;
                     self.running_shoes_stage = 0;
                     self.running_shoes_dialogue_page = 0;
@@ -3015,6 +3035,7 @@ impl WorldState {
                         5 => {
                             if self.running_shoes_trigger == Some(SOURCE_RIVAL_RUNNING_SHOES_TRIGGER) {
                                 self.pending_running_shoes = false;
+                                self.running_shoes_wait_frames = None;
                                 self.running_shoes_item_shown = true;
                                 self.running_shoes_stage = 0;
                                 self.running_shoes_dialogue_page = 0;
@@ -3534,6 +3555,7 @@ impl WorldState {
                 || (self.player.y == 2 && (10..=11).contains(&self.player.x)))
             && self.dialogue.is_none() {
             self.pending_running_shoes = true;
+            self.running_shoes_wait_frames = Some(16);
             self.running_shoes_item_shown = false;
             self.running_shoes_stage = 0;
             self.running_shoes_dialogue_page = 0;
