@@ -4772,9 +4772,10 @@ impl WorldState {
             self.gender_transition = Some(GenderTransition {
                 outgoing: self.player_gender,
                 incoming: next,
-                // The source moves each sprite four pixels per frame across
-                // its 60-pixel travel, yielding two 15-frame phases.
-                frames_remaining: 30,
+                // The source fades out for sixteen frames, then fades the
+                // replacement in for eighteen (including its settled last
+                // frame), with the same four-pixel sprite cadence.
+                frames_remaining: 34,
             });
             self.player_gender = next;
         }

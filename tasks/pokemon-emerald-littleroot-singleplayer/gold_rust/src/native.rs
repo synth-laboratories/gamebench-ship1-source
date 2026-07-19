@@ -1969,12 +1969,36 @@ fn draw_gender_select(frame: &mut [u8], world: &WorldState) {
     // at one pixel-buffer column into the source menu window.
     draw_birch_text(frame, 24, cursor_y, "▶", 1);
     if let Some(transition) = world.gender_transition {
-        if transition.frames_remaining > 15 {
-            let elapsed = 30usize - usize::from(transition.frames_remaining);
-            draw_gender_character_at(frame, transition.outgoing, 148 + elapsed * 4);
-        } else {
-            let elapsed = 15usize - usize::from(transition.frames_remaining);
-            draw_gender_character_at(frame, transition.incoming, 208 - elapsed * 4);
+        // The source fades Brendan through fifteen visible rightward frames,
+        // leaves two black handoff frames, then fades May in while she slides
+        // left. The platform remains fully visible for the entire exchange.
+        draw_gender_platform(frame);
+        let elapsed = 34usize.saturating_sub(usize::from(transition.frames_remaining));
+        match elapsed {
+            0..=14 => {
+                // The source holds the initial sprite position for its first
+                // faded frame, then advances four pixels on each following
+                // frame as the OBJ palette fades to black.
+                let brightness = if elapsed == 0 { 16 } else { 15 - elapsed };
+                draw_gender_trainer_at(
+                    frame,
+                    transition.outgoing,
+                    148 + elapsed.saturating_sub(1) * 4,
+                    brightness as u8,
+                );
+            }
+            15..=16 => {}
+            _ => {
+                // The incoming OBJ palette returns from black at the same
+                // cadence, reaching its settled position/brightness together.
+                let brightness = (elapsed - 16).min(16) as u8;
+                draw_gender_trainer_at(
+                    frame,
+                    transition.incoming,
+                    280usize.saturating_sub(elapsed * 4),
+                    brightness,
+                );
+            }
         }
     } else {
         draw_gender_character_at(frame, world.player_gender, 148);
@@ -2046,10 +2070,28 @@ fn draw_gender_backdrop(frame: &mut [u8]) {
 }
 
 fn draw_gender_character_at(frame: &mut [u8], gender: crate::world::PlayerGender, character_x: usize) {
+    draw_gender_platform(frame);
+    draw_gender_trainer_at(frame, gender, character_x, 16);
+}
+
+fn draw_gender_platform(frame: &mut [u8]) {
     let platform = GENDER_PLATFORM.get_or_init(|| {
         let bytes = decode_base64(GENDER_PLATFORM_PNG_B64.trim()).expect("gender platform source asset must decode");
         decode_indexed(&bytes).expect("gender platform source asset must be indexed")
     });
+    const PLATFORM_PALETTE: [[u8; 3]; 16] = [[0,0,0],[255,255,164],[255,255,106],[222,222,90],[189,189,74],[156,156,57],[123,123,49],[90,90,32],[57,57,16],[197,255,205],[123,255,131],[115,222,106],[106,106,189],[90,156,65],[90,123,49],[49,0,0]];
+    // The 128×24 source sheet includes eight transparent rows above the
+    // ellipse; the on-screen platform begins at y=80.
+    draw_indexed_sprite(frame, platform, 112, 72, &PLATFORM_PALETTE);
+}
+
+fn draw_gender_trainer_at(
+    frame: &mut [u8],
+    gender: crate::world::PlayerGender,
+    character_x: usize,
+    brightness: u8,
+) {
+    if brightness == 0 { return; }
     let brendan = GENDER_BRENDAN.get_or_init(|| {
         let bytes = decode_base64(GENDER_BRENDAN_PNG_B64.trim()).expect("gender trainer source asset must decode");
         decode_indexed(&bytes).expect("gender trainer source asset must be indexed")
@@ -2058,15 +2100,11 @@ fn draw_gender_character_at(frame: &mut [u8], gender: crate::world::PlayerGender
         let bytes = decode_base64(GENDER_MAY_PNG_B64.trim()).expect("gender trainer source asset must decode");
         decode_indexed(&bytes).expect("gender trainer source asset must be indexed")
     });
-    const PLATFORM_PALETTE: [[u8; 3]; 16] = [[0,0,0],[255,255,164],[255,255,106],[222,222,90],[189,189,74],[156,156,57],[123,123,49],[90,90,32],[57,57,16],[197,255,205],[123,255,131],[115,222,106],[106,106,189],[90,156,65],[90,123,49],[49,0,0]];
     const BRENDAN_PALETTE: [[u8; 3]; 16] = [[115,197,164],[255,222,205],[222,164,148],[205,131,115],[123,90,82],[98,123,156],[74,90,131],[49,65,106],[24,41,82],[222,230,238],[139,222,115],[98,156,90],[255,98,90],[197,65,65],[255,255,255],[0,0,0]];
     const MAY_PALETTE: [[u8; 3]; 16] = [[115,197,164],[255,222,205],[222,164,148],[205,131,115],[123,90,82],[98,115,41],[57,65,164],[106,82,74],[49,57,205],[205,222,139],[222,115,98],[156,90,255],[98,90,197],[65,65,255],[255,255,255],[0,0,0]];
-    // The 128×24 source sheet includes eight transparent rows above the
-    // ellipse; the on-screen platform begins at y=80.
-    draw_indexed_sprite(frame, platform, 112, 72, &PLATFORM_PALETTE);
     match gender {
-        crate::world::PlayerGender::Brendan => draw_indexed_sprite(frame, brendan, character_x, 28, &BRENDAN_PALETTE),
-        crate::world::PlayerGender::May => draw_indexed_sprite(frame, may, character_x, 28, &MAY_PALETTE),
+        crate::world::PlayerGender::Brendan => draw_indexed_sprite_faded(frame, brendan, character_x, 28, &BRENDAN_PALETTE, brightness),
+        crate::world::PlayerGender::May => draw_indexed_sprite_faded(frame, may, character_x, 28, &MAY_PALETTE, brightness),
     }
 }
 
@@ -2075,6 +2113,33 @@ fn draw_indexed_sprite(frame: &mut [u8], sprite: &IndexedTiles, x: usize, y: usi
         for column in 0..sprite.width {
             let index = sprite.pixels[row * sprite.width + column] as usize;
             if index != 0 { put_pixel(frame, x + column, y + row, palette[index]); }
+        }
+    }
+}
+
+fn draw_indexed_sprite_faded(
+    frame: &mut [u8],
+    sprite: &IndexedTiles,
+    x: usize,
+    y: usize,
+    palette: &[[u8; 3]; 16],
+    brightness: u8,
+) {
+    if brightness >= 16 {
+        draw_indexed_sprite(frame, sprite, x, y, palette);
+        return;
+    }
+    for row in 0..(sprite.pixels.len() / sprite.width) {
+        for column in 0..sprite.width {
+            let index = sprite.pixels[row * sprite.width + column] as usize;
+            if index == 0 { continue; }
+            let color = palette[index];
+            let faded = [
+                ((usize::from(color[0]) * usize::from(brightness)) / 16) as u8,
+                ((usize::from(color[1]) * usize::from(brightness)) / 16) as u8,
+                ((usize::from(color[2]) * usize::from(brightness)) / 16) as u8,
+            ];
+            put_pixel(frame, x + column, y + row, faded);
         }
     }
 }
