@@ -2051,6 +2051,21 @@ impl LittlerootSession {
             OpeningCheckpoint::TruckArrival if self.truck_held_right_frames() == Some(32) => native::opening_truck_right_32(),
             OpeningCheckpoint::TruckArrival if self.truck_held_right_frames() == Some(48) => native::opening_truck_right_48(),
             _ if self.world.map == MapId::MovingTruck => native::render_truck_idle(),
+            _ if self.world.map == MapId::LittlerootTown
+                && (self.world.truck_departure_frames.is_some()
+                    || (self.world.phase == world::StoryPhase::NewHome
+                        && self.world.transition.is_some())) =>
+            {
+                native::render_littleroot_truck_door_approach(
+                    self.world.render_player(),
+                    self.world.player_gender,
+                    self.world.facing,
+                    self.world.frame,
+                    &self.world.npcs,
+                    &self.world.npc_walk_starts,
+                    self.world.truck_departure_frames,
+                )
+            }
             OpeningCheckpoint::RivalOutsideLab
                 if self.world.map == MapId::LittlerootTown
                     && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Left, frames: 16 }]) =>
