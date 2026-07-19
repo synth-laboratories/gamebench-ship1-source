@@ -949,6 +949,11 @@ pub struct WorldState {
     pub running_shoes_wait_frames: Option<u8>,
     /// Remaining frames in Mom's scripted approach before the item dialogue.
     pub running_shoes_frames: Option<u16>,
+    /// `LittlerootTown_EventScript_GiveRunningShoes` waits `delay 30` after
+    /// Mom's final page, before it starts the selected `MomReturnHome*`
+    /// movement stream.
+    #[serde(default)]
+    pub running_shoes_return_delay_frames: Option<u8>,
     /// True once Mom's item message has been presented in the current scene.
     pub running_shoes_item_shown: bool,
     /// Source Running Shoes scene state: approach, item pages, and return.
@@ -1187,6 +1192,7 @@ impl WorldState {
             pending_running_shoes: false,
             running_shoes_wait_frames: None,
             running_shoes_frames: None,
+            running_shoes_return_delay_frames: None,
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
             running_shoes_dialogue_page: 0,
@@ -1299,6 +1305,7 @@ impl WorldState {
             pending_running_shoes: false,
             running_shoes_wait_frames: None,
             running_shoes_frames: None,
+            running_shoes_return_delay_frames: None,
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
             running_shoes_dialogue_page: 0,
@@ -1414,6 +1421,7 @@ impl WorldState {
             pending_running_shoes: false,
             running_shoes_wait_frames: None,
             running_shoes_frames: None,
+            running_shoes_return_delay_frames: None,
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
             running_shoes_dialogue_page: 0,
@@ -1525,6 +1533,7 @@ impl WorldState {
             pending_running_shoes: false,
             running_shoes_wait_frames: None,
             running_shoes_frames: None,
+            running_shoes_return_delay_frames: None,
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
             running_shoes_dialogue_page: 0,
@@ -1665,6 +1674,7 @@ impl WorldState {
             pending_running_shoes: false,
             running_shoes_wait_frames: None,
             running_shoes_frames: None,
+            running_shoes_return_delay_frames: None,
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
             running_shoes_dialogue_page: 0,
@@ -3008,6 +3018,22 @@ impl WorldState {
     }
 
     pub fn advance_running_shoes_scene(&mut self, frames: u32) -> bool {
+        if let Some(remaining) = self.running_shoes_return_delay_frames {
+            let consumed = frames.min(u32::from(remaining)) as u8;
+            let next_remaining = remaining.saturating_sub(consumed);
+            self.running_shoes_return_delay_frames = (next_remaining != 0).then_some(next_remaining);
+            if next_remaining != 0 {
+                return true;
+            }
+            let trigger = self.running_shoes_trigger.unwrap_or(2);
+            let (_, steps, fast_turn) = running_shoes_mom_path(trigger, self.player_gender, true);
+            self.running_shoes_frames = Some(u16::from(steps) * 16 + if fast_turn { 8 } else { 0 });
+            let carried_frames = frames.saturating_sub(u32::from(remaining));
+            if carried_frames != 0 {
+                self.advance_running_shoes_scene(carried_frames);
+            }
+            return true;
+        }
         let Some(remaining) = self.running_shoes_frames else { return false; };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         let trigger = self.running_shoes_trigger.unwrap_or(2);
@@ -3056,6 +3082,7 @@ impl WorldState {
                     }
                     self.pending_running_shoes = false;
                     self.running_shoes_wait_frames = None;
+                    self.running_shoes_return_delay_frames = None;
                     self.running_shoes_item_shown = true;
                     self.running_shoes_stage = 0;
                     self.running_shoes_dialogue_page = 0;
@@ -4898,6 +4925,7 @@ impl WorldState {
                             if self.running_shoes_trigger == Some(SOURCE_RIVAL_RUNNING_SHOES_TRIGGER) {
                                 self.pending_running_shoes = false;
                                 self.running_shoes_wait_frames = None;
+                                self.running_shoes_return_delay_frames = None;
                                 self.running_shoes_item_shown = true;
                                 self.running_shoes_stage = 0;
                                 self.running_shoes_dialogue_page = 0;
@@ -4906,10 +4934,10 @@ impl WorldState {
                                 self.phase = StoryPhase::RunningShoesReceived;
                             } else {
                                 self.running_shoes_stage = 6;
-                                let (_, steps, fast_turn) = running_shoes_mom_path(
-                                    self.running_shoes_trigger.unwrap_or(2), self.player_gender, true,
-                                );
-                                self.running_shoes_frames = Some(u16::from(steps) * 16 + if fast_turn { 8 } else { 0 });
+                                // `LittlerootTown_EventScript_GiveRunningShoes`
+                                // closes Mom's final message, then executes
+                                // `delay 30` before `MomReturnHome*` starts.
+                                self.running_shoes_return_delay_frames = Some(30);
                             }
                         }
                         _ => {}
@@ -5585,6 +5613,7 @@ impl WorldState {
             && self.dialogue.is_none() {
             self.pending_running_shoes = true;
             self.running_shoes_wait_frames = None;
+            self.running_shoes_return_delay_frames = None;
             self.running_shoes_item_shown = false;
             self.running_shoes_stage = 0;
             self.running_shoes_dialogue_page = 0;
