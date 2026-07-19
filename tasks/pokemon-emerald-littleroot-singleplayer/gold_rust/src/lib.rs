@@ -550,6 +550,17 @@ impl LittlerootSession {
             self.redraw();
             return;
         }
+        if self.world.phase == world::StoryPhase::StarterSelect {
+            match request.action {
+                Input::Left => self.world.move_starter_selection(-1),
+                Input::Right => self.world.move_starter_selection(1),
+                Input::A => self.world.confirm_starter(),
+                Input::Up | Input::Down | Input::B | Input::Start | Input::Select | Input::Noop => {}
+            }
+            self.input_log.push(request);
+            self.redraw();
+            return;
+        }
         match request.action {
             Input::Up => { self.world.walk_bounds(Facing::Up, request.frames); }
             Input::Down => { self.world.walk_bounds(Facing::Down, request.frames); }

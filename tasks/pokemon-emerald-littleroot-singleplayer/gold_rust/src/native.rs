@@ -1611,10 +1611,10 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             Some(crate::world::StarterSpecies::Treecko) => "TREECKO",
             Some(crate::world::StarterSpecies::Torchic) => "TORCHIC",
             Some(crate::world::StarterSpecies::Mudkip) => "MUDKIP",
-            None => "TREECKO",
+            None => "TORCHIC",
         };
         draw_text(frame, 66, 76, selected, 12);
-        draw_text(frame, 56, 96, "SELECT: NEXT  A: OK", 24);
+        draw_text(frame, 56, 96, "LEFT/RIGHT: SELECT", 24);
         return;
     }
     if let Some(field) = world.clock_editing {

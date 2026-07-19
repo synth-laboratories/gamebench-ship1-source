@@ -1832,7 +1832,10 @@ impl WorldState {
                 .expect("Route 101 starter-selection tile must be staged");
             self.facing = Facing::Left;
             self.phase = StoryPhase::StarterSelect;
-            self.begin_field_dialogue("Which POKéMON will you choose?".to_owned());
+            // `CB2_ChooseStarter` owns its own UI rather than opening a
+            // field message. Its task starts on selection index 1, which is
+            // Torchic in Emerald's Treecko/Torchic/Mudkip table.
+            self.starter = Some(StarterSpecies::Torchic);
             self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
             return true;
         }
@@ -4250,12 +4253,28 @@ impl WorldState {
 
     pub fn confirm_starter(&mut self) {
         if self.phase == StoryPhase::StarterSelect {
-            self.starter.get_or_insert(StarterSpecies::Treecko);
+            self.starter.get_or_insert(StarterSpecies::Torchic);
             self.ensure_starter_party();
             self.phase = StoryPhase::BirchBattle;
             self.dialogue = Some("Go! Your new POKéMON!".to_owned());
             self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
         }
+    }
+
+    /// `Task_HandleStarterChooseInput` accepts only bounded left/right
+    /// selection movement before the player confirms a Poké Ball.
+    pub fn move_starter_selection(&mut self, delta: i8) {
+        if self.phase != StoryPhase::StarterSelect { return; }
+        let selection = match self.starter.unwrap_or(StarterSpecies::Torchic) {
+            StarterSpecies::Treecko => 0_i8,
+            StarterSpecies::Torchic => 1,
+            StarterSpecies::Mudkip => 2,
+        };
+        self.starter = Some(match (selection + delta).clamp(0, 2) {
+            0 => StarterSpecies::Treecko,
+            1 => StarterSpecies::Torchic,
+            _ => StarterSpecies::Mudkip,
+        });
     }
 
     pub fn cycle_starter(&mut self) {
