@@ -252,6 +252,34 @@
       "sha256": "4284ba178ddf920f229de99142793fece400073c53e2fdd79e64c3e4eef1a437"
     },
     {
+      "id": "littleroot-outside-birch-lab-left-48",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "left", "frames": 48 }],
+      "frame": "gold_rust/assets/littleroot_outside_left_48.rgb",
+      "sha256": "00a0ac766daa094ff6ef1d2ea8bf7b7324e05dcbb8fd75c0ce1935cff040a80d"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-up-48",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "up", "frames": 48 }],
+      "frame": "gold_rust/assets/littleroot_outside_up_48.rgb",
+      "sha256": "c6f5064b6fdeb5609212fd4f1324df545da26f671a1797d665db56156f9ef8fe"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-down-48",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "down", "frames": 48 }],
+      "frame": "gold_rust/assets/littleroot_outside_down_48.rgb",
+      "sha256": "c92276d8c41cd1ecfa94f9e2e74afa4e9fecb24dced38cc266b744588b055f25"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-right-48",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "right", "frames": 48 }],
+      "frame": "gold_rust/assets/littleroot_outside_right_48.rgb",
+      "sha256": "4c8a15e42ee1e284195a311d17230673f2e27ada3f03245b7ebe4887453f6847"
+    },
+    {
       "id": "littleroot-outside-birch-lab-right-32",
       "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
       "input": [{ "action": "right", "frames": 32 }],

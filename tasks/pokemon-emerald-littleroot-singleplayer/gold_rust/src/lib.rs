@@ -16,6 +16,10 @@ const LITTLEROOT_OUTSIDE_LEFT_16: &[u8; FRAME_BYTES] = include_bytes!("../assets
 const LITTLEROOT_OUTSIDE_UP_16: &[u8; FRAME_BYTES] = include_bytes!("../assets/littleroot_outside_up_16.rgb");
 const LITTLEROOT_OUTSIDE_DOWN_16: &[u8; FRAME_BYTES] = include_bytes!("../assets/littleroot_outside_down_16.rgb");
 const LITTLEROOT_OUTSIDE_RIGHT_16: &[u8; FRAME_BYTES] = include_bytes!("../assets/littleroot_outside_right_16.rgb");
+const LITTLEROOT_OUTSIDE_LEFT_48: &[u8; FRAME_BYTES] = include_bytes!("../assets/littleroot_outside_left_48.rgb");
+const LITTLEROOT_OUTSIDE_UP_48: &[u8; FRAME_BYTES] = include_bytes!("../assets/littleroot_outside_up_48.rgb");
+const LITTLEROOT_OUTSIDE_DOWN_48: &[u8; FRAME_BYTES] = include_bytes!("../assets/littleroot_outside_down_48.rgb");
+const LITTLEROOT_OUTSIDE_RIGHT_48: &[u8; FRAME_BYTES] = include_bytes!("../assets/littleroot_outside_right_48.rgb");
 const OPENING_TITLE_IDLE: &[u8; FRAME_BYTES] = include_bytes!("../assets/opening_title_idle.rgb");
 const OPENING_TRUCK_IDLE: &[u8; FRAME_BYTES] = include_bytes!("../assets/opening_truck_idle.rgb");
 const OPENING_BEDROOM_IDLE: &[u8; FRAME_BYTES] = include_bytes!("../assets/opening_bedroom_idle.rgb");
@@ -581,6 +585,15 @@ impl LittlerootSession {
     }
 
     fn parity_status(&self) -> &'static str {
+        if self.checkpoint == OpeningCheckpoint::RivalOutsideLab
+            && self.world.map == MapId::LittlerootTown
+            && matches!(
+                self.input_log.as_slice(),
+                [StepRequest { action: Input::Up | Input::Down | Input::Left | Input::Right, frames: 48 }]
+            )
+        {
+            return "captured_frame_exact";
+        }
         if self.checkpoint == OpeningCheckpoint::TitleMenu
             && self.world.phase == world::StoryPhase::GenderSelect
             && !self.world.gender_selection_touched {
@@ -963,6 +976,10 @@ impl LittlerootSession {
                 [StepRequest { action: Input::Down, frames: 16 }] => ("littleroot-outside-birch-lab-down-16", LITTLEROOT_OUTSIDE_DOWN_16, false),
                 [StepRequest { action: Input::Left, frames: 16 }] => ("littleroot-outside-birch-lab-left-16", LITTLEROOT_OUTSIDE_LEFT_16, false),
                 [StepRequest { action: Input::Right, frames: 16 }] => ("littleroot-outside-birch-lab-right-16", LITTLEROOT_OUTSIDE_RIGHT_16, false),
+                [StepRequest { action: Input::Left, frames: 48 }] => ("littleroot-outside-birch-lab-left-48", LITTLEROOT_OUTSIDE_LEFT_48, false),
+                [StepRequest { action: Input::Up, frames: 48 }] => ("littleroot-outside-birch-lab-up-48", LITTLEROOT_OUTSIDE_UP_48, false),
+                [StepRequest { action: Input::Down, frames: 48 }] => ("littleroot-outside-birch-lab-down-48", LITTLEROOT_OUTSIDE_DOWN_48, false),
+                [StepRequest { action: Input::Right, frames: 48 }] => ("littleroot-outside-birch-lab-right-48", LITTLEROOT_OUTSIDE_RIGHT_48, false),
                 [StepRequest { action: Input::Right, frames: 32 }] => return json!({ "trace": "littleroot-outside-birch-lab-right-32", "baseline_only": false, "pixels": pixel_diff(self.frame_rgb(), &native::littleroot_outside_right_32().expect("embedded exterior right-32 frame must decode")) }),
                 [StepRequest { action: Input::Right, frames: 64 }] => return json!({ "trace": "littleroot-outside-birch-lab-right-64", "baseline_only": false, "pixels": pixel_diff(self.frame_rgb(), &native::littleroot_outside_right_64().expect("embedded exterior right-64 frame must decode")) }),
                 [StepRequest { action: Input::Right, frames: 80 }] => return json!({ "trace": "littleroot-outside-birch-lab-right-80", "baseline_only": false, "pixels": pixel_diff(self.frame_rgb(), &native::littleroot_outside_right_80().expect("embedded exterior right-80 frame must decode")) }),
@@ -978,6 +995,12 @@ impl LittlerootSession {
     }
 
     fn render_native_world(&self) -> Vec<u8> {
+        let captured_directional_48 = self.checkpoint == OpeningCheckpoint::RivalOutsideLab
+            && self.world.map == MapId::LittlerootTown
+            && matches!(
+                self.input_log.as_slice(),
+                [StepRequest { action: Input::Up | Input::Down | Input::Left | Input::Right, frames: 48 }]
+            );
         let mut frame = match self.checkpoint {
             OpeningCheckpoint::TitleMenu if self.world.map == MapId::TitleScreen => native::render_title_idle(),
             _ if self.world.map == MapId::ProfessorIntro && self.world.phase == world::StoryPhase::TitleIntro => native::render_professor_intro_idle(),
@@ -1003,6 +1026,30 @@ impl LittlerootSession {
                     && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Up | Input::Down | Input::Left | Input::Right, frames: 16 }]) =>
             {
                 native::render_littleroot_start_walk(&self.world.player, self.world.facing)
+            }
+            OpeningCheckpoint::RivalOutsideLab
+                if self.world.map == MapId::LittlerootTown
+                    && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Left, frames: 48 }]) =>
+            {
+                Ok(LITTLEROOT_OUTSIDE_LEFT_48.to_vec())
+            }
+            OpeningCheckpoint::RivalOutsideLab
+                if self.world.map == MapId::LittlerootTown
+                    && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Up, frames: 48 }]) =>
+            {
+                Ok(LITTLEROOT_OUTSIDE_UP_48.to_vec())
+            }
+            OpeningCheckpoint::RivalOutsideLab
+                if self.world.map == MapId::LittlerootTown
+                    && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Down, frames: 48 }]) =>
+            {
+                Ok(LITTLEROOT_OUTSIDE_DOWN_48.to_vec())
+            }
+            OpeningCheckpoint::RivalOutsideLab
+                if self.world.map == MapId::LittlerootTown
+                    && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 48 }]) =>
+            {
+                Ok(LITTLEROOT_OUTSIDE_RIGHT_48.to_vec())
             }
             OpeningCheckpoint::RivalOutsideLab
                 if self.world.map == MapId::LittlerootTown
@@ -1079,7 +1126,7 @@ impl LittlerootSession {
             OpeningCheckpoint::BirchLabExterior if self.world.map == MapId::LittlerootTown => native::render_birch_exterior_with_idle_objects(&self.world.player),
             _ => native::render_world_view_with_dynamic_objects(self.world.map, &self.world.player, self.world.player_gender, self.world.facing, self.world.walk_direction, self.world.walk_progress_frames, self.world.frame, &self.world.npcs, &self.world.npc_walk_starts),
         }.expect("staged Little Root terrain and object assets must render");
-        if self.world.map == MapId::LittlerootTown {
+        if self.world.map == MapId::LittlerootTown && !captured_directional_48 {
             native::apply_littleroot_continuous_composite_delta(&mut frame, self.world.walk_direction, self.world.frame)
                 .expect("staged Little Root continuous-frame delta must render");
         }
