@@ -92,7 +92,7 @@ pub enum StarterSpecies { Treecko, Torchic, Mudkip }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum BattleOpponent { Zigzagoon, Poochyena, Wurmple, Rival }
+pub enum BattleOpponent { Zigzagoon, Poochyena, Wingull, Wurmple, Rival }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct BattleState {
@@ -176,6 +176,7 @@ fn battle_opponent_name(opponent: BattleOpponent) -> &'static str {
     match opponent {
         BattleOpponent::Zigzagoon => "ZIGZAGOON",
         BattleOpponent::Poochyena => "POOCHYENA",
+        BattleOpponent::Wingull => "WINGULL",
         BattleOpponent::Wurmple => "WURMPLE",
         BattleOpponent::Rival => "your RIVAL",
     }
@@ -410,6 +411,10 @@ pub struct WorldState {
     /// resolved and must not retrigger when the player remains in its grass.
     #[serde(default)]
     pub route101_poochyena_resolved: bool,
+    /// The source Route 103 Wingull encounter is resolved and must not
+    /// retrigger when the player remains in the eastern grass.
+    #[serde(default)]
+    pub route103_wingull_resolved: bool,
     pub pending_rival_meeting: bool,
     /// Remaining source-script frames before the rival arrival dialogue opens.
     pub rival_arrival_frames: Option<u16>,
@@ -570,6 +575,7 @@ impl WorldState {
             route101_exit_push: None,
             route101_wurmple_resolved: false,
             route101_poochyena_resolved: false,
+            route103_wingull_resolved: false,
             pending_rival_meeting: false,
             rival_arrival_frames: None,
             rival_departure_frames: None,
@@ -673,6 +679,7 @@ impl WorldState {
             route101_exit_push: None,
             route101_wurmple_resolved: false,
             route101_poochyena_resolved: false,
+            route103_wingull_resolved: false,
             pending_rival_meeting: false,
             rival_arrival_frames: None,
             rival_departure_frames: None,
@@ -779,6 +786,7 @@ impl WorldState {
             route101_exit_push: None,
             route101_wurmple_resolved: false,
             route101_poochyena_resolved: false,
+            route103_wingull_resolved: false,
             pending_rival_meeting: false,
             rival_arrival_frames: None,
             rival_departure_frames: None,
@@ -881,6 +889,7 @@ impl WorldState {
             route101_exit_push: None,
             route101_wurmple_resolved: false,
             route101_poochyena_resolved: false,
+            route103_wingull_resolved: false,
             pending_rival_meeting: false,
             rival_arrival_frames: None,
             rival_departure_frames: None,
@@ -1012,6 +1021,7 @@ impl WorldState {
             route101_exit_push: None,
             route101_wurmple_resolved: false,
             route101_poochyena_resolved: false,
+            route103_wingull_resolved: false,
             pending_rival_meeting: false,
             rival_arrival_frames: None,
             rival_departure_frames: None,
@@ -2932,6 +2942,48 @@ impl WorldState {
         });
     }
 
+    /// From the fresh `03_birch` state, the eastern Route 103 grass at
+    /// `(16,13)` opens a deterministic level-3 Wingull encounter. This is
+    /// the first source route around the southern ledge toward the rival.
+    fn begin_route103_wingull_encounter(&mut self) {
+        if self.map != MapId::Route103
+            || self.phase != StoryPhase::BirchRescued
+            || self.player != (TilePosition { x: 16, y: 13 })
+            || self.route103_wingull_resolved
+            || self.battle.is_some()
+        {
+            return;
+        }
+        let (_, player_hp, player_move_damage, player_move_name, player_move_pp, player_status_move_name, player_status_move_pp) = starter_battle_profile(self.starter);
+        self.battle = Some(BattleState {
+            opponent: BattleOpponent::Wingull,
+            opponent_species: "WINGULL".to_owned(),
+            opponent_move_name: "TACKLE".to_owned(),
+            opponent_move_damage: 4,
+            player_hp,
+            player_max_hp: player_hp,
+            rival_hp: 18,
+            opponent_max_hp: 18,
+            player_move_damage,
+            player_move_name: player_move_name.to_owned(),
+            player_move_pp,
+            player_status_move_name: player_status_move_name.to_owned(),
+            player_status_move_pp,
+            opponent_attack_stage: 0,
+            opponent_defense_stage: 0,
+            command_cursor: 0,
+            selecting_move: false,
+            party_screen_open: false,
+            escaped: false,
+            wild: true,
+            move_cursor: 0,
+            player_fainted: false,
+            message: Some("Wild WINGULL appeared!".to_owned()),
+            entry_transition_frames: 224,
+            intro_stage: 0,
+        });
+    }
+
     /// Advances the encounter wipe and reports whether it consumed this
     /// input. The command screen deliberately stays locked until the wipe
     /// has finished, matching the field-script behavior of other opening
@@ -2999,6 +3051,7 @@ impl WorldState {
                 BattleOpponent::Rival => "No! There's no running from a TRAINER battle!".to_owned(),
                 BattleOpponent::Zigzagoon => "Can't escape!".to_owned(),
                 BattleOpponent::Poochyena => unreachable!("Route 101 Poochyena is wild"),
+                BattleOpponent::Wingull => unreachable!("Route 103 Wingull is wild"),
                 BattleOpponent::Wurmple => unreachable!("all Wurmple encounters are wild"),
             }),
         }
@@ -3035,6 +3088,7 @@ impl WorldState {
                 BattleOpponent::Rival => "RIVAL",
                 BattleOpponent::Zigzagoon => "ZIGZAGOON",
                 BattleOpponent::Poochyena => "POOCHYENA",
+                BattleOpponent::Wingull => "WINGULL",
                 BattleOpponent::Wurmple => "WURMPLE",
             };
             battle.player_fainted = battle.player_hp == 0;
@@ -3071,6 +3125,7 @@ impl WorldState {
                 if escaped && wild {
                     match opponent {
                         BattleOpponent::Poochyena => self.route101_poochyena_resolved = true,
+                        BattleOpponent::Wingull => self.route103_wingull_resolved = true,
                         BattleOpponent::Wurmple => self.route101_wurmple_resolved = true,
                         BattleOpponent::Rival | BattleOpponent::Zigzagoon => unreachable!("trainer and rescue battles are not wild"),
                     }
@@ -3083,6 +3138,7 @@ impl WorldState {
                             BattleOpponent::Rival => "Your POKéMON needs another try against your RIVAL.".to_owned(),
                             BattleOpponent::Zigzagoon => "PROF. BIRCH: Try again! My POKéMON still needs help!".to_owned(),
                             BattleOpponent::Poochyena => unreachable!("Route 101 Poochyena is wild"),
+                            BattleOpponent::Wingull => unreachable!("Route 103 Wingull is wild"),
                             BattleOpponent::Wurmple => unreachable!("all Wurmple encounters are wild"),
                         }
                     });
@@ -3141,6 +3197,9 @@ impl WorldState {
                 BattleOpponent::Poochyena => {
                     self.route101_poochyena_resolved = true;
                 }
+                BattleOpponent::Wingull => {
+                    self.route103_wingull_resolved = true;
+                }
                 BattleOpponent::Wurmple => {
                     self.route101_wurmple_resolved = true;
                 }
@@ -3156,6 +3215,7 @@ impl WorldState {
             BattleOpponent::Rival => "RIVAL",
             BattleOpponent::Zigzagoon => "ZIGZAGOON",
             BattleOpponent::Poochyena => "POOCHYENA",
+            BattleOpponent::Wingull => "WINGULL",
             BattleOpponent::Wurmple => "WURMPLE",
         };
         if battle.player_hp == 0 {
@@ -4140,6 +4200,7 @@ impl WorldState {
             self.apply_oldale_rival_trigger();
             self.begin_route101_poochyena_encounter();
             self.begin_route101_wurmple_encounter();
+            self.begin_route103_wingull_encounter();
             if self.dialogue.is_some() || self.battle.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() { break; }
         }
         moved

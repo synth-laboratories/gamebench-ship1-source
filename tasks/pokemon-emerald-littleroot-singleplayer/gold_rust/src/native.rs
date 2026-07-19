@@ -108,6 +108,7 @@ const BATTLE_MUDKIP_BACK_B64: &str = include_str!("../assets/battle_mudkip_back.
 const BATTLE_MUDKIP_FRONT_B64: &str = include_str!("../assets/battle_mudkip_front.png.b64");
 const BATTLE_ZIGZAGOON_FRONT_B64: &str = include_str!("../assets/battle_zigzagoon_front.png.b64");
 const BATTLE_POOCHYENA_FRONT_B64: &str = include_str!("../assets/battle_poochyena_front.png.b64");
+const BATTLE_WINGULL_FRONT_B64: &str = include_str!("../assets/battle_wingull_front.png.b64");
 const BATTLE_WURMPLE_FRONT_B64: &str = include_str!("../assets/battle_wurmple_front.png.b64");
 static BATTLE_TREECKO_BACK: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_TREECKO_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
@@ -117,6 +118,7 @@ static BATTLE_MUDKIP_BACK: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_MUDKIP_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_ZIGZAGOON_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_POOCHYENA_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
+static BATTLE_WINGULL_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_WURMPLE_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 // Compact source-derived GBA BG state for the first held-right terrain phase.
 // It contains the four active screenblocks, palette, and referenced
@@ -1434,7 +1436,7 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             // current renderer only approximates the final band-close phase.
             let entry_frames: usize = match battle.opponent {
                 crate::world::BattleOpponent::Wurmple => 352,
-                crate::world::BattleOpponent::Poochyena => 224,
+                crate::world::BattleOpponent::Poochyena | crate::world::BattleOpponent::Wingull => 224,
                 crate::world::BattleOpponent::Zigzagoon | crate::world::BattleOpponent::Rival => 48,
             };
             let elapsed = entry_frames.saturating_sub(usize::from(battle.entry_transition_frames));
@@ -1456,6 +1458,7 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
         let opponent_level = match battle.opponent {
             crate::world::BattleOpponent::Zigzagoon => 3,
             crate::world::BattleOpponent::Poochyena => 2,
+            crate::world::BattleOpponent::Wingull => 3,
             crate::world::BattleOpponent::Wurmple => 2,
             crate::world::BattleOpponent::Rival => 5,
         };
@@ -1981,6 +1984,7 @@ fn battle_front_sprite(species: &str) -> &'static NpcSpriteSheet {
         "MUDKIP" => battle_sheet(&BATTLE_MUDKIP_FRONT, BATTLE_MUDKIP_FRONT_B64),
         "ZIGZAGOON" => battle_sheet(&BATTLE_ZIGZAGOON_FRONT, BATTLE_ZIGZAGOON_FRONT_B64),
         "POOCHYENA" => battle_sheet(&BATTLE_POOCHYENA_FRONT, BATTLE_POOCHYENA_FRONT_B64),
+        "WINGULL" => battle_sheet(&BATTLE_WINGULL_FRONT, BATTLE_WINGULL_FRONT_B64),
         "WURMPLE" => battle_sheet(&BATTLE_WURMPLE_FRONT, BATTLE_WURMPLE_FRONT_B64),
         _ => battle_sheet(&BATTLE_ZIGZAGOON_FRONT, BATTLE_ZIGZAGOON_FRONT_B64),
     }
