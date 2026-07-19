@@ -293,6 +293,10 @@ pub struct WorldState {
     /// Source Running Shoes scene state: approach, item pages, and return.
     #[serde(default)]
     pub running_shoes_stage: u8,
+    /// Current two-line source message page within the active Running Shoes
+    /// stage. The field engine only advances the stage after its final page.
+    #[serde(default)]
+    pub running_shoes_dialogue_page: u8,
     #[serde(default)]
     pub running_shoes_trigger: Option<u8>,
     /// Remaining frames in the source Little Root Twin warning gesture before
@@ -453,6 +457,7 @@ impl WorldState {
             running_shoes_frames: None,
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
+            running_shoes_dialogue_page: 0,
             running_shoes_trigger: None,
             birch_prompt_frames: None,
             birch_prompt_active: false,
@@ -543,6 +548,7 @@ impl WorldState {
             running_shoes_frames: None,
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
+            running_shoes_dialogue_page: 0,
             running_shoes_trigger: None,
             birch_prompt_frames: None,
             birch_prompt_active: false,
@@ -636,6 +642,7 @@ impl WorldState {
             running_shoes_frames: None,
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
+            running_shoes_dialogue_page: 0,
             running_shoes_trigger: None,
             birch_prompt_frames: None,
             birch_prompt_active: false,
@@ -722,6 +729,7 @@ impl WorldState {
             running_shoes_frames: None,
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
+            running_shoes_dialogue_page: 0,
             running_shoes_trigger: None,
             birch_prompt_frames: None,
             birch_prompt_active: false,
@@ -816,6 +824,7 @@ impl WorldState {
             running_shoes_frames: None,
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
+            running_shoes_dialogue_page: 0,
             running_shoes_trigger: None,
             birch_prompt_frames: None,
             birch_prompt_active: false,
@@ -1772,6 +1781,33 @@ impl WorldState {
     /// Advances the locked outdoor portion of the source Running Shoes scene.
     /// The script first calls Mom from the front door, then has her approach
     /// the player before displaying the item message.
+    fn begin_running_shoes_dialogue(&mut self) {
+        self.running_shoes_dialogue_page = 0;
+        self.dialogue = running_shoes_dialogue_page(
+            self.running_shoes_stage,
+            self.running_shoes_dialogue_page,
+            &self.player_name,
+        );
+    }
+
+    /// Reveals the next source message page without advancing the scene
+    /// script. The exterior text flow owns fifteen dismissible pages after
+    /// Mom's initial prompt, rather than four condensed Rust strings.
+    fn advance_running_shoes_dialogue(&mut self) -> bool {
+        let next_page = self.running_shoes_dialogue_page.saturating_add(1);
+        let Some(dialogue) = running_shoes_dialogue_page(
+            self.running_shoes_stage,
+            next_page,
+            &self.player_name,
+        ) else {
+            self.running_shoes_dialogue_page = 0;
+            return false;
+        };
+        self.running_shoes_dialogue_page = next_page;
+        self.dialogue = Some(dialogue);
+        true
+    }
+
     pub fn advance_running_shoes_scene(&mut self, frames: u32) -> bool {
         let Some(remaining) = self.running_shoes_frames else { return false; };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
@@ -1810,7 +1846,7 @@ impl WorldState {
             match self.running_shoes_stage {
                 1 => {
                     self.running_shoes_stage = 2;
-                    self.dialogue = Some(running_shoes_page(0, &self.player_name));
+                    self.begin_running_shoes_dialogue();
                 }
                 6 => {
                     if fast_return_turn {
@@ -1821,6 +1857,7 @@ impl WorldState {
                     self.pending_running_shoes = false;
                     self.running_shoes_item_shown = true;
                     self.running_shoes_stage = 0;
+                    self.running_shoes_dialogue_page = 0;
                     self.running_shoes_trigger = None;
                     self.npcs.retain(|npc| npc.id != "mom_outside");
                     self.phase = StoryPhase::RunningShoesReceived;
@@ -2715,6 +2752,13 @@ impl WorldState {
             }
             return;
         }
+        if self.dialogue.is_some()
+            && self.pending_running_shoes
+            && matches!(self.running_shoes_stage, 2..=5)
+            && self.advance_running_shoes_dialogue()
+        {
+            return;
+        }
         if self.dialogue.take().is_some() {
             if let Some(blocked_facing) = self.route101_exit_push.take() {
                 match blocked_facing {
@@ -2950,7 +2994,7 @@ impl WorldState {
                         }
                         2 => {
                             self.running_shoes_stage = 3;
-                            self.dialogue = Some(running_shoes_page(1, &self.player_name));
+                            self.begin_running_shoes_dialogue();
                             // The frozen rival-exterior source keeps Mom at
                             // her approach endpoint, then immediately marks
                             // the field object hidden as A advances the long
@@ -2962,17 +3006,18 @@ impl WorldState {
                         }
                         3 => {
                             self.running_shoes_stage = 4;
-                            self.dialogue = Some(running_shoes_page(2, &self.player_name));
+                            self.begin_running_shoes_dialogue();
                         }
                         4 => {
                             self.running_shoes_stage = 5;
-                            self.dialogue = Some(running_shoes_page(3, &self.player_name));
+                            self.begin_running_shoes_dialogue();
                         }
                         5 => {
                             if self.running_shoes_trigger == Some(SOURCE_RIVAL_RUNNING_SHOES_TRIGGER) {
                                 self.pending_running_shoes = false;
                                 self.running_shoes_item_shown = true;
                                 self.running_shoes_stage = 0;
+                                self.running_shoes_dialogue_page = 0;
                                 self.running_shoes_trigger = None;
                                 self.phase = StoryPhase::RunningShoesReceived;
                             } else {
@@ -3491,6 +3536,7 @@ impl WorldState {
             self.pending_running_shoes = true;
             self.running_shoes_item_shown = false;
             self.running_shoes_stage = 0;
+            self.running_shoes_dialogue_page = 0;
             let trigger = match (self.player.x, self.player.y) {
                 // The frozen rival-exterior source state enters through a
                 // distinct, measured Mom approach rather than a Porymap
@@ -3747,14 +3793,26 @@ fn running_shoes_mom_path(trigger: u8, player_gender: PlayerGender, returning: b
     }
 }
 
-fn running_shoes_page(page: u8, player_name: &str) -> String {
-    match page {
-        0 => format!("MOM: {player_name}! {player_name}! Did you\nintroduce yourself to PROF. BIRCH?\n\nOh! What an adorable POKéMON!\nYou got it from PROF. BIRCH. How nice!\n\nYou're your father's child, all right.\nYou look good together with POKéMON!\n\nHere, honey! If you're going out on an\nadventure, wear these RUNNING SHOES.\n\nThey'll put a zip in your step!"),
-        1 => format!("{player_name} switched shoes with the\nRUNNING SHOES."),
-        2 => format!("MOM: {player_name}, those shoes came with\ninstructions.\n\n“Press the B Button while wearing these\nRUNNING SHOES to run extra-fast!\n\n“Slip on these RUNNING SHOES and race\nin the great outdoors!”"),
-        3 => "… … … … … … … …\n… … … … … … … …\n\nTo think that you have your very own\nPOKéMON now…\nYour father will be overjoyed.\n\n…But please be careful.\nIf anything happens, you can come home.\n\nGo on, go get them, honey!".to_owned(),
-        _ => unreachable!("Running Shoes page must be in range"),
-    }
+fn running_shoes_dialogue_page(stage: u8, page: u8, player_name: &str) -> Option<String> {
+    let text = match (stage, page) {
+        (2, 0) => format!("MOM: {player_name}! {player_name}! Did you\nintroduce yourself to PROF. BIRCH?"),
+        (2, 1) => "Oh! What an adorable POKéMON!\nYou got it from PROF. BIRCH. How nice!".to_owned(),
+        (2, 2) => "You're your father's child, all right.\nYou look good together with POKéMON!".to_owned(),
+        (2, 3) => "Here, honey! If you're going out on an\nadventure, wear these RUNNING SHOES.".to_owned(),
+        (2, 4) => "They'll put a zip in your step!".to_owned(),
+        (3, 0) => format!("{player_name} switched shoes with the\nRUNNING SHOES."),
+        (4, 0) => format!("MOM: {player_name}, those shoes came with\ninstructions."),
+        (4, 1) => "“Press the B Button while wearing these\nRUNNING SHOES to run extra-fast!”".to_owned(),
+        (4, 2) => "“Slip on these RUNNING SHOES and race\nin the great outdoors!”".to_owned(),
+        (5, 0) => "… … … … … … … …\n… … … … … … … …".to_owned(),
+        (5, 1) => "To think that you have your very own\nPOKéMON now…".to_owned(),
+        (5, 2) => "Your father will be overjoyed.".to_owned(),
+        (5, 3) => "…But please be careful.".to_owned(),
+        (5, 4) => "If anything happens, you can come home.".to_owned(),
+        (5, 5) => "Go on, go get them, honey!".to_owned(),
+        _ => return None,
+    };
+    Some(text)
 }
 
 fn tv_broadcast_page(page: u8, player_name: &str) -> String {
