@@ -1870,9 +1870,23 @@ impl WorldState {
         // step. Model them individually so held input can cross several
         // command boundaries without teleporting the rival to the ledge.
         let path: &[(u16, i16, i16)] = if player_faced_north {
-            &[(112, 9, 3), (96, 9, 4), (80, 9, 6), (48, 9, 7), (32, 9, 8), (16, 9, 9)]
+            &[
+                (112, 9, 3),
+                (96, 9, 4),
+                (80, 9, 6),
+                (48, 9, 7),
+                (32, 9, 8),
+                (16, 9, 9),
+                (0, 9, 10),
+            ]
         } else {
-            &[(80, 10, 4), (64, 10, 6), (32, 10, 7), (16, 10, 8)]
+            &[
+                (80, 10, 4),
+                (64, 10, 6),
+                (32, 10, 7),
+                (16, 10, 8),
+                (0, 10, 9),
+            ]
         };
         for &(boundary, x, y) in path {
             if remaining > boundary && next_remaining <= boundary {
@@ -1889,23 +1903,27 @@ impl WorldState {
         true
     }
 
-    /// Runs OldaleTown's six-step rival exit after the Route 103 return
-    /// encounter. The source removes this object permanently at completion.
+    /// Runs OldaleTown's two authored six-step rival exits after the Route
+    /// 103 return encounter. `RivalFinish` applies the same exit movement in
+    /// its selected branch, then once more before permanently removing the
+    /// object.
     pub fn advance_oldale_rival_departure(&mut self, frames: u32) -> bool {
         let Some(remaining) = self.oldale_rival_departure_frames else { return false; };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
-        // Triggered south-edge meetings run `Movement_WatchRivalExit`
-        // alongside the rival: delay 8, delay 4, then a fast downward turn.
-        // A direct A interaction does not move the player, so retain its
-        // existing facing.
-        let player_watches = self.player.y == 19 && (8..=10).contains(&self.player.x);
-        if player_watches && remaining > 80 && next_remaining <= 80 {
+        // `OldaleTown_EventScript_RivalFinish` runs the first six-step exit
+        // through `DoExitMovement{1,2}`, then unconditionally applies the
+        // same six steps before `removeobject`. South-edge triggers and a
+        // direct interaction while not facing south also run the parallel
+        // 20-frame player watch movement (delay 8, delay 4, fast down turn).
+        let player_watches = (self.player.y == 19 && (8..=10).contains(&self.player.x))
+            || self.facing != Facing::Down;
+        if player_watches && remaining > 172 && next_remaining <= 172 {
             self.facing = Facing::Down;
         }
-        // `OldaleTown_Movement_RivalExit` is six separate walk_down commands,
-        // not a midpoint relocation. Retain each boundary for the native OBJ
-        // interpolator and for checkpoint continuation.
-        for boundary in [80, 64, 48, 32, 16] {
+        // Each `OldaleTown_Movement_RivalExit` invocation has six ordinary
+        // walk_down commands. Keep all twelve 16-frame boundaries so a
+        // checkpoint restored during either pass continues the source stream.
+        for boundary in [176, 160, 144, 128, 112, 96, 80, 64, 48, 32, 16, 0] {
             if remaining > boundary && next_remaining <= boundary {
                 let rival = self.npcs.iter().find(|npc| npc.id == "oldale_rival")
                     .expect("Oldale rival must exist during its scripted exit");
@@ -4156,7 +4174,7 @@ impl WorldState {
                 }
                 StoryPhase::RivalDefeated if self.map == MapId::OldaleTown
                     && self.npcs.iter().any(|npc| npc.id == "oldale_rival") => {
-                    self.oldale_rival_departure_frames = Some(96);
+                    self.oldale_rival_departure_frames = Some(192);
                 }
                 StoryPhase::PokedexReceived if self.pending_running_shoes => {
                     match self.running_shoes_stage {
