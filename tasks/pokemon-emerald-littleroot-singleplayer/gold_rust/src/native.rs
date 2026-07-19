@@ -2290,7 +2290,7 @@ pub fn render_littleroot_with_idle_objects(player: &TilePosition, facing: Facing
 pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing: Facing, walk_direction: Option<Facing>, walk_progress_frames: u8, timing_tick: Option<u64>) -> Result<Vec<u8>, String> {
     let mut vram = outside_player_vram(facing, walk_progress_frames)?;
     let timed_player_tile = match (player, walk_direction, walk_progress_frames, timing_tick) {
-        (TilePosition { x: 9, y: 13 }, Some(Facing::Up), 0, Some(64)) => Some(LITTLEROOT_UP64_PLAYER_OBJ_B64),
+        (TilePosition { x: 9, y: 13 }, Some(Facing::Up), 0, Some(64 | 96)) => Some(LITTLEROOT_UP64_PLAYER_OBJ_B64),
         (TilePosition { x: 9, y: 15 }, Some(Facing::Down), 0, Some(64)) => Some(LITTLEROOT_DOWN64_PLAYER_OBJ_B64),
         _ => None,
     };
