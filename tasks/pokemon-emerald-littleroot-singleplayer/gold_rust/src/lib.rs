@@ -973,6 +973,25 @@ impl LittlerootSession {
             })
     }
 
+    fn title_to_met_rival_first_page_evidence(&self) -> bool {
+        self.checkpoint == OpeningCheckpoint::TitleMenu
+            && self.frame_index == 840
+            && self.world.phase == world::StoryPhase::TitleIntro
+            && self.world.map == MapId::ProfessorIntro
+            && self.world.title_start_frames == 120
+            && self.world.title_transition_frames == 480
+            && self.world.title_intro_frames == 240
+            && self.world.title_intro_step == 0
+            && matches!(
+                self.input_log.as_slice(),
+                [
+                    StepRequest { action: Input::A, frames: 120 },
+                    StepRequest { action: Input::Noop, frames: 480 },
+                    StepRequest { action: Input::Noop, frames: 240 },
+                ]
+            )
+    }
+
     fn title_to_met_rival_rival_entry_evidence(&self) -> bool {
         self.checkpoint == OpeningCheckpoint::TitleMenu
             && self.frame_index == 22_096
@@ -1012,6 +1031,9 @@ impl LittlerootSession {
     }
 
     fn parity_status(&self) -> &'static str {
+        if self.title_to_met_rival_first_page_evidence() {
+            return "source_first_page_exact";
+        }
         if self.title_to_met_rival_rival_entry_evidence() {
             return "source_rival_entry_exact";
         }
@@ -1162,6 +1184,18 @@ impl LittlerootSession {
     }
 
     fn reference_diff(&self) -> Value {
+        if self.title_to_met_rival_first_page_evidence() {
+            let expected_sha256 = "5b6a6dea9d682040c59de18df7a16f78e7ffafc2410e69a10a6e0140f226b86e";
+            let actual_sha256 = frame_sha256(self.frame_rgb());
+            return json!({
+                "trace": "title-to-met-rival-may-first-page",
+                "baseline_only": false,
+                "source_first_page": true,
+                "expected_sha256": expected_sha256,
+                "actual_sha256": actual_sha256,
+                "exact": actual_sha256 == expected_sha256,
+            });
+        }
         if self.title_to_met_rival_rival_entry_evidence() {
             let expected_sha256 = "af10f15e656f4d340526e7d650c101bc4db7f982ebf1d6fc916ea581aea4a6eb";
             let actual_sha256 = frame_sha256(self.frame_rgb());
@@ -1802,6 +1836,9 @@ impl LittlerootSession {
             self.refresh_frozen_scene();
         }
         native::composite_interface(&mut self.framebuffer, &self.world);
+        if self.title_to_met_rival_first_page_evidence() {
+            native::apply_title_intro_first_page_prompt_delta(&mut self.framebuffer);
+        }
     }
 
     fn has_native_scene(&self) -> bool {

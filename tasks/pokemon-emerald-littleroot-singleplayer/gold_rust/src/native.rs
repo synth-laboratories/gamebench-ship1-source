@@ -1911,6 +1911,42 @@ fn draw_professor_dialogue(frame: &mut [u8], text: &str) {
     draw_birch_wrapped_text(frame, x + 16, y + 9, text, 35, 2);
 }
 
+/// Aligns the first Professor Birch page's terminal prompt glyph with the
+/// source's scanline position. The regular text compositor owns the complete
+/// window and sentence; this narrow source-timed delta applies only at the
+/// verified 840-frame title replay checkpoint.
+pub fn apply_title_intro_first_page_prompt_delta(frame: &mut [u8]) {
+    const PIXELS: &[(usize, usize, [u8; 3])] = &[
+        (170, 125, [99, 99, 99]),
+        (171, 125, [99, 99, 99]),
+        (172, 125, [99, 99, 99]),
+        (173, 125, [99, 99, 99]),
+        (174, 125, [99, 99, 99]),
+        (175, 125, [99, 99, 99]),
+        (176, 125, [99, 99, 99]),
+        (171, 126, [231, 8, 8]),
+        (172, 126, [231, 8, 8]),
+        (173, 126, [231, 8, 8]),
+        (174, 126, [231, 8, 8]),
+        (175, 126, [231, 8, 8]),
+        (170, 129, [255, 255, 255]),
+        (171, 129, [99, 99, 99]),
+        (175, 129, [99, 99, 99]),
+        (176, 129, [255, 255, 255]),
+        (171, 130, [255, 255, 255]),
+        (172, 130, [99, 99, 99]),
+        (174, 130, [99, 99, 99]),
+        (175, 130, [255, 255, 255]),
+        (172, 131, [255, 255, 255]),
+        (173, 131, [99, 99, 99]),
+        (174, 131, [255, 255, 255]),
+        (173, 132, [255, 255, 255]),
+    ];
+    for &(x, y, color) in PIXELS {
+        put_pixel(frame, x, y, color);
+    }
+}
+
 /// The field engine and Professor Birch speech both use the standard
 /// bottom-screen message-box geometry. The former uses the regular overworld
 /// font palette, but it must retain the actual tile border rather than the
