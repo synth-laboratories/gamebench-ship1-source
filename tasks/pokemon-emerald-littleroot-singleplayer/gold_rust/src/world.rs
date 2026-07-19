@@ -86,6 +86,12 @@ pub enum MenuEntry { Pokedex, Pokemon, Bag, Player, Save, Option, Exit }
 #[serde(rename_all = "snake_case")]
 pub enum ClockField { Hours, Minutes }
 
+/// `NAMING_SCREEN_PLAYER` and `NAMING_SCREEN_NICKNAME` share Emerald's
+/// keyboard controls but commit to different saved data.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum NamingTarget { Player, Starter }
+
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum StarterSpecies { Treecko, Torchic, Mudkip }
@@ -251,6 +257,11 @@ struct CombatantBattleProfile {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct StarterPartyState {
     pub species: StarterSpecies,
+    /// `CreateMon` begins with the species name. A `None` nickname preserves
+    /// that source default for restored checkpoints written before nickname
+    /// ownership was serialized.
+    #[serde(default)]
+    pub nickname: Option<String>,
     pub level: u8,
     pub hp: u8,
     pub max_hp: u8,
@@ -364,6 +375,7 @@ fn starter_party_state(starter: StarterSpecies) -> StarterPartyState {
     let profile = starter_battle_profile(Some(starter));
     StarterPartyState {
         species: starter,
+        nickname: None,
         level: profile.level,
         hp: profile.max_hp,
         max_hp: profile.max_hp,
@@ -511,6 +523,8 @@ pub struct AmbientWanderState {
 fn default_ambient_rng() -> u32 { 0x5eed_0001 }
 
 fn default_starter_lab_choice_yes() -> bool { true }
+
+fn default_naming_target() -> NamingTarget { NamingTarget::Player }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct MapTransition {
@@ -757,6 +771,14 @@ pub struct WorldState {
     pub title_intro_frames: u16,
     pub player_name: String,
     pub name_cursor: u8,
+    /// Player and starter nickname screens share keyboard state, but write to
+    /// the same fields their source naming-screen callbacks own.
+    #[serde(default = "default_naming_target")]
+    pub naming_target: NamingTarget,
+    /// Input buffer for `NAMING_SCREEN_NICKNAME`. The source leaves the
+    /// original species name intact when this remains empty.
+    #[serde(default)]
+    pub starter_nickname_entry: String,
     pub player_gender: PlayerGender,
     pub gender_selection_touched: bool,
     /// Birch-speech selector transition: outgoing sprite slides right, then
@@ -869,6 +891,8 @@ impl WorldState {
             title_intro_frames: 0,
             player_name: String::new(),
             name_cursor: 0,
+            naming_target: NamingTarget::Player,
+            starter_nickname_entry: String::new(),
             // Emerald's captured selector starts on BOY (Brendan).
             player_gender: PlayerGender::Brendan,
             gender_selection_touched: false,
@@ -977,6 +1001,8 @@ impl WorldState {
             title_intro_frames: 0,
             player_name: "CASEY".to_owned(),
             name_cursor: 0,
+            naming_target: NamingTarget::Player,
+            starter_nickname_entry: String::new(),
             // The supplied tutorial and downstream source saves use the
             // female player branch: May's House is the player's home.
             player_gender: PlayerGender::May,
@@ -1088,6 +1114,8 @@ impl WorldState {
             title_intro_frames: 0,
             player_name: "CASEY".to_owned(),
             name_cursor: 0,
+            naming_target: NamingTarget::Player,
+            starter_nickname_entry: String::new(),
             player_gender: PlayerGender::May,
             gender_selection_touched: false,
             gender_transition: None,
@@ -1195,6 +1223,8 @@ impl WorldState {
             title_intro_frames: 0,
             player_name: "CASEY".to_owned(),
             name_cursor: 0,
+            naming_target: NamingTarget::Player,
+            starter_nickname_entry: String::new(),
             player_gender: PlayerGender::May,
             gender_selection_touched: false,
             gender_transition: None,
@@ -1331,6 +1361,8 @@ impl WorldState {
             title_intro_frames: 0,
             player_name: "CASEY".to_owned(),
             name_cursor: 0,
+            naming_target: NamingTarget::Player,
+            starter_nickname_entry: String::new(),
             player_gender: PlayerGender::May,
             gender_selection_touched: false,
             gender_transition: None,
@@ -3218,14 +3250,13 @@ impl WorldState {
         party.status_move_pp = profile.status_move.pp;
     }
 
-    /// The starter-nickname screen has not yet been ported, so the compact
-    /// route follows that source menu's NO branch into `GoSeeRival`. Unlike
-    /// the previous linear approximation, the following two YES/NO menus
-    /// retain their authored accept/decline behavior and gate Route 103.
+    /// Birch's Lab uses three source `MSGBOX_YESNO` branches: nickname,
+    /// `GoSeeRival`, and the decline loop. Each stays input-owned so an
+    /// ordinary dialogue advance cannot skip Route 103 permission.
     pub fn starter_lab_choice_active(&self) -> bool {
         self.phase == StoryPhase::StarterLab
             && self.dialogue.is_some()
-            && matches!(self.title_intro_step, 1 | 3)
+            && matches!(self.title_intro_step, 1 | 3 | 5)
     }
 
     pub fn move_starter_lab_choice(&mut self) {
@@ -3240,28 +3271,72 @@ impl WorldState {
         }
         self.starter_lab_choice_yes = yes;
         match self.title_intro_step {
-            // `LittlerootTown_ProfessorBirchsLab_EventScript_GoSeeRival`.
+            // `LittlerootTown_ProfessorBirchsLab_EventScript_NicknameStarter`.
             1 if yes => {
-                self.title_intro_step = 2;
-                self.dialogue = Some(starter_lab_agree_to_see_rival_text(self.player_gender));
+                self.begin_starter_nickname_entry();
             }
             1 => {
                 self.title_intro_step = 3;
                 self.starter_lab_choice_yes = true;
-                self.dialogue = Some(starter_lab_decline_seeing_rival_text());
+                self.dialogue = Some(starter_lab_go_see_rival_text(self.player_gender, &self.player_name));
             }
+            // `LittlerootTown_ProfessorBirchsLab_EventScript_GoSeeRival`.
             // `DeclineSeeingRival` loops its NO branch back to its own
             // YES/NO message and reaches the common agreement path on YES.
             3 if yes => {
-                self.title_intro_step = 2;
+                self.title_intro_step = 4;
                 self.dialogue = Some(starter_lab_agree_to_see_rival_text(self.player_gender));
             }
             3 => {
+                self.title_intro_step = 5;
+                self.dialogue = Some(starter_lab_decline_seeing_rival_text());
+            }
+            5 if yes => {
+                self.title_intro_step = 4;
+                self.dialogue = Some(starter_lab_agree_to_see_rival_text(self.player_gender));
+            }
+            5 => {
                 self.starter_lab_choice_yes = true;
                 self.dialogue = Some(starter_lab_decline_seeing_rival_text());
             }
             _ => unreachable!("only source Lab choice stages are interactive"),
         }
+    }
+
+    fn begin_starter_nickname_entry(&mut self) {
+        // `Common_EventScript_NameReceivedPartyMon` fades into
+        // `NAMING_SCREEN_NICKNAME`; its input starts blank even though the
+        // party mon still owns the species-name default.
+        self.phase = StoryPhase::NameEntry;
+        self.naming_target = NamingTarget::Starter;
+        self.starter_nickname_entry.clear();
+        self.name_cursor = 0;
+        self.name_entry_touched = false;
+        self.name_entry_ready_frames = 0;
+        self.name_entry_lowercase = false;
+        self.name_confirm_transition_frames = None;
+        self.title_intro_step = 2;
+        self.dialogue = None;
+    }
+
+    fn finish_starter_nickname_entry(&mut self) {
+        // `SaveInputText` leaves the mon's existing species-name nickname in
+        // place when the player confirms a blank keyboard buffer.
+        let nickname = self.starter_nickname_entry.clone();
+        if nickname.chars().any(|character| !character.is_whitespace()) {
+            self.ensure_starter_party();
+            self.starter_party
+                .as_mut()
+                .expect("starter party exists when naming the starter")
+                .nickname = Some(nickname);
+        }
+        self.starter_nickname_entry.clear();
+        self.naming_target = NamingTarget::Player;
+        self.name_confirm_transition_frames = None;
+        self.phase = StoryPhase::StarterLab;
+        self.title_intro_step = 3;
+        self.starter_lab_choice_yes = true;
+        self.dialogue = Some(starter_lab_go_see_rival_text(self.player_gender, &self.player_name));
     }
 
     pub fn choose_starter(&mut self, starter: StarterSpecies) {
@@ -3799,9 +3874,46 @@ impl WorldState {
     pub fn confirm_name_prompt(&mut self) {
         if self.phase != StoryPhase::NamePrompt { return; }
         self.phase = StoryPhase::NameEntry;
+        self.naming_target = NamingTarget::Player;
         self.dialogue = None;
         self.name_entry_ready_frames = 0;
         self.name_entry_lowercase = false;
+    }
+
+    pub fn is_player_name_entry(&self) -> bool {
+        self.phase == StoryPhase::NameEntry && self.naming_target == NamingTarget::Player
+    }
+
+    pub fn is_starter_nickname_entry(&self) -> bool {
+        self.phase == StoryPhase::NameEntry && self.naming_target == NamingTarget::Starter
+    }
+
+    pub fn name_entry_text(&self) -> &str {
+        match self.naming_target {
+            NamingTarget::Player => &self.player_name,
+            NamingTarget::Starter => &self.starter_nickname_entry,
+        }
+    }
+
+    fn name_entry_text_mut(&mut self) -> &mut String {
+        match self.naming_target {
+            NamingTarget::Player => &mut self.player_name,
+            NamingTarget::Starter => &mut self.starter_nickname_entry,
+        }
+    }
+
+    fn name_entry_max_chars(&self) -> usize {
+        match self.naming_target {
+            NamingTarget::Player => 7,
+            // `POKEMON_NAME_LENGTH` for `NAMING_SCREEN_NICKNAME`.
+            NamingTarget::Starter => 10,
+        }
+    }
+
+    fn append_name_entry_character(&mut self, character: char) {
+        if self.name_entry_text().chars().count() < self.name_entry_max_chars() {
+            self.name_entry_text_mut().push(character);
+        }
     }
 
     /// The source leaves the name grid visually present but non-interactive for about a
@@ -3819,13 +3931,12 @@ impl WorldState {
         if self.phase != StoryPhase::NameEntry { return; }
         self.name_entry_touched = true;
         match self.name_cursor {
-            0..=25 if self.player_name.chars().count() < 7 => {
+            0..=25 => {
                 let base = if self.name_entry_lowercase { b'a' } else { b'A' };
-                self.player_name.push((base + self.name_cursor) as char);
+                self.append_name_entry_character((base + self.name_cursor) as char);
             }
-            26 if self.player_name.chars().count() < 7 => self.player_name.push('?'),
-            27 if self.player_name.chars().count() < 7 => self.player_name.push('.'),
-            0..=27 => {},
+            26 => self.append_name_entry_character('?'),
+            27 => self.append_name_entry_character('.'),
             28 => self.name_entry_lowercase = !self.name_entry_lowercase,
             29 => self.delete_name_character(),
             30 => {}, // The source's B-button help cell does not alter the name.
@@ -3837,22 +3948,29 @@ impl WorldState {
     pub fn delete_name_character(&mut self) {
         if self.phase != StoryPhase::NameEntry { return; }
         self.name_entry_touched = true;
-        if self.player_name.is_empty() {
+        if self.name_entry_text().is_empty() && self.naming_target == NamingTarget::Player {
             self.phase = StoryPhase::GenderSelect;
-        } else {
-            self.player_name.pop();
+        } else if !self.name_entry_text().is_empty() {
+            self.name_entry_text_mut().pop();
         }
     }
 
     pub fn confirm_name(&mut self) {
-        if self.phase != StoryPhase::NameEntry || self.player_name.is_empty() { return; }
-        self.name_confirm_transition_frames = Some(1);
+        if self.phase != StoryPhase::NameEntry { return; }
+        match self.naming_target {
+            NamingTarget::Player if !self.player_name.is_empty() => {
+                self.name_confirm_transition_frames = Some(1);
+            }
+            NamingTarget::Player => {}
+            NamingTarget::Starter => self.finish_starter_nickname_entry(),
+        }
     }
 
     /// Advances the one-frame source delay between selecting the keyboard's
     /// OK cell and exposing the post-name confirmation UI. The request that
     /// crosses the boundary is consumed by the UI transition.
     pub fn advance_name_confirm_transition(&mut self, frames: u32) -> bool {
+        if self.naming_target != NamingTarget::Player { return false; }
         let Some(remaining) = self.name_confirm_transition_frames else { return false; };
         let remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         if remaining != 0 {
@@ -4183,8 +4301,8 @@ impl WorldState {
                     if self.title_intro_step == 0 {
                         self.title_intro_step = 1;
                         self.starter_lab_choice_yes = true;
-                        self.dialogue = Some(starter_lab_go_see_rival_text(self.player_gender, &self.player_name));
-                    } else if self.title_intro_step == 2 {
+                        self.dialogue = Some(starter_lab_nickname_prompt_text(self.starter));
+                    } else if self.title_intro_step == 4 {
                         self.phase = StoryPhase::StarterChosen;
                         self.title_intro_step = 0;
                         self.dialogue = None;
@@ -5170,10 +5288,15 @@ fn rival_name(player_gender: PlayerGender) -> &'static str {
     }
 }
 
+/// `LittlerootTown_ProfessorBirchsLab_Text_WhyNotGiveNicknameToMon`.
+fn starter_lab_nickname_prompt_text(starter: Option<StarterSpecies>) -> String {
+    format!(
+        "PROF. BIRCH: While you're at it, why not\ngive a nickname to that {}?",
+        starter_species_name(starter),
+    )
+}
+
 /// `LittlerootTown_ProfessorBirchsLab_Text_MightBeGoodIdeaToGoSeeRival`.
-/// The preceding nickname picker remains an explicitly separate UI gap; the
-/// compact opening takes its NO path before presenting this real permission
-/// prompt.
 fn starter_lab_go_see_rival_text(player_gender: PlayerGender, player_name: &str) -> String {
     let rival = rival_name(player_gender);
     format!(
