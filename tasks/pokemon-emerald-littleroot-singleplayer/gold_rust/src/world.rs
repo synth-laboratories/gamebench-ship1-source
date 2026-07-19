@@ -2492,8 +2492,11 @@ impl WorldState {
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         let route = self.oldale_mart_scene_route.unwrap_or(Facing::Up);
         let total_frames: u16 = match route {
-            Facing::Down => 144,
-            Facing::Up | Facing::Right | Facing::Left => 112,
+            // Each employee stream ends with the four-frame
+            // `walk_in_place_faster_down`; `waitmovement` holds the script
+            // until that visible turn completes.
+            Facing::Down => 148,
+            Facing::Up | Facing::Right | Facing::Left => 116,
         };
         let elapsed_before = total_frames.saturating_sub(remaining);
         let elapsed_after = total_frames.saturating_sub(next_remaining);
@@ -2535,6 +2538,19 @@ impl WorldState {
                 self.move_scripted_npc("mart_employee", MapId::OldaleTown, position, *direction);
             }
         }
+        let employee_turn_start = u16::try_from(employee_steps.len())
+            .expect("Oldale employee movement count fits")
+            * 16;
+        if elapsed_before < employee_turn_start && employee_turn_start <= elapsed_after {
+            let employee = self.npcs.iter().find(|npc| npc.id == "mart_employee")
+                .expect("Oldale Mart employee must exist during its scripted turn");
+            self.move_faster_scripted_npc(
+                "mart_employee",
+                MapId::OldaleTown,
+                employee.position.clone(),
+                Facing::Down,
+            );
+        }
         for (index, direction) in player_steps.iter().enumerate() {
             let boundary = (player_delay_steps + u16::try_from(index).expect("Oldale movement index fits") + 1) * 16;
             if elapsed_before < boundary && boundary <= elapsed_after {
@@ -2550,15 +2566,16 @@ impl WorldState {
             }
         }
         let player_motion_start = player_delay_steps * 16;
-        self.walk_direction = (elapsed_after > player_motion_start && elapsed_after < total_frames)
+        let player_motion_end = player_motion_start
+            + u16::try_from(player_steps.len()).expect("Oldale player movement count fits") * 16;
+        self.walk_direction = (elapsed_after > player_motion_start && elapsed_after < player_motion_end)
             .then(|| player_steps[((elapsed_after - player_motion_start) / 16) as usize]);
-        self.walk_progress_frames = if elapsed_after > player_motion_start && elapsed_after < total_frames {
+        self.walk_progress_frames = if elapsed_after > player_motion_start && elapsed_after < player_motion_end {
             ((elapsed_after - player_motion_start) % 16) as u8
         } else {
             0
         };
         if next_remaining == 0 {
-            self.move_fast_scripted_npc("mart_employee", MapId::OldaleTown, TilePosition { x: 13, y: 7 }, Facing::Down);
             self.facing = Facing::Up;
             self.walk_direction = None;
             self.walk_progress_frames = 0;
@@ -4857,16 +4874,18 @@ impl WorldState {
                         return;
                     }
                     // The invitation closes before source movement begins.
-                    // South contains four delay-16 units plus five steps;
-                    // north/east use seven ordinary steps.
+                    // South contains nine normal employee walks; north/east
+                    // use seven. Each source stream then ends in a
+                    // four-frame `walk_in_place_faster_down` before its
+                    // shared `waitmovement` releases the next dialogue.
                     self.oldale_mart_scene_stage = 2;
                     self.oldale_mart_dialogue_page = 0;
                     self.oldale_mart_scene_frames = Some(match self.oldale_mart_scene_route {
-                        Some(Facing::Down) => 144,
-                        Some(Facing::Up | Facing::Right) => 112,
+                        Some(Facing::Down) => 148,
+                        Some(Facing::Up | Facing::Right) => 116,
                         // The source has no west-facing branch, but retain a
                         // deterministic compatible path for imported state.
-                        Some(Facing::Left) | None => 112,
+                        Some(Facing::Left) | None => 116,
                     });
                     return;
                 }
