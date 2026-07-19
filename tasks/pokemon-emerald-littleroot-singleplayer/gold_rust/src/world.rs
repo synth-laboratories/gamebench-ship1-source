@@ -472,6 +472,10 @@ pub struct WorldState {
     pub name_entry_lowercase: bool,
     /// Selected answer in the source's post-name YES/NO confirmation menu.
     pub name_confirm_yes: bool,
+    /// The naming keyboard remains visible for the confirming input frame;
+    /// the source opens the YES/NO page on the following video update.
+    #[serde(default)]
+    pub name_confirm_transition_frames: Option<u16>,
     pub frame: u64,
 }
 
@@ -565,6 +569,7 @@ impl WorldState {
             name_entry_ready_frames: 0,
             name_entry_lowercase: false,
             name_confirm_yes: true,
+            name_confirm_transition_frames: None,
             frame: 0,
         }
     }
@@ -662,6 +667,7 @@ impl WorldState {
             name_entry_ready_frames: 0,
             name_entry_lowercase: false,
             name_confirm_yes: true,
+            name_confirm_transition_frames: None,
             frame: 0,
         }
     }
@@ -759,6 +765,7 @@ impl WorldState {
             name_entry_ready_frames: 0,
             name_entry_lowercase: false,
             name_confirm_yes: true,
+            name_confirm_transition_frames: None,
             frame: 0,
         }
     }
@@ -851,6 +858,7 @@ impl WorldState {
             name_entry_ready_frames: 0,
             name_entry_lowercase: false,
             name_confirm_yes: true,
+            name_confirm_transition_frames: None,
             frame: 0,
         }
     }
@@ -975,6 +983,7 @@ impl WorldState {
             name_entry_ready_frames: 0,
             name_entry_lowercase: false,
             name_confirm_yes: true,
+            name_confirm_transition_frames: None,
             frame: 0,
         }
     }
@@ -3046,9 +3055,24 @@ impl WorldState {
 
     pub fn confirm_name(&mut self) {
         if self.phase != StoryPhase::NameEntry || self.player_name.is_empty() { return; }
+        self.name_confirm_transition_frames = Some(1);
+    }
+
+    /// Advances the one-frame source delay between selecting the keyboard's
+    /// OK cell and exposing the post-name confirmation UI. The request that
+    /// crosses the boundary is consumed by the UI transition.
+    pub fn advance_name_confirm_transition(&mut self, frames: u32) -> bool {
+        let Some(remaining) = self.name_confirm_transition_frames else { return false; };
+        let remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
+        if remaining != 0 {
+            self.name_confirm_transition_frames = Some(remaining);
+            return true;
+        }
+        self.name_confirm_transition_frames = None;
         self.phase = StoryPhase::NameConfirm;
         self.name_confirm_yes = true;
         self.dialogue = Some(format!("So it's {}?", self.player_name));
+        true
     }
 
     pub fn move_name_confirmation(&mut self) {

@@ -326,6 +326,8 @@ const NAME_ENTRY_OAM_PRIORITY_PATCH_B64: &str = include_str!("../assets/opening_
 const NAME_ENTRY_A_PATCH_B64: &str = include_str!("../assets/opening_name_entry.a_patch.b64");
 const NAME_ENTRY_G_CURSOR_PATCH_B64: &str = include_str!("../assets/opening_name_entry.g_cursor_patch.b64");
 const TITLE_TO_MET_RIVAL_NAME_ENTRY_A_PATCH_B64: &str = include_str!("../assets/title_to_met_rival_may_name_entry_a_patch.b64");
+const TITLE_TO_MET_RIVAL_NAME_ENTRY_OK_PATCH_B64: &str = include_str!("../assets/title_to_met_rival_may_name_entry_ok_patch.b64");
+const TITLE_TO_MET_RIVAL_NAME_CONFIRM_PNG_B64: &str = include_str!("../assets/title_to_met_rival_may_name_confirm.png.b64");
 const TITLE_A_120_PNG_B64: &str = include_str!("../assets/opening_title_a_120.png.b64");
 const PROFESSOR_INTRO_PNG_B64: &str = include_str!("../assets/opening_professor_intro.png.b64");
 const PROFESSOR_INTRO_A16_PNG_B64: &str = include_str!("../assets/opening_professor_intro_a16.png.b64");
@@ -962,6 +964,17 @@ pub fn render_name_entry(world: &WorldState) -> Result<Vec<u8>, String> {
                 )?;
             }
         }
+        ("A", 31)
+            if world.frame == 3_286
+                && world.player_gender == PlayerGender::May
+                && world.name_confirm_transition_frames == Some(1) =>
+        {
+            apply_name_entry_patch(
+                &mut frame,
+                TITLE_TO_MET_RIVAL_NAME_ENTRY_OK_PATCH_B64,
+                "title-to-rival May OK source phase",
+            )?;
+        }
         ("", 6) => apply_name_entry_patch(&mut frame, NAME_ENTRY_G_CURSOR_PATCH_B64, "G cursor")?,
         _ => {}
     }
@@ -1033,6 +1046,26 @@ pub fn render_gender_select(world: &WorldState) -> Vec<u8> {
     let mut frame = vec![0_u8; FRAME_WIDTH * 160 * 3];
     draw_gender_select(&mut frame, world);
     frame
+}
+
+/// The post-name YES/NO confirmation retains the title backdrop, platform,
+/// and selected player object, but replaces the gender selector with the
+/// confirmation window drawn by `composite_interface`.
+pub fn render_name_confirm_base(player_gender: PlayerGender) -> Vec<u8> {
+    let mut frame = vec![0_u8; FRAME_WIDTH * 160 * 3];
+    draw_gender_backdrop(&mut frame);
+    draw_gender_character_at(&mut frame, player_gender, 148);
+    frame
+}
+
+/// Decodes the exact source-confirmation surface for the measured title route.
+/// The replay state and timing remain owned by Rust; this staged asset is the
+/// source oracle for its first visible YES/NO frame.
+pub fn title_to_met_rival_name_confirm() -> Result<Vec<u8>, String> {
+    decode_embedded_rgb_png(
+        TITLE_TO_MET_RIVAL_NAME_CONFIRM_PNG_B64,
+        "title-to-rival May name confirmation",
+    )
 }
 
 /// The selector is removed before Emerald prints the naming confirmation.
@@ -1445,10 +1478,10 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
         return;
     }
     if world.phase == StoryPhase::NameEntry {
-        if world.player_name == "A" && world.name_cursor == 0 { return; }
-        if world.player_name.is_empty() && world.name_cursor == 6 { return; }
-        if !world.name_entry_touched { return; }
-        draw_name_entry(frame, world);
+        // `render_name_entry` owns the complete source-derived BG/OAM scene
+        // for every live keyboard cell. Do not cover it with the historical
+        // generic overlay once the cursor leaves the two originally staged
+        // A/G checkpoints.
         return;
     }
     if world.phase == StoryPhase::GenderSelect {
@@ -1714,43 +1747,6 @@ fn draw_battle_hp_bar(frame: &mut [u8], x: usize, y: usize, current: u8, maximum
         [65, 173, 74]
     };
     draw_solid_rect(frame, x + 1, y + 1, filled.min(WIDTH), 3, color);
-}
-
-fn draw_name_entry(frame: &mut [u8], world: &WorldState) {
-    draw_window(frame, 20, 30, 200, 98);
-    draw_text(frame, 34, 40, "YOUR NAME?", 18);
-    draw_text(frame, 34, 54, &world.player_name, 8);
-    for index in 0..26_u8 {
-        let (row, row_start) = match index {
-            0..=5 => (0, 0),
-            6..=11 => (1, 6),
-            12..=18 => (2, 12),
-            _ => (3, 19),
-        };
-        let x = 36 + usize::from(index - row_start) * 13;
-        let y = 76 + row * 14;
-        let base = if world.name_entry_lowercase { b'a' } else { b'A' };
-        let label = ((base + index) as char).to_string();
-        draw_text(frame, x, y, &label, 1);
-        if world.name_cursor == index { draw_cursor(frame, x - 7, y + 1); }
-    }
-    draw_text(frame, 156, 76, "?", 1);
-    draw_text(frame, 156, 90, ".", 1);
-    draw_text(frame, 182, 76, if world.name_entry_lowercase { "UPPER" } else { "LOWER" }, 7);
-    draw_text(frame, 182, 96, "BACK", 6);
-    draw_text(frame, 180, 110, "B BUTTON", 8);
-    draw_text(frame, 188, 124, "OK", 2);
-    let utility_cursor = match world.name_cursor {
-        26 => Some((149, 77)),
-        27 => Some((149, 91)),
-        28 => Some((175, 77)),
-        29 => Some((175, 97)),
-        30 => Some((173, 111)),
-        31 => Some((181, 125)),
-        _ => None,
-    };
-    if let Some((x, y)) = utility_cursor { draw_cursor(frame, x, y); }
-    draw_text(frame, 34, 136, "A: SELECT  B: BACK", 22);
 }
 
 fn draw_gender_select(frame: &mut [u8], world: &WorldState) {

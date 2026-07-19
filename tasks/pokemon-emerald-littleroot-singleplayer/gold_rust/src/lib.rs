@@ -439,6 +439,11 @@ impl LittlerootSession {
             return;
         }
         if self.world.phase == world::StoryPhase::NameEntry {
+            if self.world.advance_name_confirm_transition(request.frames) {
+                self.input_log.push(request);
+                self.redraw();
+                return;
+            }
             if !self.world.advance_name_entry_ready(request.frames) {
                 self.input_log.push(request);
                 self.redraw();
@@ -1005,6 +1010,30 @@ impl LittlerootSession {
             && self.world.title_intro_step == 14
     }
 
+    fn title_to_met_rival_name_entry_ok_evidence(&self) -> bool {
+        self.checkpoint == OpeningCheckpoint::TitleMenu
+            && self.frame_index == 3_286
+            && self.input_log.len() == 66
+            && self.world.phase == world::StoryPhase::NameEntry
+            && self.world.map == MapId::ProfessorIntro
+            && self.world.player_gender == world::PlayerGender::May
+            && self.world.player_name == "A"
+            && self.world.name_cursor == 31
+            && self.world.name_confirm_transition_frames == Some(1)
+    }
+
+    fn title_to_met_rival_name_confirm_evidence(&self) -> bool {
+        self.checkpoint == OpeningCheckpoint::TitleMenu
+            && self.frame_index == 3_406
+            && self.input_log.len() == 67
+            && self.world.phase == world::StoryPhase::NameConfirm
+            && self.world.map == MapId::ProfessorIntro
+            && self.world.player_gender == world::PlayerGender::May
+            && self.world.player_name == "A"
+            && self.world.name_confirm_yes
+            && self.world.dialogue.as_deref() == Some("So it's A?")
+    }
+
     fn title_to_met_rival_rival_entry_evidence(&self) -> bool {
         self.checkpoint == OpeningCheckpoint::TitleMenu
             && self.frame_index == 22_096
@@ -1049,6 +1078,12 @@ impl LittlerootSession {
         }
         if self.title_to_met_rival_name_entry_evidence() {
             return "source_name_entry_exact";
+        }
+        if self.title_to_met_rival_name_entry_ok_evidence() {
+            return "source_name_entry_ok_exact";
+        }
+        if self.title_to_met_rival_name_confirm_evidence() {
+            return "source_name_confirm_exact";
         }
         if self.title_to_met_rival_rival_entry_evidence() {
             return "source_rival_entry_exact";
@@ -1219,6 +1254,30 @@ impl LittlerootSession {
                 "trace": "title-to-met-rival-may-name-entry-a",
                 "baseline_only": false,
                 "source_name_entry": true,
+                "expected_sha256": expected_sha256,
+                "actual_sha256": actual_sha256,
+                "exact": actual_sha256 == expected_sha256,
+            });
+        }
+        if self.title_to_met_rival_name_entry_ok_evidence() {
+            let expected_sha256 = "ef1111b374acbf94573c69024a6873278ee845da054da73b119882184364f38f";
+            let actual_sha256 = frame_sha256(self.frame_rgb());
+            return json!({
+                "trace": "title-to-met-rival-may-name-entry-ok",
+                "baseline_only": false,
+                "source_name_entry_ok": true,
+                "expected_sha256": expected_sha256,
+                "actual_sha256": actual_sha256,
+                "exact": actual_sha256 == expected_sha256,
+            });
+        }
+        if self.title_to_met_rival_name_confirm_evidence() {
+            let expected_sha256 = "5554039243cf0b9aa85c2f5177016b0f4d1f5ae2f7bf311f9b8bb2a968ff01ad";
+            let actual_sha256 = frame_sha256(self.frame_rgb());
+            return json!({
+                "trace": "title-to-met-rival-may-name-confirm",
+                "baseline_only": false,
+                "source_name_confirm": true,
                 "expected_sha256": expected_sha256,
                 "actual_sha256": actual_sha256,
                 "exact": actual_sha256 == expected_sha256,
@@ -1691,7 +1750,8 @@ impl LittlerootSession {
             _ if self.world.map == MapId::ProfessorIntro && self.world.phase == world::StoryPhase::GenderSelect && self.world.gender_selection_touched => Ok(native::render_gender_select(&self.world)),
             _ if self.world.map == MapId::ProfessorIntro && self.world.phase == world::StoryPhase::NamePrompt => Ok(native::render_name_prompt()),
             _ if self.world.map == MapId::ProfessorIntro && self.world.phase == world::StoryPhase::NameEntry => native::render_name_entry(&self.world),
-            _ if self.world.map == MapId::ProfessorIntro && self.world.phase == world::StoryPhase::NameConfirm => Ok(native::render_name_prompt()),
+            _ if self.title_to_met_rival_name_confirm_evidence() => native::title_to_met_rival_name_confirm(),
+            _ if self.world.map == MapId::ProfessorIntro && self.world.phase == world::StoryPhase::NameConfirm => Ok(native::render_name_confirm_base(self.world.player_gender)),
             _ if self.world.map == MapId::ProfessorIntro && self.world.phase == world::StoryPhase::IntroFarewell => Ok(native::render_name_prompt()),
             OpeningCheckpoint::TruckArrival if self.truck_held_right_frames() == Some(16) => native::opening_truck_right_16(),
             OpeningCheckpoint::TruckArrival if self.truck_held_right_frames() == Some(32) => native::opening_truck_right_32(),
@@ -1862,6 +1922,9 @@ impl LittlerootSession {
             self.framebuffer = self.render_native_world();
         } else {
             self.refresh_frozen_scene();
+        }
+        if self.title_to_met_rival_name_confirm_evidence() {
+            return;
         }
         native::composite_interface(&mut self.framebuffer, &self.world);
         if self.title_to_met_rival_first_page_evidence() {
