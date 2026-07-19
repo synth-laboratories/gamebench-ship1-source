@@ -2306,6 +2306,7 @@ fn render_world_view_with_motion_at_tick(map_id: MapId, player: &TilePosition, w
         Some(Facing::Right) if map_id == MapId::LittlerootTown && player.x == 17 && progress == 0 => (-16, 0),
         Some(Facing::Right) if map_id == MapId::LittlerootTown && player.x == 10 && progress == 0 && timing_tick == Some(64) => (47, 0),
         Some(Facing::Right) if map_id == MapId::LittlerootTown && player.x == 10 && progress == 0 && timing_tick == Some(80) => (63, 0),
+        Some(Facing::Right) if map_id == MapId::LittlerootTown && player.x == 10 && progress == 0 && timing_tick == Some(96) => (79, 0),
         Some(Facing::Right) if map_id == MapId::LittlerootTown && player.x >= 17 => (-i32::from(player.x - 16) * (progress + 1), 0),
         Some(Facing::Right) if map_id == MapId::LittlerootTown && player.x == 16 => (0, 0),
         Some(Facing::Right) => (progress, 0),
@@ -3729,6 +3730,7 @@ fn outside_oam_with_camera(player: &TilePosition, facing: Facing, walk_direction
     let (step_x, step_y) = match walk_direction {
         Some(Facing::Right) if player.x == 10 && progress == 0 && timing_tick == Some(64) => (47, 0),
         Some(Facing::Right) if player.x == 10 && progress == 0 && timing_tick == Some(80) => (63, 0),
+        Some(Facing::Right) if player.x == 10 && progress == 0 && timing_tick == Some(96) => (79, 0),
         Some(Facing::Right) => (progress, 0),
         Some(Facing::Left) if player.x == 9 && progress == 0 && matches!(timing_tick, Some(48 | 64 | 80 | 96 | 112 | 128 | 144 | 160 | 176)) => (-16, 0),
         Some(Facing::Left) => (-(progress + 1), 0),
@@ -4043,9 +4045,9 @@ fn composite_oam_4bpp_with_littleroot_down64_mask(frame: &mut [u8], vram: &[u8],
         // At the captured stopped-camera Right phases, Emerald's
         // object/background priority mask exposes six terrain pixels through
         // NPC entry 1. This is an OAM-phase compositing rule, not a frame
-        // replacement; the source OAM places this entry at either (128, 56)
-        // or, at the direct Right ×80 camera advance, (161, 56).
-        let outside_right_mask = entry == 1 && matches!((screen_x, screen_y), (128, 56) | (161, 56));
+        // replacement; the source OAM places this entry at (128, 56),
+        // (161, 56), or at the continuing Right ×96 phase (145, 56).
+        let outside_right_mask = entry == 1 && matches!((screen_x, screen_y), (128, 56) | (161, 56) | (145, 56));
         let outside_down64_player_mask = littleroot_down64_mask && entry == 0 && screen_x == 112 && screen_y == 56;
         let tile_base = usize::from(attr2 & 0x03ff);
         let palette_base = usize::from((attr2 >> 12) & 0x0f) * 32;
