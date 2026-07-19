@@ -373,6 +373,8 @@ const LITTLEROOT_RIGHT48_FLOWER_A_B64: &str = include_str!("../assets/littleroot
 const LITTLEROOT_RIGHT48_FLOWER_B_B64: &str = include_str!("../assets/littleroot_right48_flower_b.rgb.b64");
 const LITTLEROOT_RIGHT48_TREE_B64: &str = include_str!("../assets/littleroot_right48_tree.rgb.b64");
 const LITTLEROOT_RIGHT64_TREE_B64: &str = include_str!("../assets/littleroot_right64_tree.rgb.b64");
+const LITTLEROOT_UP64_PLAYER_OBJ_B64: &str = include_str!("../assets/littleroot_up64_player.obj.b64");
+const LITTLEROOT_DOWN64_PLAYER_OBJ_B64: &str = include_str!("../assets/littleroot_down64_player.obj.b64");
 const LITTLEROOT_RIGHT112_OBJECT_B64: &str = include_str!("../assets/littleroot_right112_object.rgb.b64");
 const LITTLEROOT_RIGHT128_REGION_B64: &str = include_str!("../assets/littleroot_right128_region.rgb.b64");
 const LITTLEROOT_RIGHT144_REGION_B64: &str = include_str!("../assets/littleroot_right144_region.rgb.b64");
@@ -2286,8 +2288,18 @@ pub fn render_littleroot_with_idle_objects(player: &TilePosition, facing: Facing
 }
 
 pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing: Facing, walk_direction: Option<Facing>, walk_progress_frames: u8, timing_tick: Option<u64>) -> Result<Vec<u8>, String> {
-    let vram = outside_player_vram(facing, walk_progress_frames)?;
-    let oam = outside_oam_with_camera(player, walk_direction, walk_progress_frames, timing_tick);
+    let mut vram = outside_player_vram(facing, walk_progress_frames)?;
+    let timed_player_tile = match (player, walk_direction, walk_progress_frames, timing_tick) {
+        (TilePosition { x: 9, y: 13 }, Some(Facing::Up), 0, Some(64)) => Some(LITTLEROOT_UP64_PLAYER_OBJ_B64),
+        (TilePosition { x: 9, y: 15 }, Some(Facing::Down), 0, Some(64)) => Some(LITTLEROOT_DOWN64_PLAYER_OBJ_B64),
+        _ => None,
+    };
+    if let Some(encoded) = timed_player_tile {
+        let tile = decode_base64(encoded)?;
+        if tile.len() != 256 { return Err("invalid Little Root timed player OBJ tile".to_owned()); }
+        vram[..tile.len()].copy_from_slice(&tile);
+    }
+    let oam = outside_oam_with_camera(player, facing, walk_direction, walk_progress_frames, timing_tick);
     let mut frame = render_world_view_with_motion_at_tick(MapId::LittlerootTown, player, walk_direction, walk_progress_frames, timing_tick)?;
     composite_oam_4bpp(&mut frame, &vram, OUTSIDE_IDLE_OBJ_PALETTE, &oam)?;
     // The first-stride renderer already applies this source flower phase. On
@@ -2305,7 +2317,7 @@ pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing
 pub fn render_littleroot_held_right_188(player: &TilePosition) -> Result<Vec<u8>, String> {
     let mut vram = outside_player_vram(Facing::Right, 0)?;
     apply_obj_vram_byte_patch(&mut vram, LITTLEROOT_NOOP_192_OBJ_VRAM_PATCH_B64, "Little Root held-right 188")?;
-    let mut oam = outside_oam_with_camera(player, Some(Facing::Right), 0, None);
+    let mut oam = outside_oam_with_camera(player, Facing::Right, Some(Facing::Right), 0, None);
     oam[8..16].copy_from_slice(&[0x38, 0x80, 0x80, 0x80, 0x24, 0x28, 0, 0]);
     oam[16..24].copy_from_slice(&[0x05, 0x80, 0x60, 0x80, 0x1c, 0x28, 0, 0]);
     let mut frame = render_world_view_with_motion_at_tick(MapId::LittlerootTown, player, Some(Facing::Right), 0, Some(188))?;
@@ -3058,7 +3070,7 @@ fn restore_littleroot_right_192_bg_state() -> Result<(Vec<u8>, Vec<u8>), String>
 pub fn render_littleroot_ambient_128(player: &TilePosition, facing: Facing) -> Result<Vec<u8>, String> {
     let mut vram = outside_player_vram(facing, 0)?;
     apply_obj_vram_byte_patch(&mut vram, LITTLEROOT_NOOP_128_OBJ_VRAM_PATCH_B64, "Little Root ambient")?;
-    let mut oam = outside_oam_with_camera(player, None, 0, None);
+    let mut oam = outside_oam_with_camera(player, facing, None, 0, None);
     oam[18..20].copy_from_slice(&0x90d0_u16.to_le_bytes());
     render_world_view_with_objects(MapId::LittlerootTown, player, None, 0, &vram, OUTSIDE_IDLE_OBJ_PALETTE, &oam)
 }
@@ -3066,7 +3078,7 @@ pub fn render_littleroot_ambient_128(player: &TilePosition, facing: Facing) -> R
 pub fn render_littleroot_ambient_192(player: &TilePosition, facing: Facing) -> Result<Vec<u8>, String> {
     let mut vram = outside_player_vram(facing, 0)?;
     apply_obj_vram_byte_patch(&mut vram, LITTLEROOT_NOOP_192_OBJ_VRAM_PATCH_B64, "Little Root later ambient")?;
-    let mut oam = outside_oam_with_camera(player, None, 0, None);
+    let mut oam = outside_oam_with_camera(player, facing, None, 0, None);
     oam[10..12].copy_from_slice(&0x80f0_u16.to_le_bytes());
     oam[16..18].copy_from_slice(&0x8001_u16.to_le_bytes());
     oam[18..20].copy_from_slice(&0x80d0_u16.to_le_bytes());
@@ -3181,7 +3193,7 @@ pub fn render_littleroot_start_walk(player: &TilePosition, facing: Facing) -> Re
         Facing::Left => (Some(Facing::Left), 7),
         Facing::Right => (Some(Facing::Right), 15),
     };
-    let mut oam = outside_oam_with_camera(player, camera_direction, camera_progress, None);
+    let mut oam = outside_oam_with_camera(player, Facing::Right, camera_direction, camera_progress, None);
     let (offset_x, offset_y) = match facing {
         Facing::Up => (0_i32, 0_i32),
         Facing::Down => (0, 0),
@@ -3455,7 +3467,7 @@ fn composite_gba_text_bg(
 
 /// The rival-exterior idle OBJ snapshot contains two nearby NPC entries.
 /// Keep those source sprites in world space as the camera follows the player.
-fn outside_oam_with_camera(player: &TilePosition, walk_direction: Option<Facing>, walk_progress_frames: u8, timing_tick: Option<u64>) -> Vec<u8> {
+fn outside_oam_with_camera(player: &TilePosition, facing: Facing, walk_direction: Option<Facing>, walk_progress_frames: u8, timing_tick: Option<u64>) -> Vec<u8> {
     let mut oam = OUTSIDE_IDLE_OAM.to_vec();
     let progress = i32::from(walk_progress_frames.min(16));
     let (step_x, step_y) = match walk_direction {
@@ -3480,6 +3492,16 @@ fn outside_oam_with_camera(player: &TilePosition, walk_direction: Option<Facing>
         oam[offset..offset + 2].copy_from_slice(&attr0.to_le_bytes());
         oam[offset + 2..offset + 4].copy_from_slice(&attr1.to_le_bytes());
     }
+    // The idle OAM snapshot starts on the source's east-facing player. Keep
+    // its position/shape, but derive the player flip bit from the live facing
+    // so west and vertical source strides do not inherit the right pose.
+    let mut player_attr1 = u16::from_le_bytes([oam[2], oam[3]]);
+    if facing == Facing::Right {
+        player_attr1 |= 1 << 12;
+    } else {
+        player_attr1 &= !(1 << 12);
+    }
+    oam[2..4].copy_from_slice(&player_attr1.to_le_bytes());
     oam
 }
 
