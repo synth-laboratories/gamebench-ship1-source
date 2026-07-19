@@ -304,6 +304,11 @@ impl LittlerootSession {
             self.redraw();
             return;
         }
+        if self.world.advance_tv_broadcast_approach(request.frames) {
+            self.input_log.push(request);
+            self.redraw();
+            return;
+        }
         if self.world.advance_truck_arrival(request.frames) {
             self.input_log.push(request);
             self.redraw();
@@ -610,6 +615,10 @@ impl LittlerootSession {
                     // Closing Mom's first move-in page starts the source's
                     // two serialized turns in this same A-input window.
                     self.world.advance_new_home_orientation(request.frames);
+                    // Closing Mom's first Gym-report page starts the source
+                    // `PlayerApproachTVForGym*` stream in the same held-A
+                    // input window before its `waitmovement` lock continues.
+                    self.world.advance_tv_broadcast_approach(request.frames);
                     // The wall-clock background event opens its first source
                     // message during this A sample window. Its printer must
                     // consume that same request, just like ordinary object
@@ -637,7 +646,6 @@ impl LittlerootSession {
                 if request.frames > 0 {
                     self.world.stop_walking();
                 }
-                self.world.advance_tv_broadcast_choreography(request.frames);
                 let was_title_intro = self.world.phase == world::StoryPhase::TitleIntro;
                 self.world.advance_title_transition(request.frames);
                 if was_title_intro {
