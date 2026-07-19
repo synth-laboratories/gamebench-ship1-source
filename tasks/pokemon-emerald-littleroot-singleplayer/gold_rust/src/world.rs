@@ -3394,15 +3394,21 @@ impl WorldState {
             }
             return;
         }
+        let source_rival_running_shoes = self.player == (TilePosition { x: 12, y: 5 });
         if self.map == MapId::LittlerootTown
             && self.phase == StoryPhase::PokedexReceived
-            && ((self.player.y == 9 && (8..=11).contains(&self.player.x))
+            && (source_rival_running_shoes
+                || (self.player.y == 9 && (8..=11).contains(&self.player.x))
                 || (self.player.y == 2 && (10..=11).contains(&self.player.x)))
             && self.dialogue.is_none() {
             self.pending_running_shoes = true;
             self.running_shoes_item_shown = false;
             self.running_shoes_stage = 0;
             let trigger = match (self.player.x, self.player.y) {
+                // The frozen rival-exterior source state enters the same
+                // running-shoes script through its field-owner coordinate.
+                // Its Mom approach uses the first scripted branch.
+                (12, 5) => 0,
                 (10, 2) => 0,
                 (11, 2) => 1,
                 (10, 9) => 2,
@@ -3436,7 +3442,7 @@ impl WorldState {
                     },
                 });
             }
-            self.dialogue = Some("MOM: Wait, {PLAYER}!".to_owned());
+            self.dialogue = Some(format!("MOM: Wait, {}!", self.player_name));
         }
     }
 
