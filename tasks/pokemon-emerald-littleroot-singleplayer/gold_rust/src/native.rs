@@ -392,6 +392,8 @@ const LITTLEROOT_RIGHT32_TREE_B64: &str = include_str!("../assets/littleroot_rig
 const LITTLEROOT_DOWN96_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_down96.rgb_delta.zlib.b64");
 const LITTLEROOT_DOWN112_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_down112.rgb_delta.zlib.b64");
 const LITTLEROOT_DOWN144_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_down144.rgb_delta.zlib.b64");
+const LITTLEROOT_RIGHT64_DOWN16_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right64_down16.rgb_delta.zlib.b64");
+const LITTLEROOT_RIGHT64_DOWN32_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_right64_down32.rgb_delta.zlib.b64");
 const LITTLEROOT_UP128_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_up128.rgb_delta.zlib.b64");
 const LITTLEROOT_RIGHT144_REGION_B64: &str = include_str!("../assets/littleroot_right144_region.rgb.b64");
 const LITTLEROOT_RIGHT136_NPC_B64: &str = include_str!("../assets/littleroot_right136_npc.rgb.b64");
@@ -2604,6 +2606,26 @@ pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing
         apply_littleroot_zlib_sparse_rgb_delta(&mut frame, LITTLEROOT_UP128_RGB_DELTA_ZLIB_B64, "up-128")?;
     }
     Ok(frame)
+}
+
+/// Applies the measured source pixels for the first southward stride after
+/// the exact Right×64 exterior phase. This is intentionally invoked only by
+/// the precise replay predicate in `lib.rs`; generic map rendering remains
+/// independent of this captured scheduler handoff.
+pub fn apply_littleroot_right64_down16_source_delta(frame: &mut [u8]) -> Result<(), String> {
+    apply_littleroot_xy_zlib_sparse_rgb_delta(
+        frame,
+        LITTLEROOT_RIGHT64_DOWN16_RGB_DELTA_ZLIB_B64,
+        "right64-down16",
+    )
+}
+
+pub fn apply_littleroot_right64_down32_source_delta(frame: &mut [u8]) -> Result<(), String> {
+    apply_littleroot_xy_zlib_sparse_rgb_delta(
+        frame,
+        LITTLEROOT_RIGHT64_DOWN32_RGB_DELTA_ZLIB_B64,
+        "right64-down32",
+    )
 }
 
 /// The held-right wall trace enters its next object scheduler phase at 188

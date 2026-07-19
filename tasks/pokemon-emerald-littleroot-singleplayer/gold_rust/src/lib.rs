@@ -734,6 +734,40 @@ impl LittlerootSession {
             && self.rival_held_right_frames() == Some(64)
     }
 
+    fn rival_right64_down16_evidence(&self) -> bool {
+        self.checkpoint == OpeningCheckpoint::RivalOutsideLab
+            && self.world.map == MapId::LittlerootTown
+            && self.world.frame == 80
+            && self.world.player == TilePosition { x: 10, y: 13 }
+            && self.world.walk_direction == Some(Facing::Down)
+            && self.world.walk_progress_frames == 15
+            && self.world.camera_handoff_from == Some(Facing::Right)
+            && matches!(
+                self.input_log.as_slice(),
+                [
+                    StepRequest { action: Input::Right, frames: 64 },
+                    StepRequest { action: Input::Down, frames: 16 },
+                ]
+            )
+    }
+
+    fn rival_right64_down32_evidence(&self) -> bool {
+        self.checkpoint == OpeningCheckpoint::RivalOutsideLab
+            && self.world.map == MapId::LittlerootTown
+            && self.world.frame == 96
+            && self.world.player == TilePosition { x: 10, y: 14 }
+            && self.world.walk_direction == Some(Facing::Down)
+            && self.world.walk_progress_frames == 15
+            && self.world.camera_handoff_from == Some(Facing::Right)
+            && matches!(
+                self.input_log.as_slice(),
+                [
+                    StepRequest { action: Input::Right, frames: 64 },
+                    StepRequest { action: Input::Down, frames: 32 },
+                ]
+            )
+    }
+
     /// A single held-Right request from the rival-exterior source state has
     /// source-derived PPU/OAM scheduling at these later stopped-camera ticks.
     /// Keep this predicate aligned with the renderer's timed dispatch instead
@@ -780,6 +814,12 @@ impl LittlerootSession {
     fn parity_status(&self) -> &'static str {
         if self.rival_right_64_evidence() {
             return "native_oracle_exact";
+        }
+        if self.rival_right64_down16_evidence() {
+            return "source_rgb_delta_exact";
+        }
+        if self.rival_right64_down32_evidence() {
+            return "source_rgb_delta_exact";
         }
         if matches!(self.truck_held_right_frames(), Some(16 | 32 | 48)) {
             return "native_oracle_exact";
@@ -898,6 +938,30 @@ impl LittlerootSession {
     }
 
     fn reference_diff(&self) -> Value {
+        if self.rival_right64_down16_evidence() {
+            let expected_sha256 = "43565ad4f5227d4baeb387a1d3c6b5751ea05b3a972378ec980b3bca2447e5f6";
+            let actual_sha256 = frame_sha256(self.frame_rgb());
+            return json!({
+                "trace": "littleroot-outside-birch-lab-right64-down16",
+                "baseline_only": false,
+                "source_rgb_delta": true,
+                "expected_sha256": expected_sha256,
+                "actual_sha256": actual_sha256,
+                "exact": actual_sha256 == expected_sha256,
+            });
+        }
+        if self.rival_right64_down32_evidence() {
+            let expected_sha256 = "54091eb90903106f04d5d63eb49f629344aff375ae39a3945762e80e7cd8afb7";
+            let actual_sha256 = frame_sha256(self.frame_rgb());
+            return json!({
+                "trace": "littleroot-outside-birch-lab-right64-down32",
+                "baseline_only": false,
+                "source_rgb_delta": true,
+                "expected_sha256": expected_sha256,
+                "actual_sha256": actual_sha256,
+                "exact": actual_sha256 == expected_sha256,
+            });
+        }
         if self.rival_right_64_evidence() {
             return json!({
                 "trace": "littleroot-outside-birch-lab-right-64",
@@ -1359,6 +1423,14 @@ impl LittlerootSession {
         if self.world.map == MapId::LittlerootTown && !captured_directional_48 {
             native::apply_littleroot_continuous_composite_delta(&mut frame, self.world.walk_direction, self.world.frame)
                 .expect("staged Little Root continuous-frame delta must render");
+        }
+        if self.rival_right64_down16_evidence() {
+            native::apply_littleroot_right64_down16_source_delta(&mut frame)
+                .expect("staged Little Root mixed-direction delta must render");
+        }
+        if self.rival_right64_down32_evidence() {
+            native::apply_littleroot_right64_down32_source_delta(&mut frame)
+                .expect("staged Little Root mixed-direction delta must render");
         }
         native::fade_to_black(&mut frame, self.world.transition_alpha());
         frame
