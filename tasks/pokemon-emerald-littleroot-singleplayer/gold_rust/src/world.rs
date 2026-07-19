@@ -4412,6 +4412,13 @@ impl WorldState {
                     self.clock_visit_frames = Some(40);
                 }
                 StoryPhase::TvBroadcast => {
+                    if self.title_intro_step == 0 {
+                        // `MomNoticeGymBroadcast` returns only after the
+                        // first message closes. The source then runs
+                        // `PlayerApproachTVForGym*`; retain the port's
+                        // compact first down-step at that script boundary.
+                        self.player.y += 1;
+                    }
                     let next = self.title_intro_step.saturating_add(1);
                     if next < TV_BROADCAST_PAGE_COUNT {
                         self.title_intro_step = next;
