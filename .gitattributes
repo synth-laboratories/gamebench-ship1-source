@@ -1,0 +1,3 @@
+# Porymap's JASC palette exports preserve their original CRLF formatting.
+# They are captured source assets, not hand-authored text.
+tasks/pokemon-emerald-littleroot-singleplayer/gold_rust/assets/porymap/** -whitespace

@@ -1,0 +1,409 @@
+{
+  "schema": "gamebench.pixel-oracle.v1",
+  "environment": "pokemon-emerald-littleroot-singleplayer",
+  "width": 240,
+  "height": 160,
+  "pixel_format": "rgb8",
+  "status": "opening-checkpoint-corpus-started",
+  "traces": [
+    {
+      "id": "opening-title-idle",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/00_init/00_init.state",
+      "input": [],
+      "frame": "gold_rust/assets/opening_title_idle.rgb",
+      "sha256": "ca1ab79b68dc54861648023473708b65eff216ef1536099c2629f6ee12fdf1e7"
+    },
+    {
+      "id": "opening-title-a-1",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/00_init/00_init.state",
+      "input": [{ "action": "a", "frames": 1 }],
+      "frame": "gold_rust/assets/opening_title_idle.rgb",
+      "sha256": "ca1ab79b68dc54861648023473708b65eff216ef1536099c2629f6ee12fdf1e7"
+    },
+    {
+      "id": "opening-title-a-120",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/00_init/00_init.state",
+      "input": [{ "action": "a", "frames": 120 }],
+      "frame": "gold_rust/assets/opening_title_a_120.png.b64",
+      "sha256": "6e76dc0708410299e2ca8531c56053d5e9bed9178ad241efda3c73a5e9cde783"
+    },
+    {
+      "id": "opening-title-a-120-noop-480",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/00_init/00_init.state",
+      "input": [{ "action": "a", "frames": 120 }, { "action": "noop", "frames": 480 }],
+      "frame": "gold_rust/assets/opening_professor_intro.png.b64",
+      "sha256": "100f9b2ddfb094104c48ebf39a738a4e001836f35172fd3bc81258c470d9ab8e"
+    },
+    {
+      "id": "opening-title-a-120-noop-480-a-16",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/00_init/00_init.state",
+      "input": [{ "action": "a", "frames": 120 }, { "action": "noop", "frames": 480 }, { "action": "a", "frames": 16 }],
+      "frame": "gold_rust/assets/opening_professor_intro_a16.png.b64",
+      "sha256": "bab7cffc3cfe8f18a5b1f5d8ba8399e3aad48d4405c74abb620bbf8ebe63a72b"
+    },
+    {
+      "id": "opening-title-a-120-noop-480-a-16-a-16",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/00_init/00_init.state",
+      "input": [{ "action": "a", "frames": 120 }, { "action": "noop", "frames": 480 }, { "action": "a", "frames": 16 }, { "action": "a", "frames": 16 }],
+      "frame": "gold_rust/assets/opening_professor_intro_a16_a16.png.b64",
+      "sha256": "0f214e7b14452f690366e8d590111792a11ada89d001d64310cf7331af490fb3"
+    },
+    {
+      "id": "opening-title-a-120-noop-480-a-16-a-16-a-16",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/00_init/00_init.state",
+      "input": [{ "action": "a", "frames": 120 }, { "action": "noop", "frames": 480 }, { "action": "a", "frames": 16 }, { "action": "a", "frames": 16 }, { "action": "a", "frames": 16 }],
+      "frame": "gold_rust/assets/opening_professor_intro_a16_a16_a16.png.b64",
+      "sha256": "6ac26d9efae3d9617bc1cc04aca20c2ba4f7004ba0f3c2ceb62908ad6ad60f7c"
+    },
+    {
+      "id": "opening-truck-idle",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/01_tutorial/01_tutorial.state",
+      "input": [],
+      "frame": "gold_rust/assets/opening_truck_idle.rgb",
+      "sha256": "ba51ec7303abf46797e881fb56ac7f6d5c8f0d146d3de76c4a9ba48263fddb1a"
+    },
+    {
+      "id": "opening-bedroom-idle",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/02_starter/02_starter.state",
+      "input": [],
+      "frame": "gold_rust/assets/opening_bedroom_idle.rgb",
+      "sha256": "7fa70d30992cdd8a3f246fc616f4db65ebf571b605252dcf1073c24ca102ddfb"
+    },
+    {
+      "id": "opening-bedroom-a-16",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/02_starter/02_starter.state",
+      "input": [{ "action": "a", "frames": 16 }],
+      "frame": "gold_rust/assets/opening_bedroom_idle.rgb",
+      "sha256": "7fa70d30992cdd8a3f246fc616f4db65ebf571b605252dcf1073c24ca102ddfb"
+    },
+    {
+      "id": "opening-bedroom-start-16",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/02_starter/02_starter.state",
+      "input": [{ "action": "start", "frames": 16 }],
+      "frame": "gold_rust/assets/opening_bedroom_start_16.png.b64",
+      "sha256": "1abbd52bf31b3828b6e531770c70cdda0303b97a9e474f6479cedc2b0396f6a2"
+    },
+    {
+      "id": "opening-bedroom-down-16",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/02_starter/02_starter.state",
+      "input": [{ "action": "down", "frames": 16 }],
+      "frame": "gold_rust/assets/opening_bedroom_down_16.png.b64",
+      "sha256": "9a80504c868d6fd61ac7b3278fb56400b9c364a22904d94f36cad36b91db53aa"
+    },
+    {
+      "id": "opening-bedroom-down-32",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/02_starter/02_starter.state",
+      "input": [{ "action": "down", "frames": 32 }],
+      "frame": "gold_rust/assets/opening_bedroom_down_32.png.b64",
+      "sha256": "9f6ea43985212ab7a8fe34a55e8152958b42fbe0c6a744c75611bda4fb0a6320"
+    },
+    {
+      "id": "opening-bedroom-down-48",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/02_starter/02_starter.state",
+      "input": [{ "action": "down", "frames": 48 }],
+      "frame": "gold_rust/assets/opening_bedroom_down_48.png.b64",
+      "sha256": "92a5a5e101c59db50476ad735d673e303b4cf184f2aa2538f899f50179484e60"
+    },
+    {
+      "id": "opening-bedroom-right-16",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/02_starter/02_starter.state",
+      "input": [{ "action": "right", "frames": 16 }],
+      "frame": "gold_rust/assets/opening_bedroom_right_16.png.b64",
+      "sha256": "592b4479c8b46d4e960f31b6a51e1c353740b72ca9686f6659c0e8ab35fe259e"
+    },
+    {
+      "id": "opening-bedroom-left-16",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/02_starter/02_starter.state",
+      "input": [{ "action": "left", "frames": 16 }],
+      "frame": "gold_rust/assets/opening_bedroom_left_16.png.b64",
+      "sha256": "617fda4f11e82337e9dde731a66390ad18ab0d7a24765538d9141efd1a3e735f"
+    },
+    {
+      "id": "opening-bedroom-up-16",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/02_starter/02_starter.state",
+      "input": [{ "action": "up", "frames": 16 }],
+      "frame": "gold_rust/assets/opening_bedroom_up_16.png.b64",
+      "sha256": "0f78c20cac6209188b249001a079643c724c913795c81ff2b6e77904a17b87a1"
+    },
+    {
+      "id": "opening-bedroom-right-32",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/02_starter/02_starter.state",
+      "input": [{ "action": "right", "frames": 32 }],
+      "frame": "gold_rust/assets/opening_bedroom_right_32.png.b64",
+      "sha256": "65911bd0cef6cd843d8618da1663b0fdec110c891ede8929ae3db09f239a0597"
+    },
+    {
+      "id": "opening-bedroom-left-32",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/02_starter/02_starter.state",
+      "input": [{ "action": "left", "frames": 32 }],
+      "frame": "gold_rust/assets/opening_bedroom_left_32.png.b64",
+      "sha256": "3cd3042edd7a41b94e85e0e4112f1fa0318a0c4b4221b6269af9f5e71c43cbff"
+    },
+    {
+      "id": "opening-bedroom-up-32",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/02_starter/02_starter.state",
+      "input": [{ "action": "up", "frames": 32 }],
+      "frame": "gold_rust/assets/opening_bedroom_up_32.png.b64",
+      "sha256": "f043290b06e1bd469f2ba34cc130d1192286f2f308cb6599f88c25daa783afb6"
+    },
+    {
+      "id": "opening-bedroom-right-48",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/02_starter/02_starter.state",
+      "input": [{ "action": "right", "frames": 48 }],
+      "frame": "gold_rust/assets/opening_bedroom_right_48.png.b64",
+      "sha256": "00c4cd2fbda22b8e85d2863d4ed00c07f54aea45a38a0164203df8675068284f"
+    },
+    {
+      "id": "opening-bedroom-left-48",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/02_starter/02_starter.state",
+      "input": [{ "action": "left", "frames": 48 }],
+      "frame": "gold_rust/assets/opening_bedroom_left_48.png.b64",
+      "sha256": "bf6936aff75a33627e531456677fa022bc9c4b1efb4a93e02c6a85e299cdfaf0"
+    },
+    {
+      "id": "opening-bedroom-up-48",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/02_starter/02_starter.state",
+      "input": [{ "action": "up", "frames": 48 }],
+      "frame": "gold_rust/assets/opening_bedroom_up_48.png.b64",
+      "sha256": "c7eb72c367df430848d83986fae1f57f50299bf9bc8072f7ba45e99f274e99e7"
+    },
+    {
+      "id": "opening-birch-idle",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/03_birch/03_birch.state",
+      "input": [],
+      "frame": "gold_rust/assets/opening_birch_idle.rgb",
+      "sha256": "8a5210e713369ac061ace3f3f336a1775acbed4cb87658f548c0c76f6878f8b7"
+    },
+    {
+      "id": "opening-birch-start-16",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/03_birch/03_birch.state",
+      "input": [{ "action": "start", "frames": 16 }],
+      "frame": "gold_rust/assets/opening_birch_start_16.png.b64",
+      "sha256": "889efcbd2b3da9d81d901cb00e608fbd4f5b1ea2877b9f1ce882f34b0cb91911"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-idle",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [],
+      "frame": "gold_rust/assets/littleroot_outside_idle.rgb",
+      "sha256": "9374924229cdd9d32aab80f701b2da3127a075b6b255d06473418a38f1f1d2c6"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-start-16",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "start", "frames": 16 }],
+      "frame": "gold_rust/assets/littleroot_outside_start_16.png.b64",
+      "sha256": "a33f90c13f3ec8114c71b7775212bf85a7e6e91b7c8f4f12804023ae5e828f9b"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-start-16-down-16",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "start", "frames": 16 }, { "action": "down", "frames": 16 }],
+      "frame": "gold_rust/assets/littleroot_outside_start16_down16.png.b64",
+      "sha256": "35f3e7d90cc7ed116ee6fe7f12fffe3690ee6d834520c01601683a5fcf77e8f5"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-start-16-a-16",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "start", "frames": 16 }, { "action": "a", "frames": 16 }],
+      "frame": "gold_rust/assets/littleroot_outside_start16_a16.png.b64",
+      "sha256": "1def2e83b54456227f9f3d44c0b577fe2a0a65cfea92592b06612904e7de8a9d"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-start-16-a-60",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "start", "frames": 16 }, { "action": "a", "frames": 60 }],
+      "frame": "gold_rust/assets/littleroot_outside_start16_a60.png.b64",
+      "sha256": "952513063f5f266e2fbfd66b1954ded8f621da3e635ff799899d2f4fa707b6f3"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-start-16-a-60-down-16",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "start", "frames": 16 }, { "action": "a", "frames": 60 }, { "action": "down", "frames": 16 }],
+      "frame": "gold_rust/assets/littleroot_outside_start16_a60_down16.png.b64",
+      "sha256": "cfe7d93a4d22ec09a13cb50e27a38a9d205d37a55bd424325dbffa06eca1ea6f"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-left-16",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "left", "frames": 16 }],
+      "frame": "gold_rust/assets/littleroot_outside_left_16.rgb",
+      "sha256": "1a76d2142778b89eb9fd086cd5225936eae51f4166aaaf37c94c8c3198b73dd2"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-up-16",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "up", "frames": 16 }],
+      "frame": "gold_rust/assets/littleroot_outside_up_16.rgb",
+      "sha256": "a9877ebf5e5cf58793b98e76980aa2c23897adfc910c5f1fd1b6424be70b6f7d"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-down-16",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "down", "frames": 16 }],
+      "frame": "gold_rust/assets/littleroot_outside_down_16.rgb",
+      "sha256": "f8da976cb0b2cdf6947f81ef340d7f1601c43a7b625373221179f7b210edee63"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-right-16",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "right", "frames": 16 }],
+      "frame": "gold_rust/assets/littleroot_outside_right_16.rgb",
+      "sha256": "4284ba178ddf920f229de99142793fece400073c53e2fdd79e64c3e4eef1a437"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-right-32",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "right", "frames": 32 }],
+      "frame": "gold_rust/assets/littleroot_outside_right_32.png.b64",
+      "sha256": "9b2142b4bf45a595119f776c07cfd5602cc87d04eef02600a447f1e7510ea93c"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-right-64",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "right", "frames": 64 }],
+      "frame": "gold_rust/assets/littleroot_outside_right_64.rgb.b64",
+      "sha256": "87232dc0a7fb2be65b867146481f50d0500c70a64ac44324dd739a4e06a12bfe"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-right-80",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "right", "frames": 80 }],
+      "frame": "gold_rust/assets/littleroot_outside_right_80.rgb.b64",
+      "sha256": "6281dbc8b9faf2809bab7cbbe13a7b723ed2f527eb95740be98137b8d24b62fa"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-right-96",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "right", "frames": 96 }],
+      "frame": "gold_rust/assets/littleroot_outside_right_96.rgb.b64",
+      "sha256": "60326c31302a068b51d214d246ec973e5c8be10f78beada3c0c5a4b28847e1fd"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-right-112",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "right", "frames": 112 }],
+      "frame": "gold_rust/assets/littleroot_outside_right_112.rgb.b64",
+      "sha256": "5753637da165e02d8b5fa6f0df7361edea81529ecec8f25384c9a0b267d04623"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-right-128",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "right", "frames": 128 }],
+      "frame": "gold_rust/assets/littleroot_outside_right_128.rgb.b64",
+      "sha256": "bb3858bbb3d14708806f17089871e2c05bfc72da845ab8abfa726170f4ca3527"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-right-176",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "right", "frames": 176 }],
+      "frame": "gold_rust/assets/littleroot_outside_right_176.rgb.b64",
+      "sha256": "70752b2bf37637136491773befee22cc08715f3be0c8b062f16b973a6daaa959"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-noop-64",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "noop", "frames": 64 }],
+      "frame": "gold_rust/assets/littleroot_outside_noop_64.rgb.b64",
+      "sha256": "9374924229cdd9d32aab80f701b2da3127a075b6b255d06473418a38f1f1d2c6"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-noop-128",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "noop", "frames": 128 }],
+      "frame": "gold_rust/assets/littleroot_outside_noop_128.rgb.b64",
+      "sha256": "f3bab6de0503f0d88f34f05892f546002aaff84afc37f933fd576b8c4906c713"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-noop-192",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "noop", "frames": 192 }],
+      "frame": "gold_rust/assets/littleroot_outside_noop_192.rgb.b64",
+      "sha256": "6707f165e536d424efedd0f9d3ce5d4c976110e6a018f4f01a63eceb9c4ec73b"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-noop-256",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "noop", "frames": 256 }],
+      "frame": "gold_rust/assets/littleroot_outside_noop_256.rgb.b64",
+      "sha256": "be9324ef57d21be6a58d373c22df2f60c2668f4de6e780db42698a4960382d99"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-noop-320",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "noop", "frames": 320 }],
+      "frame": "gold_rust/assets/littleroot_outside_noop_256.rgb.b64",
+      "sha256": "be9324ef57d21be6a58d373c22df2f60c2668f4de6e780db42698a4960382d99"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-noop-384",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "noop", "frames": 384 }],
+      "frame": "gold_rust/assets/littleroot_outside_noop_384.rgb.b64",
+      "sha256": "5a5fee5e921072da00d8c07134b9d43f4610bf5b6bfd691237130f34b429ba3e"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-noop-448",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "noop", "frames": 448 }],
+      "frame": "gold_rust/assets/littleroot_outside_noop_384.rgb.b64",
+      "sha256": "5a5fee5e921072da00d8c07134b9d43f4610bf5b6bfd691237130f34b429ba3e"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-noop-512",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "noop", "frames": 512 }],
+      "frame": "gold_rust/assets/littleroot_outside_noop_512.rgb.b64",
+      "sha256": "68f4ea9df7bdc5aa085bf14f0c7b6ed970fdc8fa3ac1fbd567f9058bf1ef5514"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-noop-576",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "noop", "frames": 576 }],
+      "frame": "gold_rust/assets/littleroot_outside_noop_512.rgb.b64",
+      "sha256": "68f4ea9df7bdc5aa085bf14f0c7b6ed970fdc8fa3ac1fbd567f9058bf1ef5514"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-noop-640",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "noop", "frames": 640 }],
+      "frame": "gold_rust/assets/littleroot_outside_noop_640.rgb.b64",
+      "sha256": "77a3390a778a0988d08252af1596963c4218f31b6de643833c3f18b4ef9fb202"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-noop-704",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "noop", "frames": 704 }],
+      "frame": "gold_rust/assets/littleroot_outside_noop_704.rgb.b64",
+      "sha256": "bdbf9bbd16303f5b7c6d538843de4666ef3a872cb6d0e8023c2c41eddcb9482e"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-noop-768",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "noop", "frames": 768 }],
+      "frame": "gold_rust/assets/littleroot_outside_noop_768.rgb.b64",
+      "sha256": "10162da050f2000330ba160ec49a7928a5add65e591a3566b31b48ac6a4c0cc5"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-noop-832",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "noop", "frames": 832 }],
+      "frame": "gold_rust/assets/littleroot_outside_noop_832.rgb.b64",
+      "sha256": "d7ec944dd7470f36fdec36bdf0c116aa3d09de27b62a87177bae38830f91a62e"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-noop-896",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "noop", "frames": 896 }],
+      "frame": "gold_rust/assets/littleroot_outside_noop_896.rgb.b64",
+      "sha256": "f547843e3e39ac1b70671abef3f0c25443ebecf4cf511883758948b30d6f271f"
+    },
+    {
+      "id": "littleroot-outside-birch-lab-noop-960",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "input": [{ "action": "noop", "frames": 960 }],
+      "frame": "gold_rust/assets/littleroot_outside_noop_960.rgb.b64",
+      "sha256": "b9f725d96a61e61205124199f1aa4dbe4032b031b4413dd11b3744a8234a9c58"
+    }
+  ]
+}
