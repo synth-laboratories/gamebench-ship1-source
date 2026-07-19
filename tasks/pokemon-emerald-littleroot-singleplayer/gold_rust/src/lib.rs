@@ -541,6 +541,17 @@ impl LittlerootSession {
             .then_some(self.world.frame)
     }
 
+    /// Exact truck-exit references are keyed to the total uninterrupted
+    /// held-Right duration, not to the request segmentation. A caller may
+    /// split a controller hold across transport requests without changing the
+    /// emulated state or its source frame.
+    fn truck_held_right_frames(&self) -> Option<u32> {
+        (self.checkpoint == OpeningCheckpoint::TruckArrival
+            && !self.input_log.is_empty()
+            && self.input_log.iter().all(|step| step.action == Input::Right))
+            .then(|| self.input_log.iter().map(|step| step.frames).sum())
+    }
+
     /// A single held-Right request from the rival-exterior source state has
     /// source-derived PPU/OAM scheduling at these later stopped-camera ticks.
     /// Keep this predicate aligned with the renderer's timed dispatch instead
@@ -585,6 +596,9 @@ impl LittlerootSession {
     }
 
     fn parity_status(&self) -> &'static str {
+        if matches!(self.truck_held_right_frames(), Some(16 | 32 | 48)) {
+            return "native_oracle_exact";
+        }
         if self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && matches!(
@@ -695,6 +709,21 @@ impl LittlerootSession {
     }
 
     fn reference_diff(&self) -> Value {
+        match self.truck_held_right_frames() {
+            Some(16) => {
+                let reference = native::opening_truck_right_16().expect("embedded truck right frame must decode");
+                return json!({ "trace": "opening-truck-right-16", "baseline_only": false, "pixels": pixel_diff(self.frame_rgb(), &reference) });
+            }
+            Some(32) => {
+                let reference = native::opening_truck_right_32().expect("embedded truck right frame must decode");
+                return json!({ "trace": "opening-truck-right-32", "baseline_only": false, "pixels": pixel_diff(self.frame_rgb(), &reference) });
+            }
+            Some(48) => {
+                let reference = native::opening_truck_right_48().expect("embedded truck right frame must decode");
+                return json!({ "trace": "opening-truck-right-48", "baseline_only": false, "pixels": pixel_diff(self.frame_rgb(), &reference) });
+            }
+            _ => {}
+        }
         if let Some((trace, expected_sha256)) = self.rival_held_right_source_evidence() {
             let actual_sha256 = frame_sha256(self.frame_rgb());
             return json!({
@@ -868,22 +897,6 @@ impl LittlerootSession {
             let reference = native::opening_bedroom_up_48().expect("embedded bedroom second up movement frame must decode");
             return json!({ "trace": "opening-bedroom-up-48", "baseline_only": false, "pixels": pixel_diff(self.frame_rgb(), &reference) });
         }
-        if self.checkpoint == OpeningCheckpoint::TruckArrival
-            && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 16 }])
-        {
-            let reference = native::opening_truck_right_16().expect("embedded truck right frame must decode");
-            return json!({ "trace": "opening-truck-right-16", "baseline_only": false, "pixels": pixel_diff(self.frame_rgb(), &reference) });
-        }
-        if self.checkpoint == OpeningCheckpoint::TruckArrival
-            && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 32 }])
-        {
-            let reference = native::opening_truck_right_32().expect("embedded truck right frame must decode");
-            return json!({ "trace": "opening-truck-right-32", "baseline_only": false, "pixels": pixel_diff(self.frame_rgb(), &reference) });
-        }
-        if self.checkpoint == OpeningCheckpoint::TruckArrival && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 48 }]) {
-            let reference = native::opening_truck_right_48().expect("embedded truck right frame must decode");
-            return json!({ "trace": "opening-truck-right-48", "baseline_only": false, "pixels": pixel_diff(self.frame_rgb(), &reference) });
-        }
         if self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 32 }])
         {
@@ -1009,17 +1022,9 @@ impl LittlerootSession {
             _ if self.world.map == MapId::ProfessorIntro && self.world.phase == world::StoryPhase::NameEntry => native::render_name_entry(&self.world),
             _ if self.world.map == MapId::ProfessorIntro && self.world.phase == world::StoryPhase::NameConfirm => Ok(native::render_name_prompt()),
             _ if self.world.map == MapId::ProfessorIntro && self.world.phase == world::StoryPhase::IntroFarewell => Ok(native::render_name_prompt()),
-            OpeningCheckpoint::TruckArrival
-                if matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 16 }]) =>
-            {
-                native::opening_truck_right_16()
-            }
-            OpeningCheckpoint::TruckArrival
-                if matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 32 }]) =>
-            {
-                native::opening_truck_right_32()
-            }
-            OpeningCheckpoint::TruckArrival if matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 48 }]) => native::opening_truck_right_48(),
+            OpeningCheckpoint::TruckArrival if self.truck_held_right_frames() == Some(16) => native::opening_truck_right_16(),
+            OpeningCheckpoint::TruckArrival if self.truck_held_right_frames() == Some(32) => native::opening_truck_right_32(),
+            OpeningCheckpoint::TruckArrival if self.truck_held_right_frames() == Some(48) => native::opening_truck_right_48(),
             _ if self.world.map == MapId::MovingTruck => native::render_truck_idle(),
             OpeningCheckpoint::RivalOutsideLab
                 if self.world.map == MapId::LittlerootTown
