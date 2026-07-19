@@ -462,6 +462,13 @@
       "sha256": "f61e21f9b9531ed4822bacd45cb3f5b9679771ec65b9399d04ec2cd3cff50057"
     },
     {
+      "id": "oldale-after-wurmple-arrival",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "replay": "fixtures/gold/replays/oldale_after_wurmple_arrival.json",
+      "frame": "gold_rust/assets/oldale_after_wurmple.png.b64",
+      "sha256": "e3fbb6d7176469bfa7aec5b2bd09026438f99df74498708ace529137f3b16bea"
+    },
+    {
       "id": "title-to-met-rival-may-first-page",
       "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/00_init/00_init.state",
       "replay": "fixtures/gold/replays/title_to_met_rival_may.json",

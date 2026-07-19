@@ -3659,9 +3659,21 @@ impl WorldState {
                         .saturating_sub(prior_walk_elapsed)
                         .saturating_add(tile_index * u32::from(cadence));
                     let carry = held_frames.saturating_sub(frames_to_connection);
-                    self.advance_transition(carry);
+                    let had_transition = self.transition.is_some();
+                    if had_transition {
+                        self.advance_transition(carry);
+                    }
                     if self.transition.is_none() {
-                        let destination_hold = carry.saturating_sub(32);
+                        // The source-replayed Route 101/Oldale/Route 103
+                        // cardinal connections replace the active map
+                        // immediately. Little Root keeps its existing
+                        // authored transition, so subtract its 32 frames only
+                        // when a transition actually consumed this request.
+                        let destination_hold = if had_transition {
+                            carry.saturating_sub(32)
+                        } else {
+                            carry
+                        };
                         if destination_hold > 0 {
                             moved += self.walk_bounds(facing, destination_hold);
                         }
@@ -3962,8 +3974,9 @@ impl WorldState {
         }
     }
 
-    /// Route 101 and Little Root are a cardinal map connection, rather than
-    /// paired warp tiles. Their shared edge preserves the player X position.
+    /// Route 101, Oldale, and Route 103's northern cardinal edges scroll
+    /// immediately. The authored Little Root handoff remains a transition.
+    /// Every connection preserves the player X coordinate.
     fn begin_connected_map(&mut self, facing: Facing) -> bool {
         if self.transition.is_some() { return false; }
         if self.map == MapId::Route101
@@ -4008,23 +4021,35 @@ impl WorldState {
                 true
             }
             (MapId::Route101, Facing::Up, x, 0) if (8..=11).contains(&x) => {
-                self.begin_transition(MapId::OldaleTown, TilePosition { x, y: 19 });
+                self.enter_cardinal_map(MapId::OldaleTown, TilePosition { x, y: 19 });
                 true
             }
             (MapId::OldaleTown, Facing::Down, x, 19) if (8..=11).contains(&x) => {
-                self.begin_transition(MapId::Route101, TilePosition { x, y: 0 });
+                self.enter_cardinal_map(MapId::Route101, TilePosition { x, y: 0 });
                 true
             }
             (MapId::OldaleTown, Facing::Up, x, 0) if (8..=11).contains(&x) => {
-                self.begin_transition(MapId::Route103, TilePosition { x, y: 21 });
+                self.enter_cardinal_map(MapId::Route103, TilePosition { x, y: 21 });
                 true
             }
             (MapId::Route103, Facing::Down, x, 21) if (8..=11).contains(&x) => {
-                self.begin_transition(MapId::OldaleTown, TilePosition { x, y: 0 });
+                self.enter_cardinal_map(MapId::OldaleTown, TilePosition { x, y: 0 });
                 true
             }
             _ => false,
         }
+    }
+
+    fn enter_cardinal_map(&mut self, destination_map: MapId, destination: TilePosition) {
+        self.map = destination_map;
+        self.player = destination;
+        self.render_position = None;
+        self.walk_progress_frames = 0;
+        self.walk_elapsed_frames = 0;
+        self.walk_render_origin = None;
+        self.elevation = crate::native::tile_elevation(self.map, self.player.x, self.player.y)
+            .expect("cardinal map destination must be inside staged terrain");
+        self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
     }
 
     /// Starts the shared overworld fade used by authored warps and opening

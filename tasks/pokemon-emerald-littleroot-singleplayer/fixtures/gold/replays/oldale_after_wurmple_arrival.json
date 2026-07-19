@@ -1,8 +1,8 @@
 {
   "schema": "gamebench.pokemon_emerald.replay.v1",
-  "id": "route103-after-wurmple-arrival",
+  "id": "oldale-after-wurmple-arrival",
   "checkpoint": "rival_outside_lab",
-  "description": "Live 04_rival replay through the Route 101 Wurmple encounter, a source-valid wild escape, and the Route 103 map arrival.",
+  "description": "Live 04_rival replay through the Route 101 Wurmple encounter and escape to the first immediate Oldale map frame.",
   "program": [
     { "action": "right", "frames": 80 },
     { "action": "up", "frames": 160 },
@@ -53,15 +53,15 @@
     { "action": "left", "frames": 64 },
     { "action": "up", "frames": 32 },
     { "action": "left", "frames": 16 },
-    { "action": "up", "frames": 512 }
+    { "action": "up", "frames": 16 }
   ],
   "expected": {
     "input_count": 243,
-    "frame_index": 7578,
+    "frame_index": 7082,
     "world": {
       "phase": "running_shoes_received",
-      "map": "route103",
-      "player": { "x": 10, "y": 13 },
+      "map": "oldale_town",
+      "player": { "x": 10, "y": 19 },
       "battle": null,
       "dialogue": null
     }
