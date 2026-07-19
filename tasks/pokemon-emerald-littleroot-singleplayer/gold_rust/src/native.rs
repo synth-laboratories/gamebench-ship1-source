@@ -2299,6 +2299,7 @@ fn render_world_view_with_motion_at_tick(map_id: MapId, player: &TilePosition, w
         Some(Facing::Right) if map_id == MapId::LittlerootTown && player.x == 17 && matches!((progress, timing_tick), (7, Some(136)) | (11, Some(140))) => (-16, 0),
         Some(Facing::Right) if map_id == MapId::LittlerootTown && player.x == 17 && progress == 0 => (-16, 0),
         Some(Facing::Right) if map_id == MapId::LittlerootTown && player.x == 10 && progress == 0 && timing_tick == Some(64) => (47, 0),
+        Some(Facing::Right) if map_id == MapId::LittlerootTown && player.x == 10 && progress == 0 && timing_tick == Some(80) => (-1, 0),
         Some(Facing::Right) if map_id == MapId::LittlerootTown && player.x >= 17 => (-i32::from(player.x - 16) * (progress + 1), 0),
         Some(Facing::Right) if map_id == MapId::LittlerootTown && player.x == 16 => (0, 0),
         Some(Facing::Right) => (progress, 0),
