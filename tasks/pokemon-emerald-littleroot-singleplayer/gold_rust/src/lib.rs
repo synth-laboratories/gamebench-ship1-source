@@ -217,20 +217,28 @@ impl LittlerootSession {
             self.held_direction = None;
         }
         // In the frozen rival exterior, source controller movement and
-        // object-event movement share every video frame. Processing a long
-        // Right hold as one post-hoc player walk let Boy's lane-vacating
-        // movement happen too late (or too early) for collision. Keep this
-        // measured branch frame-coupled until the general field controller
-        // owns the same timing model.
-        if request.action == Input::Right
+        // object-event movement share every video frame. Processing any
+        // directional hold as one post-hoc player walk makes object events
+        // depend on request chunking; Boy's lane-vacating movement was only
+        // the first visible instance on Right. Keep all four directions on
+        // the same frame-coupled controller until the general field engine
+        // owns this timing model.
+        if matches!(request.action, Input::Up | Input::Down | Input::Left | Input::Right)
             && self.can_replay_exterior_direction()
             && self.world.phase == world::StoryPhase::PokedexReceived
         {
+            let facing = match request.action {
+                Input::Up => Facing::Up,
+                Input::Down => Facing::Down,
+                Input::Left => Facing::Left,
+                Input::Right => Facing::Right,
+                Input::A | Input::B | Input::Start | Input::Select | Input::Noop => unreachable!("directional controller only accepts directional input"),
+            };
             for _ in 0..request.frames {
                 let prior_frame = self.frame_index;
                 self.frame_index += 1;
                 self.world.frame = self.frame_index;
-                self.world.walk_bounds(Facing::Right, 1);
+                self.world.walk_bounds(facing, 1);
                 self.world.advance_npc_wander(prior_frame);
             }
             self.input_log.push(request);
