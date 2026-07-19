@@ -2542,7 +2542,7 @@ impl WorldState {
     }
 
     fn should_restore_rival_ambient_anchor_at(&self, frame: u64) -> bool {
-        matches!(frame, 816 | 4160 | 4288 | 4352 | 4416 | 4480 | 4544 | 4608 | 4672)
+        matches!(frame, 816 | 4160 | 4288 | 4352 | 4416 | 4480 | 4544 | 4608 | 4672 | 4736)
             && self.map == MapId::LittlerootTown
             && self.phase == StoryPhase::PokedexReceived
             && self.render_position.is_some()
@@ -2601,6 +2601,12 @@ impl WorldState {
                 TilePosition { x: 16, y: 11 }, Facing::Right,
                 TilePosition { x: 12, y: 13 }, Facing::Left,
                 TilePosition { x: 15, y: 16 }, Facing::Left,
+                128, None, 0x3ff0_b6ec,
+            ),
+            4736 => (
+                TilePosition { x: 16, y: 11 }, Facing::Right,
+                TilePosition { x: 13, y: 13 }, Facing::Down,
+                TilePosition { x: 15, y: 17 }, Facing::Up,
                 128, None, 0x3ff0_b6ec,
             ),
             _ => return,
