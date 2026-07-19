@@ -1046,6 +1046,19 @@ impl LittlerootSession {
             && self.world.dialogue.is_none()
     }
 
+    fn title_to_met_rival_truck_up_evidence(&self) -> bool {
+        self.checkpoint == OpeningCheckpoint::TitleMenu
+            && self.frame_index == 5_265
+            && self.input_log.len() == 90
+            && self.world.phase == world::StoryPhase::IntroTruck
+            && self.world.map == MapId::MovingTruck
+            && self.world.player == TilePosition { x: 3, y: 2 }
+            && self.world.player_gender == world::PlayerGender::May
+            && self.world.player_name == "A"
+            && self.world.facing == Facing::Up
+            && self.world.dialogue.is_none()
+    }
+
     fn title_to_met_rival_rival_entry_evidence(&self) -> bool {
         self.checkpoint == OpeningCheckpoint::TitleMenu
             && self.frame_index == 22_096
@@ -1099,6 +1112,9 @@ impl LittlerootSession {
         }
         if self.title_to_met_rival_truck_idle_evidence() {
             return "source_truck_idle_exact";
+        }
+        if self.title_to_met_rival_truck_up_evidence() {
+            return "source_truck_up_exact";
         }
         if self.title_to_met_rival_rival_entry_evidence() {
             return "source_rival_entry_exact";
@@ -1309,6 +1325,11 @@ impl LittlerootSession {
                 "actual_sha256": actual_sha256,
                 "exact": actual_sha256 == expected_sha256,
             });
+        }
+        if self.title_to_met_rival_truck_up_evidence() {
+            let expected_sha256 = "ded3d1f8fd4cfb471fd765d56528ee0f0d4d056c4bc7280692f8b3e0b116e923";
+            let actual_sha256 = frame_sha256(self.frame_rgb());
+            return json!({"trace":"title-to-met-rival-may-truck-up","baseline_only":false,"source_truck_up":true,"expected_sha256":expected_sha256,"actual_sha256":actual_sha256,"exact":actual_sha256 == expected_sha256});
         }
         if self.title_to_met_rival_rival_entry_evidence() {
             let expected_sha256 = "af10f15e656f4d340526e7d650c101bc4db7f982ebf1d6fc916ea581aea4a6eb";
@@ -1781,6 +1802,7 @@ impl LittlerootSession {
             _ if self.world.map == MapId::ProfessorIntro && self.world.phase == world::StoryPhase::NameConfirm => Ok(native::render_name_confirm_base(self.world.player_gender)),
             _ if self.world.map == MapId::ProfessorIntro && self.world.phase == world::StoryPhase::IntroFarewell => Ok(native::render_name_prompt()),
             _ if self.title_to_met_rival_truck_idle_evidence() => native::title_to_met_rival_truck_idle(),
+            _ if self.title_to_met_rival_truck_up_evidence() => native::title_to_met_rival_truck_up(),
             OpeningCheckpoint::TruckArrival if self.truck_held_right_frames() == Some(16) => native::opening_truck_right_16(),
             OpeningCheckpoint::TruckArrival if self.truck_held_right_frames() == Some(32) => native::opening_truck_right_32(),
             OpeningCheckpoint::TruckArrival if self.truck_held_right_frames() == Some(48) => native::opening_truck_right_48(),

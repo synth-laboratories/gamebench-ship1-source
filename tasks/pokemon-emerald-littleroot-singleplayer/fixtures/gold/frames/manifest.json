@@ -450,6 +450,14 @@
       "sha256": "660d26a21637df25c8350f6a2738a30ef494c85d38be88640f37e0df6de18e19"
     },
     {
+      "id": "title-to-met-rival-may-truck-up",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/00_init/00_init.state",
+      "replay": "fixtures/gold/replays/title_to_met_rival_may.json",
+      "input_limit": 90,
+      "frame": "gold_rust/assets/title_to_met_rival_may_truck_up.png.b64",
+      "sha256": "ded3d1f8fd4cfb471fd765d56528ee0f0d4d056c4bc7280692f8b3e0b116e923"
+    },
+    {
       "id": "title-to-met-rival-may-truck-idle",
       "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/00_init/00_init.state",
       "replay": "fixtures/gold/replays/title_to_met_rival_may.json",
