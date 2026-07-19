@@ -27,6 +27,16 @@ struct NpcSpriteSheet {
     palette: Vec<u8>,
 }
 
+/// Indexed source art that retains its own palette. The starter-choice scene
+/// uses both 4bpp OBJ sheets and an 8bpp background sheet, unlike the
+/// overworld object-event sheets above.
+struct SourceIndexedSheet {
+    width: usize,
+    height: usize,
+    pixels: Vec<u8>,
+    palette: Vec<[u8; 3]>,
+}
+
 struct TilesetAssets {
     tiles: &'static [u8],
     metatiles: &'static [u8],
@@ -110,6 +120,13 @@ const BATTLE_ZIGZAGOON_FRONT_B64: &str = include_str!("../assets/battle_zigzagoo
 const BATTLE_POOCHYENA_FRONT_B64: &str = include_str!("../assets/battle_poochyena_front.png.b64");
 const BATTLE_WINGULL_FRONT_B64: &str = include_str!("../assets/battle_wingull_front.png.b64");
 const BATTLE_WURMPLE_FRONT_B64: &str = include_str!("../assets/battle_wurmple_front.png.b64");
+// `CB2_ChooseStarter` loads this dedicated 8bpp Birch-bag/grass tileset,
+// its two source tilemaps, and the Poké Ball / reveal-circle OBJ sheets.
+const STARTER_CHOOSE_TILES_B64: &str = include_str!("../assets/starter_choose_tiles.png.b64");
+const STARTER_CHOOSE_POKEBALL_SELECTION_B64: &str = include_str!("../assets/starter_choose_pokeball_selection.png.b64");
+const STARTER_CHOOSE_CIRCLE_B64: &str = include_str!("../assets/starter_choose_circle.png.b64");
+const STARTER_CHOOSE_BIRCH_BAG_TILEMAP_B64: &str = include_str!("../assets/starter_choose_birch_bag_tilemap.bin.b64");
+const STARTER_CHOOSE_BIRCH_GRASS_TILEMAP_B64: &str = include_str!("../assets/starter_choose_birch_grass_tilemap.bin.b64");
 static BATTLE_TREECKO_BACK: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_TREECKO_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_TORCHIC_BACK: OnceLock<NpcSpriteSheet> = OnceLock::new();
@@ -120,6 +137,11 @@ static BATTLE_ZIGZAGOON_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_POOCHYENA_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_WINGULL_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_WURMPLE_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
+static STARTER_CHOOSE_TILES: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static STARTER_CHOOSE_POKEBALL_SELECTION: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static STARTER_CHOOSE_CIRCLE: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static STARTER_CHOOSE_BIRCH_BAG_TILEMAP: OnceLock<Vec<u8>> = OnceLock::new();
+static STARTER_CHOOSE_BIRCH_GRASS_TILEMAP: OnceLock<Vec<u8>> = OnceLock::new();
 // Compact source-derived GBA BG state for the first held-right terrain phase.
 // It contains the four active screenblocks, palette, and referenced
 // 4bpp tiles; `restore_littleroot_right_192_bg_state` expands it into the
@@ -1639,23 +1661,7 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
         return;
     }
     if matches!(world.phase, StoryPhase::StarterSelect | StoryPhase::StarterConfirm) {
-        draw_window(frame, 42, 44, 156, 72);
-        draw_text(frame, 56, 54, "CHOOSE STARTER", 20);
-        let selected = match world.starter {
-            Some(crate::world::StarterSpecies::Treecko) => "TREECKO",
-            Some(crate::world::StarterSpecies::Torchic) => "TORCHIC",
-            Some(crate::world::StarterSpecies::Mudkip) => "MUDKIP",
-            None => "TORCHIC",
-        };
-        draw_text(frame, 66, 76, selected, 12);
-        if world.phase == StoryPhase::StarterConfirm {
-            draw_text(frame, 46, 88, "Do you choose this POKéMON?", 27);
-            draw_text(frame, 96, 100, "YES", 4);
-            draw_text(frame, 96, 108, "NO", 3);
-            draw_cursor(frame, 86, if world.starter_confirm_yes { 100 } else { 108 });
-        } else {
-            draw_text(frame, 56, 96, "LEFT/RIGHT: SELECT", 24);
-        }
+        draw_starter_choose_scene(frame, world);
         return;
     }
     if let Some(field) = world.clock_editing {
@@ -2180,6 +2186,219 @@ fn draw_battle_sprite(frame: &mut [u8], sprite: &NpcSpriteSheet, x: usize, y: us
             let palette = &sprite.palette[index * 3..index * 3 + 3];
             put_pixel(frame, x + column, y + row, [palette[0], palette[1], palette[2]]);
         }
+    }
+}
+
+fn starter_choose_sheet(slot: &'static OnceLock<SourceIndexedSheet>, encoded: &str) -> &'static SourceIndexedSheet {
+    slot.get_or_init(|| {
+        decode_source_indexed_sheet(encoded)
+            .expect("staged Emerald starter-choice source sheet must decode")
+    })
+}
+
+fn starter_choose_tilemap(slot: &'static OnceLock<Vec<u8>>, encoded: &str) -> &'static Vec<u8> {
+    slot.get_or_init(|| {
+        decode_base64(encoded)
+            .expect("staged Emerald starter-choice tilemap must decode")
+    })
+}
+
+/// Renders `CB2_ChooseStarter` from the source's dedicated Birch-bag scene.
+/// The original callback uses two 8bpp text backgrounds plus the 4bpp ball,
+/// hand, and reveal-circle OBJ sheets; it is not a Route 101 overworld frame.
+fn draw_starter_choose_scene(frame: &mut [u8], world: &WorldState) {
+    let tiles = starter_choose_sheet(&STARTER_CHOOSE_TILES, STARTER_CHOOSE_TILES_B64);
+    let backdrop = tiles.palette.first().copied().unwrap_or([0, 0, 0]);
+    for pixel in frame.chunks_exact_mut(3) {
+        pixel.copy_from_slice(&backdrop);
+    }
+
+    let grass = starter_choose_tilemap(
+        &STARTER_CHOOSE_BIRCH_GRASS_TILEMAP,
+        STARTER_CHOOSE_BIRCH_GRASS_TILEMAP_B64,
+    );
+    draw_starter_choose_tilemap(frame, tiles, grass, 32, 32);
+    let bag = starter_choose_tilemap(
+        &STARTER_CHOOSE_BIRCH_BAG_TILEMAP,
+        STARTER_CHOOSE_BIRCH_BAG_TILEMAP_B64,
+    );
+    draw_starter_choose_tilemap(frame, tiles, bag, 32, 20);
+
+    let pokeball = starter_choose_sheet(
+        &STARTER_CHOOSE_POKEBALL_SELECTION,
+        STARTER_CHOOSE_POKEBALL_SELECTION_B64,
+    );
+    let starter = world.starter.unwrap_or(StarterSpecies::Torchic);
+    let selection = match starter {
+        StarterSpecies::Treecko => 0,
+        StarterSpecies::Torchic => 1,
+        StarterSpecies::Mudkip => 2,
+    };
+    // `sPokeballCoords` are GBA sprite centers, while the renderer's crop
+    // coordinate is its top-left origin.
+    const BALL_CENTERS: [(usize, usize); 3] = [(60, 64), (120, 88), (180, 64)];
+    for (ball_id, &(center_x, center_y)) in BALL_CENTERS.iter().enumerate() {
+        // `sAnim_Pokeball_Moving` begins at source frame offset 16; the
+        // remaining two balls retain frame zero.
+        let source_y = if ball_id == selection { 32 } else { 0 };
+        draw_source_indexed_crop(frame, pokeball, 0, source_y, 32, 32, center_x - 16, center_y - 16);
+    }
+
+    // `SpriteCB_SelectionHand` takes the final 32×32 cell from the same
+    // object sheet and floats it over the active ball. With no source frame
+    // counter in this logical task boundary, render the callback's zero-sine
+    // position rather than fabricate an offset.
+    let (hand_x, hand_y) = match selection {
+        0 => (60, 32),
+        1 => (120, 56),
+        _ => (180, 32),
+    };
+    draw_source_indexed_crop(frame, pokeball, 0, 96, 32, 32, hand_x - 16, hand_y - 16);
+
+    // Task_HandleStarterChooseInput clears this temporary label before it
+    // creates the circle and Pokémon sprite for the confirmation task.
+    if world.phase == StoryPhase::StarterSelect {
+        draw_starter_choose_label(frame, starter);
+    }
+    if world.phase == StoryPhase::StarterConfirm {
+        let circle = starter_choose_sheet(&STARTER_CHOOSE_CIRCLE, STARTER_CHOOSE_CIRCLE_B64);
+        draw_source_indexed_crop(frame, circle, 0, 0, 64, 64, 88, 32);
+        let species = match starter {
+            StarterSpecies::Treecko => "TREECKO",
+            StarterSpecies::Torchic => "TORCHIC",
+            StarterSpecies::Mudkip => "MUDKIP",
+        };
+        // The source's 15-frame affine movement settles the selected mon at
+        // `STARTER_PKMN_POS_X/Y` (120, 64). This state is the stable frame
+        // at which Task_AskConfirmStarter opens the YES/NO menu.
+        draw_battle_sprite(frame, battle_front_sprite(species), 88, 32);
+    }
+
+    draw_starter_choose_message_box(frame);
+    match world.phase {
+        StoryPhase::StarterSelect => {
+            draw_text(frame, 24, 121, "PROF. BIRCH is in trouble!\nRelease a POKéMON and rescue him!", 72);
+        }
+        StoryPhase::StarterConfirm => {
+            draw_text(frame, 24, 121, "Do you choose this POKéMON?", 28);
+            draw_starter_choose_confirmation_menu(frame, world.starter_confirm_yes);
+        }
+        _ => unreachable!("starter-choice renderer must receive a starter phase"),
+    }
+}
+
+fn draw_starter_choose_tilemap(
+    frame: &mut [u8],
+    tiles: &SourceIndexedSheet,
+    tilemap: &[u8],
+    width_tiles: usize,
+    height_tiles: usize,
+) {
+    if tilemap.len() < width_tiles * height_tiles * 2 || tiles.width % 8 != 0 || tiles.height % 8 != 0 {
+        return;
+    }
+    let source_tiles_per_row = tiles.width / 8;
+    let source_tile_count = source_tiles_per_row * (tiles.height / 8);
+    for tile_y in 0..height_tiles {
+        for tile_x in 0..width_tiles {
+            let offset = (tile_y * width_tiles + tile_x) * 2;
+            let entry = u16::from_le_bytes([tilemap[offset], tilemap[offset + 1]]);
+            let tile = usize::from(entry & 0x03ff);
+            if tile >= source_tile_count { continue; }
+            let flip_x = entry & 0x0400 != 0;
+            let flip_y = entry & 0x0800 != 0;
+            for row in 0..8 {
+                for column in 0..8 {
+                    let source_x = (tile % source_tiles_per_row) * 8 + if flip_x { 7 - column } else { column };
+                    let source_y = (tile / source_tiles_per_row) * 8 + if flip_y { 7 - row } else { row };
+                    let color_index = usize::from(tiles.pixels[source_y * tiles.width + source_x]);
+                    // Source text backgrounds leave index zero transparent,
+                    // revealing the common palette-zero backdrop.
+                    if color_index == 0 || color_index >= tiles.palette.len() { continue; }
+                    put_pixel(frame, tile_x * 8 + column, tile_y * 8 + row, tiles.palette[color_index]);
+                }
+            }
+        }
+    }
+}
+
+fn draw_source_indexed_crop(
+    frame: &mut [u8],
+    sprite: &SourceIndexedSheet,
+    source_x: usize,
+    source_y: usize,
+    width: usize,
+    height: usize,
+    x: usize,
+    y: usize,
+) {
+    if source_x + width > sprite.width || source_y + height > sprite.height { return; }
+    for row in 0..height {
+        for column in 0..width {
+            let color_index = usize::from(sprite.pixels[(source_y + row) * sprite.width + source_x + column]);
+            if color_index == 0 || color_index >= sprite.palette.len() { continue; }
+            put_pixel(frame, x + column, y + row, sprite.palette[color_index]);
+        }
+    }
+}
+
+fn draw_starter_choose_label(frame: &mut [u8], starter: StarterSpecies) {
+    let (category, name, label_x, label_y) = match starter {
+        // `sStarterLabelCoords` and the species category strings from the
+        // source Pokédex table, not a generic left/right selector caption.
+        StarterSpecies::Treecko => ("WOOD GECKO", "TREECKO", 0, 72),
+        StarterSpecies::Torchic => ("CHICK", "TORCHIC", 128, 80),
+        StarterSpecies::Mudkip => ("MUD FISH", "MUDKIP", 64, 32),
+    };
+    const LABEL_WIDTH: usize = 104;
+    const LABEL_PALETTE: [[u8; 3]; 3] = [[255, 255, 255], [231, 239, 231], [231, 239, 231]];
+    let category_width = category.chars().map(emerald_glyph_width).sum::<usize>();
+    let name_width = name.chars().map(emerald_glyph_width).sum::<usize>();
+    let category_x = label_x + (LABEL_WIDTH.saturating_sub(category_width)) / 2;
+    let name_x = label_x + (LABEL_WIDTH.saturating_sub(name_width)) / 2;
+    draw_text_with_palette(frame, category_x, label_y + 1, category, category.chars().count(), LABEL_PALETTE);
+    draw_text_with_palette(frame, name_x, label_y + 17, name, name.chars().count(), LABEL_PALETTE);
+}
+
+fn draw_starter_choose_message_box(frame: &mut [u8]) {
+    // `sWindowTemplates[0]`: a 24×4-tile Window at (3, 15), with a source
+    // standard-frame border one tile beyond every edge.
+    draw_starter_choose_standard_frame(frame, 16, 112, 24, 4);
+}
+
+fn draw_starter_choose_confirmation_menu(frame: &mut [u8], yes_selected: bool) {
+    // `sWindowTemplate_ConfirmStarter`: 5×4 tiles at (24, 9), likewise with
+    // the standard frame expanded by one tile.
+    draw_starter_choose_standard_frame(frame, 184, 64, 5, 4);
+    draw_text(frame, 200, 73, "YES", 3);
+    draw_text(frame, 200, 89, "NO", 2);
+    draw_cursor(frame, 191, if yes_selected { 74 } else { 90 });
+}
+
+fn draw_starter_choose_standard_frame(
+    frame: &mut [u8],
+    x: usize,
+    y: usize,
+    content_width_tiles: usize,
+    content_height_tiles: usize,
+) {
+    let columns = content_width_tiles + 2;
+    let rows = content_height_tiles + 2;
+    let tiles = STANDARD_WINDOW_1.get_or_init(|| {
+        let bytes = decode_base64(STANDARD_WINDOW_1_PNG_B64.trim())
+            .expect("standard window source asset must decode");
+        decode_indexed(&bytes).expect("standard window source asset must be indexed")
+    });
+    for column in 0..columns {
+        let top = if column == 0 { 0 } else if column + 1 == columns { 2 } else { 1 };
+        let bottom = if column == 0 { 6 } else if column + 1 == columns { 8 } else { 7 };
+        draw_standard_frame_tile(frame, tiles, top, x + column * 8, y);
+        draw_standard_frame_tile(frame, tiles, bottom, x + column * 8, y + (rows - 1) * 8);
+    }
+    for row in 1..rows - 1 {
+        draw_standard_frame_tile(frame, tiles, 3, x, y + row * 8);
+        draw_solid_rect(frame, x + 8, y + row * 8, content_width_tiles * 8, 8, [255, 255, 255]);
+        draw_standard_frame_tile(frame, tiles, 5, x + (columns - 1) * 8, y + row * 8);
     }
 }
 
@@ -5155,6 +5374,43 @@ fn decode_indexed(bytes: &[u8]) -> Result<IndexedTiles, String> {
         pixels.push(byte & 0x0f);
     }
     Ok(IndexedTiles { width: info.width as usize, pixels })
+}
+
+fn decode_source_indexed_sheet(encoded: &str) -> Result<SourceIndexedSheet, String> {
+    let bytes = decode_base64(encoded)?;
+    let mut decoder = Decoder::new(Cursor::new(bytes));
+    decoder.set_transformations(Transformations::IDENTITY);
+    let mut reader = decoder.read_info().map_err(|error| error.to_string())?;
+    let palette = reader.info().palette.as_deref()
+        .ok_or_else(|| "starter-choice PNG has no indexed palette".to_owned())?
+        .chunks_exact(3)
+        .map(|color| [color[0], color[1], color[2]])
+        .collect::<Vec<_>>();
+    let mut buffer = vec![0; reader.output_buffer_size()];
+    let info = reader.next_frame(&mut buffer).map_err(|error| error.to_string())?;
+    if info.color_type != ColorType::Indexed {
+        return Err("expected indexed starter-choice PNG".to_owned());
+    }
+    let mut pixels = Vec::with_capacity((info.width * info.height) as usize);
+    match info.bit_depth {
+        png::BitDepth::Four => {
+            for byte in &buffer[..info.buffer_size()] {
+                pixels.push(byte >> 4);
+                pixels.push(byte & 0x0f);
+            }
+        }
+        png::BitDepth::Eight => pixels.extend_from_slice(&buffer[..info.buffer_size()]),
+        _ => return Err("expected 4-bit or 8-bit starter-choice PNG".to_owned()),
+    }
+    if pixels.len() != (info.width * info.height) as usize {
+        return Err("starter-choice PNG row packing did not match its dimensions".to_owned());
+    }
+    Ok(SourceIndexedSheet {
+        width: info.width as usize,
+        height: info.height as usize,
+        pixels,
+        palette,
+    })
 }
 
 fn decode_npc_sprite_sheet(encoded: &str) -> Result<NpcSpriteSheet, String> {
