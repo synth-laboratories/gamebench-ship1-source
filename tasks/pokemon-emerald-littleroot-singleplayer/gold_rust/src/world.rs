@@ -2958,7 +2958,7 @@ impl WorldState {
         self.battle = Some(BattleState {
             opponent: BattleOpponent::Wingull,
             opponent_species: "WINGULL".to_owned(),
-            opponent_move_name: "TACKLE".to_owned(),
+            opponent_move_name: "WATER GUN".to_owned(),
             opponent_move_damage: 4,
             player_hp,
             player_max_hp: player_hp,
