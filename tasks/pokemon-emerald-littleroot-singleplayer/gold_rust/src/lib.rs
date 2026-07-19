@@ -139,6 +139,16 @@ impl LittlerootSession {
             && self.world.clock_editing.is_none()
     }
 
+    /// The two staged Start-menu checkpoints have a measured held-button
+    /// surface. Preserve their physical key-down state across transport
+    /// packets just as the exterior controller preserves a directional hold.
+    fn can_replay_start_hold(&self) -> bool {
+        matches!(
+            self.checkpoint,
+            OpeningCheckpoint::BedroomIdle | OpeningCheckpoint::BirchLabExterior
+        ) && self.input_log.is_empty()
+    }
+
     pub fn step(&mut self, mut request: StepRequest) {
         let captured_professor_intro_a16 = self.checkpoint == OpeningCheckpoint::TitleMenu
             && request.action == Input::A
@@ -168,7 +178,10 @@ impl LittlerootSession {
             && self.input_log.is_empty();
         let is_directional = matches!(request.action, Input::Up | Input::Down | Input::Left | Input::Right);
         let mut prior_frame_index = self.frame_index;
-        if is_directional && self.can_replay_exterior_direction() {
+        let replayable_start = request.action == Input::Start
+            && (self.held_direction.as_ref().is_some_and(|held| held.action == Input::Start)
+                || self.can_replay_start_hold());
+        if (is_directional && self.can_replay_exterior_direction()) || replayable_start {
             if let Some(held) = self.held_direction.as_mut().filter(|held| held.action == request.action) {
                 held.frames = held.frames.saturating_add(request.frames);
                 request.frames = held.frames;
@@ -525,6 +538,8 @@ impl LittlerootSession {
             } else {
                 native::opening_birch_start_16()
             }.expect("embedded Start-menu frame must decode");
+        } else if let Some(frame) = self.start_menu_source_frame() {
+            self.framebuffer = frame;
         } else if let Some(frame) = self.bedroom_directional_source_frame() {
             self.framebuffer = frame;
         } else if captured_professor_intro_a16_a16_a16 {
@@ -1803,6 +1818,25 @@ impl LittlerootSession {
             _ => return Value::Null,
         };
         json!({ "trace": id, "baseline_only": baseline, "pixels": pixel_diff(self.frame_rgb(), frame) })
+    }
+
+    /// The staged Start-menu references are physical holds, not single
+    /// transport requests. The normalized input log contains one aggregate
+    /// request after a continuation replay.
+    fn start_menu_source_frame(&self) -> Option<Vec<u8>> {
+        if self.input_log.len() != 1
+            || self.input_log[0].action != Input::Start
+            || self.input_log[0].frames != 16
+            || !self.world.menu_open
+        {
+            return None;
+        }
+        match self.checkpoint {
+            OpeningCheckpoint::BedroomIdle => native::opening_bedroom_start_16(),
+            OpeningCheckpoint::BirchLabExterior => native::opening_birch_start_16(),
+            _ => return None,
+        }
+        .ok()
     }
 
     /// The bedroom movement receipts are source-timed controller holds, not
