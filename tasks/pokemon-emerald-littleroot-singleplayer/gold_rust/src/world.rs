@@ -811,16 +811,8 @@ impl WorldState {
         Self {
             map: MapId::LittlerootTown,
             phase: StoryPhase::BirchRescued,
-            // `03_birch.state` starts one tile south of Birch's Lab doorway:
-            // SaveBlock1 records authored Little Root coordinates `(7, 17)`.
-            // Keeping the player on the doorway itself makes the native
-            // checkpoint collide with the roof rather than following the
-            // source's exterior movement path.
-            player: TilePosition { x: 7, y: 17 },
-            // The source camera's idle composite is still registered to the
-            // doorway tile, one row north of the logical collision origin.
-            // Retain that visual anchor while movement advances both poses.
-            render_position: Some(TilePosition { x: 7, y: 16 }),
+            player: TilePosition { x: 7, y: 16 },
+            render_position: None,
             elevation: 3,
             npcs: littleroot_town_npcs(StoryPhase::BirchRescued, PlayerGender::May),
             npc_walk_starts: Vec::new(),
