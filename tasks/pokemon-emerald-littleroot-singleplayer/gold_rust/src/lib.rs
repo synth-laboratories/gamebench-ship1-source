@@ -477,6 +477,11 @@ impl LittlerootSession {
                     self.world.confirm_starter();
                 } else if !self.world.interact_with_npc() {
                     self.world.advance_opening_script();
+                    // A source dialogue close can launch Mom's scripted
+                    // approach during the same held-A request. Consume that
+                    // request window immediately so the first 16-frame
+                    // source movement commit is not deferred to Noop.
+                    self.world.advance_running_shoes_scene(request.frames);
                 }
             }
             Input::Select => self.world.cycle_starter(),

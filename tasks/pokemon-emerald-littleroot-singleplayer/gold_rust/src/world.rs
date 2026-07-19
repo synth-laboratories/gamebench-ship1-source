@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+const SOURCE_RIVAL_RUNNING_SHOES_TRIGGER: u8 = 6;
+
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum MapId {
@@ -1753,19 +1755,21 @@ impl WorldState {
         let Some(remaining) = self.running_shoes_frames else { return false; };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         let trigger = self.running_shoes_trigger.unwrap_or(2);
+        let source_rival_trigger = trigger == SOURCE_RIVAL_RUNNING_SHOES_TRIGGER;
         let returning = self.running_shoes_stage == 6;
         let (direction, steps, fast_return_turn) = running_shoes_mom_path(trigger, self.player_gender, returning);
-        let total = u16::from(steps) * 16 + if !returning || fast_return_turn { 8 } else { 0 };
+        let total = u16::from(steps) * 16
+            + if (!returning && !source_rival_trigger) || fast_return_turn { 8 } else { 0 };
         let elapsed_before = total.saturating_sub(remaining);
         let elapsed_after = total.saturating_sub(next_remaining);
-        if !returning && elapsed_before < 8 && elapsed_after >= 8 {
+        if !returning && !source_rival_trigger && elapsed_before < 8 && elapsed_after >= 8 {
             self.facing = match (trigger, self.player_gender) {
                 (0 | 1, _) => Facing::Down,
                 (_, PlayerGender::Brendan) => Facing::Left,
                 (_, PlayerGender::May) => Facing::Right,
             };
         }
-        let movement_offset = if returning { 0 } else { 8 };
+        let movement_offset = if returning || source_rival_trigger { 0 } else { 8 };
         for step in 1..=u16::from(steps) {
             let boundary = movement_offset + step * 16;
             if elapsed_before < boundary && boundary <= elapsed_after {
@@ -3405,10 +3409,10 @@ impl WorldState {
             self.running_shoes_item_shown = false;
             self.running_shoes_stage = 0;
             let trigger = match (self.player.x, self.player.y) {
-                // The frozen rival-exterior source state enters the same
-                // running-shoes script through its field-owner coordinate.
-                // Its Mom approach uses the first scripted branch.
-                (12, 5) => 0,
+                // The frozen rival-exterior source state enters through a
+                // distinct, measured Mom approach rather than a Porymap
+                // coordinate branch.
+                (12, 5) => SOURCE_RIVAL_RUNNING_SHOES_TRIGGER,
                 (10, 2) => 0,
                 (11, 2) => 1,
                 (10, 9) => 2,
@@ -3419,6 +3423,10 @@ impl WorldState {
             };
             self.running_shoes_trigger = Some(trigger);
             let position = match trigger {
+                // EWRAM records Mom at raw `(12,16)`, projected by this
+                // checkpoint renderer to `(6,5)`. Five rightward commits
+                // place her beside the player at `(11,5)`.
+                SOURCE_RIVAL_RUNNING_SHOES_TRIGGER => TilePosition { x: 6, y: 5 },
                 0 => TilePosition { x: 10, y: 9 },
                 1 => TilePosition { x: 11, y: 9 },
                 _ => match self.player_gender {
@@ -3428,17 +3436,25 @@ impl WorldState {
             };
             if let Some(mom) = self.npcs.iter_mut().find(|npc| npc.id == "mom_outside" && npc.map == MapId::LittlerootTown) {
                 mom.position = position;
-                mom.facing = match self.player_gender {
-                    PlayerGender::Brendan => Facing::Right,
-                    PlayerGender::May => Facing::Left,
+                mom.facing = if trigger == SOURCE_RIVAL_RUNNING_SHOES_TRIGGER {
+                    Facing::Right
+                } else {
+                    match self.player_gender {
+                        PlayerGender::Brendan => Facing::Right,
+                        PlayerGender::May => Facing::Left,
+                    }
                 };
             } else {
                 self.npcs.push(NpcState {
                     id: "mom_outside".to_owned(), map: MapId::LittlerootTown,
                     position,
-                    facing: match self.player_gender {
-                        PlayerGender::Brendan => Facing::Right,
-                        PlayerGender::May => Facing::Left,
+                    facing: if trigger == SOURCE_RIVAL_RUNNING_SHOES_TRIGGER {
+                        Facing::Right
+                    } else {
+                        match self.player_gender {
+                            PlayerGender::Brendan => Facing::Right,
+                            PlayerGender::May => Facing::Left,
+                        }
                     },
                 });
             }
@@ -3615,6 +3631,9 @@ fn rival_name(player_gender: PlayerGender) -> &'static str {
 
 fn running_shoes_approach_frames(trigger: u8, player_gender: PlayerGender) -> u16 {
     let (_, steps, _) = running_shoes_mom_path(trigger, player_gender, false);
+    if trigger == SOURCE_RIVAL_RUNNING_SHOES_TRIGGER {
+        return u16::from(steps) * 16;
+    }
     // Common in-place player notice turn (8 frames), followed by ordinary
     // Mom walk steps at the overworld 16-frame cadence.
     8 + u16::from(steps) * 16
@@ -3622,6 +3641,8 @@ fn running_shoes_approach_frames(trigger: u8, player_gender: PlayerGender) -> u1
 
 fn running_shoes_mom_path(trigger: u8, player_gender: PlayerGender, returning: bool) -> (Facing, u8, bool) {
     match (trigger, player_gender, returning) {
+        (SOURCE_RIVAL_RUNNING_SHOES_TRIGGER, _, false) => (Facing::Right, 5, false),
+        (SOURCE_RIVAL_RUNNING_SHOES_TRIGGER, _, true) => (Facing::Left, 5, false),
         (0 | 1, _, false) => (Facing::Up, 6, false),
         (0 | 1, _, true) => (Facing::Down, 5, false),
         (2, PlayerGender::Brendan, false) => (Facing::Right, 4, false),
