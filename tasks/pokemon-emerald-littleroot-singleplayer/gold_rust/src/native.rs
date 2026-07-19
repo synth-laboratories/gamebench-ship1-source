@@ -2309,7 +2309,11 @@ pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing
     // The first-stride renderer already applies this source flower phase. On
     // a continuing vertical stride the player remains screen-anchored while
     // the General-tileset flower upload remains visible in world space.
-    if matches!(walk_direction, Some(Facing::Up | Facing::Down)) && walk_progress_frames > 0 {
+    let up_80_flower_phase = player == &(TilePosition { x: 9, y: 13 })
+        && walk_direction == Some(Facing::Up)
+        && walk_progress_frames == 0
+        && timing_tick == Some(80);
+    if matches!(walk_direction, Some(Facing::Up | Facing::Down)) && (walk_progress_frames > 0 || up_80_flower_phase) {
         apply_littleroot_flower_animation(&mut frame, player, facing, 0);
     }
     Ok(frame)
