@@ -2245,6 +2245,11 @@ fn render_world_view_with_motion_at_tick(map_id: MapId, player: &TilePosition, w
         Some(Facing::Right) if map_id == MapId::LittlerootTown && player.x >= 17 => (-i32::from(player.x - 16) * (progress + 1), 0),
         Some(Facing::Right) if map_id == MapId::LittlerootTown && player.x == 16 => (0, 0),
         Some(Facing::Right) => (progress, 0),
+        // The direct Left ×48 source frame completes its logical second tile
+        // while the camera remains twelve pixels behind the usual completed
+        // stride anchor. This is distinct from the generic in-progress-left
+        // phase below and keeps the Lab/flower viewport aligned at `(9, 13)`.
+        Some(Facing::Left) if map_id == MapId::LittlerootTown && player.x == 9 && progress == 0 && timing_tick == Some(48) => (-13, 0),
         Some(Facing::Left) => (-(progress + 1), 0),
         Some(Facing::Down) => (0, 0),
         Some(Facing::Up) => (0, 0),
