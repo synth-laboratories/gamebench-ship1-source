@@ -448,6 +448,13 @@
       "sha256": "a4d3c3ad2392c72c1db2e789e3f9085bafd84538534cf618d854e6578b4fa0e4"
     },
     {
+      "id": "route101-wurmple-appearance",
+      "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "replay": "fixtures/gold/replays/route101_wurmple_appearance.json",
+      "frame": "gold_rust/assets/route101_wurmple_appear.png.b64",
+      "sha256": "8bee55df0956fab4e2e2f5d363da85f73b706466219bebd9cdeb7d40be73d926"
+    },
+    {
       "id": "title-to-met-rival-may-first-page",
       "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/00_init/00_init.state",
       "replay": "fixtures/gold/replays/title_to_met_rival_may.json",

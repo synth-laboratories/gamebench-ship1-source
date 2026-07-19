@@ -107,6 +107,7 @@ const BATTLE_TORCHIC_FRONT_B64: &str = include_str!("../assets/battle_torchic_fr
 const BATTLE_MUDKIP_BACK_B64: &str = include_str!("../assets/battle_mudkip_back.png.b64");
 const BATTLE_MUDKIP_FRONT_B64: &str = include_str!("../assets/battle_mudkip_front.png.b64");
 const BATTLE_ZIGZAGOON_FRONT_B64: &str = include_str!("../assets/battle_zigzagoon_front.png.b64");
+const BATTLE_WURMPLE_FRONT_B64: &str = include_str!("../assets/battle_wurmple_front.png.b64");
 static BATTLE_TREECKO_BACK: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_TREECKO_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_TORCHIC_BACK: OnceLock<NpcSpriteSheet> = OnceLock::new();
@@ -114,6 +115,7 @@ static BATTLE_TORCHIC_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_MUDKIP_BACK: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_MUDKIP_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_ZIGZAGOON_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
+static BATTLE_WURMPLE_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 // Compact source-derived GBA BG state for the first held-right terrain phase.
 // It contains the four active screenblocks, palette, and referenced
 // 4bpp tiles; `restore_littleroot_right_192_bg_state` expands it into the
@@ -436,6 +438,7 @@ const LITTLEROOT_UP128_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/little
 const LITTLEROOT_RUNNING_SHOES_PROMPT_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/littleroot_running_shoes_prompt.rgb_delta.zlib.b64");
 const LITTLEROOT_RUNNING_SHOES_PROMPT_RGB_ZLIB_B64: &str = include_str!("../assets/littleroot_running_shoes_prompt.rgb.zlib.b64");
 const ROUTE101_ARRIVAL_RGB_DELTA_ZLIB_B64: &str = include_str!("../assets/route101_arrival.rgb_delta.zlib.b64");
+const ROUTE101_WURMPLE_APPEAR_RGB_ZLIB_B64: &str = include_str!("../assets/route101_wurmple_appear.rgb.zlib.b64");
 const LITTLEROOT_RIGHT144_REGION_B64: &str = include_str!("../assets/littleroot_right144_region.rgb.b64");
 const LITTLEROOT_RIGHT136_NPC_B64: &str = include_str!("../assets/littleroot_right136_npc.rgb.b64");
 const LITTLEROOT_RIGHT180_NPC_B64: &str = include_str!("../assets/littleroot_right180_npc.rgb.b64");
@@ -1441,6 +1444,7 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
         let opponent = battle.opponent_species.as_str();
         let opponent_level = match battle.opponent {
             crate::world::BattleOpponent::Zigzagoon => 3,
+            crate::world::BattleOpponent::Wurmple => 2,
             crate::world::BattleOpponent::Rival => 5,
         };
         draw_text(frame, 16, 24, &opponent, 10);
@@ -1915,6 +1919,7 @@ fn battle_front_sprite(species: &str) -> &'static NpcSpriteSheet {
         "TORCHIC" => battle_sheet(&BATTLE_TORCHIC_FRONT, BATTLE_TORCHIC_FRONT_B64),
         "MUDKIP" => battle_sheet(&BATTLE_MUDKIP_FRONT, BATTLE_MUDKIP_FRONT_B64),
         "ZIGZAGOON" => battle_sheet(&BATTLE_ZIGZAGOON_FRONT, BATTLE_ZIGZAGOON_FRONT_B64),
+        "WURMPLE" => battle_sheet(&BATTLE_WURMPLE_FRONT, BATTLE_WURMPLE_FRONT_B64),
         _ => battle_sheet(&BATTLE_ZIGZAGOON_FRONT, BATTLE_ZIGZAGOON_FRONT_B64),
     }
 }
@@ -2997,6 +3002,16 @@ pub fn apply_route101_arrival_source_delta(frame: &mut [u8]) -> Result<(), Strin
         frame,
         ROUTE101_ARRIVAL_RGB_DELTA_ZLIB_B64,
         "Route 101 arrival",
+    )
+}
+
+/// Complete source compositor output for the first live Route 101 wild
+/// encounter appearance after its observed battle-transition sequence.
+pub fn route101_wurmple_appearance_source() -> Result<Vec<u8>, String> {
+    decode_littleroot_zlib_state(
+        ROUTE101_WURMPLE_APPEAR_RGB_ZLIB_B64,
+        FRAME_WIDTH * 160 * 3,
+        "Route 101 Wurmple appearance RGB",
     )
 }
 

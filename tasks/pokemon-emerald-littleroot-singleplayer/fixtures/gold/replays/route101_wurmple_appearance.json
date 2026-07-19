@@ -1,0 +1,51 @@
+{
+  "schema": "gamebench.pokemon_emerald.replay.v1",
+  "id": "route101-wurmple-appearance",
+  "checkpoint": "rival_outside_lab",
+  "description": "Live 04_rival replay through Running Shoes, Route 101, the source grass encounter, and the fully printed Wild Wurmple appearance frame.",
+  "program": [
+    { "action": "right", "frames": 80 },
+    { "action": "up", "frames": 160 },
+    { "action": "left", "frames": 48 },
+    { "action": "noop", "frames": 16 },
+    {
+      "repeat": 100,
+      "steps": [
+        { "action": "a", "frames": 16 },
+        { "action": "noop", "frames": 1 }
+      ]
+    },
+    { "action": "down", "frames": 160 },
+    { "action": "left", "frames": 256 },
+    { "action": "up", "frames": 160 },
+    { "action": "right", "frames": 512 },
+    { "action": "up", "frames": 512 },
+    { "action": "left", "frames": 512 },
+    { "action": "right", "frames": 144 },
+    { "action": "up", "frames": 512 },
+    { "action": "right", "frames": 16 },
+    { "action": "up", "frames": 512 },
+    { "action": "left", "frames": 48 },
+    { "action": "up", "frames": 64 },
+    { "action": "right", "frames": 96 },
+    { "action": "up", "frames": 16 },
+    { "action": "right", "frames": 32 },
+    { "action": "up", "frames": 112 },
+    { "action": "noop", "frames": 384 }
+  ],
+  "expected": {
+    "input_count": 221,
+    "frame_index": 6052,
+    "world": {
+      "phase": "running_shoes_received",
+      "map": "route101",
+      "player": { "x": 15, "y": 2 },
+      "battle": {
+        "opponent": "wurmple",
+        "opponent_species": "WURMPLE",
+        "entry_transition_frames": 0,
+        "message": "Wild WURMPLE appeared!"
+      }
+    }
+  }
+}

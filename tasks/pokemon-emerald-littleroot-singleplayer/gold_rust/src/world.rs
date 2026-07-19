@@ -92,7 +92,7 @@ pub enum StarterSpecies { Treecko, Torchic, Mudkip }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum BattleOpponent { Zigzagoon, Rival }
+pub enum BattleOpponent { Zigzagoon, Wurmple, Rival }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct BattleState {
@@ -137,6 +137,10 @@ pub struct BattleState {
     /// field and later multi-member engine.
     #[serde(default)]
     pub party_screen_open: bool,
+    /// A wild encounter can return to the field without changing the story
+    /// phase; trainer and Birch-rescue battles remain locked.
+    #[serde(default)]
+    pub escaped: bool,
     pub move_cursor: u8,
     pub player_fainted: bool,
     pub message: Option<String>,
@@ -2619,6 +2623,7 @@ impl WorldState {
                 command_cursor: 0,
                 selecting_move: false,
                 party_screen_open: false,
+                escaped: false,
                 move_cursor: 0,
                 player_fainted: false,
                 message: Some(format!("RIVAL {} would like to battle!", rival_trainer_name(self.player_gender))),
@@ -2650,6 +2655,7 @@ impl WorldState {
                 command_cursor: 0,
                 selecting_move: false,
                 party_screen_open: false,
+                escaped: false,
                 move_cursor: 0,
                 player_fainted: false,
                 message: Some("Wild ZIGZAGOON appeared!".to_owned()),
@@ -2657,6 +2663,47 @@ impl WorldState {
                 intro_stage: 0,
             });
         }
+    }
+
+    /// The captured post-Running-Shoes Route 101 field path reaches tall
+    /// grass at (15,2). Its deterministic source RNG opens a level-2
+    /// Wurmple encounter before the Oldale connection, so retain a typed
+    /// field/battle boundary rather than allowing a direct map traversal.
+    fn begin_route101_wurmple_encounter(&mut self) {
+        if self.map != MapId::Route101
+            || self.phase != StoryPhase::RunningShoesReceived
+            || self.player != (TilePosition { x: 15, y: 2 })
+            || self.battle.is_some()
+        {
+            return;
+        }
+        let (_, player_hp, player_move_damage, player_move_name, player_move_pp, player_status_move_name, player_status_move_pp) = starter_battle_profile(self.starter);
+        self.battle = Some(BattleState {
+            opponent: BattleOpponent::Wurmple,
+            opponent_species: "WURMPLE".to_owned(),
+            opponent_move_name: "TACKLE".to_owned(),
+            opponent_move_damage: 3,
+            player_hp,
+            player_max_hp: player_hp,
+            rival_hp: 12,
+            opponent_max_hp: 12,
+            player_move_damage,
+            player_move_name: player_move_name.to_owned(),
+            player_move_pp,
+            player_status_move_name: player_status_move_name.to_owned(),
+            player_status_move_pp,
+            opponent_attack_stage: 0,
+            opponent_defense_stage: 0,
+            command_cursor: 0,
+            selecting_move: false,
+            party_screen_open: false,
+            escaped: false,
+            move_cursor: 0,
+            player_fainted: false,
+            message: Some("Wild WURMPLE appeared!".to_owned()),
+            entry_transition_frames: 48,
+            intro_stage: 0,
+        });
     }
 
     /// Advances the encounter wipe and reports whether it consumed this
@@ -2721,6 +2768,10 @@ impl WorldState {
             _ => battle.message = Some(match battle.opponent {
                 BattleOpponent::Rival => "No! There's no running from a TRAINER battle!".to_owned(),
                 BattleOpponent::Zigzagoon => "Can't escape!".to_owned(),
+                BattleOpponent::Wurmple => {
+                    battle.escaped = true;
+                    "Got away safely!".to_owned()
+                }
             }),
         }
     }
@@ -2752,7 +2803,11 @@ impl WorldState {
             battle.player_hp = battle.player_hp.saturating_add(20).min(battle.player_max_hp);
             let retaliation = (i16::from(battle.opponent_move_damage) + i16::from(battle.opponent_attack_stage)).max(1) as u8;
             battle.player_hp = battle.player_hp.saturating_sub(retaliation);
-            let opponent = match battle.opponent { BattleOpponent::Rival => "RIVAL", BattleOpponent::Zigzagoon => "ZIGZAGOON" };
+            let opponent = match battle.opponent {
+                BattleOpponent::Rival => "RIVAL",
+                BattleOpponent::Zigzagoon => "ZIGZAGOON",
+                BattleOpponent::Wurmple => "WURMPLE",
+            };
             battle.player_fainted = battle.player_hp == 0;
             battle.message = Some(if battle.player_fainted {
                 format!("Used a POTION! {opponent} used {}. Your POKéMON fainted!", battle.opponent_move_name)
@@ -2776,13 +2831,17 @@ impl WorldState {
                 });
                 return;
             }
-            if battle.player_fainted {
+            if battle.player_fainted || battle.escaped {
                 let opponent = battle.opponent;
+                let escaped = battle.escaped;
                 self.battle = None;
-                self.dialogue = Some(match opponent {
-                    BattleOpponent::Rival => "Your POKéMON needs another try against your RIVAL.".to_owned(),
-                    BattleOpponent::Zigzagoon => "PROF. BIRCH: Try again! My POKéMON still needs help!".to_owned(),
-                });
+                if !escaped {
+                    self.dialogue = Some(match opponent {
+                        BattleOpponent::Rival => "Your POKéMON needs another try against your RIVAL.".to_owned(),
+                        BattleOpponent::Zigzagoon => "PROF. BIRCH: Try again! My POKéMON still needs help!".to_owned(),
+                        BattleOpponent::Wurmple => "Your POKéMON needs another try against WURMPLE.".to_owned(),
+                    });
+                }
             }
             return;
         }
@@ -2834,6 +2893,7 @@ impl WorldState {
                     self.title_intro_step = 0;
                     self.dialogue = Some(birch_rescue_after_battle_page(0, &self.player_name));
                 }
+                BattleOpponent::Wurmple => {}
             }
             return;
         }
@@ -2842,7 +2902,11 @@ impl WorldState {
         // opponent's later physical retaliation rather than dealing damage.
         let retaliation = (i16::from(battle.opponent_move_damage) + i16::from(battle.opponent_attack_stage)).max(1) as u8;
         battle.player_hp = battle.player_hp.saturating_sub(retaliation);
-        let opponent = match battle.opponent { BattleOpponent::Rival => "RIVAL", BattleOpponent::Zigzagoon => "ZIGZAGOON" };
+        let opponent = match battle.opponent {
+            BattleOpponent::Rival => "RIVAL",
+            BattleOpponent::Zigzagoon => "ZIGZAGOON",
+            BattleOpponent::Wurmple => "WURMPLE",
+        };
         if battle.player_hp == 0 {
             battle.player_fainted = true;
             battle.message = Some(format!("{move_name} was used! {opponent} used {}. Your POKéMON fainted!", battle.opponent_move_name));
@@ -3711,7 +3775,8 @@ impl WorldState {
                 self.advance_running_shoes_wait(held_frames.saturating_sub(frames_to_trigger));
             }
             self.apply_oldale_rival_trigger();
-            if self.dialogue.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() { break; }
+            self.begin_route101_wurmple_encounter();
+            if self.dialogue.is_some() || self.battle.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() { break; }
         }
         moved
     }
