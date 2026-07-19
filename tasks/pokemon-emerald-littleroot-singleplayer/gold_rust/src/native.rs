@@ -2325,7 +2325,11 @@ fn render_world_view_with_motion_at_tick(map_id: MapId, player: &TilePosition, w
         // phase below and keeps the Lab/flower viewport aligned at `(9, 13)`.
         Some(Facing::Left) if map_id == MapId::LittlerootTown && player.x == 9 && progress == 0 && matches!(timing_tick, Some(48 | 64 | 80 | 96 | 112 | 128 | 144 | 160 | 176)) => (-16, 0),
         Some(Facing::Left) => (-(progress + 1), 0),
-        Some(Facing::Down) => (0, 0),
+        // The player remains screen-anchored during a southward stride; the
+        // source terrain and nearby NPCs scroll north by each live stride
+        // pixel. This is visible immediately after the Right×64 → Down
+        // handoff, before the logical y coordinate commits.
+        Some(Facing::Down) => (0, progress),
         Some(Facing::Up) => (0, 0),
         None => (0, 0),
     };
@@ -2494,7 +2498,7 @@ pub fn render_littleroot_with_idle_objects_at_tick(player: &TilePosition, facing
         && walk_progress_frames == 0
         && timing_tick == Some(80);
     if matches!(walk_direction, Some(Facing::Up | Facing::Down)) && (walk_progress_frames > 0 || up_80_flower_phase) {
-        apply_littleroot_flower_animation(&mut frame, player, facing, 0);
+        apply_littleroot_flower_animation(&mut frame, player, facing, walk_progress_frames);
     }
     if player == &(TilePosition { x: 9, y: 13 })
         && walk_direction == Some(Facing::Up)
@@ -3764,7 +3768,7 @@ fn outside_oam_with_camera(player: &TilePosition, facing: Facing, walk_direction
         Some(Facing::Right) => (progress, 0),
         Some(Facing::Left) if player.x == 9 && progress == 0 && matches!(timing_tick, Some(48 | 64 | 80 | 96 | 112 | 128 | 144 | 160 | 176)) => (-16, 0),
         Some(Facing::Left) => (-(progress + 1), 0),
-        Some(Facing::Down) => (0, 0),
+        Some(Facing::Down) => (0, progress),
         Some(Facing::Up) => (0, 0),
         None => (0, 0),
     };
