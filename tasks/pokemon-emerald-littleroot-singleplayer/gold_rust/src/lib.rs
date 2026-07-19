@@ -2081,7 +2081,21 @@ impl LittlerootSession {
                     ) {
                         frame
                     } else {
-                        native::render_littleroot_with_idle_objects_at_tick(self.world.render_player(), self.world.facing, self.world.walk_direction, self.world.walk_progress_frames, Some(self.world.frame), self.world.camera_handoff_from)
+                        // After the final staged PPU/OAM phase, retain the
+                        // source-owned terrain fallback but compose the live
+                        // object-event state rather than replaying the idle
+                        // NPC snapshot.
+                        native::render_world_view_with_dynamic_objects(
+                            self.world.map,
+                            self.world.render_player(),
+                            self.world.player_gender,
+                            self.world.facing,
+                            self.world.walk_direction,
+                            self.world.walk_progress_frames,
+                            self.world.frame,
+                            &self.world.npcs,
+                            &self.world.npc_walk_starts,
+                        )
                     }
                 } else {
                     native::render_littleroot_with_idle_objects_at_tick(self.world.render_player(), self.world.facing, self.world.walk_direction, self.world.walk_progress_frames, Some(self.world.frame), self.world.camera_handoff_from)
