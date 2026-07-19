@@ -32,7 +32,7 @@
       "source_state": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/00_init/00_init.state",
       "input": [{ "action": "a", "frames": 120 }, { "action": "noop", "frames": 480 }],
       "frame": "gold_rust/assets/opening_professor_intro.png.b64",
-      "sha256": "100f9b2ddfb094104c48ebf39a738a4e001836f35172fd3bc81258c470d9ab8e"
+      "sha256": "5a76a30e5c8d28a959fd6100a0ca348f49e572ad238c80ae6edb7e7818941426"
     },
     {
       "id": "opening-title-a-120-noop-480-a-16",

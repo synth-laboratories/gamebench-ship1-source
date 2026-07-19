@@ -1289,6 +1289,21 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             return;
         }
     }
+    if world.map == MapId::LittlerootTown
+        && world.phase == StoryPhase::PokedexReceived
+        && world.render_player() == &(crate::world::TilePosition { x: 9, y: 13 })
+        && world.facing == crate::world::Facing::Right
+        && !world.menu_open
+        && world.menu_selection == Some(crate::world::MenuEntry::Pokedex)
+        && world.menu_transition_frames == Some(44)
+        && world.frame == 32
+    {
+        frame.copy_from_slice(
+            &littleroot_outside_start16_a16()
+                .expect("staged Little Root Pokédex transition page must decode"),
+        );
+        return;
+    }
     if let Some(dialogue) = world.rendered_dialogue() {
         if world.map == MapId::ProfessorIntro {
             draw_professor_dialogue(frame, &dialogue);

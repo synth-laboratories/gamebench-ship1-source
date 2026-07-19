@@ -57,6 +57,16 @@ This is functional replay evidence, not a blanket pixel-parity claim: the
 individual exact frame traces remain listed in the frame manifest, while the
 continuous exterior compositor is still under active parity work.
 
+Replay the committed frozen frame corpus with full SHA-256 and pixel-diff
+verification:
+
+```bash
+cargo run --manifest-path gold_rust/Cargo.toml --bin scenario -- --verify-manifest
+```
+
+This verifies every frame presently committed to the manifest; it does not
+replace the remaining required captures for other reachable views.
+
 The HTTP service offers `/health`, `/info`, `POST /rollouts`,
 `POST /rollouts/{id}/step`, `POST /rollouts/{id}/checkpoint`,
 `POST /rollouts/{id}/restore`, `POST /rollouts/{id}/simulate`,
