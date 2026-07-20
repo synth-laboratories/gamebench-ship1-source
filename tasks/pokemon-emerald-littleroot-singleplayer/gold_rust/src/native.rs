@@ -1262,9 +1262,22 @@ pub fn title_to_met_rival_name_confirm() -> Result<Vec<u8>, String> {
     )
 }
 
-/// The selector is removed before Emerald prints the naming confirmation.
+/// Confirming a gender clears only the compact selector window. Emerald keeps
+/// the selected trainer and the platform visible beneath Birch's next page;
 /// `composite_interface` supplies that lower dialogue window.
-pub fn render_name_prompt() -> Vec<u8> {
+pub fn render_name_prompt(player_gender: PlayerGender) -> Vec<u8> {
+    let mut frame = vec![0_u8; FRAME_WIDTH * 160 * 3];
+    draw_gender_backdrop(&mut frame);
+    // `Task_NewGameBirchSpeech_WhatsYourName` leaves tPlayerSpriteId at its
+    // settled source position (center x=180, y=60), represented by this
+    // source sheet's 64x64 top-left anchor at (148, 28).
+    draw_gender_character_at(&mut frame, player_gender, 148);
+    frame
+}
+
+/// The later intro-farewell state retains its existing neutral base until its
+/// separate Birch/Lotad transition is represented by the renderer.
+pub fn render_intro_farewell() -> Vec<u8> {
     vec![0_u8; FRAME_WIDTH * 160 * 3]
 }
 
