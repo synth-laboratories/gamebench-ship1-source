@@ -1069,7 +1069,7 @@ impl LittlerootSession {
         (self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, .. }])
-            && matches!(self.world.frame, 2176 | 2240 | 2304 | 2368 | 2432 | 2496 | 2560 | 2624 | 2688 | 2752 | 2816 | 2880 | 2944 | 3008 | 3072 | 3136 | 3200 | 3264 | 3328 | 3392 | 3456 | 3520 | 3584 | 3648 | 3712 | 3776 | 3840 | 3904 | 4032 | 4096 | 4160 | 4224 | 4288 | 4352 | 4416 | 4480 | 4544 | 4608 | 4672 | 4736 | 4800 | 4816 | 4832 | 4848 | 4864 | 5120)
+            && matches!(self.world.frame, 2176 | 2240 | 2304 | 2368 | 2432 | 2496 | 2560 | 2624 | 2688 | 2752 | 2816 | 2880 | 2944 | 3008 | 3072 | 3136 | 3200 | 3264 | 3328 | 3392 | 3456 | 3520 | 3584 | 3648 | 3712 | 3776 | 3840 | 3904 | 4032 | 4096 | 4160 | 4224 | 4288 | 4352 | 4416 | 4480 | 4544 | 4608 | 4672 | 4736 | 4800 | 4816 | 4832 | 4848 | 4864 | 4880 | 5120)
             && (native::render_littleroot_held_right_timed(self.world.render_player(), self.world.frame).is_some()
                 || native::has_littleroot_stopped_right_phase(self.world.frame)))
             .then(|| match self.world.frame {
@@ -1118,6 +1118,7 @@ impl LittlerootSession {
                 4832 => ("littleroot-outside-birch-lab-right-4832", "d057773a8d6967bd7df3ae763b9388d865c0be1d9efe5f626d77a2a2176c589a"),
                 4848 => ("littleroot-outside-birch-lab-right-4848", "085b6e2b80e6c59de6b63d6233c776f9d6ec364b3fd1761d61a7c2551f98fe69"),
                 4864 => ("littleroot-outside-birch-lab-right-4864", "783cfb2a5647414b22e8f6cce2e2a9d4d269bb0f209599910567ea0ef1eb23b3"),
+                4880 => ("littleroot-outside-birch-lab-right-4880", "3bbf6b53b87806e357bf6f83b66d13058bbf68485fd80e809c238d07df9fa0b4"),
                 5120 => ("littleroot-outside-birch-lab-right-5120", "5acabef02f1a9140a154847f253d54adb08e701e85eb5e50934b8fb21ab33cf8"),
                 _ => unreachable!("source evidence is restricted to captured scheduler ticks"),
             })
