@@ -153,6 +153,11 @@ const BATTLE_BALL_PARTICLES_B64: &str = include_str!("../assets/battle_ball_part
 const BATTLE_TALL_GRASS_TILES_B64: &str = include_str!("../assets/battle_tall_grass_tiles.png.b64");
 const BATTLE_TALL_GRASS_PALETTE_B64: &str = include_str!("../assets/battle_tall_grass_palette.pal.b64");
 const BATTLE_TALL_GRASS_MAP_B64: &str = include_str!("../assets/battle_tall_grass_map.bin.b64");
+// Emerald's normal-grass entry uses a second BG1 tile/map pair over the
+// static BG2 field. The map selects palette bank 4 (the third source bank).
+const BATTLE_TALL_GRASS_ANIM_TILES_B64: &str = include_str!("../assets/battle_tall_grass_anim_tiles.png.b64");
+const BATTLE_TALL_GRASS_ANIM_MAP_B64: &str = include_str!("../assets/battle_tall_grass_anim_map.bin.b64");
+const BATTLE_TALL_GRASS_ANIM_PALETTE_B64: &str = include_str!("../assets/battle_tall_grass_anim_palette.pal.b64");
 // `LoadBattleTextboxAndBackground` loads these BG0 assets before the opening
 // action-selection page, then adds the default `text_window/1.png` frame.
 const BATTLE_TEXTBOX_TILES_B64: &str = include_str!("../assets/battle_textbox_tiles.png.b64");
@@ -270,6 +275,9 @@ static BATTLE_BALL_PARTICLES: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_TALL_GRASS_TILES: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_TALL_GRASS_PALETTE: OnceLock<Vec<[u8; 3]>> = OnceLock::new();
 static BATTLE_TALL_GRASS_MAP: OnceLock<Vec<u8>> = OnceLock::new();
+static BATTLE_TALL_GRASS_ANIM_TILES: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static BATTLE_TALL_GRASS_ANIM_MAP: OnceLock<Vec<u8>> = OnceLock::new();
+static BATTLE_TALL_GRASS_ANIM_PALETTE: OnceLock<[[u8; 3]; 16]> = OnceLock::new();
 static BATTLE_TEXTBOX_TILES: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_TEXTBOX_PALETTE: OnceLock<Vec<u8>> = OnceLock::new();
 static BATTLE_TEXTBOX_MAP: OnceLock<Vec<u8>> = OnceLock::new();
@@ -2580,6 +2588,78 @@ fn draw_grass_battle_intro_slide_phase(
         )
     };
     draw_battle_background_windowed(frame, top, bottom, upper_x_offset, lower_x_offset);
+    // BG1 is the environment-specific animated layer loaded by
+    // `DrawBattleEntryBackground`. It shares the WIN0 reveal but not the
+    // BG2 scanline offsets, so compose it after the static field.
+    draw_battle_tall_grass_anim_windowed(frame, top, bottom, source_tick);
+}
+
+/// Compose the source tall-grass BG1 text layer inside the current WIN0
+/// opening. `BattleIntroSlide1` advances BG1_X by six pixels every task tick;
+/// normal grass starts its one-pixel BG1_Y scroll only after the overlapping
+/// 32-tick state-3 delay. Map entries select palette bank 4, represented by
+/// the third 16-color bank in `palette.pal`; index zero remains transparent so
+/// the static BG2 field shows through the map's blank rows and tile borders.
+fn draw_battle_tall_grass_anim_windowed(
+    frame: &mut [u8],
+    top: usize,
+    bottom: usize,
+    source_tick: usize,
+) {
+    const MAP_WIDTH_TILES: usize = 32;
+    const MAP_HEIGHT_TILES: usize = 32;
+    const MAP_PIXELS: usize = MAP_WIDTH_TILES * TILE_SIZE;
+    const BG1_SCROLL_DELAY_END: usize = 66;
+    let tiles = BATTLE_TALL_GRASS_ANIM_TILES.get_or_init(|| {
+        decode_source_indexed_sheet(BATTLE_TALL_GRASS_ANIM_TILES_B64)
+            .expect("staged Emerald animated tall-grass tiles must decode")
+    });
+    let tilemap = BATTLE_TALL_GRASS_ANIM_MAP.get_or_init(|| {
+        let bytes = decode_base64(BATTLE_TALL_GRASS_ANIM_MAP_B64)
+            .expect("staged Emerald animated tall-grass map must decode");
+        assert_eq!(bytes.len(), MAP_WIDTH_TILES * MAP_HEIGHT_TILES * 2);
+        bytes
+    });
+    let palette = BATTLE_TALL_GRASS_ANIM_PALETTE.get_or_init(|| {
+        let bytes = decode_base64(BATTLE_TALL_GRASS_ANIM_PALETTE_B64)
+            .expect("staged Emerald animated tall-grass palette must decode");
+        parse_palette_bank(&bytes, 2)
+            .expect("staged Emerald animated tall-grass palette must contain bank 4")
+    });
+    if tiles.width != 128 || tiles.height != 128 || tiles.pixels.len() != 128 * 128 {
+        return;
+    }
+    let source_tiles_per_row = tiles.width / TILE_SIZE;
+    let source_tile_count = source_tiles_per_row * (tiles.height / TILE_SIZE);
+    let bg1_x = ((source_tick * 6) & 0xff) as i32;
+    let bg1_y = -(source_tick.saturating_sub(BG1_SCROLL_DELAY_END).min(56) as i32);
+    let first_row = top.min(FRAME_HEIGHT);
+    let last_row = bottom.min(FRAME_HEIGHT);
+    for y in first_row..last_row {
+        let source_y = (y as i32 + bg1_y).rem_euclid(MAP_PIXELS as i32) as usize;
+        let tile_y = source_y / TILE_SIZE;
+        let pixel_y = source_y % TILE_SIZE;
+        for x in 0..FRAME_WIDTH {
+            let source_x = (x as i32 + bg1_x).rem_euclid(MAP_PIXELS as i32) as usize;
+            let tile_x = source_x / TILE_SIZE;
+            let pixel_x = source_x % TILE_SIZE;
+            let entry_offset = (tile_y * MAP_WIDTH_TILES + tile_x) * 2;
+            let entry = u16::from_le_bytes([tilemap[entry_offset], tilemap[entry_offset + 1]]);
+            let tile = usize::from(entry & 0x03ff);
+            if tile >= source_tile_count {
+                continue;
+            }
+            let source_tile_x = (tile % source_tiles_per_row) * TILE_SIZE
+                + if entry & 0x0400 != 0 { TILE_SIZE - 1 - pixel_x } else { pixel_x };
+            let source_tile_y = (tile / source_tiles_per_row) * TILE_SIZE
+                + if entry & 0x0800 != 0 { TILE_SIZE - 1 - pixel_y } else { pixel_y };
+            let color_index = usize::from(tiles.pixels[source_tile_y * tiles.width + source_tile_x]);
+            if color_index == 0 {
+                continue;
+            }
+            put_pixel(frame, x, y, palette[color_index]);
+        }
+    }
 }
 
 /// Replays the settled one-member `OpenPartyMenuInBattle` screen used by the
@@ -9214,6 +9294,40 @@ fn parse_palette(bytes: &[u8]) -> Result<[[u8; 3]; 16], String> {
             Ok(((gba << 3) | (gba >> 2)) as u8)
         };
         colors[index] = [parse_channel("red")?, parse_channel("green")?, parse_channel("blue")?];
+    }
+    Ok(colors)
+}
+
+/// Parse one raw 16-color JASC bank. Battle environment palettes are loaded
+/// as three consecutive hardware banks; the animated BG1 map's `0x4000`
+/// entries select the third source bank (bank index 2 here).
+fn parse_palette_bank(bytes: &[u8], bank: usize) -> Result<[[u8; 3]; 16], String> {
+    let text = std::str::from_utf8(bytes).map_err(|error| error.to_string())?;
+    let first_line = 3usize
+        .checked_add(bank.checked_mul(16).ok_or("palette bank offset overflow")?)
+        .ok_or("palette bank header offset overflow")?;
+    let mut colors = [[0; 3]; 16];
+    let mut parsed = 0usize;
+    for (index, line) in text.lines().skip(first_line).take(16).enumerate() {
+        let mut channels = line.split_whitespace();
+        let parse_channel = |name: &str, channels: &mut std::str::SplitWhitespace<'_>| {
+            channels.next()
+                .ok_or_else(|| format!("missing palette {name}"))?
+                .parse::<u8>()
+                .map_err(|error| format!("invalid palette {name}: {error}"))
+        };
+        colors[index] = [
+            parse_channel("red", &mut channels)?,
+            parse_channel("green", &mut channels)?,
+            parse_channel("blue", &mut channels)?,
+        ];
+        if channels.next().is_some() {
+            return Err(format!("palette bank {bank} color {index} has extra channels"));
+        }
+        parsed += 1;
+    }
+    if parsed != colors.len() {
+        return Err(format!("palette bank {bank} has {parsed} colors, expected 16"));
     }
     Ok(colors)
 }
