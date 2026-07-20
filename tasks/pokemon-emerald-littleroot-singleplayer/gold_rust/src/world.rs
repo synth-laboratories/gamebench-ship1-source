@@ -77,6 +77,9 @@ const NEW_HOME_ORIENTATION_FRAMES: u8 =
     NEW_HOME_FACE_PLAYER_FRAMES + NEW_HOME_PLAYER_FAST_TURN_FRAMES;
 /// Matches the port's existing post-input `MUS_OBTAIN_ITEM` receipt cadence.
 const POKE_BALL_GIFT_FANFARE_REMAINING_FRAMES: u16 = 144;
+/// `EventScript_ReceivePokedex` uses the same `MUS_OBTAIN_ITEM` fanfare as
+/// `giveitem ITEM_POKE_BALL, 5`, so it retains the same post-input rail.
+const POKEDEX_RECEIPT_FANFARE_REMAINING_FRAMES: u16 = POKE_BALL_GIFT_FANFARE_REMAINING_FRAMES;
 /// `MomEnters{Male,Female}` takes 68 frames. The wall-clock script then
 /// waits for the player's four-frame `WalkInPlaceFaster` turn before Mom can
 /// open her upstairs message.
@@ -1211,6 +1214,10 @@ pub struct WorldState {
     /// Rival's approach after Birch explains the Pokédex.
     #[serde(default)]
     pub pokedex_rival_frames: Option<u16>,
+    /// Remaining source frames in `EventScript_ReceivePokedex`'s
+    /// `MUS_OBTAIN_ITEM` receipt fanfare.
+    #[serde(default)]
+    pub pokedex_receipt_fanfare_frames: Option<u16>,
     /// Remaining source frames in the rival's `giveitem ITEM_POKE_BALL, 5`
     /// obtain-item fanfare.
     #[serde(default)]
@@ -1481,6 +1488,7 @@ impl WorldState {
             route103_rival_departure_facing: None,
             pokedex_arrival_frames: None,
             pokedex_rival_frames: None,
+            pokedex_receipt_fanfare_frames: None,
             pokedex_poke_ball_fanfare_frames: None,
             pokedex_poke_ball_pocket_receipt: false,
             route101_exit_push: None,
@@ -1611,6 +1619,7 @@ impl WorldState {
             route103_rival_departure_facing: None,
             pokedex_arrival_frames: None,
             pokedex_rival_frames: None,
+            pokedex_receipt_fanfare_frames: None,
             pokedex_poke_ball_fanfare_frames: None,
             pokedex_poke_ball_pocket_receipt: false,
             route101_exit_push: None,
@@ -1744,6 +1753,7 @@ impl WorldState {
             route103_rival_departure_facing: None,
             pokedex_arrival_frames: None,
             pokedex_rival_frames: None,
+            pokedex_receipt_fanfare_frames: None,
             pokedex_poke_ball_fanfare_frames: None,
             pokedex_poke_ball_pocket_receipt: false,
             route101_exit_push: None,
@@ -1873,6 +1883,7 @@ impl WorldState {
             route103_rival_departure_facing: None,
             pokedex_arrival_frames: None,
             pokedex_rival_frames: None,
+            pokedex_receipt_fanfare_frames: None,
             pokedex_poke_ball_fanfare_frames: None,
             pokedex_poke_ball_pocket_receipt: false,
             route101_exit_push: None,
@@ -2031,6 +2042,7 @@ impl WorldState {
             route103_rival_departure_facing: None,
             pokedex_arrival_frames: None,
             pokedex_rival_frames: None,
+            pokedex_receipt_fanfare_frames: None,
             pokedex_poke_ball_fanfare_frames: None,
             pokedex_poke_ball_pocket_receipt: false,
             route101_exit_push: None,
@@ -3823,11 +3835,13 @@ impl WorldState {
             let visible_characters = usize::from(elapsed.saturating_sub(lead_in));
             return Some(dialogue.chars().take(visible_characters).collect());
         }
-        if let Some(remaining) = self.pokedex_poke_ball_fanfare_frames {
-            // `giveitem ITEM_POKE_BALL, 5` enters
-            // `EventScript_ObtainedItem`: its message printer begins while
-            // `MUS_OBTAIN_ITEM` is still playing, and `waitfanfare` keeps
-            // the follow-up pocket message from replacing this receipt.
+        if let Some(remaining) = self.pokedex_receipt_fanfare_frames
+            .or(self.pokedex_poke_ball_fanfare_frames)
+        {
+            // `EventScript_ReceivePokedex` and `giveitem ITEM_POKE_BALL, 5`
+            // both leave their receipt printer visible while
+            // `MUS_OBTAIN_ITEM` is playing. `waitfanfare` keeps the next
+            // source message from replacing either receipt.
             // The fanfare clock is deliberately longer than the text printer,
             // so derive the visible glyph count from its elapsed source time
             // rather than treating its remaining duration as a printer total.
@@ -3857,6 +3871,7 @@ impl WorldState {
             || self.truck_arrival_dialogue_frames.is_some()
             || self.oldale_mart_dialogue_frames.is_some()
             || self.oldale_mart_item_fanfare_frames.is_some()
+            || self.pokedex_receipt_fanfare_frames.is_some()
             || self.pokedex_poke_ball_fanfare_frames.is_some()
             || self.field_dialogue_frames.is_some()
     }
@@ -4446,6 +4461,24 @@ impl WorldState {
         self.facing = Facing::Right;
         self.title_intro_step = 3;
         self.dialogue = Some(pokedex_handoff_page(3, self.player_gender, &self.player_name));
+        true
+    }
+
+    /// Holds `LittlerootTown_ProfessorBirchsLab_Text_ReceivedPokedex` while
+    /// `EventScript_ReceivePokedex` waits for `MUS_OBTAIN_ITEM`. The source
+    /// only sets the Pokédex flags after that wait before Birch explains it.
+    pub fn advance_pokedex_receipt_fanfare(&mut self, frames: u32) -> bool {
+        let Some(remaining) = self.pokedex_receipt_fanfare_frames else { return false; };
+        let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
+        if next_remaining != 0 {
+            self.pokedex_receipt_fanfare_frames = Some(next_remaining);
+            return true;
+        }
+
+        self.pokedex_receipt_fanfare_frames = None;
+        self.has_pokedex = true;
+        self.title_intro_step = 2;
+        self.dialogue = Some(pokedex_handoff_page(2, self.player_gender, &self.player_name));
         true
     }
 
@@ -5950,6 +5983,7 @@ impl WorldState {
             || self.running_shoes_wait_frames.is_some()
             || self.oldale_mart_dialogue_frames.is_some()
             || self.oldale_mart_item_fanfare_frames.is_some()
+            || self.pokedex_receipt_fanfare_frames.is_some()
             || self.pokedex_poke_ball_fanfare_frames.is_some()
             || self.field_dialogue_frames.is_some()
         {
@@ -6244,6 +6278,12 @@ impl WorldState {
                         self.pokedex_poke_ball_pocket_receipt = false;
                         self.title_intro_step = 4;
                         self.dialogue = Some(pokedex_handoff_page(4, self.player_gender, &self.player_name));
+                    } else if self.title_intro_step == 1 {
+                        // Old serialized checkpoints can restore on the
+                        // receipt page from before this source fanfare rail;
+                        // begin its wait rather than letting one A skip it.
+                        self.pokedex_receipt_fanfare_frames =
+                            Some(POKEDEX_RECEIPT_FANFARE_REMAINING_FRAMES);
                     } else if self.title_intro_step == 2 {
                         // Birch's explanation closes before the rival's
                         // normal down step, faster left turn, and the
@@ -6257,15 +6297,17 @@ impl WorldState {
                         self.pokedex_poke_ball_fanfare_frames =
                             Some(POKE_BALL_GIFT_FANFARE_REMAINING_FRAMES);
                         self.dialogue = Some("Obtained the POKé BALLS!".to_owned());
+                    } else if self.title_intro_step == 0 {
+                        // `EventScript_ReceivePokedex` starts the item
+                        // fanfare and opens this receipt before its
+                        // `waitfanfare`; the following explanation cannot
+                        // replace the message until the rail releases.
+                        self.title_intro_step = 1;
+                        self.pokedex_receipt_fanfare_frames =
+                            Some(POKEDEX_RECEIPT_FANFARE_REMAINING_FRAMES);
+                        self.dialogue = Some(pokedex_handoff_page(1, self.player_gender, &self.player_name));
                     } else if self.title_intro_step < 4 {
                         let next = self.title_intro_step.saturating_add(1);
-                        // Emerald sets the Pokédex flag immediately after
-                        // its receipt/fanfare. Keep that durable milestone
-                        // ahead of later dialogue so a checkpoint restored
-                        // mid-explanation is true to the source script.
-                        if next == 2 {
-                            self.has_pokedex = true;
-                        }
                         self.title_intro_step = next;
                         self.dialogue = Some(pokedex_handoff_page(next, self.player_gender, &self.player_name));
                     } else {
@@ -6417,7 +6459,7 @@ impl WorldState {
     /// separate so they cannot be mistaken for implemented behavior.
     pub fn walk_bounds(&mut self, facing: Facing, held_frames: u32) -> u32 {
         self.face(facing);
-        if self.menu_open || self.dialogue.is_some() || self.transition.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.birch_post_battle_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() || self.pokedex_poke_ball_fanfare_frames.is_some() || self.tv_broadcast_intro_frames.is_some() || self.tv_broadcast_approach_frames.is_some() || self.tv_broadcast_view_frames.is_some() {
+        if self.menu_open || self.dialogue.is_some() || self.transition.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.birch_post_battle_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() || self.pokedex_receipt_fanfare_frames.is_some() || self.pokedex_poke_ball_fanfare_frames.is_some() || self.tv_broadcast_intro_frames.is_some() || self.tv_broadcast_approach_frames.is_some() || self.tv_broadcast_view_frames.is_some() {
             return 0;
         }
 
@@ -6694,7 +6736,7 @@ impl WorldState {
             self.begin_route101_poochyena_encounter();
             self.begin_route101_wurmple_encounter();
             self.begin_route103_wingull_encounter();
-            if self.dialogue.is_some() || self.battle.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.oldale_rival_approach_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() || self.pokedex_poke_ball_fanfare_frames.is_some() { break; }
+            if self.dialogue.is_some() || self.battle.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.oldale_rival_approach_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() || self.pokedex_receipt_fanfare_frames.is_some() || self.pokedex_poke_ball_fanfare_frames.is_some() { break; }
         }
         moved
     }
@@ -6805,6 +6847,7 @@ impl WorldState {
                 // northward steps, then begins the Pokédex handoff.
                 self.phase = StoryPhase::PokedexHandoff;
                 self.pokedex_arrival_frames = Some(112);
+                self.pokedex_receipt_fanfare_frames = None;
                 self.pokedex_poke_ball_fanfare_frames = None;
                 self.pokedex_poke_ball_pocket_receipt = false;
                 self.dialogue = None;
