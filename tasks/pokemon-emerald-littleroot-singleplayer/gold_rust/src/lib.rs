@@ -472,12 +472,12 @@ impl LittlerootSession {
         }
         self.world.advance_npc_wander(prior_frame_index);
         if self.world.clock_editing.is_some() {
-            self.world.advance_clock_period_transition(request.frames);
             // Emerald's `Task_SetClock_HandleInput` has no field cursor:
             // held LEFT/RIGHT advances the minute hand, while UP/DOWN are
             // ignored.  Once the confirmation menu is open, the standard
             // no-wrap menu consumes UP/DOWN to switch YES/NO instead.
             if self.world.clock_confirming {
+                self.world.advance_clock_period_transition(request.frames);
                 match request.action {
                     Input::Up | Input::Down => self.world.move_clock_cursor(),
                     Input::A => self.world.confirm_clock(),
@@ -489,17 +489,10 @@ impl LittlerootSession {
                     | Input::Noop => {}
                 }
             } else {
-                match request.action {
-                    Input::Left => self.world.adjust_clock(-1),
-                    Input::Right => self.world.adjust_clock(1),
-                    Input::A => self.world.confirm_clock(),
-                    Input::B
-                    | Input::Up
-                    | Input::Down
-                    | Input::Start
-                    | Input::Select
-                    | Input::Noop => {}
-                }
+                // `frames` is a held duration in the replay contract. Run
+                // every source VBlank so the minute hand's easing and speed
+                // acceleration survive both long and split LEFT/RIGHT holds.
+                self.world.advance_clock_input(request.action, request.frames);
             }
             self.input_log.push(request);
             self.redraw();
