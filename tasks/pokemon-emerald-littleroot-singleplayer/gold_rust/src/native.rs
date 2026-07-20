@@ -1896,8 +1896,10 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
         if player_intro_sendout {
             // Both objects are source OBJ layers beneath the retained status
             // chrome. The ball begins while the trainer is still exiting,
-            // then hands off at the release callback; affine emergence and
-            // particles deliberately remain outside this bounded rail.
+            // then hands off at the release callback. Keep the existing
+            // input-lock timeline unchanged, but project the callback's first
+            // open-ball/affine-emerge frame before the settled sprite takes
+            // over on the following frame.
             if battle.intro_player_sendout_frames > 0 {
                 draw_battle_player_intro_sendout_trainer(
                     frame,
@@ -1911,6 +1913,9 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
                     battle.intro_player_sendout_elapsed_frames,
                     world.starter,
                 );
+                if battle.intro_player_sendout_elapsed_frames == BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES {
+                    draw_battle_player_intro_sendout_release(frame, world.starter);
+                }
             }
         }
         draw_battle_healthbox_backgrounds(frame);
@@ -3481,7 +3486,7 @@ fn battle_player_sendout_pokeball_center(
 
 /// Source `sBallOamData` is a 16×16 affine-double OBJ with priority 2. Its
 /// arc uses `sBallAnimSeq0`, so the first 16×16 cell of `gBallGfx_Poke` stays
-/// visible until the next release callback switches to the opening sequence.
+/// visible until the release callback switches to `sBallAnimSeq1`.
 fn draw_battle_player_intro_sendout_pokeball(
     frame: &mut [u8],
     elapsed_frames: u8,
@@ -3494,16 +3499,44 @@ fn draw_battle_player_intro_sendout_pokeball(
         decode_source_indexed_sheet(BATTLE_PLAYER_SENDOUT_POKEBALL_B64)
             .expect("staged Emerald player-send-out Poké Ball source asset must decode")
     });
-    if ball.width != 16 || ball.height < 16 { return; }
+    if ball.width != 16 { return; }
+    // `SpriteCB_ReleaseMonFromBall` starts sequence 1 at the final arc
+    // callback. The first sequence cell is the source sheet's middle 16×16
+    // crop; all preceding arc frames remain on cell zero.
+    let source_y = if elapsed_frames == BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES { 16 } else { 0 };
+    if ball.height < source_y + 16 { return; }
     draw_source_indexed_crop(
         frame,
         ball,
         0,
-        0,
+        source_y,
         16,
         16,
         (center_x - 8).max(0) as usize,
         (center_y - 8).max(0) as usize,
+    );
+}
+
+/// Projects the first visible frame after `SpriteCB_ReleaseMonFromBall`.
+/// `src/data.c` seeds `BATTLER_AFFINE_EMERGE` at 0x28 (40) before its twelve
+/// 0x12 steps grow the sprite to normal size. The player-side center and
+/// species y offsets are the same coordinates used by the settled battler.
+/// This is intentionally a one-frame hand-off projection: the existing
+/// serialized send-out lock and command timing remain untouched.
+fn draw_battle_player_intro_sendout_release(
+    frame: &mut [u8],
+    starter: Option<StarterSpecies>,
+) {
+    let y_offset = match starter.unwrap_or(StarterSpecies::Treecko) {
+        StarterSpecies::Treecko => 6,
+        StarterSpecies::Torchic | StarterSpecies::Mudkip => 5,
+    };
+    draw_battle_sprite_scaled_centered(
+        frame,
+        battle_back_sprite(starter),
+        72,
+        80 + y_offset,
+        0x28,
     );
 }
 
