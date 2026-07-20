@@ -2861,9 +2861,10 @@ impl WorldState {
         }
 
         // `Common_Movement_WalkInPlaceFasterRight` starts as soon as the
-        // rival's final normal stride completes.  The port has no separate
-        // player in-place OBJ cadence yet, but its visible facing changes at
-        // the source boundary and input remains locked for all four frames.
+        // rival's final normal stride completes. Its visible facing changes
+        // at the source boundary and input remains locked for all four frames;
+        // the native compositor consumes that interval for the source
+        // faster-east OBJ cells.
         if elapsed_before <= rival_walk_frames && rival_walk_frames < elapsed_after {
             self.facing = Facing::Right;
         }
