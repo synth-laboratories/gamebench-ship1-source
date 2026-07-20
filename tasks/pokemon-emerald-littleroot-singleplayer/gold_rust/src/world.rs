@@ -90,6 +90,7 @@ const WALL_CLOCK_START_MINUTES: u16 = 10 * 60;
 /// `SpriteCB_PMIndicator` and `SpriteCB_AMIndicator` both settle in 21
 /// VBlanks: fifteen one-degree steps, then six five-degree steps.
 const WALL_CLOCK_PERIOD_TRANSITION_FRAMES: u8 = 21;
+const WALL_CLOCK_MINUTE_ANGLE_CIRCLE: u16 = 360;
 const CLOCK_VISIT_MOM_ENTRY_FRAMES: u16 = 68;
 const CLOCK_VISIT_PLAYER_TURN_FRAMES: u16 = 4;
 const CLOCK_VISIT_ENTRY_FRAMES: u16 =
@@ -237,6 +238,41 @@ fn wall_clock_advance_am_indicator(angle: u8, target_is_pm: bool) -> u8 {
         if angle > 120 { angle -= 1; }
     }
     angle
+}
+
+/// Exact `CalcMinHandDelta` thresholds from `src/wallclock.c`.
+fn wall_clock_minute_hand_delta(speed: u8) -> u16 {
+    if speed > 60 {
+        6
+    } else if speed > 30 {
+        3
+    } else if speed > 10 {
+        2
+    } else {
+        1
+    }
+}
+
+/// Exact `CalcNewMinHandAngle` wrap behavior from `src/wallclock.c`.
+fn wall_clock_advance_minute_hand(angle: u16, direction: i8, speed: u8) -> u16 {
+    let delta = wall_clock_minute_hand_delta(speed);
+    match direction {
+        -1 => {
+            if angle > 0 {
+                angle - delta
+            } else {
+                WALL_CLOCK_MINUTE_ANGLE_CIRCLE - delta
+            }
+        }
+        1 => {
+            if angle < WALL_CLOCK_MINUTE_ANGLE_CIRCLE - delta {
+                angle + delta
+            } else {
+                0
+            }
+        }
+        _ => angle,
+    }
 }
 
 /// `NAMING_SCREEN_PLAYER` and `NAMING_SCREEN_NICKNAME` share Emerald's
@@ -1183,6 +1219,15 @@ pub struct WorldState {
     pub pokedex_cursor: u16,
     pub dialogue: Option<String>,
     pub clock_minutes: Option<u16>,
+    /// Source `Task_SetClock` state used to preserve held LEFT/RIGHT motion
+    /// across request packets. The hand eases between six-degree minute
+    /// marks while the logical time advances only at each mark.
+    #[serde(default)]
+    pub clock_minute_hand_angle: u16,
+    #[serde(default)]
+    pub clock_move_direction: i8,
+    #[serde(default)]
+    pub clock_move_speed: u8,
     pub clock_editing: Option<ClockField>,
     pub clock_confirming: bool,
     pub clock_confirm_yes: bool,
@@ -1526,6 +1571,9 @@ impl WorldState {
             pokedex_cursor: 0,
             dialogue: None,
             clock_minutes: None,
+            clock_minute_hand_angle: 0,
+            clock_move_direction: 0,
+            clock_move_speed: 0,
             clock_editing: None,
             clock_confirming: false,
             clock_confirm_yes: true,
@@ -1660,6 +1708,9 @@ impl WorldState {
             pokedex_cursor: 0,
             dialogue: None,
             clock_minutes: None,
+            clock_minute_hand_angle: 0,
+            clock_move_direction: 0,
+            clock_move_speed: 0,
             clock_editing: None,
             clock_confirming: false,
             clock_confirm_yes: true,
@@ -1797,6 +1848,9 @@ impl WorldState {
             pokedex_cursor: 0,
             dialogue: None,
             clock_minutes: None,
+            clock_minute_hand_angle: 0,
+            clock_move_direction: 0,
+            clock_move_speed: 0,
             clock_editing: None,
             clock_confirming: false,
             clock_confirm_yes: true,
@@ -1930,6 +1984,9 @@ impl WorldState {
             pokedex_cursor: 0,
             dialogue: None,
             clock_minutes: Some(720),
+            clock_minute_hand_angle: 0,
+            clock_move_direction: 0,
+            clock_move_speed: 0,
             clock_editing: None,
             clock_confirming: false,
             clock_confirm_yes: true,
@@ -2092,6 +2149,9 @@ impl WorldState {
             pokedex_cursor: 0,
             dialogue: None,
             clock_minutes: Some(720),
+            clock_minute_hand_angle: 0,
+            clock_move_direction: 0,
+            clock_move_speed: 0,
             clock_editing: None,
             clock_confirming: false,
             clock_confirm_yes: true,
@@ -2534,7 +2594,10 @@ impl WorldState {
     }
 
     fn start_clock_editor(&mut self) {
-        self.clock_minutes.get_or_insert(WALL_CLOCK_START_MINUTES);
+        let minutes = self.clock_minutes.get_or_insert(WALL_CLOCK_START_MINUTES);
+        self.clock_minute_hand_angle = (*minutes % 60) * 6;
+        self.clock_move_direction = 0;
+        self.clock_move_speed = 0;
         self.clock_editing = Some(ClockField::Hours);
         self.clock_confirming = false;
         self.clock_confirm_yes = true;
@@ -2589,24 +2652,83 @@ impl WorldState {
         (pm_angle, am_angle)
     }
 
-    pub fn adjust_clock(&mut self, delta: i16) {
-        if self.clock_confirming { return; }
-        let Some(_field) = self.clock_editing else { return; };
+    /// Advances the source wall-clock task for a held input packet. Emerald
+    /// samples JOY_HELD every VBlank, easing the minute hand between six-
+    /// degree marks and accelerating after 10/30/60 logical moves. Keep that
+    /// hand/speed state serialized so splitting one hold across requests has
+    /// the same result as one contiguous hold.
+    pub fn advance_clock_input(&mut self, action: crate::Input, frames: u32) {
+        if self.clock_editing.is_none() || self.clock_confirming {
+            return;
+        }
+        let held_direction = match action {
+            crate::Input::Left => -1,
+            crate::Input::Right => 1,
+            crate::Input::Up
+            | crate::Input::Down
+            | crate::Input::A
+            | crate::Input::B
+            | crate::Input::Start
+            | crate::Input::Select
+            | crate::Input::Noop => 0,
+        };
+        let frame_count = frames.min(u32::from(u16::MAX));
+        for frame in 0..frame_count {
+            // Sprite callbacks run once per VBlank after the clock task. The
+            // transition state stores the post-callback pose, so advance the
+            // prior transition before handling this frame's input.
+            self.advance_clock_period_transition(1);
+            let hand_is_settled = self.clock_minute_hand_angle % 6 == 0;
+            if !hand_is_settled {
+                // While the hand is between marks the source task does not
+                // read new input; it continues with its previous direction.
+                self.clock_minute_hand_angle = wall_clock_advance_minute_hand(
+                    self.clock_minute_hand_angle,
+                    self.clock_move_direction,
+                    self.clock_move_speed,
+                );
+                continue;
+            }
+
+            let minutes = self.clock_minutes.unwrap_or(WALL_CLOCK_START_MINUTES);
+            self.clock_minute_hand_angle = (minutes % 60) * 6;
+            // JOY_NEW(A_BUTTON) is sampled only on the first frame of a
+            // transport packet. If the hand is still easing, source ignores
+            // that A and waits for a later fresh press.
+            if frame == 0 && action == crate::Input::A {
+                self.confirm_clock();
+                self.advance_clock_period_transition(frame_count.saturating_sub(1));
+                break;
+            }
+
+            self.clock_move_direction = 0;
+            if held_direction != 0 {
+                self.clock_move_direction = held_direction;
+                self.clock_move_speed = self.clock_move_speed.saturating_add(1);
+                self.clock_minute_hand_angle = wall_clock_advance_minute_hand(
+                    self.clock_minute_hand_angle,
+                    held_direction,
+                    self.clock_move_speed,
+                );
+                self.apply_clock_minute_delta(i16::from(held_direction));
+            } else {
+                self.clock_move_speed = 0;
+            }
+        }
+    }
+
+    fn apply_clock_minute_delta(&mut self, delta: i16) {
         let current = i16::try_from(self.clock_minutes.unwrap_or(WALL_CLOCK_START_MINUTES))
             .unwrap_or(i16::try_from(WALL_CLOCK_START_MINUTES).expect("wall-clock default fits i16"));
         let was_pm = current >= 12 * 60;
         let (pm_angle, am_angle) = self.clock_period_indicator_angles();
-        // `Task_SetClock_HandleInput` advances one minute per completed
-        // movement and maps LEFT/RIGHT to decrement/increment.  The public
-        // replay input is sampled as a directional action, so keep each
-        // sample to one logical minute and leave cadence to the caller.
         let adjusted = (current + delta).rem_euclid(1440) as u16;
         let is_pm = adjusted >= 12 * 60;
         self.clock_minutes = Some(adjusted);
         if was_pm != is_pm {
             // `Task_SetClock_HandleInput` changes `tPeriod` before the
             // sprite callbacks run for the current VBlank. Start at one
-            // elapsed source callback so this request includes that first
+            // elapsed source callback so this frame includes that first
             // visible degree of period-badge movement.
             self.clock_period_transition = Some(ClockPeriodTransition {
                 pm_angle,
@@ -2615,6 +2737,13 @@ impl WorldState {
                 elapsed_frames: 1,
             });
         }
+    }
+
+    pub fn adjust_clock(&mut self, delta: i16) {
+        if self.clock_confirming { return; }
+        let Some(_field) = self.clock_editing else { return; };
+        self.apply_clock_minute_delta(delta);
+        self.clock_minute_hand_angle = (self.clock_minutes.unwrap_or(WALL_CLOCK_START_MINUTES) % 60) * 6;
     }
 
     pub fn confirm_clock(&mut self) {

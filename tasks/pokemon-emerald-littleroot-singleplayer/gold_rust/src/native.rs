@@ -4298,7 +4298,13 @@ fn draw_wallclock_editor(frame: &mut [u8], world: &WorldState) {
     // inserts the same value before entering this compositor; retain it as
     // the fallback so an older serialized state cannot redraw noon instead.
     let time = world.clock_minutes.unwrap_or(10 * 60);
-    let minute_angle = (time % 60) * 6;
+    let minute_angle = if world.clock_editing.is_some() {
+        // `Task_SetClock_HandleInput` renders the hand at its in-flight
+        // angle while a held direction eases toward the next minute mark.
+        world.clock_minute_hand_angle
+    } else {
+        (time % 60) * 6
+    };
     let hour_angle = ((time / 60) % 12) * 30 + ((time % 60) / 10) * 5;
     let hand_tiles = wallclock_hand_tiles();
     // `SpriteCB_MinuteHand` and `SpriteCB_HourHand` use 64x64 OAMs with
