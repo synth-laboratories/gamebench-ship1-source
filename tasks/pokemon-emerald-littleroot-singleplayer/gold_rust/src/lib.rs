@@ -457,6 +457,7 @@ impl LittlerootSession {
         }
         self.world.advance_npc_wander(prior_frame_index);
         if self.world.clock_editing.is_some() {
+            self.world.advance_clock_period_transition(request.frames);
             match request.action {
                 Input::Up => self.world.adjust_clock(1),
                 Input::Down => self.world.adjust_clock(-1),

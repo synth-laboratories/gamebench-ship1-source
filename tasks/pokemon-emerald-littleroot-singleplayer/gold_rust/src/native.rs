@@ -3670,22 +3670,23 @@ fn draw_wallclock_editor(frame: &mut [u8], world: &WorldState) {
     draw_wallclock_affine_hand(frame, hand_tiles, 64, hour_angle, palette);
 
     // The AM/PM markers are separate 16x16 source OAMs at tile offsets 128
-    // and 132. `CB2_StartWallClock` creates AM at 90° and PM at 45°; when
-    // `UpdateClockPeriod` flips to PM, `SpriteCB_AMIndicator` settles at
-    // 135° and `SpriteCB_PMIndicator` settles at 90°.
-    let is_pm = time / 60 >= 12;
+    // and 132. `SpriteCB_AMIndicator` / `SpriteCB_PMIndicator` animate
+    // through their source angular bands after `UpdateClockPeriod` changes
+    // `tPeriod`, so use the typed world state's in-flight OAM angles rather
+    // than snapping directly to a settled AM or PM pose.
+    let (pm_indicator_angle, am_indicator_angle) = world.clock_period_indicator_angles();
     draw_wallclock_period_indicator(
         frame,
         hand_tiles,
         128,
-        if is_pm { 135 } else { 90 },
+        am_indicator_angle,
         palette,
     );
     draw_wallclock_period_indicator(
         frame,
         hand_tiles,
         132,
-        if is_pm { 90 } else { 45 },
+        pm_indicator_angle,
         palette,
     );
 

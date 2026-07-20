@@ -83,6 +83,9 @@ const POKE_BALL_GIFT_FANFARE_REMAINING_FRAMES: u16 = 144;
 /// `CB2_StartWallClock` initializes its editable clock to 10:00 AM before
 /// it creates the two hand sprites (`tHours = 10`, `tMinutes = 0`).
 const WALL_CLOCK_START_MINUTES: u16 = 10 * 60;
+/// `SpriteCB_PMIndicator` and `SpriteCB_AMIndicator` both settle in 21
+/// VBlanks: fifteen one-degree steps, then six five-degree steps.
+const WALL_CLOCK_PERIOD_TRANSITION_FRAMES: u8 = 21;
 const CLOCK_VISIT_MOM_ENTRY_FRAMES: u16 = 68;
 const CLOCK_VISIT_PLAYER_TURN_FRAMES: u16 = 4;
 const CLOCK_VISIT_ENTRY_FRAMES: u16 =
@@ -185,6 +188,47 @@ pub enum MenuEntry { Pokedex, Pokemon, Bag, Player, Save, Option, Exit }
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum ClockField { Hours, Minutes }
+
+/// The wall-clock editor's AM/PM badges are independent source OAM sprites.
+/// Keep their actual angular state, rather than snapping badges whenever the
+/// displayed time crosses noon or midnight.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct ClockPeriodTransition {
+    pm_angle: u8,
+    am_angle: u8,
+    target_is_pm: bool,
+    elapsed_frames: u8,
+}
+
+fn wall_clock_settled_period_angles(is_pm: bool) -> (u8, u8) {
+    if is_pm { (90, 135) } else { (45, 90) }
+}
+
+/// Exact `SpriteCB_PMIndicator` angle update from `src/wallclock.c`.
+fn wall_clock_advance_pm_indicator(angle: u8, target_is_pm: bool) -> u8 {
+    let mut angle = angle;
+    if target_is_pm {
+        if (60..90).contains(&angle) { angle += 5; }
+        if angle < 60 { angle += 1; }
+    } else {
+        if (46..76).contains(&angle) { angle -= 5; }
+        if angle > 75 { angle -= 1; }
+    }
+    angle
+}
+
+/// Exact `SpriteCB_AMIndicator` angle update from `src/wallclock.c`.
+fn wall_clock_advance_am_indicator(angle: u8, target_is_pm: bool) -> u8 {
+    let mut angle = angle;
+    if target_is_pm {
+        if (105..135).contains(&angle) { angle += 5; }
+        if angle < 105 { angle += 1; }
+    } else {
+        if (91..121).contains(&angle) { angle -= 5; }
+        if angle > 120 { angle -= 1; }
+    }
+    angle
+}
 
 /// `NAMING_SCREEN_PLAYER` and `NAMING_SCREEN_NICKNAME` share Emerald's
 /// keyboard controls but commit to different saved data.
@@ -1075,6 +1119,9 @@ pub struct WorldState {
     /// before it hands control to `StartWallClock`.
     #[serde(default)]
     pub clock_prompt_active: bool,
+    /// Active source OAM settling state for the AM/PM period badges.
+    #[serde(default)]
+    pub clock_period_transition: Option<ClockPeriodTransition>,
     pub pending_running_shoes: bool,
     /// Source frames before Mom's initial Running Shoes `Wait` box accepts a
     /// dismiss input. The trigger frame itself is not a valid close.
@@ -1394,6 +1441,7 @@ impl WorldState {
             clock_confirming: false,
             clock_confirm_yes: true,
             clock_prompt_active: false,
+            clock_period_transition: None,
             pending_running_shoes: false,
             running_shoes_wait_frames: None,
             running_shoes_frames: None,
@@ -1523,6 +1571,7 @@ impl WorldState {
             clock_confirming: false,
             clock_confirm_yes: true,
             clock_prompt_active: false,
+            clock_period_transition: None,
             pending_running_shoes: false,
             running_shoes_wait_frames: None,
             running_shoes_frames: None,
@@ -1655,6 +1704,7 @@ impl WorldState {
             clock_confirming: false,
             clock_confirm_yes: true,
             clock_prompt_active: false,
+            clock_period_transition: None,
             pending_running_shoes: false,
             running_shoes_wait_frames: None,
             running_shoes_frames: None,
@@ -1783,6 +1833,7 @@ impl WorldState {
             clock_confirming: false,
             clock_confirm_yes: true,
             clock_prompt_active: false,
+            clock_period_transition: None,
             pending_running_shoes: false,
             running_shoes_wait_frames: None,
             running_shoes_frames: None,
@@ -1940,6 +1991,7 @@ impl WorldState {
             clock_confirming: false,
             clock_confirm_yes: true,
             clock_prompt_active: false,
+            clock_period_transition: None,
             pending_running_shoes: false,
             running_shoes_wait_frames: None,
             running_shoes_frames: None,
@@ -2377,6 +2429,7 @@ impl WorldState {
         self.clock_editing = Some(ClockField::Hours);
         self.clock_confirming = false;
         self.clock_confirm_yes = true;
+        self.clock_period_transition = None;
     }
 
     pub fn move_clock_cursor(&mut self) {
@@ -2391,13 +2444,65 @@ impl WorldState {
         };
     }
 
+    /// Advances the two independent period-indicator OAM callbacks while the
+    /// clock task remains interactive. Source runs these callbacks after its
+    /// input task every VBlank, including frames with no button press.
+    pub fn advance_clock_period_transition(&mut self, frames: u32) {
+        let Some(transition) = self.clock_period_transition else { return; };
+        let elapsed = transition.elapsed_frames.saturating_add(
+            frames.min(u32::from(u8::MAX)) as u8,
+        );
+        if elapsed >= WALL_CLOCK_PERIOD_TRANSITION_FRAMES {
+            self.clock_period_transition = None;
+        } else {
+            self.clock_period_transition = Some(ClockPeriodTransition {
+                elapsed_frames: elapsed,
+                ..transition
+            });
+        }
+    }
+
+    /// Returns the source OAM angles in PM, AM order. At rest these are
+    /// `(45, 90)` for AM and `(90, 135)` for PM; during a period flip each
+    /// angle follows its own callback's one-degree/five-degree bands.
+    pub fn clock_period_indicator_angles(&self) -> (u8, u8) {
+        let Some(transition) = self.clock_period_transition else {
+            return wall_clock_settled_period_angles(
+                self.clock_minutes.unwrap_or(WALL_CLOCK_START_MINUTES) >= 12 * 60,
+            );
+        };
+        let mut pm_angle = transition.pm_angle;
+        let mut am_angle = transition.am_angle;
+        for _ in 0..transition.elapsed_frames {
+            pm_angle = wall_clock_advance_pm_indicator(pm_angle, transition.target_is_pm);
+            am_angle = wall_clock_advance_am_indicator(am_angle, transition.target_is_pm);
+        }
+        (pm_angle, am_angle)
+    }
+
     pub fn adjust_clock(&mut self, delta: i16) {
         if self.clock_confirming { return; }
         let Some(field) = self.clock_editing else { return; };
         let step = match field { ClockField::Hours => 60, ClockField::Minutes => 1 };
         let current = i16::try_from(self.clock_minutes.unwrap_or(WALL_CLOCK_START_MINUTES))
             .unwrap_or(i16::try_from(WALL_CLOCK_START_MINUTES).expect("wall-clock default fits i16"));
-        self.clock_minutes = Some((current + delta * step).rem_euclid(1440) as u16);
+        let was_pm = current >= 12 * 60;
+        let (pm_angle, am_angle) = self.clock_period_indicator_angles();
+        let adjusted = (current + delta * step).rem_euclid(1440) as u16;
+        let is_pm = adjusted >= 12 * 60;
+        self.clock_minutes = Some(adjusted);
+        if was_pm != is_pm {
+            // `Task_SetClock_HandleInput` changes `tPeriod` before the
+            // sprite callbacks run for the current VBlank. Start at one
+            // elapsed source callback so this request includes that first
+            // visible degree of period-badge movement.
+            self.clock_period_transition = Some(ClockPeriodTransition {
+                pm_angle,
+                am_angle,
+                target_is_pm: is_pm,
+                elapsed_frames: 1,
+            });
+        }
     }
 
     pub fn confirm_clock(&mut self) {
@@ -2408,6 +2513,7 @@ impl WorldState {
         } else if self.clock_confirm_yes {
             self.clock_editing = None;
             self.clock_confirming = false;
+            self.clock_period_transition = None;
             // `PlayersHouse_2F_EventScript_WallClock` waits thirty frames
             // after `StartWallClock` before it creates Mom's upstairs object
             // event, then runs Mom's 68-frame entry and the player's
@@ -4641,6 +4747,7 @@ impl WorldState {
             self.clock_confirming = false;
         } else {
             self.clock_editing = None;
+            self.clock_period_transition = None;
         }
     }
 
