@@ -18,9 +18,10 @@ fn bedroom_rival_movement_frames(faster: bool) -> u16 {
     }
 }
 
-/// `PetalburgGymReport{Male,Female}` spends one faster in-place turn, an
-/// exclamation emote, and `Common_Movement_Delay48` before Mom speaks.
-const TV_BROADCAST_INTRO_FRAMES: u16 = 84;
+/// `PetalburgGymReport{Male,Female}` spends one four-frame faster in-place
+/// turn, one frame launching `emote_exclamation_mark`, and the three
+/// `delay_16` actions in `Common_Movement_Delay48` before Mom speaks.
+const TV_BROADCAST_INTRO_FRAMES: u16 = 4 + 1 + 48;
 /// `Common_Movement_ExclamationMark` completes its object movement in one
 /// tick, while the spawned field-effect icon stays animated for 60 frames.
 const RIVAL_MOM_EMOTE_MOVEMENT_FRAMES: u16 = 1;
