@@ -1,7 +1,11 @@
 use png::{ColorType, Decoder, Transformations};
 use flate2::read::ZlibDecoder;
 use crate::{FRAME_BYTES, FRAME_HEIGHT, FRAME_WIDTH};
-use crate::world::{ClockField, Facing, MapId, NpcState, NpcWalkStart, PlayerGender, StarterSpecies, StoryPhase, TilePosition, WorldState};
+use crate::world::{
+    ClockField, Facing, MapId, NamingActionButton, NamingActionButtonPulse,
+    NpcState, NpcWalkStart, PlayerGender, StarterSpecies, StoryPhase,
+    TilePosition, WorldState,
+};
 use std::io::{Cursor, Read};
 use std::sync::OnceLock;
 
@@ -995,10 +999,13 @@ pub fn render_professor_intro_idle() -> Result<Vec<u8>, String> {
 }
 
 pub fn render_name_entry_idle() -> Result<Vec<u8>, String> {
-    render_name_entry_with_cursor(Some((0, 0)))
+    render_name_entry_with_cursor(Some((0, 0)), None)
 }
 
-fn render_name_entry_with_cursor(cursor: Option<(usize, usize)>) -> Result<Vec<u8>, String> {
+fn render_name_entry_with_cursor(
+    cursor: Option<(usize, usize)>,
+    action_button_pulse: Option<NamingActionButtonPulse>,
+) -> Result<Vec<u8>, String> {
     let vram = decode_base64(NAME_ENTRY_BG_VRAM_B64.trim())?;
     let palette = decode_base64(NAME_ENTRY_BG_PALETTE_B64.trim())?;
     if vram.len() != 0x10000 || palette.len() != 0x200 { return Err("invalid staged name-entry BG assets".to_owned()); }
@@ -1016,7 +1023,10 @@ fn render_name_entry_with_cursor(cursor: Option<(usize, usize)>) -> Result<Vec<u
         )?;
     }
     let obj_vram = decode_base64(NAME_ENTRY_OBJ_VRAM_B64.trim())?;
-    let obj_palette = decode_base64(NAME_ENTRY_OBJ_PALETTE_B64.trim())?;
+    let mut obj_palette = decode_base64(NAME_ENTRY_OBJ_PALETTE_B64.trim())?;
+    if let Some(pulse) = action_button_pulse {
+        apply_name_entry_action_button_pulse(&mut obj_palette, pulse)?;
+    }
     let oam = decode_base64(NAME_ENTRY_OAM_B64.trim())?;
     // Entry 22 is the 16x16 keyboard cursor. Recompose it separately so its
     // source sprite data can follow the live Rust keyboard position.
@@ -1046,7 +1056,10 @@ fn render_name_entry_with_cursor(cursor: Option<(usize, usize)>) -> Result<Vec<u
 }
 
 pub fn render_name_entry(world: &WorldState) -> Result<Vec<u8>, String> {
-    let mut frame = render_name_entry_with_cursor(name_entry_cursor_position(world.name_cursor))?;
+    let mut frame = render_name_entry_with_cursor(
+        name_entry_cursor_position(world.name_cursor),
+        world.naming_action_button_pulse,
+    )?;
     // These source patches are exact captures of the player-name title flow;
     // the starter screen below reuses the keyboard art but has its own title
     // and input line.
@@ -1119,6 +1132,40 @@ fn name_entry_cursor_position(cursor: u8) -> Option<(usize, usize)> {
         28..=31 => None,
         _ => Some((0, 0)),
     }
+}
+
+/// Mirrors `GetButtonPalOffset` plus
+/// `MultiplyInvertedPaletteRGBComponents` for the staged naming-screen OBJ
+/// palette. `LoadSpritePalettes` assigns the source palette tags in order:
+/// page frame = 4, cursor = 5, Back = 6, and OK = 7.
+fn apply_name_entry_action_button_pulse(
+    palette: &mut [u8],
+    pulse: NamingActionButtonPulse,
+) -> Result<(), String> {
+    let palette_number = match pulse.button {
+        NamingActionButton::Page => 4,
+        NamingActionButton::Back => 6,
+        NamingActionButton::Ok => 7,
+    };
+    if pulse.applied_color > 16 {
+        return Err("invalid name-entry action-button pulse color".to_owned());
+    }
+    // Every source control pulses palette color 14; `gPlttBufferUnfaded`
+    // remains the base for each frame's toward-white calculation.
+    let offset = (palette_number * 16 + 14) * 2;
+    if palette.len() < offset + 2 {
+        return Err("invalid staged name-entry OBJ palette".to_owned());
+    }
+    let source = u16::from_le_bytes([palette[offset], palette[offset + 1]]);
+    let intensity = u16::from(pulse.applied_color);
+    let red = (source & 0x1f) + (((0x1f - (source & 0x1f)) * intensity) >> 4);
+    let green_component = (source >> 5) & 0x1f;
+    let green = green_component + (((0x1f - green_component) * intensity) >> 4);
+    let blue_component = (source >> 10) & 0x1f;
+    let blue = blue_component + (((0x1f - blue_component) * intensity) >> 4);
+    let brightened = red | (green << 5) | (blue << 10);
+    palette[offset..offset + 2].copy_from_slice(&brightened.to_le_bytes());
+    Ok(())
 }
 
 fn disabled_oam() -> Vec<u8> {

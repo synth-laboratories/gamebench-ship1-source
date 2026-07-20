@@ -185,6 +185,27 @@ pub enum ClockField { Hours, Minutes }
 #[serde(rename_all = "snake_case")]
 pub enum NamingTarget { Player, Starter }
 
+/// The three source controls in the naming screen's action-button column.
+/// The two middle keyboard rows both route to Emerald's Back control.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum NamingActionButton { Page, Back, Ok }
+
+/// Serialized mirror of `Task_UpdateButtonFlash` in `naming_screen.c`.
+/// `applied_color` is the most recent value written into the source's faded
+/// OBJ palette; the remaining fields directly model the task's data slots.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct NamingActionButtonPulse {
+    pub button: NamingActionButton,
+    pub color: i16,
+    pub color_incr: i16,
+    pub color_delay: i16,
+    pub color_delta: i16,
+    pub keep_flashing: bool,
+    pub allow_flash: bool,
+    pub applied_color: u8,
+}
+
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum StarterSpecies { Treecko, Torchic, Mudkip }
@@ -1281,6 +1302,11 @@ pub struct WorldState {
     /// the replacement slides in from the right while input is locked.
     pub gender_transition: Option<GenderTransition>,
     pub name_entry_touched: bool,
+    /// Source `Task_UpdateButtonFlash` state for the naming action column.
+    /// Older snapshots predate the fidelity pass and start at the static
+    /// source palette until an action button is selected.
+    #[serde(default)]
+    pub naming_action_button_pulse: Option<NamingActionButtonPulse>,
     /// Frames since the naming screen opened; its input grid is not ready immediately.
     pub name_entry_ready_frames: u32,
     /// Whether the name keyboard is showing its lowercase/effect character page.
@@ -1408,6 +1434,7 @@ impl WorldState {
             gender_selection_touched: false,
             gender_transition: None,
             name_entry_touched: false,
+            naming_action_button_pulse: None,
             name_entry_ready_frames: 0,
             name_entry_lowercase: false,
             name_confirm_yes: true,
@@ -1533,6 +1560,7 @@ impl WorldState {
             gender_selection_touched: false,
             gender_transition: None,
             name_entry_touched: false,
+            naming_action_button_pulse: None,
             name_entry_ready_frames: 0,
             name_entry_lowercase: false,
             name_confirm_yes: true,
@@ -1658,6 +1686,7 @@ impl WorldState {
             gender_selection_touched: false,
             gender_transition: None,
             name_entry_touched: false,
+            naming_action_button_pulse: None,
             name_entry_ready_frames: 0,
             name_entry_lowercase: false,
             name_confirm_yes: true,
@@ -1781,6 +1810,7 @@ impl WorldState {
             gender_selection_touched: false,
             gender_transition: None,
             name_entry_touched: false,
+            naming_action_button_pulse: None,
             name_entry_ready_frames: 0,
             name_entry_lowercase: false,
             name_confirm_yes: true,
@@ -1933,6 +1963,7 @@ impl WorldState {
             gender_selection_touched: false,
             gender_transition: None,
             name_entry_touched: false,
+            naming_action_button_pulse: None,
             name_entry_ready_frames: 0,
             name_entry_lowercase: false,
             name_confirm_yes: true,
@@ -4356,6 +4387,7 @@ impl WorldState {
         self.starter_nickname_entry.clear();
         self.name_cursor = 0;
         self.name_entry_touched = false;
+        self.naming_action_button_pulse = None;
         self.name_entry_ready_frames = 0;
         self.name_entry_lowercase = false;
         self.name_confirm_transition_frames = None;
@@ -4376,6 +4408,7 @@ impl WorldState {
         }
         self.starter_nickname_entry.clear();
         self.naming_target = NamingTarget::Player;
+        self.naming_action_button_pulse = None;
         self.name_confirm_transition_frames = None;
         self.phase = StoryPhase::StarterLab;
         self.title_intro_step = 3;
@@ -4938,6 +4971,98 @@ impl WorldState {
         });
     }
 
+    fn name_entry_action_button(&self) -> Option<NamingActionButton> {
+        if self.phase != StoryPhase::NameEntry { return None; }
+        match self.name_cursor {
+            // `sKeyRowToButtonRow` maps the top row to PAGE, both middle
+            // rows to BACK, and the bottom row to OK.
+            28 => Some(NamingActionButton::Page),
+            29 | 30 => Some(NamingActionButton::Back),
+            31 => Some(NamingActionButton::Ok),
+            _ => None,
+        }
+    }
+
+    /// Source-faithful `TryStartButtonFlash`: changing controls restores the
+    /// prior palette by dropping its pulse, while staying on a control keeps
+    /// the existing task phase alive.
+    fn try_start_name_entry_action_button_pulse(
+        &mut self,
+        button: Option<NamingActionButton>,
+        keep_flashing: bool,
+        interrupt_current_flash: bool,
+    ) {
+        let current = self.naming_action_button_pulse.map(|pulse| pulse.button);
+        if current == button && !interrupt_current_flash {
+            if let Some(pulse) = self.naming_action_button_pulse.as_mut() {
+                pulse.keep_flashing = keep_flashing;
+                pulse.allow_flash = true;
+            }
+            return;
+        }
+        let Some(button) = button else {
+            self.naming_action_button_pulse = None;
+            return;
+        };
+        self.naming_action_button_pulse = Some(NamingActionButtonPulse {
+            button,
+            color: 4,
+            color_incr: 2,
+            color_delay: 0,
+            color_delta: 4,
+            keep_flashing,
+            allow_flash: true,
+            applied_color: 4,
+        });
+    }
+
+    fn advance_name_entry_action_button_pulse_frame(&mut self) {
+        let Some(pulse) = self.naming_action_button_pulse.as_mut() else { return; };
+        if !pulse.allow_flash { return; }
+
+        // `MultiplyInvertedPaletteRGBComponents` observes `tColor` before
+        // `Task_UpdateButtonFlash` advances the task fields for this frame.
+        pulse.applied_color = u8::try_from(pulse.color).expect("source button color remains non-negative");
+        if pulse.color_delay != 0 {
+            pulse.color_delay -= 1;
+            if pulse.color_delay != 0 { return; }
+        }
+        pulse.color_delay = 2;
+        if pulse.color_incr >= 0 {
+            if pulse.color < 14 {
+                pulse.color += pulse.color_incr;
+                pulse.color_delta += pulse.color_incr;
+            } else {
+                pulse.color = 16;
+                pulse.color_delta += 1;
+            }
+        } else {
+            pulse.color += pulse.color_incr;
+            pulse.color_delta += pulse.color_incr;
+        }
+        if pulse.color == 16 && pulse.color_delta == 22 {
+            pulse.color_incr = -4;
+        } else if pulse.color == 0 {
+            pulse.allow_flash = pulse.keep_flashing;
+            pulse.color_incr = 2;
+            pulse.color_delta = 0;
+        }
+    }
+
+    /// Runs `Task_UpdateButtonFlash` in video-frame order for a name-entry
+    /// request. This uses local serialized task state, never `world.frame`.
+    pub fn advance_name_entry_action_button_pulse(&mut self, frames: u32) {
+        if self.phase != StoryPhase::NameEntry {
+            self.naming_action_button_pulse = None;
+            return;
+        }
+        for _ in 0..frames {
+            let button = self.name_entry_action_button();
+            self.try_start_name_entry_action_button_pulse(button, button.is_some(), false);
+            self.advance_name_entry_action_button_pulse_frame();
+        }
+    }
+
     pub fn move_name_cursor(&mut self, horizontal: i8, vertical: i8) {
         if self.phase != StoryPhase::NameEntry { return; }
         self.name_entry_touched = true;
@@ -5067,6 +5192,7 @@ impl WorldState {
         self.dialogue = None;
         self.name_entry_ready_frames = 0;
         self.name_entry_lowercase = false;
+        self.naming_action_button_pulse = None;
     }
 
     pub fn is_player_name_entry(&self) -> bool {
@@ -5139,6 +5265,7 @@ impl WorldState {
         self.name_entry_touched = true;
         if self.name_entry_text().is_empty() && self.naming_target == NamingTarget::Player {
             self.phase = StoryPhase::GenderSelect;
+            self.naming_action_button_pulse = None;
         } else if !self.name_entry_text().is_empty() {
             self.name_entry_text_mut().pop();
         }
@@ -5168,6 +5295,7 @@ impl WorldState {
         }
         self.name_confirm_transition_frames = None;
         self.phase = StoryPhase::NameConfirm;
+        self.naming_action_button_pulse = None;
         self.name_confirm_yes = true;
         self.dialogue = Some(format!("So it's {}?", self.player_name));
         true
