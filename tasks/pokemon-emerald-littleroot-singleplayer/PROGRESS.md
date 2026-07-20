@@ -25,9 +25,10 @@ The scoped route is now functionally traversable, with coarse visuals allowed:
   source warning instead of a generic escape message. Oldale's pre-Pokédex
   blocked west entrance now runs its Footprints Man warning/return event.
 - Validation: `cargo build --release --bin scenario` passed on `dev` at
-  `b123786`; `git diff --check` passed. Running Shoes ready-message pages now
-  accept either A or B, matching Emerald's `TextPrinterWait` field wait. No automated tests, Ruff, ty, Clippy,
-  formatter, or ad-hoc RGB capture were run.
+  `6a7977a`; `git diff --check` passed. Running Shoes ready-message pages now
+  accept either A or B, matching Emerald's `TextPrinterWait` field wait, and
+  an alternate-gender fuzz probe no longer panics in the TV script. No automated
+  tests, Ruff, ty, Clippy, formatter, or ad-hoc RGB capture were run.
 
 This gate establishes “mostly playable” behavior. The seven checkpoint rows
 below remain `partial` because pixel parity and frame-by-frame NPC/camera
