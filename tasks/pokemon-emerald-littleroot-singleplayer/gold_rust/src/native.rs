@@ -3237,10 +3237,40 @@ fn draw_gender_platform(frame: &mut [u8]) {
         let bytes = decode_base64(GENDER_PLATFORM_PNG_B64.trim()).expect("gender platform source asset must decode");
         decode_indexed(&bytes).expect("gender platform source asset must be indexed")
     });
-    const PLATFORM_PALETTE: [[u8; 3]; 16] = [[0,0,0],[255,255,164],[255,255,106],[222,222,90],[189,189,74],[156,156,57],[123,123,49],[90,90,32],[57,57,16],[197,255,205],[123,255,131],[115,222,106],[106,106,189],[90,156,65],[90,123,49],[49,0,0]];
-    // The 128×24 source sheet includes eight transparent rows above the
-    // ellipse; the on-screen platform begins at y=80.
-    draw_indexed_sprite(frame, platform, 112, 72, &PLATFORM_PALETTE);
+    // `shadow.png` is loaded as BG1 character data, not as one 128×24
+    // object.  The source map places its 16×8-tile rows (16..47) in a
+    // four-row, mirrored tilemap at screen (14,9), producing the 128×32
+    // ellipse visible behind the trainer.  The PNG's first eight rows and
+    // its second palette bank are not part of that map; drawing the sheet
+    // directly leaks the green strip and truncates the lower half.
+    const PLATFORM_PALETTE: [[u8; 3]; 16] = [
+        [0, 0, 0], [255, 255, 165], [255, 255, 107], [222, 222, 90],
+        [189, 189, 74], [156, 156, 57], [123, 123, 49], [90, 90, 33],
+        [57, 57, 16], [197, 255, 206], [123, 255, 132], [115, 222, 107],
+        [107, 189, 90], [99, 156, 66], [90, 123, 49], [0, 0, 0],
+    ];
+    const TILEMAP: [[u16; 16]; 4] = [
+        [16, 17, 18, 19, 20, 21, 22, 23, 0x417, 0x416, 0x415, 0x414, 0x413, 0x412, 0x411, 0x410],
+        [32, 33, 34, 35, 36, 37, 38, 39, 0x427, 0x426, 0x425, 0x424, 0x423, 0x422, 0x421, 0x420],
+        [24, 25, 26, 27, 28, 29, 30, 31, 0x41f, 0x41e, 0x41d, 0x41c, 0x41b, 0x41a, 0x419, 0x418],
+        [40, 41, 42, 43, 44, 45, 46, 47, 0x42f, 0x42e, 0x42d, 0x42c, 0x42b, 0x42a, 0x429, 0x428],
+    ];
+    for (map_y, row) in TILEMAP.iter().enumerate() {
+        for (map_x, &entry) in row.iter().enumerate() {
+            let tile = usize::from(entry & 0x03ff);
+            let hflip = entry & 0x0400 != 0;
+            let source_x = (tile % 16) * 8;
+            let source_y = (tile / 16) * 8;
+            for y in 0..8 {
+                for x in 0..8 {
+                    let index = platform.pixels[(source_y + y) * platform.width + source_x + if hflip { 7 - x } else { x }] as usize;
+                    if index != 0 {
+                        put_pixel(frame, 116 + map_x * 8 + x, 72 + map_y * 8 + y, PLATFORM_PALETTE[index]);
+                    }
+                }
+            }
+        }
+    }
 }
 
 fn draw_gender_trainer_at(
@@ -3258,8 +3288,11 @@ fn draw_gender_trainer_at(
         let bytes = decode_base64(GENDER_MAY_PNG_B64.trim()).expect("gender trainer source asset must decode");
         decode_indexed(&bytes).expect("gender trainer source asset must be indexed")
     });
-    const BRENDAN_PALETTE: [[u8; 3]; 16] = [[115,197,164],[255,222,205],[222,164,148],[205,131,115],[123,90,82],[98,123,156],[74,90,131],[49,65,106],[24,41,82],[222,230,238],[139,222,115],[98,156,90],[255,98,90],[197,65,65],[255,255,255],[0,0,0]];
-    const MAY_PALETTE: [[u8; 3]; 16] = [[115,197,164],[255,222,205],[222,164,148],[205,131,115],[123,90,82],[98,115,41],[57,65,164],[106,82,74],[49,57,205],[205,222,139],[222,115,98],[156,90,255],[98,90,197],[65,65,255],[255,255,255],[0,0,0]];
+    // These are the GBA-expanded values of the source 15-bit trainer
+    // palettes.  The indexed PNG palette stores the pre-expansion values;
+    // mGBA's RGB readout rounds channels with `(v << 3) | (v >> 2)`.
+    const BRENDAN_PALETTE: [[u8; 3]; 16] = [[115,197,164],[255,222,206],[222,165,148],[206,132,115],[123,90,82],[99,123,156],[74,90,132],[49,66,107],[24,41,82],[222,231,239],[140,222,115],[99,156,90],[255,99,90],[198,66,66],[255,255,255],[0,0,0]];
+    const MAY_PALETTE: [[u8; 3]; 16] = [[115,197,164],[255,222,206],[222,165,148],[206,132,115],[123,90,82],[99,115,41],[57,66,165],[107,82,74],[49,57,206],[206,222,140],[222,115,98],[156,90,255],[99,90,198],[66,66,255],[255,255,255],[0,0,0]];
     match gender {
         crate::world::PlayerGender::Brendan => draw_indexed_sprite_faded(frame, brendan, character_x, 28, &BRENDAN_PALETTE, brightness),
         crate::world::PlayerGender::May => draw_indexed_sprite_faded(frame, may, character_x, 28, &MAY_PALETTE, brightness),
