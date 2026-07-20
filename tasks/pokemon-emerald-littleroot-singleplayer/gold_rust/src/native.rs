@@ -448,6 +448,11 @@ const BIRCH_IDLE_OBJ_PALETTE: &[u8] = include_bytes!("../assets/opening_birch_id
 const BIRCH_IDLE_OAM: &[u8] = include_bytes!("../assets/opening_birch_idle.oam.bin");
 const EMERALD_FONT_NORMAL: &[u8] = include_bytes!("../assets/fonts/latin_normal.png");
 static EMERALD_NORMAL_FONT: OnceLock<IndexedTiles> = OnceLock::new();
+// The source field text printer blits this 8×48 4bpp strip through the
+// message-box palette.  Its three vertically-offset copies provide the
+// ordinary dialogue advance marker's 0/1/2/1 pixel bob.
+const EMERALD_DIALOGUE_DOWN_ARROW_B64: &str = include_str!("../assets/dialogue_down_arrow.png.b64");
+static EMERALD_DIALOGUE_DOWN_ARROW: OnceLock<SourceIndexedSheet> = OnceLock::new();
 // `FONT_NARROW` backs Emerald's move-selection names, PP label, and type
 // label. This is the unmodified source `graphics/fonts/latin_narrow.png`.
 const EMERALD_FONT_NARROW_B64: &str = include_str!("../assets/fonts/latin_narrow.png.b64");
@@ -1665,7 +1670,12 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             }
             return;
         }
-        draw_overworld_dialogue(frame, &dialogue, !world.dialogue_printer_active());
+        draw_overworld_dialogue(
+            frame,
+            &dialogue,
+            !world.dialogue_printer_active(),
+            world.frame,
+        );
         if world.starter_lab_choice_active() {
             // The Lab scripts use the standard field `MSGBOX_YESNO` window,
             // layered over the lower-right of the ordinary message box.
@@ -3681,15 +3691,25 @@ pub fn apply_title_intro_first_page_prompt_delta(frame: &mut [u8]) {
 /// font palette, but it must retain the actual tile border rather than the
 /// earlier debug rectangle so home, town, and Lab scripts remain visually
 /// consistent with Emerald's dialogue cadence.
-fn draw_overworld_dialogue(frame: &mut [u8], text: &str, show_advance_marker: bool) {
+fn draw_overworld_dialogue(
+    frame: &mut [u8],
+    text: &str,
+    show_advance_marker: bool,
+    frame_counter: u64,
+) {
     draw_standard_message_box(frame);
-    draw_overworld_wrapped_text(frame, 16, 121, text);
+    let (cursor_x, cursor_y) = draw_overworld_wrapped_text(frame, 16, 121, text);
     if show_advance_marker {
-        draw_text(frame, 216, 140, "A", 1);
+        draw_dialogue_down_arrow(frame, cursor_x, cursor_y, frame_counter);
     }
 }
 
-fn draw_overworld_wrapped_text(frame: &mut [u8], x: usize, y: usize, text: &str) {
+/// Render the visible source printer page and return its current printer
+/// position. `TextPrinterDrawDownArrow` uses that exact position instead of a
+/// fixed lower-right marker location.
+fn draw_overworld_wrapped_text(frame: &mut [u8], x: usize, y: usize, text: &str) -> (usize, usize) {
+    let mut final_cursor_x = 0;
+    let mut final_cursor_y = y;
     for (line_index, source_line) in text.split('\n').take(2).enumerate() {
         let mut cursor = 0;
         for word in source_line.split_whitespace() {
@@ -3702,6 +3722,41 @@ fn draw_overworld_wrapped_text(frame: &mut [u8], x: usize, y: usize, text: &str)
             }
             draw_text(frame, x + cursor, y + line_index * 16, word, word.chars().count());
             cursor += width;
+        }
+        final_cursor_x = cursor;
+        final_cursor_y = y + line_index * 16;
+    }
+    (x + final_cursor_x, final_cursor_y)
+}
+
+/// Source `TextPrinterDrawDownArrow` advances at a nine-frame cadence: it
+/// draws immediately, then decrements `downArrowDelay` from eight before the
+/// next blit. `sDownArrowYCoords` supplies the 0/1/2/1 source-row offsets.
+fn draw_dialogue_down_arrow(frame: &mut [u8], x: usize, y: usize, frame_counter: u64) {
+    const SOURCE_Y_OFFSETS: [usize; 4] = [0, 1, 2, 1];
+    const FRAME_DELAY: u64 = 9;
+    // The idle field printer owns `TEXT_COLOR_DARK_GRAY`,
+    // `TEXT_COLOR_WHITE`, and `TEXT_COLOR_LIGHT_GRAY` as palette entries
+    // 2, 1, and 3 respectively.  The arrow's 4bpp source indices are drawn
+    // through that same message-box palette rather than through the PNG's
+    // authoring palette.
+    const MESSAGE_BOX_PALETTE: [[u8; 3]; 4] = [
+        [0, 206, 189],
+        [255, 255, 255],
+        [56, 56, 56],
+        [216, 216, 216],
+    ];
+
+    let arrow = EMERALD_DIALOGUE_DOWN_ARROW.get_or_init(|| {
+        decode_source_indexed_sheet(EMERALD_DIALOGUE_DOWN_ARROW_B64)
+            .expect("staged Emerald dialogue down-arrow must decode")
+    });
+    let source_y = SOURCE_Y_OFFSETS[((frame_counter / FRAME_DELAY) % 4) as usize];
+    for row in 0..16 {
+        for column in 0..8 {
+            let index = arrow.pixels[(source_y + row) * arrow.width + column] as usize;
+            let color = MESSAGE_BOX_PALETTE.get(index).copied().unwrap_or(MESSAGE_BOX_PALETTE[1]);
+            put_pixel(frame, x + column, y + row, color);
         }
     }
 }
@@ -3763,21 +3818,71 @@ fn draw_window(frame: &mut [u8], x: usize, y: usize, width: usize, height: usize
 }
 
 fn draw_menu_window(frame: &mut [u8], x: usize, y: usize, width: usize, height: usize) {
-    let outer = [41, 49, 49];
-    let trim = [115, 107, 132];
-    let inner = [255, 255, 255];
-    for py in y..(y + height).min(160) {
-        for px in x..(x + width).min(240) {
-            let edge = px - x;
-            let row = py - y;
-            let color = if edge == 0 || row == 0 || edge + 1 == width || row + 1 == height {
-                outer
-            } else if edge <= 2 || row <= 2 || edge + 3 >= width || row + 3 >= height {
-                trim
-            } else {
-                inner
+    draw_standard_window_frame(frame, x, y, width, height);
+}
+
+/// Compose `graphics/text_window/1.png` into an arbitrary-size menu.  The
+/// source frame is a 3×3 tile sheet: corners, repeated horizontal/vertical
+/// edges, and the opaque white center.  Most callers are tile-aligned; the
+/// final partial tile is clipped for the captured Start-menu geometry.
+fn draw_standard_window_frame(frame: &mut [u8], x: usize, y: usize, width: usize, height: usize) {
+    if width < 16 || height < 16 { return; }
+    let columns = (width + 7) / 8;
+    let rows = (height + 7) / 8;
+    let tiles = STANDARD_WINDOW_1.get_or_init(|| {
+        let bytes = decode_base64(STANDARD_WINDOW_1_PNG_B64.trim())
+            .expect("standard window source asset must decode");
+        decode_indexed(&bytes).expect("standard window source asset must be indexed")
+    });
+
+    for row in 0..rows {
+        for column in 0..columns {
+            let tile = match (row, column) {
+                (0, 0) => 0,
+                (0, column) if column + 1 == columns => 2,
+                (0, _) => 1,
+                (row, 0) if row + 1 == rows => 6,
+                (row, column) if row + 1 == rows && column + 1 == columns => 8,
+                (row, _) if row + 1 == rows => 7,
+                (_, 0) => 3,
+                (_, column) if column + 1 == columns => 5,
+                _ => 4,
             };
-            put_pixel(frame, px, py, color);
+            draw_standard_frame_tile_clipped(frame, tiles, tile, x + column * 8, y + row * 8, x, y, width, height);
+        }
+    }
+}
+
+fn draw_standard_frame_tile_clipped(
+    frame: &mut [u8],
+    tiles: &IndexedTiles,
+    tile: usize,
+    x: usize,
+    y: usize,
+    clip_x: usize,
+    clip_y: usize,
+    clip_width: usize,
+    clip_height: usize,
+) {
+    const PALETTE: [[u8; 3]; 16] = [
+        [0, 0, 0], [41, 49, 49], [74, 74, 107], [115, 107, 132],
+        [99, 99, 148], [115, 115, 173], [140, 140, 206], [173, 189, 173],
+        [222, 214, 222], [0, 0, 0], [0, 0, 0], [0, 0, 0],
+        [0, 0, 0], [0, 0, 0], [255, 255, 255], [74, 66, 82],
+    ];
+    let source_x = (tile % 3) * 8;
+    let source_y = (tile / 3) * 8;
+    let clip_right = clip_x.saturating_add(clip_width);
+    let clip_bottom = clip_y.saturating_add(clip_height);
+    for row in 0..8 {
+        for column in 0..8 {
+            let destination_x = x + column;
+            let destination_y = y + row;
+            if destination_x < clip_x || destination_x >= clip_right || destination_y < clip_y || destination_y >= clip_bottom {
+                continue;
+            }
+            let index = tiles.pixels[(source_y + row) * tiles.width + source_x + column] as usize;
+            put_pixel(frame, destination_x, destination_y, PALETTE[index]);
         }
     }
 }
@@ -3896,12 +4001,31 @@ fn emerald_glyph_id(character: char) -> Option<usize> {
 }
 
 fn emerald_glyph_width(character: char) -> usize {
-    match character {
-        ' ' | 'I' | 'i' | 'l' | '!' | '.' | ',' | ':' | '\'' => 3,
-        '…' => 8,
-        'M' | 'W' | 'm' | 'w' | '▶' => 8,
-        _ => 6,
-    }
+    // Exact indices 0x00..=0xFF from the opening portion of source
+    // `gFontNormalLatinGlyphWidths`. `emerald_glyph_id` only emits values in
+    // this range, so text layout and the dialogue arrow's printer position
+    // use the source advance for every supported glyph.
+    const WIDTHS: [u8; 256] = [
+         3, 6, 6, 6, 6, 6, 6, 6, 6, 6, 3, 6, 6, 6, 6, 6,
+         8, 6, 6, 6, 6, 6, 6, 6, 3, 6, 6, 6, 6, 6, 6, 3,
+         6, 6, 6, 6, 6, 8, 6, 6, 6, 6, 6, 6, 9, 7, 6, 3,
+         3, 3, 3, 3,10, 8, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+         3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+         6, 6, 4, 8, 8, 8, 7, 8, 8, 4, 6, 6, 4, 4, 3, 3,
+         3, 3, 3, 3, 3, 3, 3, 3, 6, 3, 3, 3, 3, 3, 3, 6,
+         3, 3, 3, 3, 3, 3, 3, 6, 3, 7, 7, 7, 7, 1, 2, 3,
+         4, 5, 6, 7, 6, 6, 6, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+         3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+         8, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 4, 6, 3, 6, 3,
+         6, 6, 6, 3, 3, 6, 6, 6, 3, 7, 6, 6, 6, 6, 6, 6,
+         6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+         6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 4, 5, 6,
+         4, 6, 6, 6, 6, 6, 5, 6, 6, 6, 6, 6, 6, 6, 6, 8,
+         3, 6, 6, 6, 6, 6, 6, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+    ];
+    emerald_glyph_id(character)
+        .map(|glyph_id| usize::from(WIDTHS[glyph_id]))
+        .unwrap_or(0)
 }
 
 fn emerald_narrow_glyph_width(character: char) -> usize {
