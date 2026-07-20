@@ -175,12 +175,13 @@ Latest rail audit:
   starter, Poké Ball, affine-release, particle, and tall-grass BG1
   `anim_tiles`/`anim_map` assets are staged. The BG1 layer now composes inside
   the source WIN0 reveal with `BG1_X += 6` and delayed normal-grass `BG1_Y`
-  scrolling through the 154-tick rival entry. The source player send-out
-  timing is already source-shaped; the remaining trainer-battle visual slice
-  is the opponent front-trainer slide, exact WIN0/scanline wipe, sound, and
-  party initialization animation. No exact battle RGB oracle is in the
-  73-trace manifest, so no front-pic or transition patch is accepted without
-  captured OAM/OBJ/palette/register evidence.
+  scrolling through the 154-tick rival entry. Brendan/May's exact indexed
+  64×64 front-pic assets are now staged; the renderer projects the source
+  `-240 → 0` +2-per-tick entry slide and the visual-only 35-tick
+  `OpponentHandleTrainerSlideBack` exit without changing message/input timing.
+  The source player send-out timing is already source-shaped. Exact WIN0/
+  scanline wipe, sound, the 16-tick opponent-ball delay, party initialization,
+  and a battle RGB oracle remain open.
 - Interiors: bedroom idle/menu/cardinal movement traces are already manifest
   backed. Clock, generic door boundaries, and ordinary home/clock/TV/Running
   Shoes printer pages have source components or timing notes but no complete
@@ -191,15 +192,16 @@ Latest rail audit:
 - Naming: uppercase/lowercase/symbol page state and character mapping are
   functional; the serialized source 32-frame page-swap lock and source
   label/button sheets are staged for non-uppercase pages and active swaps. The
-  BG sine/page-priority tilemap animation, late Birch printer windows, and
-  exact utility-button RGB timing remain open. The late Birch sequence is
-  seven pause-delimited source printer pages plus a 64-frame handoff, selected
-  player reveal, affine shrink, and fade-to-white; the current five-page flow
-  stays functional until those source captures exist. Emerald has no preset-name
-  UI in the scoped source path.
+  BG sine/page-priority tilemap animation and exact utility-button RGB timing
+  remain open. A clean source replay capture now exists in
+  `/tmp/late_birch_fine_output` for the seven pause-delimited Birch printer
+  pages, 64-frame handoff, selected-player reveal, affine shrink, and
+  fade-to-white; the current five-page flow remains the functional owner until
+  those captured phases are staged without changing the existing title-route
+  timing. Emerald has no preset-name UI in the scoped source path.
 
 The checkpoint summaries above still use `partial` for battle and naming
 because they lack continuous RGB oracles. Their remaining wording about
-unstaged entry/page visuals is superseded by this audit: the BG1 battle layer
-and page-swap label/button assets are now implemented, while exact source
-captures, sound, and late text-window parity remain open.
+unstaged entry/page visuals is superseded by this audit: the BG1 battle layer,
+opponent front-pic rail, and page-swap label/button assets are implemented,
+while exact source captures, sound, and late text-window parity remain open.

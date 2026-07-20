@@ -139,6 +139,10 @@ const BATTLE_WURMPLE_FRONT_B64: &str = include_str!("../assets/battle_wurmple_fr
 // while the trainer exits before the normal ball-release controller begins.
 const BATTLE_TRAINER_BACK_BRENDAN_B64: &str = include_str!("../assets/battle_trainer_back_brendan.png.b64");
 const BATTLE_TRAINER_BACK_MAY_B64: &str = include_str!("../assets/battle_trainer_back_may.png.b64");
+// Route 103's trainer intro uses the same 64×64 indexed front pics that
+// `OpponentHandleDrawTrainerPic` uploads before the party-summary page.
+const BATTLE_TRAINER_FRONT_BRENDAN_B64: &str = include_str!("../assets/battle_trainer_front_brendan.png.b64");
+const BATTLE_TRAINER_FRONT_MAY_B64: &str = include_str!("../assets/battle_trainer_front_may.png.b64");
 // `gBallGfx_Poke` is the player party's default source ball sheet. During
 // `SpriteCB_PlayerMonSendOut_2` the active `sBallAnimSeq0` holds frame zero
 // while the affine-double 16×16 OBJ crosses its arc.
@@ -270,6 +274,8 @@ static BATTLE_WINGULL_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_WURMPLE_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_TRAINER_BACK_BRENDAN: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_TRAINER_BACK_MAY: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static BATTLE_TRAINER_FRONT_BRENDAN: OnceLock<NpcSpriteSheet> = OnceLock::new();
+static BATTLE_TRAINER_FRONT_MAY: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_PLAYER_SENDOUT_POKEBALL: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_BALL_PARTICLES: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_TALL_GRASS_TILES: OnceLock<SourceIndexedSheet> = OnceLock::new();
@@ -2206,10 +2212,31 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             } else {
                 (elapsed.saturating_sub(entry_frames.saturating_sub(48)), 48)
             };
-            draw_grass_battle_intro_slide_phase(frame, intro_phase, serialized_frames);
+            draw_grass_battle_intro_slide_phase(
+                frame,
+                intro_phase,
+                serialized_frames,
+                (battle.opponent == crate::world::BattleOpponent::Rival).then_some(world.player_gender),
+            );
             return;
         }
         draw_battle_background(frame);
+        let opponent_trainer_exit = if battle.opponent == crate::world::BattleOpponent::Rival {
+            usize::from(crate::world::BATTLE_OPPONENT_TRAINER_EXIT_FRAMES
+                .saturating_sub(battle.intro_opponent_trainer_exit_frames))
+        } else {
+            0
+        };
+        let opponent_trainer_visible = battle.opponent == crate::world::BattleOpponent::Rival
+            && (battle.intro_stage <= 1 || battle.intro_opponent_trainer_exit_frames > 0);
+        if opponent_trainer_visible {
+            let center_x = if battle.intro_opponent_trainer_exit_frames > 0 {
+                176 + ((280 - 176) * opponent_trainer_exit / usize::from(crate::world::BATTLE_OPPONENT_TRAINER_EXIT_FRAMES)) as i16
+            } else {
+                176
+            };
+            draw_battle_trainer_front(frame, world.player_gender, center_x, 40);
+        }
         let player_intro_sendout = (battle.intro_player_sendout_started
             && battle.intro_player_sendout_elapsed_frames <= BATTLE_PLAYER_SENDOUT_COMPLETE_FRAMES)
             || battle.intro_player_sendout_frames > 0;
@@ -2257,7 +2284,9 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
         draw_text(frame, 86, 24, &format!("L{}", battle.opponent_level), 2);
         draw_text(frame, 16, 34, "HP", 10);
         draw_source_battle_hp_bar(frame, 38, 34, battle.rival_hp, battle.opponent_max_hp);
-        draw_battle_opponent_sprite(frame, &battle.opponent_species);
+        if !opponent_trainer_visible {
+            draw_battle_opponent_sprite(frame, &battle.opponent_species);
+        }
         let player = match world.starter {
             Some(crate::world::StarterSpecies::Treecko) => "TREECKO",
             Some(crate::world::StarterSpecies::Torchic) => "TORCHIC",
@@ -2668,6 +2697,7 @@ fn draw_grass_battle_intro_slide_phase(
     frame: &mut [u8],
     serialized_phase: usize,
     serialized_frames: usize,
+    trainer_gender: Option<PlayerGender>,
 ) {
     const SOURCE_TASK_TICKS: usize = 154;
     const INITIAL_WINDOW_TOP: usize = FRAME_HEIGHT / 2;
@@ -2714,6 +2744,14 @@ fn draw_grass_battle_intro_slide_phase(
     // `DrawBattleEntryBackground`. It shares the WIN0 reveal but not the
     // BG2 scanline offsets, so compose it after the static field.
     draw_battle_tall_grass_anim_windowed(frame, top, bottom, source_tick);
+    if let Some(gender) = trainer_gender {
+        // `OpponentHandleDrawTrainerPic` starts the 64×64 front OBJ at
+        // x2=-240 and advances +2 per VBlank for 120 ticks. Keep the OBJ
+        // clipped to the opening WIN0 window while the field layers slide.
+        let slide_tick = source_tick.min(120);
+        let center_x = -64 + (slide_tick * 2) as i16;
+        draw_battle_trainer_front_clipped(frame, gender, center_x, 40, top, bottom);
+    }
 }
 
 /// Compose the source tall-grass BG1 text layer inside the current WIN0
@@ -3791,6 +3829,15 @@ fn battle_sheet(slot: &'static OnceLock<NpcSpriteSheet>, encoded: &str) -> &'sta
     slot.get_or_init(|| decode_npc_sprite_sheet(encoded).expect("staged Emerald battle sprite must decode"))
 }
 
+fn battle_trainer_front_sprite(gender: PlayerGender) -> &'static NpcSpriteSheet {
+    // Route 103's counterpart is the opposite gender from the selected
+    // player, matching `gTrainers[TRAINER_RIVAL_*].trainerPic`.
+    match gender {
+        PlayerGender::Brendan => battle_sheet(&BATTLE_TRAINER_FRONT_MAY, BATTLE_TRAINER_FRONT_MAY_B64),
+        PlayerGender::May => battle_sheet(&BATTLE_TRAINER_FRONT_BRENDAN, BATTLE_TRAINER_FRONT_BRENDAN_B64),
+    }
+}
+
 fn battle_back_sprite(starter: Option<crate::world::StarterSpecies>) -> &'static NpcSpriteSheet {
     match starter.unwrap_or(crate::world::StarterSpecies::Treecko) {
         crate::world::StarterSpecies::Treecko => battle_sheet(&BATTLE_TREECKO_BACK, BATTLE_TREECKO_BACK_B64),
@@ -3839,6 +3886,43 @@ fn draw_battle_sprite_centered(
             put_pixel(frame, x as usize, y as usize, [palette[0], palette[1], palette[2]]);
         }
     }
+}
+
+fn draw_battle_trainer_front_clipped(
+    frame: &mut [u8],
+    gender: PlayerGender,
+    center_x: i16,
+    center_y: i16,
+    top: usize,
+    bottom: usize,
+) {
+    let sprite = battle_trainer_front_sprite(gender);
+    if sprite.width != 64 || sprite.height < 64 || sprite.palette.len() < 48 {
+        return;
+    }
+    let origin_x = center_x - 32;
+    let origin_y = center_y - 32;
+    for row in 0..64 {
+        let y = origin_y + row as i16;
+        if y < top as i16 || y >= bottom as i16 { continue; }
+        for column in 0..64 {
+            let index = usize::from(sprite.pixels[row * sprite.width + column]);
+            if index == 0 { continue; }
+            let x = origin_x + column as i16;
+            if x < 0 || y < 0 { continue; }
+            let palette = &sprite.palette[index * 3..index * 3 + 3];
+            put_pixel(frame, x as usize, y as usize, [palette[0], palette[1], palette[2]]);
+        }
+    }
+}
+
+fn draw_battle_trainer_front(
+    frame: &mut [u8],
+    gender: PlayerGender,
+    center_x: i16,
+    center_y: i16,
+) {
+    draw_battle_trainer_front_clipped(frame, gender, center_x, center_y, 0, FRAME_HEIGHT);
 }
 
 /// Source `GetBattlerSpriteDefault_Y` for the scoped single-battle opponent

@@ -407,6 +407,11 @@ impl LittlerootSession {
             self.redraw();
             return;
         }
+        // The rival's front trainer exits on its own source task after the
+        // sent-out page closes. Keep this visual-only timer advancing even
+        // while the existing encounter transition or player send-out rail
+        // owns the input packet.
+        self.world.advance_battle_opponent_trainer_exit(request.frames);
         if self.world.advance_battle_transition(request.frames) {
             self.input_log.push(request);
             self.redraw();
