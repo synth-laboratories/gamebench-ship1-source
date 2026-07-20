@@ -126,6 +126,9 @@ pub enum StoryPhase {
     MetRival,
     BirchRescue,
     StarterSelect,
+    /// The source's short, input-locked affine reveal after a Poké Ball is
+    /// chosen and before its standard confirmation menu appears.
+    StarterReveal,
     StarterConfirm,
     BirchBattle,
     StarterChosen,
@@ -1204,6 +1207,14 @@ pub struct WorldState {
     /// Older snapshots lazily construct it from the selected starter.
     #[serde(default)]
     pub starter_party: Option<StarterPartyState>,
+    /// Elapsed frames of `sAffineAnim_StarterPokemon` / `StarterCircle`.
+    /// `None` is the ordinary selector or post-reveal confirmation state.
+    #[serde(default)]
+    pub starter_reveal_frames: Option<u8>,
+    /// The `SpriteCB_SelectionHand` sine-table index. The source advances it
+    /// by four every rendered frame while Birch's chooser is active.
+    #[serde(default)]
+    pub starter_hand_phase: u8,
     /// `Task_HandleConfirmStarterInput` starts its standard menu on YES.
     /// Kept separately from Birch Lab's later YES/NO branches so a declined
     /// Poké Ball returns to the bounded three-ball selector unchanged.
@@ -1354,6 +1365,8 @@ impl WorldState {
             running: false,
             starter: None,
             starter_party: None,
+            starter_reveal_frames: None,
+            starter_hand_phase: 0,
             starter_confirm_yes: true,
             starter_lab_choice_yes: true,
             has_pokedex: false,
@@ -1475,6 +1488,8 @@ impl WorldState {
             running: false,
             starter: None,
             starter_party: None,
+            starter_reveal_frames: None,
+            starter_hand_phase: 0,
             starter_confirm_yes: true,
             starter_lab_choice_yes: true,
             has_pokedex: false,
@@ -1599,6 +1614,8 @@ impl WorldState {
             running: false,
             starter: None,
             starter_party: None,
+            starter_reveal_frames: None,
+            starter_hand_phase: 0,
             starter_confirm_yes: true,
             starter_lab_choice_yes: true,
             has_pokedex: false,
@@ -1719,6 +1736,8 @@ impl WorldState {
             running: false,
             starter: Some(StarterSpecies::Treecko),
             starter_party: None,
+            starter_reveal_frames: None,
+            starter_hand_phase: 0,
             starter_confirm_yes: true,
             starter_lab_choice_yes: true,
             has_pokedex: false,
@@ -1868,6 +1887,8 @@ impl WorldState {
             running: false,
             starter: Some(StarterSpecies::Treecko),
             starter_party: None,
+            starter_reveal_frames: None,
+            starter_hand_phase: 0,
             starter_confirm_yes: true,
             starter_lab_choice_yes: true,
             has_pokedex: true,
@@ -1983,6 +2004,8 @@ impl WorldState {
             // field message. Its task starts on selection index 1, which is
             // Torchic in Emerald's Treecko/Torchic/Mudkip table.
             self.starter = Some(StarterSpecies::Torchic);
+            self.starter_reveal_frames = None;
+            self.starter_hand_phase = 0;
             self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
             return true;
         }
@@ -4741,14 +4764,47 @@ impl WorldState {
         }
     }
 
-    /// `Task_HandleStarterChooseInput` opens the source's confirmation task
-    /// after A selects the currently bounded Poké Ball. The port deliberately
-    /// models only that logical task boundary, not its circle/sprite animation.
+    /// `Task_HandleStarterChooseInput` starts the source's small affine
+    /// circle/Pokémon reveal after A selects the currently bounded Poké Ball.
     pub fn ask_confirm_starter(&mut self) {
         if self.phase != StoryPhase::StarterSelect { return; }
         self.starter.get_or_insert(StarterSpecies::Torchic);
         self.starter_confirm_yes = true;
-        self.phase = StoryPhase::StarterConfirm;
+        self.starter_reveal_frames = Some(0);
+        self.phase = StoryPhase::StarterReveal;
+    }
+
+    /// Advances `SpriteCB_SelectionHand`'s source `Sin(data[1], 8)` phase.
+    /// Its callback adds four to `data[1]` on each GBA frame.
+    pub fn advance_starter_hand(&mut self, frames: u32) {
+        if !matches!(
+            self.phase,
+            StoryPhase::StarterSelect | StoryPhase::StarterReveal | StoryPhase::StarterConfirm
+        ) {
+            return;
+        }
+        let source_steps = (frames & 0xff) as u8;
+        self.starter_hand_phase = self.starter_hand_phase
+            .wrapping_add(source_steps.wrapping_mul(4));
+    }
+
+    /// Runs the two source `AFFINEANIMCMD_FRAME` sequences. The chosen
+    /// Pokémon starts at scale 16 and grows by 16 for fifteen frames; the
+    /// circle starts at 20 and grows by 20. `Task_WaitForStarterSprite` only
+    /// enables the standard YES/NO task after that motion has settled.
+    pub fn advance_starter_reveal(&mut self, frames: u32) -> bool {
+        if self.phase != StoryPhase::StarterReveal { return false; }
+        self.advance_starter_hand(frames);
+        let elapsed = self.starter_reveal_frames.unwrap_or(0);
+        let advanced = frames.min(15) as u8;
+        let next = elapsed.saturating_add(advanced).min(15);
+        if next == 15 {
+            self.starter_reveal_frames = None;
+            self.phase = StoryPhase::StarterConfirm;
+        } else {
+            self.starter_reveal_frames = Some(next);
+        }
+        true
     }
 
     pub fn move_starter_confirmation(&mut self) {
@@ -4766,6 +4822,7 @@ impl WorldState {
             self.confirm_starter();
         } else {
             self.starter_confirm_yes = true;
+            self.starter_reveal_frames = None;
             self.phase = StoryPhase::StarterSelect;
         }
     }
@@ -4774,6 +4831,7 @@ impl WorldState {
         if self.phase == StoryPhase::StarterConfirm {
             self.starter.get_or_insert(StarterSpecies::Torchic);
             self.ensure_starter_party();
+            self.starter_reveal_frames = None;
             self.phase = StoryPhase::BirchBattle;
             self.dialogue = Some("Go! Your new POKéMON!".to_owned());
             self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
@@ -6050,7 +6108,13 @@ impl WorldState {
     fn begin_connected_map(&mut self, facing: Facing) -> bool {
         if self.transition.is_some() { return false; }
         if self.map == MapId::Route101
-            && matches!(self.phase, StoryPhase::BirchRescue | StoryPhase::StarterSelect | StoryPhase::BirchBattle)
+            && matches!(
+                self.phase,
+                StoryPhase::BirchRescue
+                    | StoryPhase::StarterSelect
+                    | StoryPhase::StarterReveal
+                    | StoryPhase::BirchBattle
+            )
         {
             // The same source guard also catches a map-edge attempt; its
             // authored in-map coordinate events are applied after a tile
@@ -6688,7 +6752,14 @@ fn route101_npcs(phase: StoryPhase) -> Vec<NpcState> {
         id: "youngster".to_owned(), map: MapId::Route101,
         position: TilePosition { x: 16, y: 8 }, facing: Facing::Down,
     }];
-    if matches!(phase, StoryPhase::BirchRescue | StoryPhase::StarterSelect | StoryPhase::BirchBattle | StoryPhase::BirchRescued) {
+    if matches!(
+        phase,
+        StoryPhase::BirchRescue
+            | StoryPhase::StarterSelect
+            | StoryPhase::StarterReveal
+            | StoryPhase::BirchBattle
+            | StoryPhase::BirchRescued
+    ) {
         npcs.push(NpcState {
             id: "birch".to_owned(), map: MapId::Route101,
             position: TilePosition { x: 9, y: 13 }, facing: Facing::Right,
