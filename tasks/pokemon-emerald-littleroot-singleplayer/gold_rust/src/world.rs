@@ -313,11 +313,12 @@ pub const BATTLE_PLAYER_SENDOUT_COMPLETE_FRAMES: u8 =
     BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES + BATTLE_PLAYER_SENDOUT_RELEASE_FRAMES;
 
 /// `BattleIntroSlide1` for the normal grass environment consumes two setup
-/// ticks, thirty-two one-line WIN0 expansion ticks, and 120 two-pixel
-/// scanline-slide ticks before `BattleIntroSlideEnd` resets the BG offsets.
-/// Keep the Route 103 trainer hand-off on that source timeline instead of the
-/// former 48-frame compressed presentation.
-pub const BATTLE_GRASS_INTRO_FRAMES: u16 = 154;
+/// ticks, thirty-two one-line WIN0 expansion ticks, thirty-two state-3 delay
+/// ticks, and 120 two-pixel scanline-slide ticks before
+/// `BattleIntroSlideEnd` resets the BG offsets. Keep the Route 103 trainer
+/// hand-off on that complete source timeline instead of the former 48-frame
+/// compressed presentation.
+pub const BATTLE_GRASS_INTRO_FRAMES: u16 = 186;
 
 /// A source moveset slot, retained independently of the currently selected
 /// move so an opponent controller can choose from the original four slots.

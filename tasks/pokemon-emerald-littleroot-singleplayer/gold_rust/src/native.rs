@@ -2521,14 +2521,15 @@ fn draw_battle_background_windowed(
 }
 
 /// `BattleIntroSlide1` executes two setup ticks, 32 one-pixel WIN0
-/// expansions, then 120 two-pixel scanline slides. Wild encounters still pass
-/// a 48-frame projection, while Route 103 passes the source 154-frame count.
+/// expansions, a 32-tick state-3 delay, then 120 two-pixel scanline slides.
+/// Wild encounters still pass a 48-frame projection, while Route 103 passes
+/// the complete source 186-frame count.
 fn draw_grass_battle_intro_slide_phase(
     frame: &mut [u8],
     serialized_phase: usize,
     serialized_frames: usize,
 ) {
-    const SOURCE_TASK_TICKS: usize = 154;
+    const SOURCE_TASK_TICKS: usize = 186;
     const INITIAL_WINDOW_TOP: usize = FRAME_HEIGHT / 2;
     const INITIAL_WINDOW_BOTTOM: usize = INITIAL_WINDOW_TOP + 1;
 
