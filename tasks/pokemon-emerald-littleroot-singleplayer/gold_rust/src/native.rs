@@ -2,7 +2,7 @@ use png::{ColorType, Decoder, Transformations};
 use flate2::read::ZlibDecoder;
 use crate::{FRAME_BYTES, FRAME_HEIGHT, FRAME_WIDTH};
 use crate::world::{
-    BATTLE_COMMAND_BAG, BATTLE_COMMAND_RUN, ClockField, Facing, MapId,
+    BATTLE_COMMAND_BAG, BATTLE_COMMAND_RUN, Facing, MapId,
     NamingActionButton, NamingActionButtonPulse, NpcState, NpcWalkStart,
     PlayerGender, StarterSpecies, StoryPhase,
     TilePosition, WorldState,
@@ -150,6 +150,13 @@ const BATTLE_HP_BAR_ANIM_B64: &str = include_str!("../assets/battle_hpbar_anim.p
 // `FldEff_ExclamationMarkIcon` creates this source 16x16 field-effect OBJ
 // above the Route 103 rival during `Common_Movement_ExclamationMark`.
 const FIELD_EFFECT_EMOTION_EXCLAMATION_B64: &str = include_str!("../assets/field_effect_emotion_exclamation.png.b64");
+// `CB2_StartWallClock` replaces the field renderer with this dedicated 4bpp
+// clock scene before it creates its hand OBJ sprites. The source swaps only
+// palette entries 5..8 for the selected player gender.
+const WALLCLOCK_CLOCK_B64: &str = include_str!("../assets/wallclock_clock.png.b64");
+const WALLCLOCK_START_TILEMAP_B64: &str = include_str!("../assets/wallclock_start.bin.b64");
+const WALLCLOCK_MALE_PALETTE_B64: &str = include_str!("../assets/wallclock_male.pal.b64");
+const WALLCLOCK_FEMALE_PALETTE_B64: &str = include_str!("../assets/wallclock_female.pal.b64");
 // `CB2_ChooseStarter` loads this dedicated 8bpp Birch-bag/grass tileset,
 // its two source tilemaps, and the Poké Ball / reveal-circle OBJ sheets.
 const STARTER_CHOOSE_TILES_B64: &str = include_str!("../assets/starter_choose_tiles.png.b64");
@@ -179,6 +186,10 @@ static BATTLE_HEALTHBOX_SINGLES_OPPONENT: OnceLock<SourceIndexedSheet> = OnceLoc
 static BATTLE_HP_BAR: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_HP_BAR_ANIM: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static FIELD_EFFECT_EMOTION_EXCLAMATION: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static WALLCLOCK_CLOCK: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static WALLCLOCK_START_TILEMAP: OnceLock<Vec<u8>> = OnceLock::new();
+static WALLCLOCK_MALE_PALETTE: OnceLock<[[u8; 3]; 16]> = OnceLock::new();
+static WALLCLOCK_FEMALE_PALETTE: OnceLock<[[u8; 3]; 16]> = OnceLock::new();
 static STARTER_CHOOSE_TILES: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static STARTER_CHOOSE_POKEBALL_SELECTION: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static STARTER_CHOOSE_CIRCLE: OnceLock<SourceIndexedSheet> = OnceLock::new();
@@ -1782,21 +1793,8 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
         draw_starter_choose_scene(frame, world);
         return;
     }
-    if let Some(field) = world.clock_editing {
-        draw_window(frame, 64, 52, 112, 54);
-        draw_text(frame, 76, 62, "SET CLOCK", 16);
-        let minutes = world.clock_minutes.unwrap_or(720);
-        let time = format!("{:02}:{:02}", minutes / 60, minutes % 60);
-        draw_text(frame, 88, 78, &time, 8);
-        let cursor_x = match field { ClockField::Hours => 87, ClockField::Minutes => 100 };
-        draw_cursor(frame, cursor_x, 91);
-        if world.clock_confirming {
-            draw_window(frame, 76, 92, 96, 44);
-            draw_text(frame, 84, 100, "IS THIS OK?", 12);
-            draw_text(frame, 98, 114, "YES", 4);
-            draw_text(frame, 98, 126, "NO", 3);
-            draw_cursor(frame, 88, if world.clock_confirm_yes { 115 } else { 127 });
-        }
+    if world.clock_editing.is_some() {
+        draw_wallclock_editor(frame, world);
         return;
     }
     if world.menu_open || world.menu_transition_frames.is_some() {
@@ -2966,6 +2964,150 @@ fn draw_source_indexed_crop_scaled_centered(
             let y = origin_y + row as i16;
             if x < 0 || y < 0 { continue; }
             put_pixel(frame, x as usize, y as usize, sprite.palette[color_index]);
+        }
+    }
+}
+
+/// Renders the visual shell of `CB2_StartWallClock`. Emerald leaves the field
+/// callback entirely here: it clears VRAM, loads `gWallClock_Gfx`, centers
+/// its hand sprites at `(120, 80)`, and provides a lower-right CONFIRM label.
+/// The opening state's typed clock interaction stays intact; this function
+/// only projects that state onto the source-specific presentation.
+fn draw_wallclock_editor(frame: &mut [u8], world: &WorldState) {
+    let clock = WALLCLOCK_CLOCK.get_or_init(|| {
+        decode_source_indexed_sheet(WALLCLOCK_CLOCK_B64)
+            .expect("staged Emerald wall-clock graphic must decode")
+    });
+    let palette = wallclock_palette(world.player_gender);
+    draw_wallclock_start_background(frame, clock, palette);
+
+    let time = world.clock_minutes.unwrap_or(720);
+    let minute_angle = f32::from(time % 60) * 6.0;
+    let hour_angle = f32::from((time / 60) % 12) * 30.0
+        + f32::from((time % 60) / 10) * 5.0;
+    // `SpriteCB_MinuteHand` / `SpriteCB_HourHand` rotate their source hand
+    // OBJ around this exact center. The typed model carries a discrete time,
+    // so project its settled source angle instead of retaining the removed
+    // provisional HH:MM text window.
+    draw_wallclock_hand(frame, minute_angle, 25, palette[8]);
+    draw_wallclock_hand(frame, hour_angle, 17, palette[7]);
+    draw_solid_rect(frame, 118, 78, 5, 5, [0, 0, 0]);
+
+    // `WIN_BUTTON_LABEL` is at tile (24, 16), with the source's custom
+    // prompt palette. Its text begins at y + 1 pixel.
+    const PROMPT_PALETTE: [[u8; 3]; 3] = [[0, 0, 0], [74, 180, 189], [255, 255, 255]];
+    draw_text_with_palette(frame, 192, 129, "CONFIRM", 7, PROMPT_PALETTE);
+
+    if !world.clock_confirming { return; }
+
+    // `Task_SetClock_AskConfirm` creates its message frame at (3, 17),
+    // 24x2 tiles, and `CreateYesNoMenu` at (24, 9), 5x4 tiles. Include the
+    // standard 8px frame border around both source WindowTemplates.
+    draw_menu_window(frame, 16, 128, 208, 32);
+    draw_text_with_palette(frame, 24, 137, "Is this the correct time?", 26, PROMPT_PALETTE);
+    draw_menu_window(frame, 184, 64, 56, 48);
+    draw_text_with_palette(frame, 200, 73, "YES", 3, PROMPT_PALETTE);
+    draw_text_with_palette(frame, 200, 89, "NO", 2, PROMPT_PALETTE);
+    draw_menu_cursor(frame, 190, if world.clock_confirm_yes { 76 } else { 92 });
+}
+
+fn draw_wallclock_start_background(
+    frame: &mut [u8],
+    tiles: &SourceIndexedSheet,
+    palette: &[[u8; 3]; 16],
+) {
+    for pixel in frame.chunks_exact_mut(3) {
+        pixel.copy_from_slice(&palette[0]);
+    }
+    let tilemap = WALLCLOCK_START_TILEMAP.get_or_init(|| {
+        decode_base64(WALLCLOCK_START_TILEMAP_B64)
+            .expect("staged Emerald wall-clock start tilemap must decode")
+    });
+    const MAP_WIDTH_TILES: usize = 32;
+    const MAP_HEIGHT_TILES: usize = 20;
+    if tilemap.len() != MAP_WIDTH_TILES * MAP_HEIGHT_TILES * 2
+        || tiles.width % 8 != 0
+        || tiles.height % 8 != 0
+    {
+        return;
+    }
+    let source_tiles_per_row = tiles.width / 8;
+    let source_tile_count = source_tiles_per_row * (tiles.height / 8);
+    for tile_y in 0..MAP_HEIGHT_TILES {
+        for tile_x in 0..(FRAME_WIDTH / 8) {
+            let offset = (tile_y * MAP_WIDTH_TILES + tile_x) * 2;
+            let entry = u16::from_le_bytes([tilemap[offset], tilemap[offset + 1]]);
+            let tile = usize::from(entry & 0x03ff);
+            if tile >= source_tile_count { continue; }
+            let flip_x = entry & 0x0400 != 0;
+            let flip_y = entry & 0x0800 != 0;
+            for row in 0..8 {
+                for column in 0..8 {
+                    let source_x = (tile % source_tiles_per_row) * 8
+                        + if flip_x { 7 - column } else { column };
+                    let source_y = (tile / source_tiles_per_row) * 8
+                        + if flip_y { 7 - row } else { row };
+                    let color_index = usize::from(tiles.pixels[source_y * tiles.width + source_x]);
+                    if color_index >= palette.len() { continue; }
+                    put_pixel(frame, tile_x * 8 + column, tile_y * 8 + row, palette[color_index]);
+                }
+            }
+        }
+    }
+}
+
+fn wallclock_palette(gender: PlayerGender) -> &'static [[u8; 3]; 16] {
+    match gender {
+        PlayerGender::Brendan => WALLCLOCK_MALE_PALETTE.get_or_init(|| {
+            decode_wallclock_palette(WALLCLOCK_MALE_PALETTE_B64)
+        }),
+        PlayerGender::May => WALLCLOCK_FEMALE_PALETTE.get_or_init(|| {
+            decode_wallclock_palette(WALLCLOCK_FEMALE_PALETTE_B64)
+        }),
+    }
+}
+
+fn decode_wallclock_palette(encoded: &str) -> [[u8; 3]; 16] {
+    let bytes = decode_base64(encoded).expect("staged Emerald wall-clock palette must decode");
+    let text = std::str::from_utf8(&bytes).expect("staged Emerald wall-clock palette must be UTF-8");
+    let mut palette = [[0; 3]; 16];
+    for (slot, line) in text.lines().skip(3).take(16).enumerate() {
+        let mut channels = line.split_whitespace();
+        for channel in &mut palette[slot] {
+            *channel = channels
+                .next()
+                .expect("wall-clock palette line has three channels")
+                .parse()
+                .expect("wall-clock palette channel is an 8-bit integer");
+        }
+    }
+    palette
+}
+
+fn draw_wallclock_hand(frame: &mut [u8], angle: f32, length: i32, color: [u8; 3]) {
+    let radians = angle.to_radians();
+    let end_x = 120 + (radians.sin() * length as f32).round() as i32;
+    let end_y = 80 - (radians.cos() * length as f32).round() as i32;
+    let mut x = 120_i32;
+    let mut y = 80_i32;
+    let dx = (end_x - x).abs();
+    let sx = if x < end_x { 1 } else { -1 };
+    let dy = -(end_y - y).abs();
+    let sy = if y < end_y { 1 } else { -1 };
+    let mut error = dx + dy;
+    loop {
+        if x >= 0 && y >= 0 {
+            put_pixel(frame, x as usize, y as usize, color);
+        }
+        if x == end_x && y == end_y { break; }
+        let doubled = error * 2;
+        if doubled >= dy {
+            error += dy;
+            x += sx;
+        }
+        if doubled <= dx {
+            error += dx;
+            y += sy;
         }
     }
 }
