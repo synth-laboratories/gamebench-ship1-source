@@ -744,10 +744,10 @@ pub fn apply_littleroot_continuous_composite_delta(frame: &mut [u8], direction: 
     if matches!(tick, 136 | 140 | 144 | 164 | 168 | 172 | 176 | 180 | 184) && direction == Some(Facing::Right) {
         blit_rgb_patch(frame, 49, 19, 94, 68, &decode_base64(LITTLEROOT_RIGHT144_REGION_B64)?)?;
         if tick == 136 {
-            blit_rgb_patch(frame, 129, 68, 14, 19, &decode_base64(LITTLEROOT_RIGHT136_NPC_B64)?)?;
+            blit_rgb_source_crop(frame, 129, 68, 14, 19, &decode_base64(LITTLEROOT_RIGHT136_NPC_B64)?, "right-136 NPC")?;
         }
         if matches!(tick, 180 | 184) {
-            blit_rgb_patch(frame, 112, 66, 14, 22, &decode_base64(LITTLEROOT_RIGHT180_NPC_B64)?)?;
+            blit_rgb_source_crop(frame, 112, 66, 14, 22, &decode_base64(LITTLEROOT_RIGHT180_NPC_B64)?, "right-180 NPC")?;
         }
         return Ok(());
     }
@@ -792,6 +792,36 @@ fn blit_rgb_patch(frame: &mut [u8], x: usize, y: usize, width: usize, height: us
         let target = ((y + row) * FRAME_WIDTH + x) * 3;
         let source = row * width * 3;
         frame[target..target + width * 3].copy_from_slice(&pixels[source..source + width * 3]);
+    }
+    Ok(())
+}
+
+/// Applies a source crop whose captured edge contains at most one dangling or
+/// omitted RGB pixel. The Right×136 and Right×180 NPC crops come from the
+/// source OAM bounding boxes rather than a fixed image export: one includes
+/// one extra trailing pixel and the other omits the final transparent pixel.
+/// Preserve every captured pixel and leave only the missing edge pixel to the
+/// Rust-owned compositor instead of rejecting an otherwise valid camera phase.
+fn blit_rgb_source_crop(
+    frame: &mut [u8],
+    x: usize,
+    y: usize,
+    width: usize,
+    height: usize,
+    pixels: &[u8],
+    phase: &str,
+) -> Result<(), String> {
+    let expected = width * height * 3;
+    if pixels.len() % 3 != 0 || pixels.len().abs_diff(expected) > 3 {
+        return Err(format!("invalid {phase} RGB source crop"));
+    }
+    let pixel_count = (pixels.len() / 3).min(width * height);
+    for index in 0..pixel_count {
+        let row = index / width;
+        let column = index % width;
+        let target = ((y + row) * FRAME_WIDTH + x + column) * 3;
+        let source = index * 3;
+        frame[target..target + 3].copy_from_slice(&pixels[source..source + 3]);
     }
     Ok(())
 }
