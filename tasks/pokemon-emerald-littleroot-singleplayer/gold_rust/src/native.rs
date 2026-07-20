@@ -569,6 +569,15 @@ const NAME_ENTRY_OAM_B64: &str = include_str!("../assets/opening_name_entry.oam.
 const NAME_ENTRY_OAM_PRIORITY_PATCH_B64: &str = include_str!("../assets/opening_name_entry.oam_priority_patch.b64");
 const NAME_ENTRY_A_PATCH_B64: &str = include_str!("../assets/opening_name_entry.a_patch.b64");
 const NAME_ENTRY_G_CURSOR_PATCH_B64: &str = include_str!("../assets/opening_name_entry.g_cursor_patch.b64");
+// Source: pokeemerald graphics/naming_screen/page_swap_*.png (4bpp OBJ art).
+const NAME_PAGE_SWAP_UPPER_PNG_B64: &str = include_str!("../assets/naming_page_swap_upper.png.b64");
+const NAME_PAGE_SWAP_LOWER_PNG_B64: &str = include_str!("../assets/naming_page_swap_lower.png.b64");
+const NAME_PAGE_SWAP_OTHERS_PNG_B64: &str = include_str!("../assets/naming_page_swap_others.png.b64");
+const NAME_PAGE_SWAP_BUTTON_PNG_B64: &str = include_str!("../assets/naming_page_swap_button.png.b64");
+static NAME_PAGE_SWAP_UPPER: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static NAME_PAGE_SWAP_LOWER: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static NAME_PAGE_SWAP_OTHERS: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static NAME_PAGE_SWAP_BUTTON: OnceLock<SourceIndexedSheet> = OnceLock::new();
 const TITLE_TO_MET_RIVAL_NAME_ENTRY_A_PATCH_B64: &str = include_str!("../assets/title_to_met_rival_may_name_entry_a_patch.b64");
 const TITLE_TO_MET_RIVAL_NAME_ENTRY_OK_PATCH_B64: &str = include_str!("../assets/title_to_met_rival_may_name_entry_ok_patch.b64");
 const TITLE_TO_MET_RIVAL_NAME_CONFIRM_PNG_B64: &str = include_str!("../assets/title_to_met_rival_may_name_confirm.png.b64");
@@ -1228,13 +1237,14 @@ pub fn render_professor_intro_idle() -> Result<Vec<u8>, String> {
 }
 
 pub fn render_name_entry_idle() -> Result<Vec<u8>, String> {
-    render_name_entry_with_cursor(NamingKeyboardPage::LettersUpper, Some((0, 0)), None)
+    render_name_entry_with_cursor(NamingKeyboardPage::LettersUpper, Some((0, 0)), None, true)
 }
 
 fn render_name_entry_with_cursor(
     page: NamingKeyboardPage,
     cursor: Option<(usize, usize)>,
     action_button_pulse: Option<NamingActionButtonPulse>,
+    include_page_swap_sprites: bool,
 ) -> Result<Vec<u8>, String> {
     let vram = decode_base64(NAME_ENTRY_BG_VRAM_B64.trim())?;
     let palette = decode_base64(NAME_ENTRY_BG_PALETTE_B64.trim())?;
@@ -1265,6 +1275,15 @@ fn render_name_entry_with_cursor(
     // source sprite data can follow the live Rust keyboard position.
     let mut non_cursor_oam = oam.clone();
     disable_oam_entry(&mut non_cursor_oam, 22);
+    if !include_page_swap_sprites {
+        // Entries 20/21 are the 24x8 page label and entry 23 is its 32x16
+        // button. The source swaps both sheets/palettes during the page
+        // hand-off; disable the captured uppercase versions before drawing
+        // the source page-specific sheets below.
+        disable_oam_entry(&mut non_cursor_oam, 20);
+        disable_oam_entry(&mut non_cursor_oam, 21);
+        disable_oam_entry(&mut non_cursor_oam, 23);
+    }
     composite_oam_4bpp(&mut frame, &obj_vram, &obj_palette, &non_cursor_oam)?;
     if let Some((cursor_x, cursor_y)) = cursor {
         let mut cursor_oam = disabled_oam();
@@ -1303,11 +1322,17 @@ pub fn render_name_entry(world: &WorldState) -> Result<Vec<u8>, String> {
     } else {
         name_entry_cursor_position_for_page(page, world.name_cursor)
     };
+    let include_page_swap_sprites = page == NamingKeyboardPage::LettersUpper
+        && !world.name_entry_page_swap_active();
     let mut frame = render_name_entry_with_cursor(
         page,
         cursor,
         world.naming_action_button_pulse,
+        include_page_swap_sprites,
     )?;
+    if !include_page_swap_sprites {
+        draw_name_page_swap_sprites(&mut frame, page, world.name_entry_page_swap_frames);
+    }
     // The source naming screen redraws WIN_TEXT_ENTRY after every character
     // selection.  The staged idle/OAM surface intentionally contains only
     // the empty input line, so keep the live buffer Rust-owned here instead
@@ -1509,6 +1534,103 @@ fn draw_name_keyboard_page(frame: &mut [u8], page: NamingKeyboardPage) {
         }
     }
 }
+
+/// Draws the source page-button sheets for non-uppercase pages and for the
+/// 32-frame page hand-off. The captured uppercase frame already contains the
+/// exact lower-page label/button, so that manifest path deliberately bypasses
+/// this helper. Source `SpriteCB_PageSwap` slides the label down for eight
+/// frames, hides it at the hand-off boundary, then slides the next label up
+/// for four frames; the page-button palette changes at that boundary.
+fn draw_name_page_swap_sprites(
+    frame: &mut [u8],
+    page: NamingKeyboardPage,
+    swap_frames: Option<u8>,
+) {
+    let next_page = |page| match page {
+        NamingKeyboardPage::Symbols => NamingKeyboardPage::LettersUpper,
+        NamingKeyboardPage::LettersUpper => NamingKeyboardPage::LettersLower,
+        NamingKeyboardPage::LettersLower => NamingKeyboardPage::Symbols,
+    };
+    let (button_page, label_page, label_y) = match swap_frames {
+        Some(elapsed) if elapsed < 8 => {
+            let button_page = next_page(page);
+            (button_page, Some(button_page), Some(80 + usize::from(elapsed)))
+        }
+        Some(elapsed) if elapsed < 12 => {
+            let button_page = next_page(next_page(page));
+            // The source hides the old label on frame 8, then starts the
+            // replacement at y2=-3 on frame 9 and reaches its resting y2=0
+            // on frame 12.
+            let label_y = Some(80_usize.saturating_sub(12 - usize::from(elapsed)));
+            (button_page, Some(button_page), label_y)
+        }
+        Some(_) => {
+            let button_page = next_page(next_page(page));
+            (button_page, Some(button_page), Some(80))
+        }
+        None => {
+            let button_page = next_page(page);
+            (button_page, Some(button_page), Some(80))
+        }
+    };
+
+    let button = NAME_PAGE_SWAP_BUTTON.get_or_init(|| {
+        decode_source_indexed_sheet(NAME_PAGE_SWAP_BUTTON_PNG_B64)
+            .expect("source naming page-swap button must decode")
+    });
+    let button_palette = match button_page {
+        NamingKeyboardPage::LettersUpper => NAME_PAGE_SWAP_BUTTON_PALETTE_UPPER,
+        NamingKeyboardPage::LettersLower => NAME_PAGE_SWAP_BUTTON_PALETTE_LOWER,
+        NamingKeyboardPage::Symbols => NAME_PAGE_SWAP_BUTTON_PALETTE_OTHERS,
+    };
+    for row in 0..16 {
+        for column in 0..32 {
+            let color_index = usize::from(button.pixels[row * button.width + column]);
+            if color_index == 0 || color_index >= button_palette.len() {
+                continue;
+            }
+            put_pixel(frame, 188 + column, 75 + row, button_palette[color_index]);
+        }
+    }
+
+    let (Some(label_page), Some(label_y)) = (label_page, label_y) else { return; };
+    let label = match label_page {
+        NamingKeyboardPage::LettersUpper => NAME_PAGE_SWAP_UPPER.get_or_init(|| {
+            decode_source_indexed_sheet(NAME_PAGE_SWAP_UPPER_PNG_B64)
+                .expect("source naming uppercase page-swap label must decode")
+        }),
+        NamingKeyboardPage::LettersLower => NAME_PAGE_SWAP_LOWER.get_or_init(|| {
+            decode_source_indexed_sheet(NAME_PAGE_SWAP_LOWER_PNG_B64)
+                .expect("source naming lowercase page-swap label must decode")
+        }),
+        NamingKeyboardPage::Symbols => NAME_PAGE_SWAP_OTHERS.get_or_init(|| {
+            decode_source_indexed_sheet(NAME_PAGE_SWAP_OTHERS_PNG_B64)
+                .expect("source naming symbols page-swap label must decode")
+        }),
+    };
+    draw_source_indexed_crop(frame, label, 0, 0, 24, 8, 192, label_y);
+}
+
+// Source: pokeemerald graphics/naming_screen/page_swap_*.pal, expanded to
+// the renderer's 8-bit RGB palette representation.
+const NAME_PAGE_SWAP_BUTTON_PALETTE_UPPER: [[u8; 3]; 16] = [
+    [106, 156, 213], [255, 255, 255], [57, 57, 57], [115, 115, 115],
+    [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 255],
+    [0, 0, 255], [0, 0, 255], [0, 0, 255], [74, 115, 139],
+    [98, 139, 164], [123, 172, 197], [156, 205, 230], [180, 222, 246],
+];
+const NAME_PAGE_SWAP_BUTTON_PALETTE_LOWER: [[u8; 3]; 16] = [
+    [106, 156, 213], [255, 255, 255], [57, 57, 57], [115, 115, 115],
+    [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 255],
+    [0, 0, 255], [0, 0, 255], [0, 0, 255], [172, 115, 74],
+    [189, 131, 90], [213, 156, 115], [246, 205, 164], [255, 230, 197],
+];
+const NAME_PAGE_SWAP_BUTTON_PALETTE_OTHERS: [[u8; 3]; 16] = [
+    [106, 156, 213], [255, 255, 255], [57, 57, 57], [115, 115, 115],
+    [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 255],
+    [0, 0, 255], [0, 0, 255], [0, 0, 255], [98, 156, 57],
+    [123, 172, 82], [148, 189, 106], [197, 230, 156], [213, 238, 189],
+];
 
 /// Mirrors `GetButtonPalOffset` plus
 /// `MultiplyInvertedPaletteRGBComponents` for the staged naming-screen OBJ
