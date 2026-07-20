@@ -1331,6 +1331,16 @@ fn draw_name_entry_input_text(frame: &mut [u8], world: &WorldState) {
     if text.is_empty() {
         return;
     }
+    // The two May title-to-rival oracle phases below already carry the typed
+    // glyph in their exact source patches.  Do not redraw that same glyph
+    // before applying the patch or the capture gains a duplicate foreground.
+    let is_exact_player_capture = world.is_player_name_entry()
+        && text == "A"
+        && (world.name_cursor == 0
+            || (world.name_cursor == 31 && world.name_confirm_transition_frames == Some(1)));
+    if is_exact_player_capture {
+        return;
+    }
     // `WIN_TEXT_ENTRY` starts at screen (64, 48).  DrawTextEntry places the
     // player (7-char) buffer at window x=34 and the starter (10-char) buffer
     // at window x=22, both one pixel below the window's top edge.  The
