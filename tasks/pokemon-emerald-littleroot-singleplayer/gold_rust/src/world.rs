@@ -7138,6 +7138,12 @@ fn npc_wander_bounds(map: MapId, id: &str) -> Option<(TilePosition, i16, i16)> {
         // authored one-tile range in both axes; movement itself is limited
         // to the source's left/right direction pair above.
         (MapId::Route101, "route101_boy") => Some((TilePosition { x: 2, y: 13 }, 1, 1)),
+        // The Lab's aide is authored as `MOVEMENT_TYPE_WANDER_AROUND` with
+        // one-tile X/Y ranges around `(9, 8)`.  Keeping this local to the
+        // Lab lets the source object-event scheduler animate the
+        // post-Route-101 acknowledgement scene instead of freezing the aide
+        // in their initial south-facing pose.
+        (MapId::ProfessorBirchsLab, "aide") => Some((TilePosition { x: 9, y: 8 }, 1, 1)),
         // The staged Route 101 youngster and Oldale man are fixed-facing
         // source objects, so they intentionally have no ambient range.
         _ => None,
