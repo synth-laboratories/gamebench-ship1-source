@@ -2100,6 +2100,19 @@ impl LittlerootSession {
                     self.world.truck_departure_frames,
                 )
             }
+            _ if self.world.map == MapId::LittlerootTown
+                && self.world.running_shoes_return_door_frames.is_some() =>
+            {
+                native::render_littleroot_running_shoes_return(
+                    self.world.render_player(),
+                    self.world.player_gender,
+                    self.world.facing,
+                    self.world.frame,
+                    &self.world.npcs,
+                    &self.world.npc_walk_starts,
+                    self.world.running_shoes_return_door_frames,
+                )
+            }
             OpeningCheckpoint::RivalOutsideLab
                 if self.world.map == MapId::LittlerootTown
                     && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Left, frames: 16 }]) =>
