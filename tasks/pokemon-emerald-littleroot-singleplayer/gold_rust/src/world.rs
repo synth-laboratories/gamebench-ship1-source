@@ -46,6 +46,10 @@ const TV_BROADCAST_VIEW_FRAMES: u16 = TV_BROADCAST_VIEW_MOM_STEP_FRAMES
     + TV_BROADCAST_VIEW_FASTER_TURN_FRAMES
     + TV_BROADCAST_VIEW_PLAYER_STEP_FRAMES
     + TV_BROADCAST_VIEW_FASTER_TURN_FRAMES;
+
+fn default_tv_screen_on() -> bool {
+    true
+}
 /// `MomApproachDoor` completes after its 24-frame pause and normal walk;
 /// `PlayerApproachDoor` adds a four-frame fast up-facing turn, which controls
 /// the shared `waitmovement` release.
@@ -1210,6 +1214,10 @@ pub struct WorldState {
     /// report message opens.
     #[serde(default)]
     pub tv_broadcast_view_frames: Option<u16>,
+    /// `TurnOffTVScreen` replaces every television metatile immediately
+    /// after the Petalburg Gym report message closes.
+    #[serde(default = "default_tv_screen_on")]
+    pub tv_screen_on: bool,
     /// Remaining frames in the source truck-arrival choreography before Mom
     /// opens her first Little Root dialogue. Input is locked throughout.
     #[serde(default)]
@@ -1397,6 +1405,7 @@ impl WorldState {
             rival_mom_exclamation_frames: None,
             tv_broadcast_approach_frames: None,
             tv_broadcast_view_frames: None,
+            tv_screen_on: true,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1522,6 +1531,7 @@ impl WorldState {
             rival_mom_exclamation_frames: None,
             tv_broadcast_approach_frames: None,
             tv_broadcast_view_frames: None,
+            tv_screen_on: true,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1650,6 +1660,7 @@ impl WorldState {
             rival_mom_exclamation_frames: None,
             tv_broadcast_approach_frames: None,
             tv_broadcast_view_frames: None,
+            tv_screen_on: true,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1774,6 +1785,7 @@ impl WorldState {
             rival_mom_exclamation_frames: None,
             tv_broadcast_approach_frames: None,
             tv_broadcast_view_frames: None,
+            tv_screen_on: true,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1927,6 +1939,7 @@ impl WorldState {
             rival_mom_exclamation_frames: None,
             tv_broadcast_approach_frames: None,
             tv_broadcast_view_frames: None,
+            tv_screen_on: true,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -5613,6 +5626,11 @@ impl WorldState {
                         // turn before the reporter can speak.
                         self.tv_broadcast_view_frames = Some(TV_BROADCAST_VIEW_FRAMES);
                         return;
+                    }
+                    if self.title_intro_step == 2 {
+                        // `WatchGymBroadcast` calls `TurnOffTVScreen`
+                        // immediately after its report message is dismissed.
+                        self.tv_screen_on = false;
                     }
                     let next = self.title_intro_step.saturating_add(1);
                     if next < TV_BROADCAST_PAGE_COUNT {
