@@ -586,19 +586,30 @@ impl LittlerootSession {
             return;
         }
         if self.world.phase == world::StoryPhase::StarterSelect {
-            self.world.advance_starter_hand(request.frames);
-            match request.action {
+            // `CB2_StarterChoose` runs its task before `AnimateSprites`.
+            // A newly selected ball therefore begins its moving animation on
+            // the request's first source frame; the remaining held frames
+            // advance that fresh animation normally.
+            let ball_started = match request.action {
                 Input::Left => self.world.move_starter_selection(-1),
                 Input::Right => self.world.move_starter_selection(1),
-                Input::A => self.world.ask_confirm_starter(),
-                Input::Up | Input::Down | Input::B | Input::Start | Input::Select | Input::Noop => {}
-            }
+                Input::A => {
+                    self.world.ask_confirm_starter();
+                    false
+                }
+                Input::Up | Input::Down | Input::B | Input::Start | Input::Select | Input::Noop => false,
+            };
+            self.world.advance_starter_hand(request.frames);
+            self.world.advance_starter_pokeball_animation(
+                request.frames.saturating_sub(u32::from(ball_started)),
+            );
             self.input_log.push(request);
             self.redraw();
             return;
         }
         if self.world.phase == world::StoryPhase::StarterConfirm {
             self.world.advance_starter_hand(request.frames);
+            self.world.advance_starter_pokeball_animation(request.frames);
             match request.action {
                 Input::Up | Input::Down => self.world.move_starter_confirmation(),
                 Input::A => {

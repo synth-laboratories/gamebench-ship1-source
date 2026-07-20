@@ -2574,9 +2574,14 @@ fn draw_starter_choose_scene(frame: &mut [u8], world: &WorldState) {
     // coordinate is its top-left origin.
     const BALL_CENTERS: [(usize, usize); 3] = [(60, 64), (120, 88), (180, 64)];
     for (ball_id, &(center_x, center_y)) in BALL_CENTERS.iter().enumerate() {
-        // `sAnim_Pokeball_Moving` begins at source frame offset 16; the
-        // remaining two balls retain frame zero.
-        let source_y = if ball_id == selection { 32 } else { 0 };
+        // `SpriteCB_Pokeball` runs `sAnim_Pokeball_Moving` only for the
+        // current selection. The image values are 4bpp-tile offsets: 0, 16,
+        // and 32 map to the sheet's 0, 32, and 64 pixel rows.
+        let source_y = if ball_id == selection {
+            starter_choose_pokeball_source_y(world.starter_pokeball_animation_frame)
+        } else {
+            0
+        };
         draw_source_indexed_crop(frame, pokeball, 0, source_y, 32, 32, center_x - 16, center_y - 16);
     }
 
@@ -2690,6 +2695,28 @@ fn starter_hand_bob(phase: u8) -> i16 {
         -8, -8, -8, -8, -8, -8, -7, -7, -6, -6, -5, -4, -4, -3, -2, -1,
     ];
     SOURCE_SINE_EVERY_FOURTH[usize::from(phase >> 2)]
+}
+
+/// Exact `sAnim_Pokeball_Moving` image sequence from `starter_choose.c`.
+/// The engine starts its selected ball at image value 16, then loops after
+/// 128 source video frames. Returning the PNG-row position keeps that 4bpp
+/// tile offset local to the staged source sheet.
+fn starter_choose_pokeball_source_y(animation_frame: u8) -> usize {
+    const ANIMATION: [(usize, u8); 17] = [
+        (32, 4), (0, 4), (64, 4), (0, 4),
+        (32, 4), (0, 4), (64, 4), (0, 4),
+        (0, 32),
+        (32, 8), (0, 8), (64, 8), (0, 8),
+        (32, 8), (0, 8), (64, 8), (0, 8),
+    ];
+    let mut remaining = animation_frame & 0x7f;
+    for (source_y, duration) in ANIMATION {
+        if remaining < duration {
+            return source_y;
+        }
+        remaining -= duration;
+    }
+    unreachable!("the source Poké Ball animation totals 128 frames")
 }
 
 fn draw_starter_choose_tilemap(
