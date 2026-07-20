@@ -7370,6 +7370,11 @@ impl WorldState {
             (MapId::OldaleTown, 7 | 8, 16) => Some("POKéMON CENTER"),
             (MapId::OldaleTown, 15 | 16, 6) => Some("POKéMON MART"),
             (MapId::Route101, 5, 9) => Some("ROUTE 101\n↑ OLDALE TOWN"),
+            // `Route103_MapBGEvents` places the south-facing route sign at
+            // (11, 9) and dispatches `Route103_Text_RouteSign` whenever the
+            // player faces it. Keep this as a background event rather than
+            // an NPC so interaction ownership follows the authored map data.
+            (MapId::Route103, 11, 9) => Some("ROUTE 103\n↓ OLDALE TOWN"),
             (MapId::BrendansHouse2F, 0, 1) | (MapId::MaysHouse2F, 8, 1) => {
                 Some("The PC is booted up. It contains your saved items.")
             }
