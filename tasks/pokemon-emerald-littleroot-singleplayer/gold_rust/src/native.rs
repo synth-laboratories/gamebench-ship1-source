@@ -979,10 +979,10 @@ pub fn render_professor_intro_idle() -> Result<Vec<u8>, String> {
 }
 
 pub fn render_name_entry_idle() -> Result<Vec<u8>, String> {
-    render_name_entry_with_cursor(0, 0)
+    render_name_entry_with_cursor(Some((0, 0)))
 }
 
-fn render_name_entry_with_cursor(cursor_x: usize, cursor_y: usize) -> Result<Vec<u8>, String> {
+fn render_name_entry_with_cursor(cursor: Option<(usize, usize)>) -> Result<Vec<u8>, String> {
     let vram = decode_base64(NAME_ENTRY_BG_VRAM_B64.trim())?;
     let palette = decode_base64(NAME_ENTRY_BG_PALETTE_B64.trim())?;
     if vram.len() != 0x10000 || palette.len() != 0x200 { return Err("invalid staged name-entry BG assets".to_owned()); }
@@ -1007,23 +1007,24 @@ fn render_name_entry_with_cursor(cursor_x: usize, cursor_y: usize) -> Result<Vec
     let mut non_cursor_oam = oam.clone();
     disable_oam_entry(&mut non_cursor_oam, 22);
     composite_oam_4bpp(&mut frame, &obj_vram, &obj_palette, &non_cursor_oam)?;
-    let mut cursor_oam = disabled_oam();
-    cursor_oam[..8].copy_from_slice(&oam[22 * 8..22 * 8 + 8]);
-    let sprite_x = 30 + cursor_x * 12 + if cursor_x >= 3 { 20 } else { 0 };
-    let sprite_y = 80 + cursor_y * 16;
-    cursor_oam[2..4].copy_from_slice(&(sprite_x as u16 | 0x4000).to_le_bytes());
-    cursor_oam[0..2].copy_from_slice(&(sprite_y as u16 | 0x0400).to_le_bytes());
-    composite_oam_4bpp(&mut frame, &obj_vram, &obj_palette, &cursor_oam)?;
+    if let Some((cursor_x, cursor_y)) = cursor {
+        let mut cursor_oam = disabled_oam();
+        cursor_oam[..8].copy_from_slice(&oam[22 * 8..22 * 8 + 8]);
+        let sprite_x = 30 + cursor_x * 12 + if cursor_x >= 3 { 20 } else { 0 };
+        let sprite_y = 80 + cursor_y * 16;
+        cursor_oam[2..4].copy_from_slice(&(sprite_x as u16 | 0x4000).to_le_bytes());
+        cursor_oam[0..2].copy_from_slice(&(sprite_y as u16 | 0x0400).to_le_bytes());
+        composite_oam_4bpp(&mut frame, &obj_vram, &obj_palette, &cursor_oam)?;
+    }
     // The name-entry cursor objects are priority 1; BG0's priority-0 grid
     // tiles cover their overlapping pixels.
     composite_gba_bg_4bpp(&mut frame, &vram[..], &vram[0xf000..0xf800], &palette, true)?;
-    apply_name_entry_oam_priority_patch(&mut frame)?;
+    apply_name_entry_oam_priority_patch(&mut frame, cursor.is_none())?;
     Ok(frame)
 }
 
 pub fn render_name_entry(world: &WorldState) -> Result<Vec<u8>, String> {
-    let (cursor_x, cursor_y) = name_entry_cursor_position(world.name_cursor);
-    let mut frame = render_name_entry_with_cursor(cursor_x, cursor_y)?;
+    let mut frame = render_name_entry_with_cursor(name_entry_cursor_position(world.name_cursor))?;
     // These source patches are exact captures of the player-name title flow;
     // the starter screen below reuses the keyboard art but has its own title
     // and input line.
@@ -1080,13 +1081,17 @@ pub fn render_starter_nickname_entry(world: &WorldState) -> Result<Vec<u8>, Stri
     Ok(frame)
 }
 
-fn name_entry_cursor_position(cursor: u8) -> (usize, usize) {
+fn name_entry_cursor_position(cursor: u8) -> Option<(usize, usize)> {
     match cursor {
-        0..=5 => (usize::from(cursor), 0),
-        6..=11 => (usize::from(cursor - 6), 1),
-        12..=18 => (usize::from(cursor - 12), 2),
-        19..=25 => (usize::from(cursor - 19), 3),
-        _ => (0, 0),
+        0..=5 => Some((usize::from(cursor), 0)),
+        6..=11 => Some((usize::from(cursor - 6), 1)),
+        12..=18 => Some((usize::from(cursor - 12), 2)),
+        19..=25 => Some((usize::from(cursor - 19), 3)),
+        // `SpriteCB_Cursor` in `naming_screen.c` hides the 16x16 cursor
+        // when it reaches the screen's right-hand action-button column.
+        // The button itself then supplies the source selection pulse.
+        28..=31 => None,
+        _ => Some((0, 0)),
     }
 }
 
@@ -1102,14 +1107,20 @@ fn disable_oam_entry(oam: &mut [u8], entry: usize) {
     oam[offset..offset + 2].copy_from_slice(&attr0.to_le_bytes());
 }
 
-fn apply_name_entry_oam_priority_patch(frame: &mut [u8]) -> Result<(), String> {
+fn apply_name_entry_oam_priority_patch(frame: &mut [u8], suppress_initial_cursor: bool) -> Result<(), String> {
     // The captured cursor/utility OAM layer uses a priority interaction not
     // represented by the general 4bpp compositor. Store only the 193 affected
     // source-derived pixels as (x, y, r, g, b) records.
     let patch = decode_base64(NAME_ENTRY_OAM_PRIORITY_PATCH_B64.trim())?;
     if patch.len() % 5 != 0 { return Err("invalid name-entry OAM priority patch".to_owned()); }
     for record in patch.chunks_exact(5) {
-        let offset = (usize::from(record[1]) * FRAME_WIDTH + usize::from(record[0])) * 3;
+        let x = usize::from(record[0]);
+        let y = usize::from(record[1]);
+        // The staged correction was captured with OAM entry 22 at its
+        // initial A-cell location (x=30, y=80). Do not restore those cursor
+        // pixels after the source cursor has been hidden on an action cell.
+        if suppress_initial_cursor && (30..46).contains(&x) && (80..96).contains(&y) { continue; }
+        let offset = (y * FRAME_WIDTH + x) * 3;
         frame[offset..offset + 3].copy_from_slice(&record[2..5]);
     }
     Ok(())
