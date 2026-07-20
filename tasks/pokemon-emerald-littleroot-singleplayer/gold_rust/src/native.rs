@@ -142,6 +142,11 @@ const BATTLE_TRAINER_BACK_MAY_B64: &str = include_str!("../assets/battle_trainer
 // `SpriteCB_PlayerMonSendOut_2` the active `sBallAnimSeq0` holds frame zero
 // while the affine-double 16×16 OBJ crosses its arc.
 const BATTLE_PLAYER_SENDOUT_POKEBALL_B64: &str = include_str!("../assets/battle_player_sendout_pokeball.png.b64");
+// `AnimateBallOpenParticles` uploads the source 8×64 4bpp particle sheet
+// (`graphics/battle_anims/sprites/particles.png`) and the circle-impact
+// palette.  Keeping the indexed PNG here lets the release rail render the
+// source fan-out without substituting host-drawn sparkles.
+const BATTLE_BALL_PARTICLES_B64: &str = include_str!("../assets/battle_ball_particles.png.b64");
 // The opening Route 101/103 battles use Emerald's normal tall-grass battle
 // environment: a 64×32 BG2 tilemap, its 4bpp tiles, and three palette banks.
 const BATTLE_TALL_GRASS_TILES_B64: &str = include_str!("../assets/battle_tall_grass_tiles.png.b64");
@@ -260,6 +265,7 @@ static BATTLE_WURMPLE_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_TRAINER_BACK_BRENDAN: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_TRAINER_BACK_MAY: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_PLAYER_SENDOUT_POKEBALL: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static BATTLE_BALL_PARTICLES: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_TALL_GRASS_TILES: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_TALL_GRASS_PALETTE: OnceLock<Vec<[u8; 3]>> = OnceLock::new();
 static BATTLE_TALL_GRASS_MAP: OnceLock<Vec<u8>> = OnceLock::new();
@@ -1921,6 +1927,12 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
                         battle.intro_player_sendout_elapsed_frames
                             .saturating_sub(BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES),
                     );
+                    draw_battle_player_intro_open_particles(
+                        frame,
+                        battle.intro_player_sendout_elapsed_frames
+                            .saturating_sub(BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES),
+                        world.starter,
+                    );
                 }
             }
         }
@@ -3577,6 +3589,118 @@ fn draw_battle_player_intro_sendout_pokeball(
         (center_y - 8).max(0) as usize,
     );
 }
+
+/// Projects Emerald's `AnimateBallOpenParticles` fan-out for the player's
+/// release. `PokeBallOpenParticleAnimation` creates one 8x8 OBJ per frame for
+/// sixteen frames, then each particle uses `Sin(data[0], data[1])` /
+/// `Cos(data[0], data[2])` for fifty-one source ticks. This stays narrowly
+/// release-gated; the typed battle timeline and command lock remain unchanged.
+fn draw_battle_player_intro_open_particles(
+    frame: &mut [u8],
+    release_elapsed: u8,
+    starter: Option<StarterSpecies>,
+) {
+    const PARTICLE_SPAWN_TICKS: u8 = 16;
+    const PARTICLE_LIFETIME_TICKS: u8 = 51;
+    let particle_sheet = BATTLE_BALL_PARTICLES.get_or_init(|| {
+        decode_source_indexed_sheet(BATTLE_BALL_PARTICLES_B64)
+            .expect("staged Emerald Poké Ball particle sheet must decode")
+    });
+    if particle_sheet.width != 8 || particle_sheet.height < 64 {
+        return;
+    }
+    let target_y = match starter.unwrap_or(StarterSpecies::Treecko) {
+        StarterSpecies::Treecko => 118_i16,
+        StarterSpecies::Torchic | StarterSpecies::Mudkip => 117_i16,
+    };
+    let particle_x = 72_i16;
+    let particle_y = target_y - 5;
+    for spawn_tick in 0..PARTICLE_SPAWN_TICKS {
+        if release_elapsed < spawn_tick {
+            continue;
+        }
+        let age = release_elapsed - spawn_tick;
+        if age >= PARTICLE_LIFETIME_TICKS {
+            continue;
+        }
+
+        // The first callback only switches from Step1 to Step2. Step2 first
+        // runs on age two with a zero radius, then grows data[1] by two each
+        // source frame. The regular Poké Ball animation keeps data[0] fixed;
+        // only the eight angular spawn slots fan out.
+        let (offset_x, offset_y) = if age < 2 {
+            (0_i16, 0_i16)
+        } else {
+            let radius = i16::from(age - 2) * 2;
+            let angle = u16::from(spawn_tick % 8) * 32;
+            (
+                battle_ball_particle_sin(angle, radius),
+                battle_ball_particle_cos(angle, radius),
+            )
+        };
+        let animation_frame = match age % 6 {
+            0 => (0_usize, false),
+            1 => (1, false),
+            2 => (2, false),
+            3 => (0, true),
+            4 => (2, false),
+            _ => (1, false),
+        };
+        let source_y = animation_frame.0 * 8;
+        let origin_x = particle_x + offset_x - 4;
+        let origin_y = particle_y + offset_y - 4;
+        for row in 0..8_i16 {
+            for column in 0..8_i16 {
+                let source_column = if animation_frame.1 { 7 - column } else { column };
+                let color_index = usize::from(
+                    particle_sheet.pixels[(source_y + row as usize) * particle_sheet.width
+                        + source_column as usize],
+                );
+                if color_index == 0 || color_index >= particle_sheet.palette.len() {
+                    continue;
+                }
+                let x = origin_x + column;
+                let y = origin_y + row;
+                if x < 0 || y < 0 {
+                    continue;
+                }
+                put_pixel(frame, x as usize, y as usize, particle_sheet.palette[color_index]);
+            }
+        }
+    }
+}
+
+fn battle_ball_particle_sin(index: u16, amplitude: i16) -> i16 {
+    ((i32::from(amplitude) * i32::from(BATTLE_GBA_SINE_Q8_8[usize::from(index)])) >> 8) as i16
+}
+
+fn battle_ball_particle_cos(index: u16, amplitude: i16) -> i16 {
+    battle_ball_particle_sin(index + 64, amplitude)
+}
+
+/// Exact Q8.8 values from src/trig.c:gSineTable (x * pi / 128).
+const BATTLE_GBA_SINE_Q8_8: [i16; 320] = [
+    0, 6, 12, 18, 25, 31, 37, 43, 49, 56, 62, 68, 74, 80, 86, 92,
+    97, 103, 109, 115, 120, 126, 131, 136, 142, 147, 152, 157, 162, 167, 171, 176,
+    181, 185, 189, 193, 197, 201, 205, 209, 212, 216, 219, 222, 225, 228, 231, 234,
+    236, 238, 241, 243, 244, 246, 248, 249, 251, 252, 253, 254, 254, 255, 255, 255,
+    256, 255, 255, 255, 254, 254, 253, 252, 251, 249, 248, 246, 244, 243, 241, 238,
+    236, 234, 231, 228, 225, 222, 219, 216, 212, 209, 205, 201, 197, 193, 189, 185,
+    181, 176, 171, 167, 162, 157, 152, 147, 142, 136, 131, 126, 120, 115, 109, 103,
+    97, 92, 86, 80, 74, 68, 62, 56, 49, 43, 37, 31, 25, 18, 12, 6,
+    0, -6, -12, -18, -25, -31, -37, -43, -49, -56, -62, -68, -74, -80, -86, -92,
+    -97, -103, -109, -115, -120, -126, -131, -136, -142, -147, -152, -157, -162, -167, -171, -176,
+    -181, -185, -189, -193, -197, -201, -205, -209, -212, -216, -219, -222, -225, -228, -231, -234,
+    -236, -238, -241, -243, -244, -246, -248, -249, -251, -252, -253, -254, -254, -255, -255, -255,
+    -256, -255, -255, -255, -254, -254, -253, -252, -251, -249, -248, -246, -244, -243, -241, -238,
+    -236, -234, -231, -228, -225, -222, -219, -216, -212, -209, -205, -201, -197, -193, -189, -185,
+    -181, -176, -171, -167, -162, -157, -152, -147, -142, -136, -131, -126, -120, -115, -109, -103,
+    -97, -92, -86, -80, -74, -68, -62, -56, -49, -43, -37, -31, -25, -18, -12, -6,
+    0, 6, 12, 18, 25, 31, 37, 43, 49, 56, 62, 68, 74, 80, 86, 92,
+    97, 103, 109, 115, 120, 126, 131, 136, 142, 147, 152, 157, 162, 167, 171, 176,
+    181, 185, 189, 193, 197, 201, 205, 209, 212, 216, 219, 222, 225, 228, 231, 234,
+    236, 238, 241, 243, 244, 246, 248, 249, 251, 252, 253, 254, 254, 255, 255, 255,
+];
 
 /// Projects the first visible frame after `SpriteCB_ReleaseMonFromBall`.
 /// `src/data.c` seeds `BATTLER_AFFINE_EMERGE` at 0x28 (40) before its twelve
