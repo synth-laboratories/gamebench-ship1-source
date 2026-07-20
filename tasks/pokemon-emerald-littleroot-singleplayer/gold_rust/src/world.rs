@@ -4841,7 +4841,10 @@ impl WorldState {
     }
 
     pub fn toggle_running(&mut self) {
-        if self.phase == StoryPhase::RunningShoesReceived && self.map == MapId::LittlerootTown && self.dialogue.is_none() {
+        if self.phase == StoryPhase::RunningShoesReceived
+            && matches!(self.map, MapId::LittlerootTown | MapId::Route101)
+            && self.dialogue.is_none()
+        {
             self.running = !self.running;
             // A stationary player is on a face command, so the next source
             // `SetStepAnimHandleAlternation` starts at its first run foot.
