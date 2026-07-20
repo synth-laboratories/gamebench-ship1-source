@@ -5100,6 +5100,7 @@ pub fn render_world_view_with_dynamic_objects_and_tv_state_and_running(map_id: M
         player_running,
         running_step_uses_second_foot,
         active_home_tv_screen_on,
+        None,
     )
 }
 
@@ -5120,6 +5121,7 @@ fn render_world_view_with_dynamic_objects_and_player_visibility(
     player_running: bool,
     running_step_uses_second_foot: bool,
     tv_screen_on: bool,
+    littleroot_door_art_frame: Option<usize>,
 ) -> Result<Vec<u8>, String> {
     render_world_view_with_dynamic_objects_and_player_y_offset(
         map_id,
@@ -5136,6 +5138,7 @@ fn render_world_view_with_dynamic_objects_and_player_visibility(
         running_step_uses_second_foot,
         tv_screen_on,
         0,
+        littleroot_door_art_frame,
     )
 }
 
@@ -5158,6 +5161,7 @@ fn render_world_view_with_dynamic_objects_and_player_y_offset(
     running_step_uses_second_foot: bool,
     tv_screen_on: bool,
     player_y_offset: i8,
+    littleroot_door_art_frame: Option<usize>,
 ) -> Result<Vec<u8>, String> {
     let mut frame = render_world_view_with_motion_at_tick_and_tv_state(
         map_id,
@@ -5168,6 +5172,13 @@ fn render_world_view_with_dynamic_objects_and_player_y_offset(
         None,
         tv_screen_on,
     )?;
+    // `field_door.c` mutates the map's background metatiles before the PPU
+    // composes object sprites. Keep the Little Root doorway in this terrain
+    // phase so Mom and the player pass in front of it, rather than painting
+    // it over their OBJ pixels after composition.
+    if let Some(art_frame) = littleroot_door_art_frame {
+        draw_littleroot_door_animation(&mut frame, player, player_gender, art_frame)?;
+    }
     // `InitJumpRegular` starts FLDEFF_SHADOW before the rival's 32-frame
     // Route 103 `jump_2_down`. The field-effect sprite is composited below
     // the object OBJ but above terrain, so paint it before dynamic OAM.
@@ -5450,7 +5461,7 @@ pub fn render_littleroot_truck_door_approach(
     // the map state is committed ahead of the visible stride.
     let mut visual_walks = npc_walk_starts.to_vec();
 
-    let (mut frame, door_visual) = if let Some(remaining) = departure_frames {
+    let (frame, _door_visual) = if let Some(remaining) = departure_frames {
         // The gameplay endpoint records Mom's normal walk at frame 40. Do
         // not replay that marker after the source action has completed; the
         // approach stride below is the only visual owner for this actor
@@ -5488,6 +5499,7 @@ pub fn render_littleroot_truck_door_approach(
                     false,
                     false,
                     true,
+                    door_visual.animation_art_frame(),
                 )?,
                 door_visual,
             )
@@ -5528,12 +5540,14 @@ pub fn render_littleroot_truck_door_approach(
                     false,
                     false,
                     true,
+                    door_visual.animation_art_frame(),
                 )?,
                 door_visual,
             )
         }
     } else if let Some(remaining) = arrival_frames {
         let elapsed = ARRIVAL_TOTAL_FRAMES.saturating_sub(remaining.min(ARRIVAL_TOTAL_FRAMES));
+        let door_visual = littleroot_arrival_door_visual(elapsed);
         // `LittlerootTown_Movement_PlayerStepOffTruck` begins with
         // `jump_right`. `InitJumpRegular` immediately selects the east-facing
         // walk pose, then `DoJumpSpriteMovement` applies its sixteen source
@@ -5565,8 +5579,9 @@ pub fn render_littleroot_truck_door_approach(
                 false,
                 true,
                 jump_y_offset,
+                door_visual.animation_art_frame(),
             )?,
-            littleroot_arrival_door_visual(elapsed),
+            door_visual,
         )
     } else {
         (
@@ -5585,9 +5600,6 @@ pub fn render_littleroot_truck_door_approach(
         )
     };
 
-    if let Some(art_frame) = door_visual.animation_art_frame() {
-        draw_littleroot_door_animation(&mut frame, player, player_gender, art_frame)?;
-    }
     Ok(frame)
 }
 
