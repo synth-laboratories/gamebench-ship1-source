@@ -3532,6 +3532,19 @@ impl WorldState {
             let visible_characters = usize::from(elapsed.saturating_sub(lead_in));
             return Some(dialogue.chars().take(visible_characters).collect());
         }
+        if let Some(remaining) = self.pokedex_poke_ball_fanfare_frames {
+            // `giveitem ITEM_POKE_BALL, 5` enters
+            // `EventScript_ObtainedItem`: its message printer begins while
+            // `MUS_OBTAIN_ITEM` is still playing, and `waitfanfare` keeps
+            // the follow-up pocket message from replacing this receipt.
+            // The fanfare clock is deliberately longer than the text printer,
+            // so derive the visible glyph count from its elapsed source time
+            // rather than treating its remaining duration as a printer total.
+            let elapsed = POKE_BALL_GIFT_FANFARE_REMAINING_FRAMES
+                .saturating_sub(remaining);
+            let visible_characters = usize::from(elapsed.saturating_sub(12));
+            return Some(dialogue.chars().take(visible_characters).collect());
+        }
         let Some(remaining) = self.running_shoes_wait_frames.map(u16::from)
             .or(self.running_shoes_dialogue_frames)
             .or(self.truck_arrival_dialogue_frames)
