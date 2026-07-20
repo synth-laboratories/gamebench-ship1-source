@@ -1613,7 +1613,7 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             return;
         }
         draw_battle_background(frame);
-        draw_menu_window(frame, 8, 18, 104, 24);
+        draw_battle_healthbox_backgrounds(frame);
         // The status pane identifies the active opposing Pokémon, including
         // in trainer battles; the trainer identity belongs to the intro text.
         let opponent = battle.opponent_species.as_str();
@@ -1622,7 +1622,6 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
         draw_text(frame, 16, 34, "HP", 10);
         draw_battle_hp_bar(frame, 38, 34, battle.rival_hp, battle.opponent_max_hp);
         draw_battle_sprite(frame, battle_front_sprite(&battle.opponent_species), 160, 18);
-        draw_menu_window(frame, 132, 76, 100, 32);
         let player = match world.starter {
             Some(crate::world::StarterSpecies::Treecko) => "TREECKO",
             Some(crate::world::StarterSpecies::Torchic) => "TORCHIC",
@@ -2018,7 +2017,7 @@ fn draw_wurmple_entry_phase(frame: &mut [u8], world: &WorldState, battle: &crate
     }
 
     draw_battle_background(frame);
-    draw_wurmple_healthbox_backgrounds(frame);
+    draw_battle_healthbox_backgrounds(frame);
     draw_menu_window(frame, 0, 112, 240, 48);
     if elapsed < 192 {
         return;
@@ -2047,11 +2046,12 @@ fn draw_wurmple_entry_phase(frame: &mut [u8], world: &WorldState, battle: &crate
     draw_text(frame, 198, 99, &format!("{}/{}", battle.player_hp, battle.player_max_hp), 6);
 }
 
-/// Source single-battle healthbox OBJ composition used during Route 101's
-/// Wurmple hand-off. `CreateBattlerHealthboxSprites` splits each atlas over
-/// two 64px OAM sprites, and `InitBattlerHealthboxCoords` places their main
-/// centers at `(44, 30)` (opponent) and `(158, 88)` (player).
-fn draw_wurmple_healthbox_backgrounds(frame: &mut [u8]) {
+/// Source single-battle healthbox OBJ composition used by the settled battle
+/// UI and Route 101's Wurmple hand-off. `CreateBattlerHealthboxSprites`
+/// splits each atlas over two 64px OAM sprites, and
+/// `InitBattlerHealthboxCoords` places their main centers at `(44, 30)`
+/// (opponent) and `(158, 88)` (player).
+fn draw_battle_healthbox_backgrounds(frame: &mut [u8]) {
     let opponent = BATTLE_HEALTHBOX_SINGLES_OPPONENT.get_or_init(|| {
         decode_source_indexed_sheet(BATTLE_HEALTHBOX_SINGLES_OPPONENT_B64)
             .expect("staged Emerald opponent healthbox atlas must decode")
