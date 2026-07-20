@@ -150,6 +150,18 @@ const BATTLE_HEALTHBOX_SINGLES_OPPONENT_B64: &str = include_str!("../assets/batt
 // (`ball_display.png`) palette.
 const BATTLE_HP_BAR_B64: &str = include_str!("../assets/battle_hpbar.png.b64");
 const BATTLE_HP_BAR_ANIM_B64: &str = include_str!("../assets/battle_hpbar_anim.png.b64");
+// `OpenPartyMenuInBattle` replaces the battle scene with Emerald's party
+// menu. Keep the source BG1 tile sheet/map, selected first-slot tilemap, the
+// party Poké Ball OBJ, and the three starter icon sheets separate from the
+// battle renderer; this opening slice has exactly one party member.
+const PARTY_MENU_BG_B64: &str = include_str!("../assets/party_menu_bg.png.b64");
+const PARTY_MENU_BG_MAP_B64: &str = include_str!("../assets/party_menu_bg.bin.b64");
+const PARTY_MENU_SLOT_MAIN_B64: &str = include_str!("../assets/party_menu_slot_main.bin.b64");
+const PARTY_MENU_POKEBALL_B64: &str = include_str!("../assets/party_menu_pokeball.png.b64");
+const PARTY_MENU_TREECKO_ICON_B64: &str = include_str!("../assets/party_menu_treecko_icon.png.b64");
+const PARTY_MENU_TORCHIC_ICON_B64: &str = include_str!("../assets/party_menu_torchic_icon.png.b64");
+const PARTY_MENU_MUDKIP_ICON_B64: &str = include_str!("../assets/party_menu_mudkip_icon.png.b64");
+const PARTY_MENU_SMALL_FONT_B64: &str = include_str!("../assets/party_menu_latin_small.png.b64");
 // `FldEff_ExclamationMarkIcon` creates this source 16x16 field-effect OBJ
 // above the Route 103 rival during `Common_Movement_ExclamationMark`.
 const FIELD_EFFECT_EMOTION_EXCLAMATION_B64: &str = include_str!("../assets/field_effect_emotion_exclamation.png.b64");
@@ -241,6 +253,14 @@ static BATTLE_HEALTHBOX_SINGLES_PLAYER: OnceLock<SourceIndexedSheet> = OnceLock:
 static BATTLE_HEALTHBOX_SINGLES_OPPONENT: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_HP_BAR: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_HP_BAR_ANIM: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static PARTY_MENU_BG: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static PARTY_MENU_BG_MAP: OnceLock<Vec<u8>> = OnceLock::new();
+static PARTY_MENU_SLOT_MAIN: OnceLock<Vec<u8>> = OnceLock::new();
+static PARTY_MENU_POKEBALL: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static PARTY_MENU_TREECKO_ICON: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static PARTY_MENU_TORCHIC_ICON: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static PARTY_MENU_MUDKIP_ICON: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static PARTY_MENU_SMALL_FONT: OnceLock<IndexedTiles> = OnceLock::new();
 static FIELD_EFFECT_EMOTION_EXCLAMATION: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static WALLCLOCK_CLOCK: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static WALLCLOCK_START_TILEMAP: OnceLock<Vec<u8>> = OnceLock::new();
@@ -1816,14 +1836,7 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
         draw_text(frame, 198, 99, &format!("{}/{}", battle.player_hp, battle.player_max_hp), 6);
         draw_battle_player_sprite(frame, world.starter);
         if battle.party_screen_open {
-            draw_menu_window(frame, 20, 20, 200, 120);
-            draw_text(frame, 32, 30, "POKéMON", 10);
-            draw_menu_window(frame, 32, 48, 176, 48);
-            draw_text(frame, 48, 58, player, 10);
-            draw_text(frame, 48, 74, &format!("HP {}/{}", battle.player_hp, battle.player_max_hp), 10);
-            draw_battle_hp_bar(frame, 116, 77, battle.player_hp, battle.player_max_hp);
-            draw_text(frame, 48, 106, "IN BATTLE", 10);
-            draw_text(frame, 184, 126, "B", 1);
+            draw_opening_battle_party_menu(frame, world, battle, player);
             return;
         }
         if let Some(message) = battle.message.as_deref() {
@@ -2178,6 +2191,173 @@ fn draw_battle_background(frame: &mut [u8]) {
                 put_pixel(frame, x, y, *color);
             }
         }
+    }
+}
+
+/// Replays the settled one-member `OpenPartyMenuInBattle` screen used by the
+/// opening battles. `party_menu.c` puts the shared 32x32 BG1 source tilemap
+/// behind the single-layout windows, then gives slot zero the left-column
+/// 10x7 tile map and its selected palette. The compact state has no party
+/// transition clock, so this intentionally projects that stable selected
+/// state rather than inventing a slide/fade.
+fn draw_opening_battle_party_menu(
+    frame: &mut [u8],
+    world: &WorldState,
+    battle: &crate::world::BattleState,
+    player: &str,
+) {
+    let tiles = PARTY_MENU_BG.get_or_init(|| {
+        decode_source_indexed_sheet(PARTY_MENU_BG_B64)
+            .expect("staged Emerald party-menu background must decode")
+    });
+    let tilemap = PARTY_MENU_BG_MAP.get_or_init(|| {
+        decode_base64(PARTY_MENU_BG_MAP_B64)
+            .expect("staged Emerald party-menu background map must decode")
+    });
+    let slot_main = PARTY_MENU_SLOT_MAIN.get_or_init(|| {
+        decode_base64(PARTY_MENU_SLOT_MAIN_B64)
+            .expect("staged Emerald party-menu main-slot map must decode")
+    });
+    const MAP_WIDTH_TILES: usize = 32;
+    const MAP_HEIGHT_TILES: usize = 32;
+    const MAIN_SLOT_WIDTH_TILES: usize = 10;
+    const MAIN_SLOT_HEIGHT_TILES: usize = 7;
+    assert_eq!(tilemap.len(), MAP_WIDTH_TILES * MAP_HEIGHT_TILES * 2);
+    assert_eq!(slot_main.len(), MAIN_SLOT_WIDTH_TILES * MAIN_SLOT_HEIGHT_TILES);
+    assert_eq!(tiles.width % 8, 0);
+    assert_eq!(tiles.height % 8, 0);
+    assert!(tiles.palette.len() >= 11 * 16);
+
+    let tiles_per_row = tiles.width / 8;
+    let source_tile_count = tiles_per_row * (tiles.height / 8);
+    for y in 0..FRAME_HEIGHT {
+        let tile_y = y / 8;
+        let pixel_y = y % 8;
+        for x in 0..FRAME_WIDTH {
+            let tile_x = x / 8;
+            let pixel_x = x % 8;
+            let entry_offset = (tile_y * MAP_WIDTH_TILES + tile_x) * 2;
+            let entry = u16::from_le_bytes([tilemap[entry_offset], tilemap[entry_offset + 1]]);
+            let tile = usize::from(entry & 0x03ff);
+            if tile >= source_tile_count { continue; }
+            let source_x = (tile % tiles_per_row) * 8
+                + if entry & 0x0400 != 0 { 7 - pixel_x } else { pixel_x };
+            let source_y = (tile / tiles_per_row) * 8
+                + if entry & 0x0800 != 0 { 7 - pixel_y } else { pixel_y };
+            let color_index = usize::from(tiles.pixels[source_y * tiles.width + source_x]);
+            let palette_bank = usize::from((entry >> 12) & 0x0f);
+            if let Some(color) = tiles.palette.get(palette_bank * 16 + color_index) {
+                put_pixel(frame, x, y, *color);
+            }
+        }
+    }
+
+    // `sSinglePartyMenuWindowTemplate[0]` starts at tile `(1, 3)`, and
+    // `AnimatePartySlot(0, 1)` swaps exactly these six palette entries for
+    // the current-selection main-card colors.
+    let mut selected_palette = [[0; 3]; 16];
+    for (index, color) in selected_palette.iter_mut().enumerate() {
+        *color = tiles.palette[3 * 16 + index];
+    }
+    selected_palette[1] = tiles.palette[97];
+    selected_palette[4] = tiles.palette[116];
+    selected_palette[5] = tiles.palette[117];
+    selected_palette[6] = tiles.palette[118];
+    selected_palette[7] = tiles.palette[103];
+    selected_palette[8] = tiles.palette[104];
+    for row in 0..MAIN_SLOT_HEIGHT_TILES {
+        for column in 0..MAIN_SLOT_WIDTH_TILES {
+            let tile = usize::from(slot_main[row * MAIN_SLOT_WIDTH_TILES + column]);
+            if tile >= source_tile_count { continue; }
+            for pixel_y in 0..8 {
+                for pixel_x in 0..8 {
+                    let source_x = (tile % tiles_per_row) * 8 + pixel_x;
+                    let source_y = (tile / tiles_per_row) * 8 + pixel_y;
+                    let color_index = usize::from(tiles.pixels[source_y * tiles.width + source_x]);
+                    if color_index != 0 && color_index < selected_palette.len() {
+                        put_pixel(frame, 8 + column * 8 + pixel_x, 24 + row * 8 + pixel_y, selected_palette[color_index]);
+                    }
+                }
+            }
+        }
+    }
+
+    // Source `CreatePartyMonIcon` uses the single-layout center `(16, 40)`;
+    // these source sheets contain two 32x32 icon animation frames. The
+    // serialized state has no icon timer, so use its first source frame.
+    let icon = match world.starter {
+        Some(StarterSpecies::Treecko) => Some(PARTY_MENU_TREECKO_ICON.get_or_init(|| {
+            decode_source_indexed_sheet(PARTY_MENU_TREECKO_ICON_B64)
+                .expect("staged Treecko party icon must decode")
+        })),
+        Some(StarterSpecies::Torchic) => Some(PARTY_MENU_TORCHIC_ICON.get_or_init(|| {
+            decode_source_indexed_sheet(PARTY_MENU_TORCHIC_ICON_B64)
+                .expect("staged Torchic party icon must decode")
+        })),
+        Some(StarterSpecies::Mudkip) => Some(PARTY_MENU_MUDKIP_ICON.get_or_init(|| {
+            decode_source_indexed_sheet(PARTY_MENU_MUDKIP_ICON_B64)
+                .expect("staged Mudkip party icon must decode")
+        })),
+        None => None,
+    };
+    if let Some(icon) = icon {
+        draw_source_indexed_crop(frame, icon, 0, 0, 32, 32, 0, 24);
+    }
+
+    let pokeball = PARTY_MENU_POKEBALL.get_or_init(|| {
+        decode_source_indexed_sheet(PARTY_MENU_POKEBALL_B64)
+            .expect("staged Emerald party-menu Poké Ball must decode")
+    });
+    // Slot zero is selected, so `sPokeballAnim_Open` uses frame 16, the
+    // lower 32x32 region of `graphics/party_menu/pokeball.png`.
+    draw_source_indexed_crop(frame, pokeball, 0, 32, 32, 32, 0, 18);
+    // The non-choose-half party menu also creates one closed Cancel ball at
+    // source center `(198, 148)`.
+    draw_source_indexed_crop(frame, pokeball, 0, 0, 32, 32, 182, 132);
+
+    // `DisplayPartyPokemonData` uses `FONT_SMALL` at the left-column source
+    // dimensions: nickname `(24, 11)`, level `(32, 20)`, and HP `(38, 37)`.
+    draw_party_small_text(frame, 32, 35, player, 10);
+    draw_party_small_text(frame, 40, 44, &format!("L{}", battle.player_level), 4);
+    draw_party_small_text(frame, 46, 61, &format!("{}/{}", battle.player_hp, battle.player_max_hp), 7);
+
+    // `DisplayPartyMenuStdMessage(PARTY_MSG_CHOOSE_MON)` creates a 28x4
+    // standard frame at tile `(1, 15)`, i.e. source pixel `(8, 120)`.
+    draw_menu_window(frame, 8, 120, 224, 32);
+    draw_text(frame, 16, 128, "Choose a POKéMON.", 20);
+}
+
+/// `DisplayPartyPokemonBarDetail` uses the source 13px `FONT_SMALL` glyphs
+/// for the individual party card. The opening party only prints starter
+/// names, levels, HP digits, and a slash; their source advances are five
+/// pixels except for I/Y's four-pixel glyphs.
+fn draw_party_small_text(frame: &mut [u8], x: usize, y: usize, text: &str, max_chars: usize) {
+    let font = PARTY_MENU_SMALL_FONT.get_or_init(|| {
+        let bytes = decode_base64(PARTY_MENU_SMALL_FONT_B64)
+            .expect("staged Emerald party-menu small font must decode from base64");
+        decode_font_indexed(&bytes).expect("staged Emerald party-menu small font must decode")
+    });
+    const PALETTE: [[u8; 3]; 3] = [[56, 56, 56], [216, 216, 216], [248, 248, 248]];
+    let mut cursor_x = x;
+    for character in text.chars().take(max_chars) {
+        let Some(glyph_id) = emerald_glyph_id(character) else { continue; };
+        let glyph_x = (glyph_id % 16) * 16;
+        let glyph_y = (glyph_id / 16) * 16;
+        for row in 0..13 {
+            for column in 0..8 {
+                match font.pixels[(glyph_y + row) * font.width + glyph_x + column] {
+                    1 => put_pixel(frame, cursor_x + column, y + row, PALETTE[0]),
+                    2 => put_pixel(frame, cursor_x + column, y + row, PALETTE[1]),
+                    3 => put_pixel(frame, cursor_x + column, y + row, PALETTE[2]),
+                    _ => {}
+                }
+            }
+        }
+        cursor_x += match character {
+            ' ' => 3,
+            'I' | 'Y' => 4,
+            _ => 5,
+        };
     }
 }
 
@@ -2732,23 +2912,6 @@ fn draw_source_battle_hp_bar(frame: &mut [u8], x: usize, y: usize, current: u8, 
             );
         }
     }
-}
-
-/// Compact generic gauge retained for the Party-screen projection. The field
-/// and Wurmple opening paths use the source-tile healthbar above.
-fn draw_battle_hp_bar(frame: &mut [u8], x: usize, y: usize, current: u8, maximum: u8) {
-    const WIDTH: usize = 42;
-    draw_solid_rect(frame, x, y, WIDTH + 2, 5, [24, 32, 40]);
-    draw_solid_rect(frame, x + 1, y + 1, WIDTH, 3, [239, 239, 239]);
-    let filled = if maximum == 0 { 0 } else { (usize::from(current) * WIDTH + usize::from(maximum) - 1) / usize::from(maximum) };
-    let color = if current.saturating_mul(5) <= maximum {
-        [222, 65, 49]
-    } else if current.saturating_mul(2) <= maximum {
-        [239, 189, 49]
-    } else {
-        [65, 173, 74]
-    };
-    draw_solid_rect(frame, x + 1, y + 1, filled.min(WIDTH), 3, color);
 }
 
 fn draw_gender_select(frame: &mut [u8], world: &WorldState) {
