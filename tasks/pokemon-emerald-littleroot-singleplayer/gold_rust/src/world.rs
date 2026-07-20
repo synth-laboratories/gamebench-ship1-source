@@ -5910,10 +5910,21 @@ impl WorldState {
         const OK: u8 = 31;
 
         if matches!(self.name_cursor, LOWER | BACK | B_BUTTON | OK) {
-            const UTILITIES: [u8; 4] = [LOWER, BACK, B_BUTTON, OK];
-            let index = UTILITIES.iter().position(|cell| *cell == self.name_cursor).unwrap_or(0);
             if vertical != 0 {
-                self.name_cursor = UTILITIES[(i16::try_from(index).expect("four utilities") + i16::from(vertical)).rem_euclid(4) as usize];
+                // The source has three physical button rows (PAGE, BACK,
+                // OK).  BACK is reachable from either of the two middle
+                // keyboard rows, so B_BUTTON is only a provenance marker for
+                // the same physical y=1 button.  Vertical movement therefore
+                // wraps modulo three rows instead of cycling four Rust cells.
+                self.name_cursor = match (self.name_cursor, vertical.signum()) {
+                    (LOWER, 1) => BACK,
+                    (LOWER, -1) => OK,
+                    (BACK | B_BUTTON, 1) => OK,
+                    (BACK | B_BUTTON, -1) => LOWER,
+                    (OK, 1) => LOWER,
+                    (OK, -1) => BACK,
+                    _ => self.name_cursor,
+                };
             } else if horizontal < 0 {
                 self.name_cursor = match self.name_cursor { LOWER => QUESTION, BACK => PERIOD, B_BUTTON => 18, OK => 25, _ => unreachable!() };
             }
