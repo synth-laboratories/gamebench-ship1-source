@@ -644,6 +644,15 @@ impl LittlerootSession {
             Input::Down => { self.world.walk_bounds(Facing::Down, request.frames); }
             Input::Left => { self.world.walk_bounds(Facing::Left, request.frames); }
             Input::Right => { self.world.walk_bounds(Facing::Right, request.frames); }
+            // `Task_TitleScreenPhase3` enters the next title flow from either
+            // A or Start. The field Start menu does not exist on this screen.
+            Input::Start if self.world.phase == world::StoryPhase::Title => {
+                self.world.advance_title_start(request.frames);
+            }
+            // The modeled Professor Birch introduction is still outside the
+            // field engine, so Start cannot open the field menu between its
+            // source text pages.
+            Input::Start if self.world.phase == world::StoryPhase::TitleIntro => {}
             Input::Start => self.world.open_menu(),
             Input::B => self.world.toggle_running(),
             Input::A => {
