@@ -288,10 +288,16 @@ pub const BATTLE_PLAYER_SENDOUT_BALL_SPAWN_FRAME: u8 = 34;
 pub const BATTLE_PLAYER_SENDOUT_BALL_FIRST_ARC_FRAME: u8 = 36;
 pub const BATTLE_PLAYER_SENDOUT_BALL_ARC_FRAMES: u8 = 25;
 /// The last arc callback commits the ball's accumulated offset and hands it
-/// to `SpriteCB_ReleaseMonFromBall`. Release particles and affine emergence
-/// deliberately remain a later visual rail, but input stays locked through
-/// this hand-off frame.
+/// to `SpriteCB_ReleaseMonFromBall`. The release callback then runs the
+/// source twelve-tick `BATTLER_AFFINE_EMERGE` sequence before the command
+/// controller is released; particles and sound remain a separate rail.
 pub const BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES: u8 = 61;
+/// `sAffineAnim_Battler_Emerge` seeds 0x28 and adds 0x12 for twelve ticks,
+/// reaching the normal 0x100 matrix scale. Keep the visual hand-off inside
+/// the existing serialized send-out lock so a save resumes the same phase.
+pub const BATTLE_PLAYER_SENDOUT_RELEASE_FRAMES: u8 = 12;
+pub const BATTLE_PLAYER_SENDOUT_COMPLETE_FRAMES: u8 =
+    BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES + BATTLE_PLAYER_SENDOUT_RELEASE_FRAMES;
 
 /// A source moveset slot, retained independently of the currently selected
 /// move so an opponent controller can choose from the original four slots.
@@ -5187,10 +5193,10 @@ impl WorldState {
     }
 
     /// Advances the source player trainer exit and its overlapping Poké Ball
-    /// launch through the hand-off to `SpriteCB_ReleaseMonFromBall`. The
-    /// release particles and affine emergence remain intentionally separate,
-    /// while this typed timeline keeps ordinary battle messages from
-    /// accidentally re-entering the intro sequence.
+    /// launch through `SpriteCB_ReleaseMonFromBall` and the twelve-tick
+    /// `BATTLER_AFFINE_EMERGE` hand-off. Release particles and sound remain
+    /// separate, while this typed timeline keeps ordinary battle messages
+    /// from accidentally re-entering the intro sequence.
     pub fn advance_battle_player_intro_sendout(&mut self, frames: u32) -> bool {
         let Some(battle) = self.battle.as_mut() else { return false; };
         if !battle.intro_player_sendout_started {
@@ -5202,13 +5208,13 @@ impl WorldState {
                 .saturating_sub(battle.intro_player_sendout_frames);
             battle.intro_player_sendout_started = true;
         }
-        if battle.intro_player_sendout_elapsed_frames >= BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES {
+        if battle.intro_player_sendout_elapsed_frames >= BATTLE_PLAYER_SENDOUT_COMPLETE_FRAMES {
             battle.intro_player_sendout_started = false;
             return false;
         }
         battle.intro_player_sendout_elapsed_frames = battle.intro_player_sendout_elapsed_frames
             .saturating_add(frames.min(u32::from(u8::MAX)) as u8)
-            .min(BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES);
+            .min(BATTLE_PLAYER_SENDOUT_COMPLETE_FRAMES);
         battle.intro_player_sendout_frames = BATTLE_PLAYER_INTRO_SENDOUT_FRAMES
             .saturating_sub(battle.intro_player_sendout_elapsed_frames);
         true
