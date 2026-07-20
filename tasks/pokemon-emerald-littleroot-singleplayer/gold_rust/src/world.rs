@@ -2736,30 +2736,51 @@ impl WorldState {
             ),
         };
         for (index, direction) in employee_steps.iter().enumerate() {
-            let boundary = (u16::try_from(index).expect("Oldale movement index fits") + 1) * 16;
-            if elapsed_before < boundary && boundary <= elapsed_after {
-                let employee = self.npcs.iter().find(|npc| npc.id == "mart_employee")
-                    .expect("Oldale Mart employee must exist during its scripted walk");
-                let position = match direction {
-                    Facing::Up => TilePosition { x: employee.position.x, y: employee.position.y - 1 },
-                    Facing::Down => TilePosition { x: employee.position.x, y: employee.position.y + 1 },
-                    Facing::Left => TilePosition { x: employee.position.x - 1, y: employee.position.y },
-                    Facing::Right => TilePosition { x: employee.position.x + 1, y: employee.position.y },
+            // `walk_*` begins at this boundary and occupies the following
+            // sixteen video frames.  Commit the destination when the source
+            // stride starts, not when it ends: the OBJ renderer then offsets
+            // that logical destination back toward the prior tile for the
+            // in-flight portion of the walk.  The former end-boundary commit
+            // made every Oldale Mart guide stride appear one full beat late.
+            let start = u16::try_from(index).expect("Oldale movement index fits") * 16;
+            if elapsed_before <= start && start < elapsed_after {
+                let position = {
+                    let employee = self.npcs.iter().find(|npc| npc.id == "mart_employee")
+                        .expect("Oldale Mart employee must exist during its scripted walk");
+                    match direction {
+                        Facing::Up => TilePosition { x: employee.position.x, y: employee.position.y - 1 },
+                        Facing::Down => TilePosition { x: employee.position.x, y: employee.position.y + 1 },
+                        Facing::Left => TilePosition { x: employee.position.x - 1, y: employee.position.y },
+                        Facing::Right => TilePosition { x: employee.position.x + 1, y: employee.position.y },
+                    }
                 };
-                self.move_scripted_npc("mart_employee", MapId::OldaleTown, position, *direction);
+                let source_frame = self.frame.saturating_sub(u64::from(elapsed_after - start));
+                self.move_scripted_npc_with_duration_at_frame(
+                    "mart_employee",
+                    MapId::OldaleTown,
+                    position,
+                    *direction,
+                    16,
+                    source_frame,
+                );
             }
         }
         let employee_turn_start = u16::try_from(employee_steps.len())
             .expect("Oldale employee movement count fits")
             * 16;
-        if elapsed_before < employee_turn_start && employee_turn_start <= elapsed_after {
-            let employee = self.npcs.iter().find(|npc| npc.id == "mart_employee")
-                .expect("Oldale Mart employee must exist during its scripted turn");
-            self.move_faster_scripted_npc(
+        if elapsed_before <= employee_turn_start && employee_turn_start < elapsed_after {
+            let position = self.npcs.iter().find(|npc| npc.id == "mart_employee")
+                .expect("Oldale Mart employee must exist during its scripted turn")
+                .position
+                .clone();
+            let source_frame = self.frame.saturating_sub(u64::from(elapsed_after - employee_turn_start));
+            self.move_scripted_npc_with_duration_at_frame(
                 "mart_employee",
                 MapId::OldaleTown,
-                employee.position.clone(),
+                position,
                 Facing::Down,
+                4,
+                source_frame,
             );
         }
         for (index, direction) in player_steps.iter().enumerate() {
