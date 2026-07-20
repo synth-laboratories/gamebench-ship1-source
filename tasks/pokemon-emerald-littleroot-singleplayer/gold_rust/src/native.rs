@@ -3653,7 +3653,42 @@ fn draw_professor_dialogue(frame: &mut [u8], text: &str) {
         let tile = if column == 0 { 1 } else if column == 1 { 3 } else if column == 28 { 5 } else if column == 29 { 6 } else { 4 };
         draw_message_box_tile(frame, tiles, tile, x + column * 8, y + 40, true);
     }
-    draw_birch_wrapped_text(frame, x + 16, y + 9, text, 35, 2);
+    draw_professor_dialogue_text(frame, x + 16, y + 9, text);
+}
+
+/// `AddTextPrinterForMessage` creates its normal-font printer at `(0, 1)` in
+/// the 27×4 Birch window, with zero extra letter and line spacing.  Its
+/// advance is therefore each glyph's proportional `FONT_NORMAL` width, not a
+/// six-pixel character cell.  Keep the two available text rows and the full
+/// 27-tile content width owned by that source window.
+fn draw_professor_dialogue_text(frame: &mut [u8], x: usize, y: usize, text: &str) {
+    const CONTENT_WIDTH: usize = 27 * 8;
+    const CONTENT_ROWS: usize = 2;
+
+    let mut row = 0_usize;
+    let mut cursor_x = 0_usize;
+    for (source_row, source_line) in text.split('\n').enumerate() {
+        if source_row != 0 {
+            row += 1;
+            cursor_x = 0;
+        }
+        if row >= CONTENT_ROWS { break; }
+        for word in source_line.split_whitespace() {
+            let word_width = word.chars().map(emerald_glyph_width).sum::<usize>();
+            let separator_width = if cursor_x == 0 { 0 } else { emerald_glyph_width(' ') };
+            if cursor_x != 0 && cursor_x + separator_width + word_width > CONTENT_WIDTH {
+                row += 1;
+                cursor_x = 0;
+                if row >= CONTENT_ROWS { break; }
+            }
+            if cursor_x != 0 {
+                draw_birch_text(frame, x + cursor_x, y + row * 16, " ", 1);
+                cursor_x += separator_width;
+            }
+            draw_birch_text(frame, x + cursor_x, y + row * 16, word, word.chars().count());
+            cursor_x += word_width;
+        }
+    }
 }
 
 /// Aligns the first Professor Birch page's terminal prompt glyph with the
@@ -3792,22 +3827,6 @@ fn draw_message_box_tile(frame: &mut [u8], tiles: &IndexedTiles, tile: usize, x:
         for column in 0..8 {
             let index = tiles.pixels[(source_y + row) * tiles.width + source_x + column] as usize;
             put_pixel(frame, x + column, y + if flip_y { 7 - row } else { row }, PALETTE[index]);
-        }
-    }
-}
-
-fn draw_birch_wrapped_text(frame: &mut [u8], x: usize, y: usize, text: &str, columns: usize, rows: usize) {
-    for (cursor_y, line) in text.split('\n').take(rows).enumerate() {
-        let mut cursor_x = 0;
-        for word in line.split_whitespace() {
-            let word_width = word.chars().count();
-            if cursor_x != 0 && cursor_x + 1 + word_width > columns { break; }
-            if cursor_x != 0 {
-                draw_birch_text(frame, x + cursor_x * 6, y + cursor_y * 9, " ", 1);
-                cursor_x += 1;
-            }
-            draw_birch_text(frame, x + cursor_x * 6, y + cursor_y * 9, word, word_width);
-            cursor_x += word_width;
         }
     }
 }
