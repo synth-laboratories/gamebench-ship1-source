@@ -666,6 +666,7 @@ const LITTLEROOT_DOWN48_FLOWER_B_B64: &str = include_str!("../assets/littleroot_
 const LITTLEROOT_BORDER_B64: &str = include_str!("../assets/porymap/littleroot_border.bin.b64");
 const ROUTE101_BORDER_B64: &str = include_str!("../assets/porymap/route101_border.bin.b64");
 const OLDALE_TOWN_BORDER_B64: &str = include_str!("../assets/porymap/oldale_town_border.bin.b64");
+const ROUTE103_BORDER_B64: &str = include_str!("../assets/porymap/route103_border.bin.b64");
 // Emerald's General tileset advances these source flower frames as 0, 1, 0,
 // 2 at sixteen-frame intervals. The live terrain pass consumes this sequence.
 const GENERAL_FLOWER_FRAME_0_B64: &str = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAMFBMVEUYKVK0/4ODxWI5izE5UgDelHNqWlqkYlpBOTH/xZTeamLNQVKk1cVzxaRBtIMYpGrAHIEZAAAAeklEQVQImT3NsQ2GIBCG4W8WYAKhobCCxsIwnDTESYwzWGEpYYK/o/kLc57ReM09ubzJobyDZx03sp2ei50XFjYzzEvUPbJQQ3RCMrRxqVMoNuq0poA/Fx988icqp80zsnFB6a7HLkwLToxoMhA1OaJ6KpW4KXR/p98FDzpMT6LDzQsAAAAASUVORK5CYII=";
@@ -856,6 +857,10 @@ const ROUTE101_RUNTIME_LEFT_BORDER_METATILES: usize = 7;
 const ROUTE101_RUNTIME_RIGHT_BORDER_METATILES: usize = 8;
 const ROUTE101_RUNTIME_TOP_BORDER_METATILES: usize = 7;
 const ROUTE101_RUNTIME_BOTTOM_BORDER_METATILES: usize = 7;
+const ROUTE103_RUNTIME_LEFT_BORDER_METATILES: usize = 7;
+const ROUTE103_RUNTIME_RIGHT_BORDER_METATILES: usize = 8;
+const ROUTE103_RUNTIME_TOP_BORDER_METATILES: usize = 7;
+const ROUTE103_RUNTIME_BOTTOM_BORDER_METATILES: usize = 7;
 const OLDALE_TOWN_RUNTIME_LEFT_BORDER_METATILES: usize = 7;
 const OLDALE_TOWN_RUNTIME_RIGHT_BORDER_METATILES: usize = 8;
 const OLDALE_TOWN_RUNTIME_TOP_BORDER_METATILES: usize = 7;
@@ -4698,6 +4703,82 @@ fn render_route101_runtime_map() -> Result<(Vec<u8>, usize, usize), String> {
     Ok((runtime, width_metatiles, height_metatiles))
 }
 
+/// Builds Route 103's local map-grid surface so the early rival approach
+/// retains the authored seven-metatile camera margin instead of clamping to
+/// the layout's top edge. `Route103/map.json` has a single in-scope downward
+/// connection to Oldale at offset zero; mirror `FillSouthConnection` for its
+/// first twenty columns. The far-east Route 110 connection remains outside
+/// the Little Root segment and retains Route 103's repeated border here.
+fn render_route103_runtime_map() -> Result<(Vec<u8>, usize, usize), String> {
+    let interior = render_route103_map()?;
+    let border_entries = decode_base64(ROUTE103_BORDER_B64.trim())?;
+    if border_entries.len() != 8 {
+        return Err("Route 103 border must contain four metatiles".to_owned());
+    }
+    let border = render_map(
+        &border_entries,
+        2,
+        2,
+        TilesetAssets {
+            tiles: GENERAL_TILES,
+            metatiles: GENERAL_METATILES,
+            palettes: &GENERAL_PALETTES,
+        },
+        TilesetAssets {
+            tiles: PETALBURG_TILES,
+            metatiles: PETALBURG_METATILES,
+            palettes: &PETALBURG_PALETTES,
+        },
+    )?;
+    let width_metatiles = ROUTE103_WIDTH
+        + ROUTE103_RUNTIME_LEFT_BORDER_METATILES
+        + ROUTE103_RUNTIME_RIGHT_BORDER_METATILES;
+    let height_metatiles = ROUTE103_HEIGHT
+        + ROUTE103_RUNTIME_TOP_BORDER_METATILES
+        + ROUTE103_RUNTIME_BOTTOM_BORDER_METATILES;
+    let width = width_metatiles * METATILE_SIZE;
+    let height = height_metatiles * METATILE_SIZE;
+    let inset_x = ROUTE103_RUNTIME_LEFT_BORDER_METATILES * METATILE_SIZE;
+    let inset_y = ROUTE103_RUNTIME_TOP_BORDER_METATILES * METATILE_SIZE;
+    let interior_width = ROUTE103_WIDTH * METATILE_SIZE;
+    let interior_height = ROUTE103_HEIGHT * METATILE_SIZE;
+    let mut runtime = vec![0; width * height * 3];
+    for y in 0..height {
+        for x in 0..width {
+            let target = (y * width + x) * 3;
+            let inside = (inset_x..inset_x + interior_width).contains(&x)
+                && (inset_y..inset_y + interior_height).contains(&y);
+            if inside {
+                let source = ((y - inset_y) * interior_width + (x - inset_x)) * 3;
+                runtime[target..target + 3].copy_from_slice(&interior[source..source + 3]);
+            } else {
+                let border_x = (i32::try_from(x).expect("runtime width fits i32")
+                    - i32::try_from(inset_x).expect("runtime inset fits i32"))
+                    .rem_euclid(32) as usize;
+                let border_y = (i32::try_from(y).expect("runtime height fits i32")
+                    - i32::try_from(inset_y).expect("runtime inset fits i32"))
+                    .rem_euclid(32) as usize;
+                let source = (border_y * 32 + border_x) * 3;
+                runtime[target..target + 3].copy_from_slice(&border[source..source + 3]);
+            }
+        }
+    }
+    // `FillSouthConnection` copies the first MAP_OFFSET rows of Oldale into
+    // Route 103's lower backing strip beginning at `offset + MAP_OFFSET`.
+    // The Route 103 connection offset is zero, so only Oldale's twenty-wide
+    // leading section replaces the repeated border.
+    let south = render_oldale_town_map()?;
+    let south_y = inset_y + interior_height;
+    let south_width = MAP_WIDTH * METATILE_SIZE;
+    for row in 0..inset_y {
+        let destination = ((south_y + row) * width + inset_x) * 3;
+        let source = row * south_width * 3;
+        runtime[destination..destination + south_width * 3]
+            .copy_from_slice(&south[source..source + south_width * 3]);
+    }
+    Ok((runtime, width_metatiles, height_metatiles))
+}
+
 /// Builds Oldale's source map-grid backing surface rather than clamping the
 /// 20×20 authored layout at the camera edge. `InitBackupMapLayout` reserves
 /// a seven-metatile border around the town (and an eighth column on the east)
@@ -5492,7 +5573,7 @@ fn render_world_view_with_motion_at_tick_and_tv_state(map_id: MapId, player: &Ti
         MapId::LittlerootTown => render_littleroot_runtime_map()?,
         MapId::Route101 => render_route101_runtime_map()?,
         MapId::OldaleTown => render_oldale_town_runtime_map()?,
-        MapId::Route103 => (render_route103_map()?, ROUTE103_WIDTH, ROUTE103_HEIGHT),
+        MapId::Route103 => render_route103_runtime_map()?,
         MapId::BrendansHouse1F => (render_house_with_tv_screen(BRENDANS_HOUSE_1F_MAP, 11, 9, tv_screen_on)?, 11, 9),
         MapId::BrendansHouse2F => unreachable!("handled by the fixed source viewport above"),
         MapId::MaysHouse1F => (render_house_with_tv_screen(MAYS_HOUSE_1F_MAP, 11, 9, tv_screen_on)?, 11, 9),
@@ -5509,6 +5590,10 @@ fn render_world_view_with_motion_at_tick_and_tv_state(map_id: MapId, player: &Ti
         MapId::Route101 => (
             ROUTE101_RUNTIME_LEFT_BORDER_METATILES * METATILE_SIZE,
             ROUTE101_RUNTIME_TOP_BORDER_METATILES * METATILE_SIZE,
+        ),
+        MapId::Route103 => (
+            ROUTE103_RUNTIME_LEFT_BORDER_METATILES * METATILE_SIZE,
+            ROUTE103_RUNTIME_TOP_BORDER_METATILES * METATILE_SIZE,
         ),
         MapId::OldaleTown => (
             OLDALE_TOWN_RUNTIME_LEFT_BORDER_METATILES * METATILE_SIZE,
