@@ -524,6 +524,7 @@ impl LittlerootSession {
                 Input::Start => self.world.move_name_cursor_to_ok(),
                 Input::Select | Input::Noop => {}
             }
+            self.world.advance_name_entry_action_button_pulse(request.frames);
             self.input_log.push(request);
             self.redraw();
             return;
