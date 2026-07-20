@@ -2567,52 +2567,72 @@ impl WorldState {
         let departure_facing = self.route103_rival_departure_facing.unwrap_or(self.facing);
         let player_faced_north = departure_facing == Facing::Up;
         let player_faced_sideways = matches!(departure_facing, Facing::Left | Facing::Right);
+        let total_frames = match departure_facing {
+            Facing::Up => ROUTE103_RIVAL_EXIT_NORTH_FRAMES,
+            Facing::Left | Facing::Right => ROUTE103_RIVAL_EXIT_SIDE_FRAMES,
+            Facing::Down => ROUTE103_RIVAL_EXIT_SOUTH_FRAMES,
+        };
+        let elapsed_before = total_frames.saturating_sub(remaining);
+        let elapsed_after = total_frames.saturating_sub(next_remaining);
         // `WatchRivalExitFacingNorth` is `delay_16`, `delay_4`, a
         // four-frame left turn, `delay_16`, then a four-frame down turn.
         // The east/west watcher is `delay_16` plus its four-frame down turn.
         // Commit facing when each in-place action completes, matching the
         // duration boundary used for other staged source turns.
-        if player_faced_north && remaining > 132 && next_remaining <= 132 {
+        if player_faced_north && elapsed_before < 24 && 24 <= elapsed_after {
             self.facing = Facing::Left;
         }
-        if player_faced_north && remaining > 112 && next_remaining <= 112 {
+        if player_faced_north && elapsed_before < 44 && 44 <= elapsed_after {
             self.facing = Facing::Down;
         }
-        if player_faced_sideways && remaining > 96 && next_remaining <= 96 {
+        if player_faced_sideways && elapsed_before < 20 && 20 <= elapsed_after {
             self.facing = Facing::Down;
         }
-        // Normal walks are 16 frames and `jump_2_down` is 32. Keep each
-        // authored destination, but use the post-`waitmovement` timestamps
-        // from the selected source branch so a large held request cannot
-        // shorten the watcher or ledge choreography.
-        let path: &[(u16, i16, i16)] = match departure_facing {
+        // `Route103_Movement_RivalExit*` commits each destination as its
+        // movement command starts.  In particular, `jump_2_down` begins only
+        // after the watcher stream's `waitmovement`, travels two tiles over
+        // 32 frames, and then pauses for `delay_16`.  Starting the native
+        // stride at its former completion boundary made the rival slide one
+        // tile late with no jump arc.
+        let path: &[(u16, i16, i16, u8)] = match departure_facing {
             Facing::Up => &[
-                (140, 9, 3),
-                (124, 9, 4),
-                (80, 9, 6),
-                (48, 9, 7),
-                (32, 9, 8),
-                (16, 9, 9),
-                (0, 9, 10),
+                (0, 9, 3, 16),
+                (16, 9, 4, 16),
+                (44, 9, 6, 32),
+                (92, 9, 7, 16),
+                (108, 9, 8, 16),
+                (124, 9, 9, 16),
+                (140, 9, 10, 16),
             ],
             Facing::Left | Facing::Right => &[
-                (100, 10, 4),
-                (64, 10, 6),
-                (32, 10, 7),
-                (16, 10, 8),
-                (0, 10, 9),
+                (0, 10, 4, 16),
+                (20, 10, 6, 32),
+                (68, 10, 7, 16),
+                (84, 10, 8, 16),
+                (100, 10, 9, 16),
             ],
             Facing::Down => &[
-                (96, 10, 4),
-                (64, 10, 6),
-                (32, 10, 7),
-                (16, 10, 8),
-                (0, 10, 9),
+                (0, 10, 4, 16),
+                (16, 10, 6, 32),
+                (64, 10, 7, 16),
+                (80, 10, 8, 16),
+                (96, 10, 9, 16),
             ],
         };
-        for &(boundary, x, y) in path {
-            if remaining > boundary && next_remaining <= boundary {
-                self.move_scripted_npc("rival", MapId::Route103, TilePosition { x, y }, Facing::Down);
+        for &(start, x, y, duration) in path {
+            if elapsed_before <= start && start < elapsed_after {
+                let request_offset = u32::from(start.saturating_sub(elapsed_before));
+                let source_frame = self.frame.saturating_sub(u64::from(
+                    frames.saturating_sub(request_offset),
+                ));
+                self.move_scripted_npc_with_duration_at_frame(
+                    "rival",
+                    MapId::Route103,
+                    TilePosition { x, y },
+                    Facing::Down,
+                    duration,
+                    source_frame,
+                );
             }
         }
         if next_remaining == 0 {

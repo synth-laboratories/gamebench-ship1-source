@@ -7215,6 +7215,16 @@ fn dynamic_object_oam(
                         Facing::Left => screen_x += remaining,
                         Facing::Right => screen_x -= remaining,
                     }
+                    // Route 103's departure stream uses the source
+                    // `jump_2_down`: a two-tile `JUMP_DISTANCE_FAR` motion
+                    // with `JUMP_TYPE_HIGH`. The generic stride already
+                    // supplies its 32-pixel downwards translation; retain
+                    // the movement callback's per-frame `y2` arc and its
+                    // first `Step1` pixel instead of flattening it into a
+                    // regular walk.
+                    if route103_rival_jump2_down(map_id, &npc.id, walk) {
+                        screen_y += 1 + route103_jump2_high_y(elapsed as u64);
+                    }
                 }
             }
         }
@@ -7247,6 +7257,30 @@ fn dynamic_object_oam(
         next_dynamic_tile += npc_dynamic_tile_count(map_id, &npc.id);
     }
     oam
+}
+
+/// The only scoped far jump is `Route103_Movement_RivalExit{FacingNorth,}`'s
+/// southbound `jump_2_down`. `MovementAction_Jump2Down` selects
+/// `JUMP_DISTANCE_FAR` and `JUMP_TYPE_HIGH`; limiting the compositor branch
+/// to that serialized 32-frame rival marker avoids changing ordinary walks.
+fn route103_rival_jump2_down(map_id: MapId, id: &str, walk: &NpcWalkStart) -> bool {
+    map_id == MapId::Route103
+        && id == "rival"
+        && !walk.in_place
+        && walk.sprite_facing == Some(Facing::Down)
+        && walk.duration_frames == 32
+}
+
+/// `DoJumpSpriteMovement` indexes `sJumpY_High[sTimer >> 1]` for a far jump,
+/// while `Step1` moves the object one pixel each video frame. The caller adds
+/// that horizontal/vertical Step1 pixel to the generic destination-relative
+/// stride before applying this source `sprite->y2` value.
+fn route103_jump2_high_y(elapsed: u64) -> i32 {
+    const HIGH_JUMP_Y: [i32; 16] = [
+        -4, -6, -8, -10, -11, -12, -12, -12,
+        -11, -10, -9, -8, -6, -4, 0, 0,
+    ];
+    HIGH_JUMP_Y[(elapsed as usize / 2).min(HIGH_JUMP_Y.len() - 1)]
 }
 
 /// Supplies the source OBJ sheets whose slots are overwritten dynamically by
