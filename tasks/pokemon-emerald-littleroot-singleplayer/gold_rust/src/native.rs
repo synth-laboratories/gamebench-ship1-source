@@ -1018,7 +1018,12 @@ fn render_name_entry_with_cursor(cursor: Option<(usize, usize)>) -> Result<Vec<u
     if let Some((cursor_x, cursor_y)) = cursor {
         let mut cursor_oam = disabled_oam();
         cursor_oam[..8].copy_from_slice(&oam[22 * 8..22 * 8 + 8]);
-        let sprite_x = 30 + cursor_x * 12 + if cursor_x >= 3 { 20 } else { 0 };
+        // `SetCursorPos` uses the source keyboard's irregular X table. The
+        // staged 16x16 OAM cursor starts eight pixels left of that source
+        // center, so the final punctuation column is 153 rather than the
+        // regular 12-pixel grid cadence.
+        const SOURCE_CURSOR_X: [usize; 8] = [30, 42, 54, 86, 98, 110, 122, 153];
+        let sprite_x = SOURCE_CURSOR_X[cursor_x];
         let sprite_y = 80 + cursor_y * 16;
         cursor_oam[2..4].copy_from_slice(&(sprite_x as u16 | 0x4000).to_le_bytes());
         cursor_oam[0..2].copy_from_slice(&(sprite_y as u16 | 0x0400).to_le_bytes());
@@ -1027,7 +1032,8 @@ fn render_name_entry_with_cursor(cursor: Option<(usize, usize)>) -> Result<Vec<u
     // The name-entry cursor objects are priority 1; BG0's priority-0 grid
     // tiles cover their overlapping pixels.
     composite_gba_bg_4bpp(&mut frame, &vram[..], &vram[0xf000..0xf800], &palette, true)?;
-    apply_name_entry_oam_priority_patch(&mut frame, cursor.is_none())?;
+    let suppress_initial_cursor = cursor.is_none() || matches!(cursor, Some((7, _)));
+    apply_name_entry_oam_priority_patch(&mut frame, suppress_initial_cursor)?;
     Ok(frame)
 }
 
@@ -1095,6 +1101,10 @@ fn name_entry_cursor_position(cursor: u8) -> Option<(usize, usize)> {
         6..=11 => Some((usize::from(cursor - 6), 1)),
         12..=18 => Some((usize::from(cursor - 12), 2)),
         19..=25 => Some((usize::from(cursor - 19), 3)),
+        // The upper source keyboard reserves a blank column before its
+        // punctuation keys, leaving both of these at column seven.
+        26 => Some((7, 0)),
+        27 => Some((7, 1)),
         // `SpriteCB_Cursor` in `naming_screen.c` hides the 16x16 cursor
         // when it reaches the screen's right-hand action-button column.
         // The button itself then supplies the source selection pulse.
