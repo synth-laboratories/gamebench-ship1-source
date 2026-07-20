@@ -25,7 +25,7 @@ The scoped route is now functionally traversable, with coarse visuals allowed:
   source warning instead of a generic escape message. Oldale's pre-Pokédex
   blocked west entrance now runs its Footprints Man warning/return event.
 - Validation: `cargo build --release --bin scenario` passed on `dev` at
-  `8ce5478`; `git diff --check` passed. Running Shoes ready-message pages now
+  `abcb7b3`; `git diff --check` passed. Running Shoes ready-message pages now
   accept either A or B, matching Emerald's `TextPrinterWait` field wait, and
   an alternate-gender fuzz probe no longer panics in the TV script. The shared
   indexed-art decoder now accepts the source 8-bit Little Root door sheet, so
