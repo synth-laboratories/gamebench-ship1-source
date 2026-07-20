@@ -60,6 +60,11 @@ const TRUCK_DEPARTURE_FRAMES: u16 = TRUCK_DEPARTURE_APPROACH_FRAMES
     + LITTLEROOT_DOOR_ANIMATION_FRAMES
     + TRUCK_DEPARTURE_ENTRY_FRAMES
     + LITTLEROOT_DOOR_ANIMATION_FRAMES;
+/// The Running Shoes return routes that end beside the player's home have
+/// the same open / enter / close tail as the truck scene, but only Mom moves.
+const RUNNING_SHOES_RETURN_DOOR_FRAMES: u16 = LITTLEROOT_DOOR_ANIMATION_FRAMES
+    + 16
+    + LITTLEROOT_DOOR_ANIMATION_FRAMES;
 const NEW_HOME_FACE_PLAYER_FRAMES: u8 = 1;
 // `walk_in_place_faster_{left,right}` follows Mom's source `face_player`
 // action and lasts four frames, rather than the eight-frame fast cadence.
@@ -1030,6 +1035,10 @@ pub struct WorldState {
     pub running_shoes_wait_frames: Option<u8>,
     /// Remaining frames in Mom's scripted approach before the item dialogue.
     pub running_shoes_frames: Option<u16>,
+    /// After the eligible Running Shoes return path reaches the home door,
+    /// source waits for open, Mom's one upward entry stride, and close.
+    #[serde(default)]
+    pub running_shoes_return_door_frames: Option<u16>,
     /// `LittlerootTown_EventScript_GiveRunningShoes` waits `delay 30` after
     /// Mom's final page, before it starts the selected `MomReturnHome*`
     /// movement stream.
@@ -1317,6 +1326,7 @@ impl WorldState {
             pending_running_shoes: false,
             running_shoes_wait_frames: None,
             running_shoes_frames: None,
+            running_shoes_return_door_frames: None,
             running_shoes_return_delay_frames: None,
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
@@ -1440,6 +1450,7 @@ impl WorldState {
             pending_running_shoes: false,
             running_shoes_wait_frames: None,
             running_shoes_frames: None,
+            running_shoes_return_door_frames: None,
             running_shoes_return_delay_frames: None,
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
@@ -1566,6 +1577,7 @@ impl WorldState {
             pending_running_shoes: false,
             running_shoes_wait_frames: None,
             running_shoes_frames: None,
+            running_shoes_return_door_frames: None,
             running_shoes_return_delay_frames: None,
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
@@ -1688,6 +1700,7 @@ impl WorldState {
             pending_running_shoes: false,
             running_shoes_wait_frames: None,
             running_shoes_frames: None,
+            running_shoes_return_door_frames: None,
             running_shoes_return_delay_frames: None,
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
@@ -1839,6 +1852,7 @@ impl WorldState {
             pending_running_shoes: false,
             running_shoes_wait_frames: None,
             running_shoes_frames: None,
+            running_shoes_return_door_frames: None,
             running_shoes_return_delay_frames: None,
             running_shoes_item_shown: false,
             running_shoes_stage: 0,
@@ -3495,6 +3509,34 @@ impl WorldState {
             }
             return true;
         }
+        if let Some(remaining) = self.running_shoes_return_door_frames {
+            let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
+            let elapsed_before = RUNNING_SHOES_RETURN_DOOR_FRAMES.saturating_sub(remaining);
+            let elapsed_after = RUNNING_SHOES_RETURN_DOOR_FRAMES.saturating_sub(next_remaining);
+            // The source `waitdooranim` gates a 20-frame open, then Mom
+            // takes exactly one normal step through the door before the
+            // script hides her and starts its 20-frame close.
+            let mom_entry_end = LITTLEROOT_DOOR_ANIMATION_FRAMES + 16;
+            if elapsed_before < mom_entry_end && mom_entry_end <= elapsed_after {
+                self.npcs.retain(|npc| npc.id != "mom_outside");
+            }
+            if next_remaining == 0 {
+                self.running_shoes_return_door_frames = None;
+                self.pending_running_shoes = false;
+                self.running_shoes_wait_frames = None;
+                self.running_shoes_return_delay_frames = None;
+                self.running_shoes_item_shown = true;
+                self.running_shoes_stage = 0;
+                self.running_shoes_dialogue_page = 0;
+                self.running_shoes_dialogue_frames = None;
+                self.running_shoes_trigger = None;
+                self.npcs.retain(|npc| npc.id != "mom_outside");
+                self.phase = StoryPhase::RunningShoesReceived;
+            } else {
+                self.running_shoes_return_door_frames = Some(next_remaining);
+            }
+            return true;
+        }
         let Some(remaining) = self.running_shoes_frames else { return false; };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         let trigger = self.running_shoes_trigger.unwrap_or(2);
@@ -3540,10 +3582,17 @@ impl WorldState {
                         let mom = self.npcs.iter().find(|npc| npc.id == "mom_outside")
                             .expect("Running Shoes Mom must exist for her return turn");
                         self.move_faster_scripted_npc("mom_outside", MapId::LittlerootTown, mom.position.clone(), Facing::Up);
+                        self.running_shoes_return_door_frames = Some(RUNNING_SHOES_RETURN_DOOR_FRAMES);
+                        let carried_frames = frames.saturating_sub(u32::from(remaining));
+                        if carried_frames != 0 {
+                            self.advance_running_shoes_scene(carried_frames);
+                        }
+                        return true;
                     }
                     self.pending_running_shoes = false;
                     self.running_shoes_wait_frames = None;
                     self.running_shoes_return_delay_frames = None;
+                    self.running_shoes_return_door_frames = None;
                     self.running_shoes_item_shown = true;
                     self.running_shoes_stage = 0;
                     self.running_shoes_dialogue_page = 0;
@@ -5584,6 +5633,7 @@ impl WorldState {
                                 self.pending_running_shoes = false;
                                 self.running_shoes_wait_frames = None;
                                 self.running_shoes_return_delay_frames = None;
+                                self.running_shoes_return_door_frames = None;
                                 self.running_shoes_item_shown = true;
                                 self.running_shoes_stage = 0;
                                 self.running_shoes_dialogue_page = 0;
@@ -6303,6 +6353,7 @@ impl WorldState {
             self.pending_running_shoes = true;
             self.running_shoes_wait_frames = None;
             self.running_shoes_return_delay_frames = None;
+            self.running_shoes_return_door_frames = None;
             self.running_shoes_item_shown = false;
             self.running_shoes_stage = 0;
             self.running_shoes_dialogue_page = 0;

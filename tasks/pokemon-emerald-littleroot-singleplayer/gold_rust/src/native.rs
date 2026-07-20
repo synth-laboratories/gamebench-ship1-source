@@ -3339,6 +3339,93 @@ fn littleroot_departure_door_visual(elapsed: u16) -> LittlerootDoorVisual {
     }
 }
 
+/// `MomReturnHome{Male,Female}{2..5}` shares the Little Root door asset but
+/// has no player entry: once Mom reaches the door it opens for 20 frames,
+/// she walks up for 16, then it closes for 20 after `hideobjectat`.
+fn littleroot_running_shoes_return_door_visual(elapsed: u16) -> LittlerootDoorVisual {
+    const OPEN_END: u16 = 20;
+    const MOM_ENTRY_END: u16 = 36;
+    const CLOSE_END: u16 = 56;
+    if elapsed < OPEN_END {
+        LittlerootDoorVisual::Opening(elapsed)
+    } else if elapsed < MOM_ENTRY_END {
+        LittlerootDoorVisual::Open
+    } else if elapsed < CLOSE_END {
+        LittlerootDoorVisual::Closing(elapsed - MOM_ENTRY_END)
+    } else {
+        LittlerootDoorVisual::Closed
+    }
+}
+
+/// Renders the source-only door tail after Mom gives the Running Shoes.
+/// The home-door coordinates and Petalburg tiles are identical to the truck
+/// entry, but only the outdoor Mom object moves through the opening.
+pub fn render_littleroot_running_shoes_return(
+    player: &TilePosition,
+    player_gender: PlayerGender,
+    facing: Facing,
+    npc_animation_tick: u64,
+    npcs: &[NpcState],
+    npc_walk_starts: &[NpcWalkStart],
+    door_frames: Option<u16>,
+) -> Result<Vec<u8>, String> {
+    const TOTAL_FRAMES: u16 = 56;
+    const OPEN_END: u16 = 20;
+    const MOM_ENTRY_END: u16 = 36;
+
+    let Some(remaining) = door_frames else {
+        return render_world_view_with_dynamic_objects(
+            MapId::LittlerootTown,
+            player,
+            player_gender,
+            facing,
+            None,
+            0,
+            npc_animation_tick,
+            npcs,
+            npc_walk_starts,
+        );
+    };
+    let elapsed = TOTAL_FRAMES.saturating_sub(remaining.min(TOTAL_FRAMES));
+    let mut visual_npcs = npcs.to_vec();
+    // The return walk's final four-frame turn has completed before
+    // `opendoor`; its old movement marker must not replay under this tail.
+    let mut visual_walks = npc_walk_starts
+        .iter()
+        .filter(|walk| walk.id != "mom_outside")
+        .cloned()
+        .collect::<Vec<_>>();
+    if (OPEN_END..MOM_ENTRY_END).contains(&elapsed) {
+        if let Some(mom) = visual_npcs.iter_mut().find(|npc| npc.id == "mom_outside") {
+            // The world commits `hideobjectat` at the end of the stride. Use
+            // the destination row plus the source OBJ walk offset until then.
+            mom.position.y -= 1;
+            mom.facing = Facing::Up;
+            visual_walks.push(NpcWalkStart {
+                id: "mom_outside".to_owned(),
+                frame: npc_animation_tick.saturating_sub(u64::from(elapsed - OPEN_END)),
+                duration_frames: 16,
+                sprite_facing: Some(Facing::Up),
+            });
+        }
+    }
+    let mut frame = render_world_view_with_dynamic_objects(
+        MapId::LittlerootTown,
+        player,
+        player_gender,
+        facing,
+        None,
+        0,
+        npc_animation_tick,
+        &visual_npcs,
+        &visual_walks,
+    )?;
+    if let Some(art_frame) = littleroot_running_shoes_return_door_visual(elapsed).animation_art_frame() {
+        draw_littleroot_door_animation(&mut frame, player, player_gender, art_frame)?;
+    }
+    Ok(frame)
+}
+
 /// Presents Little Root's first home-entry choreography. The source runs the
 /// same Petalburg/Little Root door art for both the initial Mom exit and the
 /// later player/Mom entry, so this renderer owns the real four-frame door task
