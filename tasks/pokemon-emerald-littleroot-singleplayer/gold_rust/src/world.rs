@@ -1263,6 +1263,12 @@ pub struct WorldState {
     /// by four every rendered frame while Birch's chooser is active.
     #[serde(default)]
     pub starter_hand_phase: u8,
+    /// Elapsed frame in the selected Poké Ball's 128-frame
+    /// `sAnim_Pokeball_Moving` loop. This is intentionally separate from
+    /// the hand's 64-frame sine phase: the source objects advance on the
+    /// same video tick, but their loop lengths differ.
+    #[serde(default)]
+    pub starter_pokeball_animation_frame: u8,
     /// `Task_HandleConfirmStarterInput` starts its standard menu on YES.
     /// Kept separately from Birch Lab's later YES/NO branches so a declined
     /// Poké Ball returns to the bounded three-ball selector unchanged.
@@ -1422,6 +1428,7 @@ impl WorldState {
             starter_party: None,
             starter_reveal_frames: None,
             starter_hand_phase: 0,
+            starter_pokeball_animation_frame: 0,
             starter_confirm_yes: true,
             starter_lab_choice_yes: true,
             has_pokedex: false,
@@ -1548,6 +1555,7 @@ impl WorldState {
             starter_party: None,
             starter_reveal_frames: None,
             starter_hand_phase: 0,
+            starter_pokeball_animation_frame: 0,
             starter_confirm_yes: true,
             starter_lab_choice_yes: true,
             has_pokedex: false,
@@ -1677,6 +1685,7 @@ impl WorldState {
             starter_party: None,
             starter_reveal_frames: None,
             starter_hand_phase: 0,
+            starter_pokeball_animation_frame: 0,
             starter_confirm_yes: true,
             starter_lab_choice_yes: true,
             has_pokedex: false,
@@ -1802,6 +1811,7 @@ impl WorldState {
             starter_party: None,
             starter_reveal_frames: None,
             starter_hand_phase: 0,
+            starter_pokeball_animation_frame: 0,
             starter_confirm_yes: true,
             starter_lab_choice_yes: true,
             has_pokedex: false,
@@ -1956,6 +1966,7 @@ impl WorldState {
             starter_party: None,
             starter_reveal_frames: None,
             starter_hand_phase: 0,
+            starter_pokeball_animation_frame: 0,
             starter_confirm_yes: true,
             starter_lab_choice_yes: true,
             has_pokedex: true,
@@ -2074,6 +2085,7 @@ impl WorldState {
             self.starter = Some(StarterSpecies::Torchic);
             self.starter_reveal_frames = None;
             self.starter_hand_phase = 0;
+            self.starter_pokeball_animation_frame = 0;
             self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
             return true;
         }
@@ -4895,8 +4907,8 @@ impl WorldState {
         self.phase = StoryPhase::StarterReveal;
     }
 
-    /// Advances `SpriteCB_SelectionHand`'s source `Sin(data[1], 8)` phase.
-    /// Its callback adds four to `data[1]` on each GBA frame.
+    /// Advances `SpriteCB_SelectionHand`'s `Sin(data[1], 8)` phase. Its
+    /// callback adds four indices on every source video frame.
     pub fn advance_starter_hand(&mut self, frames: u32) {
         if !matches!(
             self.phase,
@@ -4909,6 +4921,23 @@ impl WorldState {
             .wrapping_add(source_steps.wrapping_mul(4));
     }
 
+    /// Advances the selected ball's `sAnim_Pokeball_Moving` clock. A ball
+    /// selected on the first source frame begins at image value 16 during
+    /// that frame, so its caller omits that initial frame after a selection
+    /// change and advances only the remaining held frames.
+    pub fn advance_starter_pokeball_animation(&mut self, frames: u32) {
+        if !matches!(
+            self.phase,
+            StoryPhase::StarterSelect | StoryPhase::StarterReveal | StoryPhase::StarterConfirm
+        ) {
+            return;
+        }
+        self.starter_pokeball_animation_frame = self
+            .starter_pokeball_animation_frame
+            .wrapping_add((frames & 0x7f) as u8)
+            & 0x7f;
+    }
+
     /// Runs the two source `AFFINEANIMCMD_FRAME` sequences. The chosen
     /// Pokémon starts at scale 16 and grows by 16 for fifteen frames; the
     /// circle starts at 20 and grows by 20. `Task_WaitForStarterSprite` only
@@ -4916,6 +4945,7 @@ impl WorldState {
     pub fn advance_starter_reveal(&mut self, frames: u32) -> bool {
         if self.phase != StoryPhase::StarterReveal { return false; }
         self.advance_starter_hand(frames);
+        self.advance_starter_pokeball_animation(frames);
         let elapsed = self.starter_reveal_frames.unwrap_or(0);
         let advanced = frames.min(15) as u8;
         let next = elapsed.saturating_add(advanced).min(15);
@@ -4961,27 +4991,40 @@ impl WorldState {
 
     /// `Task_HandleStarterChooseInput` accepts only bounded left/right
     /// selection movement before the player confirms a Poké Ball.
-    pub fn move_starter_selection(&mut self, delta: i8) {
-        if self.phase != StoryPhase::StarterSelect { return; }
-        let selection = match self.starter.unwrap_or(StarterSpecies::Torchic) {
+    pub fn move_starter_selection(&mut self, delta: i8) -> bool {
+        if self.phase != StoryPhase::StarterSelect { return false; }
+        let previous = self.starter.unwrap_or(StarterSpecies::Torchic);
+        let selection = match previous {
             StarterSpecies::Treecko => 0_i8,
             StarterSpecies::Torchic => 1,
             StarterSpecies::Mudkip => 2,
         };
-        self.starter = Some(match (selection + delta).clamp(0, 2) {
+        let next = match (selection + delta).clamp(0, 2) {
             0 => StarterSpecies::Treecko,
             1 => StarterSpecies::Torchic,
             _ => StarterSpecies::Mudkip,
-        });
+        };
+        // `SpriteCB_Pokeball` restarts `sAnim_Pokeball_Moving` whenever a
+        // different ball becomes selected. Bounded input that leaves the
+        // selection unchanged does not restart it.
+        if next != previous {
+            self.starter_pokeball_animation_frame = 0;
+            self.starter = Some(next);
+            return true;
+        }
+        self.starter = Some(next);
+        false
     }
 
     pub fn cycle_starter(&mut self) {
         if self.phase != StoryPhase::StarterSelect { return; }
-        self.starter = Some(match self.starter {
+        let next = match self.starter {
             None | Some(StarterSpecies::Treecko) => StarterSpecies::Torchic,
             Some(StarterSpecies::Torchic) => StarterSpecies::Mudkip,
             Some(StarterSpecies::Mudkip) => StarterSpecies::Treecko,
-        });
+        };
+        self.starter_pokeball_animation_frame = 0;
+        self.starter = Some(next);
     }
 
     fn name_entry_action_button(&self) -> Option<NamingActionButton> {
