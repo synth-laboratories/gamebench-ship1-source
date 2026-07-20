@@ -31,8 +31,11 @@ The scoped route is now functionally traversable, with coarse visuals allowed:
   indexed-art decoder now accepts the source 8-bit Little Root door sheet, so
   generic door rendering is crash-safe under replay mutation. A 60-case and a
   100-case mutation corpus (action/frame perturbations across the continuous
-  title route) completed with zero crashes/timeouts; the exact May manifest and
-  terminal replay remain green after the fix. No automated tests, Ruff, ty,
+  title route) completed with zero crashes/timeouts; a separate 100-case
+  multi-checkpoint valid-input corpus also completed with zero crashes/timeouts,
+  and a direct scripted Zigzagoon victory returns to `BirchRescued` without a
+  stranded battle state. The exact May manifest and terminal replay remain
+  green after the fix. No automated tests, Ruff, ty,
   Clippy, formatter, or ad-hoc RGB capture were run.
 
 This gate establishes “mostly playable” behavior. The seven checkpoint rows
