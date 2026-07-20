@@ -279,6 +279,19 @@ pub const BATTLE_COMMAND_RUN: u8 = 3;
 /// sprite from `(80, 80)` to `(-40, 80)` over fifty frames before the
 /// regular Poké Ball release controller takes over.
 pub const BATTLE_PLAYER_INTRO_SENDOUT_FRAMES: u8 = 50;
+/// `Task_StartSendOutAnim` waits through its thirty-one source counter ticks;
+/// the follow-up ball task then spends one frame idling before it creates the
+/// player-side Poké Ball OBJ.
+pub const BATTLE_PLAYER_SENDOUT_BALL_SPAWN_FRAME: u8 = 34;
+/// `SpriteCB_PlayerMonSendOut_1` prepares the 25-frame arc one tick after
+/// the ball appears, so this is the first `TranslateAnimHorizontalArc` frame.
+pub const BATTLE_PLAYER_SENDOUT_BALL_FIRST_ARC_FRAME: u8 = 36;
+pub const BATTLE_PLAYER_SENDOUT_BALL_ARC_FRAMES: u8 = 25;
+/// The last arc callback commits the ball's accumulated offset and hands it
+/// to `SpriteCB_ReleaseMonFromBall`. Release particles and affine emergence
+/// deliberately remain a later visual rail, but input stays locked through
+/// this hand-off frame.
+pub const BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES: u8 = 61;
 
 /// A source moveset slot, retained independently of the currently selected
 /// move so an opponent controller can choose from the original four slots.
@@ -424,6 +437,17 @@ pub struct BattleState {
     /// lock without consulting an emulator.
     #[serde(default)]
     pub intro_player_sendout_frames: u8,
+    /// The source player-send-out task begins the ball controller before the
+    /// fifty-frame trainer exit has finished. Preserve its shared timeline
+    /// separately so the ball can overlap the departing trainer and a save
+    /// made during the arc resumes at the same source subphase.
+    #[serde(default)]
+    pub intro_player_sendout_elapsed_frames: u8,
+    /// Older snapshots intentionally resume at the command screen. This
+    /// explicit marker prevents their default intro stage from replaying a
+    /// new send-out just because the new elapsed field deserializes to zero.
+    #[serde(default)]
+    pub intro_player_sendout_started: bool,
     /// Outcome metadata for the most recently resolved move. It keeps the
     /// deterministic RNG decision observable without inventing battle UI.
     #[serde(default)]
@@ -722,7 +746,7 @@ fn opening_battle_state(opponent: BattleOpponent, player: CombatantBattleProfile
         player_hp: player.max_hp, player_max_hp: player.max_hp, player_level: player.level, player_attack: player.attack, player_defense: player.defense, player_speed: player.speed, player_special_attack: player.special_attack, player_special_defense: player.special_defense,
         rival_hp: enemy.max_hp, opponent_max_hp: enemy.max_hp, opponent_level: enemy.level, opponent_attack: enemy.attack, opponent_defense: enemy.defense, opponent_speed: enemy.speed, opponent_special_attack: enemy.special_attack, opponent_special_defense: enemy.special_defense,
         player_move_damage, player_move_name: player_physical.name.to_owned(), player_status_move_name: player_status.name.to_owned(), player_move_pp: player_physical.pp, player_status_move_pp: player_status.pp,
-        opponent_attack_stage: 0, opponent_defense_stage: 0, player_attack_stage: 0, player_defense_stage: 0, player_speed_stage: 0, command_cursor: BATTLE_COMMAND_FIGHT, selecting_move: false, party_screen_open: false, escaped: false, opponent_fled: false, wild, move_cursor: 0, player_fainted: false, message: Some(message), entry_transition_frames, intro_stage: 0, intro_player_sendout_pending: false, intro_player_sendout_frames: 0, last_move_hit: false, last_move_critical: false, last_damage_variance: None,
+        opponent_attack_stage: 0, opponent_defense_stage: 0, player_attack_stage: 0, player_defense_stage: 0, player_speed_stage: 0, command_cursor: BATTLE_COMMAND_FIGHT, selecting_move: false, party_screen_open: false, escaped: false, opponent_fled: false, wild, move_cursor: 0, player_fainted: false, message: Some(message), entry_transition_frames, intro_stage: 0, intro_player_sendout_pending: false, intro_player_sendout_frames: 0, intro_player_sendout_elapsed_frames: 0, intro_player_sendout_started: false, last_move_hit: false, last_move_critical: false, last_damage_variance: None,
     }
 }
 
@@ -5078,15 +5102,31 @@ impl WorldState {
         true
     }
 
-    /// Advances only the source player-trainer exit that follows the opening
-    /// `Go!` page. The ball/release controller that follows it remains a
-    /// separate visual gap; keeping this timer narrow prevents ordinary
-    /// battle messages from accidentally re-entering the intro sequence.
+    /// Advances the source player trainer exit and its overlapping Poké Ball
+    /// launch through the hand-off to `SpriteCB_ReleaseMonFromBall`. The
+    /// release particles and affine emergence remain intentionally separate,
+    /// while this typed timeline keeps ordinary battle messages from
+    /// accidentally re-entering the intro sequence.
     pub fn advance_battle_player_intro_sendout(&mut self, frames: u32) -> bool {
         let Some(battle) = self.battle.as_mut() else { return false; };
-        if battle.intro_player_sendout_frames == 0 { return false; }
-        battle.intro_player_sendout_frames = battle.intro_player_sendout_frames
-            .saturating_sub(frames.min(u32::from(u8::MAX)) as u8);
+        if !battle.intro_player_sendout_started {
+            // Keep a snapshot produced by the preceding trainer-exit-only
+            // rail moving forward. Snapshots without an active old timer
+            // retain the command-screen behavior promised by the default.
+            if battle.intro_player_sendout_frames == 0 { return false; }
+            battle.intro_player_sendout_elapsed_frames = BATTLE_PLAYER_INTRO_SENDOUT_FRAMES
+                .saturating_sub(battle.intro_player_sendout_frames);
+            battle.intro_player_sendout_started = true;
+        }
+        if battle.intro_player_sendout_elapsed_frames >= BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES {
+            battle.intro_player_sendout_started = false;
+            return false;
+        }
+        battle.intro_player_sendout_elapsed_frames = battle.intro_player_sendout_elapsed_frames
+            .saturating_add(frames.min(u32::from(u8::MAX)) as u8)
+            .min(BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES);
+        battle.intro_player_sendout_frames = BATTLE_PLAYER_INTRO_SENDOUT_FRAMES
+            .saturating_sub(battle.intro_player_sendout_elapsed_frames);
         true
     }
 
@@ -5222,6 +5262,8 @@ impl WorldState {
             if battle.intro_player_sendout_pending {
                 battle.intro_player_sendout_pending = false;
                 battle.intro_player_sendout_frames = BATTLE_PLAYER_INTRO_SENDOUT_FRAMES;
+                battle.intro_player_sendout_elapsed_frames = 0;
+                battle.intro_player_sendout_started = true;
                 battle.intro_stage = 2;
                 return;
             }
