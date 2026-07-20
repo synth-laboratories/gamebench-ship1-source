@@ -413,6 +413,11 @@ fn fast_path_position(start: TilePosition, path: &[Facing], completed: usize, id
     (position, facing)
 }
 
+// `Route101_EventScript_StartBirchRescue` waits for the longest actor
+// stream: 48 frames entering, Zigzagoon's 31-step / 248-frame circle, then
+// Birch's four-frame turn and the paired 32-frame facing actions.
+const ROUTE101_RESCUE_CHOREOGRAPHY_FRAMES: u16 = 332;
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum BattleType { Normal, Grass, Fire, Water, Dark, Bug, Flying }
 
@@ -955,6 +960,11 @@ pub struct NpcWalkStart {
     /// even after the ObjectEvent turns to face a different direction.
     #[serde(default)]
     pub sprite_facing: Option<Facing>,
+    /// `walk_in_place_*` advances the source sprite cadence without moving
+    /// its object-event coordinate.  Retain that distinction so the OBJ
+    /// layer does not invent an eight- or four-pixel translation.
+    #[serde(default)]
+    pub in_place: bool,
 }
 
 fn default_npc_walk_duration() -> u8 { 16 }
@@ -2699,6 +2709,31 @@ impl WorldState {
                 frame,
                 duration_frames,
                 sprite_facing: Some(facing),
+                in_place: false,
+            });
+        }
+    }
+
+    /// Records an authored `walk_in_place_*` action.  These commands use the
+    /// same source OBJ stride cells as a walk, but their map coordinate stays
+    /// fixed throughout the action.
+    fn animate_scripted_npc_in_place_at_frame(
+        &mut self,
+        id: &str,
+        map: MapId,
+        facing: Facing,
+        duration_frames: u8,
+        frame: u64,
+    ) {
+        if let Some(npc) = self.npcs.iter_mut().find(|npc| npc.id == id && npc.map == map) {
+            npc.facing = facing;
+            self.npc_walk_starts.retain(|walk| walk.id != id);
+            self.npc_walk_starts.push(NpcWalkStart {
+                id: id.to_owned(),
+                frame,
+                duration_frames,
+                sprite_facing: Some(facing),
+                in_place: true,
             });
         }
     }
@@ -3857,14 +3892,23 @@ impl WorldState {
     /// Birch/Zigzagoon in from `(0,15)/(0,16)`, then runs their circular
     /// chase in parallel before the Bag prompt is released.
     pub fn advance_birch_rescue_scene(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.birch_rescue_frames else { return false; };
+        let Some(saved_remaining) = self.birch_rescue_frames else { return false; };
+        // Older checkpoints recorded the earlier 344-frame approximation.
+        // Normalize them as they resume so their remaining motion follows
+        // the source stream boundaries below.
+        let remaining = saved_remaining.min(ROUTE101_RESCUE_CHOREOGRAPHY_FRAMES);
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         if self.birch_rescue_stage == 1 {
-            // The source's `walk_fast_*` commands advance on eight-frame
-            // beats. The entry stream has six moves; Birch then has thirty
-            // circular moves while Zigzagoon has thirty-two. The latter two
-            // source steps are what leave Zigzagoon at (4,12), facing left,
-            // before the Bag prompt opens.
+            // These are the source streams in `Route101/scripts.inc`. Each
+            // `walk_fast_*` starts on an eight-frame boundary. Commit a
+            // destination when its stride starts, at that source frame, so
+            // the shared OBJ renderer interpolates the remaining pixels
+            // rather than showing only a request-end teleport.
+            const FAST_STEP_FRAMES: u16 = 8;
+            const ENTRY_END: u16 = 48;
+            const PLAYER_ENTER_TURN_END: u16 = 4 * FAST_STEP_FRAMES + 4;
+            const BIRCH_TURN_START: u16 = ENTRY_END + 31 * FAST_STEP_FRAMES;
+            const FACE_EACH_OTHER_START: u16 = BIRCH_TURN_START + 4;
             const BIRCH_ENTRY: [Facing; 6] = [Facing::Right, Facing::Right, Facing::Right, Facing::Right, Facing::Up, Facing::Up];
             const ZIGZAGOON_ENTRY: [Facing; 6] = [Facing::Up, Facing::Right, Facing::Right, Facing::Right, Facing::Right, Facing::Up];
             const BIRCH_CIRCLE: [Facing; 30] = [
@@ -3872,45 +3916,153 @@ impl WorldState {
                 Facing::Up, Facing::Up, Facing::Right, Facing::Right, Facing::Right, Facing::Down, Facing::Down, Facing::Left, Facing::Left, Facing::Left,
                 Facing::Up, Facing::Up, Facing::Right, Facing::Right, Facing::Right, Facing::Down, Facing::Down, Facing::Left, Facing::Left, Facing::Left,
             ];
-            const ZIGZAGOON_CIRCLE: [Facing; 32] = [
+            const ZIGZAGOON_CIRCLE: [Facing; 31] = [
                 Facing::Up, Facing::Up, Facing::Up, Facing::Right, Facing::Right, Facing::Right, Facing::Down, Facing::Down, Facing::Left, Facing::Left,
                 Facing::Left, Facing::Up, Facing::Up, Facing::Right, Facing::Right, Facing::Right, Facing::Down, Facing::Down, Facing::Left, Facing::Left,
                 Facing::Left, Facing::Up, Facing::Up, Facing::Up, Facing::Right, Facing::Right, Facing::Right, Facing::Down, Facing::Down, Facing::Left,
-                Facing::Left, Facing::Left,
+                Facing::Left,
             ];
-            let elapsed = 344_u16.saturating_sub(next_remaining);
-            let completed = usize::from(elapsed / 8);
+            let elapsed_before = ROUTE101_RESCUE_CHOREOGRAPHY_FRAMES.saturating_sub(remaining);
+            let elapsed_after = ROUTE101_RESCUE_CHOREOGRAPHY_FRAMES.saturating_sub(next_remaining);
             // `Route101_Movement_EnterScene` brings the player north four
             // tiles in 32 frames, then performs its four-frame faster left
             // turn. Keep this in the same clock as the actors instead of
             // deferring it to the prompt.
-            let player_steps = (completed as i16).min(4);
+            let player_steps = (elapsed_after / FAST_STEP_FRAMES).min(4) as i16;
             let player_y = 19 - player_steps;
             if self.player.y != player_y {
                 self.player.y = player_y;
                 self.elevation = crate::native::tile_elevation(self.map, self.player.x, self.player.y)
                     .expect("Route 101 rescue player path must be staged");
             }
-            self.facing = if elapsed >= 32 { Facing::Left } else { Facing::Up };
-            let (birch_position, mut birch_facing) = if completed <= BIRCH_ENTRY.len() {
-                fast_path_position(TilePosition { x: 0, y: 15 }, &BIRCH_ENTRY, completed, Facing::Right)
+            // The final `walk_in_place_faster_left` occupies frames 32..36.
+            // Player walk state drives camera translation, so it cannot be
+            // reused for this in-place action without inventing movement.
+            // Keep the prior up-facing pose until that four-frame command
+            // finishes, then commit the source-facing result.
+            self.facing = if elapsed_after >= PLAYER_ENTER_TURN_END {
+                Facing::Left
             } else {
-                fast_path_position(TilePosition { x: 4, y: 13 }, &BIRCH_CIRCLE, (completed - BIRCH_ENTRY.len()).min(BIRCH_CIRCLE.len()), Facing::Up)
+                Facing::Up
             };
-            let (zigzagoon_position, zigzagoon_facing) = if completed <= ZIGZAGOON_ENTRY.len() {
-                fast_path_position(TilePosition { x: 0, y: 16 }, &ZIGZAGOON_ENTRY, completed, Facing::Up)
-            } else {
-                fast_path_position(TilePosition { x: 4, y: 14 }, &ZIGZAGOON_CIRCLE, (completed - ZIGZAGOON_ENTRY.len()).min(ZIGZAGOON_CIRCLE.len()), Facing::Up)
-            };
-            // After both circular streams finish, Birch performs the
-            // source's distinct four-frame faster right turn before the
-            // paired fast face-each-other actions. Zigzagoon is already
-            // left-facing at the end of its 32-step stream.
-            if elapsed >= 304 {
-                birch_facing = Facing::Right;
+
+            for (index, direction) in BIRCH_ENTRY.iter().enumerate() {
+                let start = u16::try_from(index).expect("Route 101 Birch entry index fits") * FAST_STEP_FRAMES;
+                if elapsed_before <= start && start < elapsed_after {
+                    let (position, _) = fast_path_position(
+                        TilePosition { x: 0, y: 15 },
+                        &BIRCH_ENTRY,
+                        index + 1,
+                        Facing::Right,
+                    );
+                    let source_frame = self.frame.saturating_sub(u64::from(elapsed_after - start));
+                    self.move_scripted_npc_with_duration_at_frame(
+                        "birch",
+                        MapId::Route101,
+                        position,
+                        *direction,
+                        FAST_STEP_FRAMES as u8,
+                        source_frame,
+                    );
+                }
             }
-            self.move_fast_scripted_npc("birch", MapId::Route101, birch_position, birch_facing);
-            self.move_fast_scripted_npc("zigzagoon", MapId::Route101, zigzagoon_position, zigzagoon_facing);
+            for (index, direction) in ZIGZAGOON_ENTRY.iter().enumerate() {
+                let start = u16::try_from(index).expect("Route 101 Zigzagoon entry index fits") * FAST_STEP_FRAMES;
+                if elapsed_before <= start && start < elapsed_after {
+                    let (position, _) = fast_path_position(
+                        TilePosition { x: 0, y: 16 },
+                        &ZIGZAGOON_ENTRY,
+                        index + 1,
+                        Facing::Up,
+                    );
+                    let source_frame = self.frame.saturating_sub(u64::from(elapsed_after - start));
+                    self.move_scripted_npc_with_duration_at_frame(
+                        "zigzagoon",
+                        MapId::Route101,
+                        position,
+                        *direction,
+                        FAST_STEP_FRAMES as u8,
+                        source_frame,
+                    );
+                }
+            }
+            for (index, direction) in BIRCH_CIRCLE.iter().enumerate() {
+                let start = ENTRY_END
+                    + u16::try_from(index).expect("Route 101 Birch circle index fits") * FAST_STEP_FRAMES;
+                if elapsed_before <= start && start < elapsed_after {
+                    let (position, _) = fast_path_position(
+                        TilePosition { x: 4, y: 13 },
+                        &BIRCH_CIRCLE,
+                        index + 1,
+                        Facing::Up,
+                    );
+                    let source_frame = self.frame.saturating_sub(u64::from(elapsed_after - start));
+                    self.move_scripted_npc_with_duration_at_frame(
+                        "birch",
+                        MapId::Route101,
+                        position,
+                        *direction,
+                        FAST_STEP_FRAMES as u8,
+                        source_frame,
+                    );
+                }
+            }
+            for (index, direction) in ZIGZAGOON_CIRCLE.iter().enumerate() {
+                let start = ENTRY_END
+                    + u16::try_from(index).expect("Route 101 Zigzagoon circle index fits") * FAST_STEP_FRAMES;
+                if elapsed_before <= start && start < elapsed_after {
+                    let (position, _) = fast_path_position(
+                        TilePosition { x: 4, y: 14 },
+                        &ZIGZAGOON_CIRCLE,
+                        index + 1,
+                        Facing::Up,
+                    );
+                    let source_frame = self.frame.saturating_sub(u64::from(elapsed_after - start));
+                    self.move_scripted_npc_with_duration_at_frame(
+                        "zigzagoon",
+                        MapId::Route101,
+                        position,
+                        *direction,
+                        FAST_STEP_FRAMES as u8,
+                        source_frame,
+                    );
+                }
+            }
+
+            // `waitmovement 0` releases this turn only after Zigzagoon's
+            // 31st circle command ends at frame 296.  The four-frame action
+            // is visibly in place, so it must animate without an invented
+            // tile offset.
+            if elapsed_before <= BIRCH_TURN_START && BIRCH_TURN_START < elapsed_after {
+                let source_frame = self.frame.saturating_sub(u64::from(elapsed_after - BIRCH_TURN_START));
+                self.animate_scripted_npc_in_place_at_frame(
+                    "birch",
+                    MapId::Route101,
+                    Facing::Right,
+                    4,
+                    source_frame,
+                );
+            }
+            for index in 0_u16..4 {
+                let start = FACE_EACH_OTHER_START + index * FAST_STEP_FRAMES;
+                if elapsed_before <= start && start < elapsed_after {
+                    let source_frame = self.frame.saturating_sub(u64::from(elapsed_after - start));
+                    self.animate_scripted_npc_in_place_at_frame(
+                        "zigzagoon",
+                        MapId::Route101,
+                        Facing::Left,
+                        FAST_STEP_FRAMES as u8,
+                        source_frame,
+                    );
+                    self.animate_scripted_npc_in_place_at_frame(
+                        "birch",
+                        MapId::Route101,
+                        Facing::Right,
+                        FAST_STEP_FRAMES as u8,
+                        source_frame,
+                    );
+                }
+            }
         }
         if next_remaining != 0 {
             self.birch_rescue_frames = Some(next_remaining);
@@ -3927,9 +4079,17 @@ impl WorldState {
                 .expect("Route 101 rescue scene endpoint must be staged");
             self.facing = Facing::Left;
             // The final face commands occur at the source circle endpoints,
-            // rather than beside the Bag.
-            self.move_scripted_npc("birch", MapId::Route101, TilePosition { x: 4, y: 13 }, Facing::Right);
-            self.move_scripted_npc("zigzagoon", MapId::Route101, TilePosition { x: 4, y: 12 }, Facing::Left);
+            // rather than beside the Bag. Zigzagoon's authored stream has
+            // 31, not 32, left/up/right/down commands, so it ends at (5,12).
+            if let Some(birch) = self.npcs.iter_mut().find(|npc| npc.id == "birch" && npc.map == MapId::Route101) {
+                birch.position = TilePosition { x: 4, y: 13 };
+                birch.facing = Facing::Right;
+            }
+            if let Some(zigzagoon) = self.npcs.iter_mut().find(|npc| npc.id == "zigzagoon" && npc.map == MapId::Route101) {
+                zigzagoon.position = TilePosition { x: 5, y: 12 };
+                zigzagoon.facing = Facing::Left;
+            }
+            self.npc_walk_starts.retain(|walk| walk.id != "birch" && walk.id != "zigzagoon");
             self.birch_rescue_stage = 2;
             self.dialogue = Some("Hello! You over there!\nPlease! Help!\n\nIn my BAG!\nThere's a POKé BALL!".to_owned());
         }
@@ -4166,6 +4326,7 @@ impl WorldState {
                 frame: frame.saturating_sub(16),
                 duration_frames: 16,
                 sprite_facing: Some(Facing::Right),
+                in_place: false,
             });
         }
         self.ambient_wanders = vec![
@@ -4283,6 +4444,7 @@ impl WorldState {
                         frame,
                         duration_frames: 16,
                         sprite_facing: Some(facing),
+                        in_place: false,
                     });
                     self.ambient_wanders[state_index].mode = AmbientWanderMode::Walk { remaining_frames: 16 };
                 }
@@ -5538,7 +5700,7 @@ impl WorldState {
             }
             if self.phase == StoryPhase::BirchRescue && self.birch_rescue_stage == 0 {
                 self.birch_rescue_stage = 1;
-                self.birch_rescue_frames = Some(344);
+                self.birch_rescue_frames = Some(ROUTE101_RESCUE_CHOREOGRAPHY_FRAMES);
                 if let Some(birch) = self.npcs.iter_mut().find(|npc| npc.id == "birch" && npc.map == MapId::Route101) {
                     birch.position = TilePosition { x: 0, y: 15 };
                     birch.facing = Facing::Right;

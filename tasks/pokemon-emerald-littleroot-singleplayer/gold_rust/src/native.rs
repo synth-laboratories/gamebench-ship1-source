@@ -1670,7 +1670,7 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             if let Some(walk) = world.npc_walk_starts.iter().rev().find(|walk| walk.id == mom.id) {
                 let elapsed = world.frame.saturating_sub(walk.frame) as i32;
                 let duration = i32::from(walk.duration_frames.max(1));
-                if elapsed < duration {
+                if !walk.in_place && elapsed < duration {
                     let remaining = duration - elapsed;
                     match walk.sprite_facing.unwrap_or(mom.facing) {
                         Facing::Up => screen_y += remaining,
@@ -4070,6 +4070,7 @@ pub fn render_littleroot_running_shoes_return(
                 frame: npc_animation_tick.saturating_sub(u64::from(elapsed - OPEN_END)),
                 duration_frames: 16,
                 sprite_facing: Some(Facing::Up),
+                in_place: false,
             });
         }
     }
@@ -4137,6 +4138,7 @@ pub fn render_littleroot_truck_door_approach(
                     frame: npc_animation_tick.saturating_sub(u64::from(elapsed - WALK_START_FRAME)),
                     duration_frames: 16,
                     sprite_facing: Some(Facing::Up),
+                    in_place: false,
                 });
             }
             (
@@ -4170,6 +4172,7 @@ pub fn render_littleroot_truck_door_approach(
                         frame: npc_animation_tick.saturating_sub(u64::from(elapsed - DOOR_OPEN_END_FRAME)),
                         duration_frames: 16,
                         sprite_facing: Some(Facing::Up),
+                        in_place: false,
                     });
                 }
                 (Some(Facing::Up), (elapsed - DOOR_OPEN_END_FRAME) as u8)
@@ -6380,7 +6383,7 @@ fn dynamic_object_oam(
             if let Some(walk) = latest_walk {
                 let elapsed = npc_animation_tick.saturating_sub(walk.frame) as i32;
                 let duration = i32::from(walk.duration_frames.max(1));
-                if elapsed < duration {
+                if !walk.in_place && elapsed < duration {
                     let remaining = duration - elapsed;
                     match sprite_facing {
                         Facing::Up => screen_y += remaining,
