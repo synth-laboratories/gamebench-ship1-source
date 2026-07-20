@@ -1996,10 +1996,11 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
         if let Some(message) = battle.message.as_deref() {
             let text_palette = draw_battle_message_chrome(frame);
             draw_text_with_palette(frame, 16, 121, message, 34, text_palette);
-            // `B_WIN_MSG` owns the source down-arrow through the live text
-            // printer's wait state. The typed battle state does not yet
-            // serialize that blink phase, so do not substitute the former
-            // invented literal "A" for source UI art here.
+            // `B_WIN_MSG` leaves the printer at the end of the message while
+            // it waits for A|B.  The battle state already owns that exact
+            // wait (a non-None message), so project the source dark-arrow
+            // tile here rather than replacing it with an invented prompt.
+            draw_battle_message_down_arrow(frame, message, world.frame);
         } else if battle.selecting_move {
             if battle.command_cursor == BATTLE_COMMAND_BAG {
                 draw_menu_window(frame, 0, 112, 128, 48);
@@ -2661,6 +2662,53 @@ fn draw_battle_message_chrome(frame: &mut [u8]) -> [[u8; 3]; 3] {
             .expect("staged Emerald battle textbox palette must have message shadow"),
         fill,
     ]
+}
+
+/// Source `TextPrinterDrawDownArrow` for `B_WIN_MSG`. Battle messages use the
+/// alternate dark arrow and the battle window's text palette (`fg=1`,
+/// `bg=15`, `shadow=6`); its printer starts at window-local `(0,1)`, i.e.
+/// screen `(16,121)`. The serialized battle's `message` is the source wait
+/// state, so the existing world frame is sufficient for the nine-frame
+/// 0/1/2/1 bob cadence without adding renderer-only state.
+fn draw_battle_message_down_arrow(frame: &mut [u8], message: &str, frame_counter: u64) {
+    const SOURCE_Y_OFFSETS: [usize; 4] = [0, 1, 2, 1];
+    const FRAME_DELAY: u64 = 9;
+    const START_X: usize = 16;
+    const START_Y: usize = 121;
+
+    let mut cursor_x = START_X;
+    let mut cursor_y = START_Y;
+    for character in message.chars() {
+        if character == '\n' {
+            cursor_x = START_X;
+            cursor_y = cursor_y.saturating_add(16);
+        } else {
+            cursor_x = cursor_x.saturating_add(emerald_glyph_width(character));
+        }
+    }
+
+    let arrow = EMERALD_DIALOGUE_DOWN_ARROW.get_or_init(|| {
+        decode_source_indexed_sheet(EMERALD_DIALOGUE_DOWN_ARROW_B64)
+            .expect("staged Emerald battle down-arrow must decode")
+    });
+    let source_y = SOURCE_Y_OFFSETS[((frame_counter / FRAME_DELAY) % 4) as usize];
+    let palette = BATTLE_TEXTBOX_PALETTE.get_or_init(|| {
+        decode_base64(BATTLE_TEXTBOX_PALETTE_B64)
+            .expect("staged Emerald battle textbox palette must decode")
+    });
+    // The staged arrow is the source 4bpp strip.  Its authoring indices map
+    // onto the battle window's alternate-arrow colors: fill, foreground,
+    // shadow, and light shadow respectively.
+    const BATTLE_ARROW_PALETTE_INDICES: [usize; 4] = [15, 1, 6, 7];
+    for row in 0..16 {
+        for column in 0..8 {
+            let arrow_index = usize::from(arrow.pixels[(source_y + row) * arrow.width + column]);
+            let Some(&battle_index) = BATTLE_ARROW_PALETTE_INDICES.get(arrow_index) else { continue; };
+            if let Some(color) = battle_textbox_palette_color(palette, battle_index) {
+                put_pixel(frame, cursor_x + column, cursor_y + row, color);
+            }
+        }
+    }
 }
 
 /// Replays the normal move-selection page of Emerald's BG0. Source
