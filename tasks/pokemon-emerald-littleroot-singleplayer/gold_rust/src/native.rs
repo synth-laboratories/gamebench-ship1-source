@@ -2044,11 +2044,15 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
         } else {
             vec!["POKEMON", "BAG", &world.player_name, "SAVE", "OPTION", "EXIT"]
         };
-        // The outside-Littleroot source menu uses the standard frame one
-        // scanline above the provisional overlay and extends through the
-        // bottom EXIT row; the player entry is the saved player name.
-        let height = entries.len() * 16 + 30;
-        draw_menu_window(frame, 170, 1, 69, height);
+        // `AddStartMenuWindow` in `src/menu.c` places the seven-entry normal
+        // menu at tilemap `(22, 1)` with a seven-tile content width and
+        // `(actions * 2) + 2` content rows.  `DrawStdWindowFrame` adds one
+        // tile on each side, so the rendered frame starts at (168, 0), is
+        // 72 pixels wide, and is 144 pixels tall for seven actions (128 for
+        // six).  Keep the Rust menu on those source tile boundaries instead
+        // of the former hand-tuned 69x142 rectangle.
+        let height = entries.len() * 16 + 32;
+        draw_menu_window(frame, 168, 0, 72, height);
         for (index, label) in entries.iter().enumerate() {
             // The source font baseline begins two scanlines above the
             // provisional menu placement; this applies to each 16-pixel row.
@@ -4595,7 +4599,13 @@ fn draw_standard_frame_tile_clipped(
                 continue;
             }
             let index = tiles.pixels[(source_y + row) * tiles.width + source_x + column] as usize;
-            put_pixel(frame, destination_x, destination_y, PALETTE[index]);
+            // Palette index zero is the source frame's transparent corner
+            // color.  `DrawStdWindowFrame` leaves those pixels to the field
+            // BG underneath; writing black here made rounded corners opaque
+            // in every non-canonical menu frame.
+            if index != 0 {
+                put_pixel(frame, destination_x, destination_y, PALETTE[index]);
+            }
         }
     }
 }
