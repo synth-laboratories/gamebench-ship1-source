@@ -357,6 +357,10 @@ const OUTSIDE_PLAYER_LEFT_WALK_TILE_B64: &str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 const OUTSIDE_PLAYER_DOWN_WALK_ALT_TILE_B64: &str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQVQAA5Z4AUO7uAAAAAAAAAAAAAAAAAAUAAFBeAADlXgUAmZlZAO6ZBQAA8JqqAL+brgBfq+5A8hERQEIRGAA0IygATzMjQPtPM6qpDwDqufsA7rr1ABERLwSBESQEgjJDADIzBAAz9A8AgPuP/wD4iNgAAE+IAAD/RAAA+P8AAE/7AADfSgAA8P//OPIAjfiPAIjP/ADY3/0A//8PAP8PAAAPAAAAAAAAAA==";
 const OUTSIDE_PLAYER_UP_WALK_ALT_TILE_B64: &str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUAAAAOUFAFDlXgCVmZkAUOnuAAAAAAAAAAAAAAAAAAAAAAAAAABVBQAA6V4AAO7uBQAAlZnpAJ+ZmQCPmZlA84mZQEOImAA08/8AQDMiAAAoRJ7uWQCZmfkAmZn4AJmYPwSJiDQE/z9DACIz9ABEiP0AAPCD/wDw9OsAxE+qANhPRACA/7sAAPD/AAAA8AAAAAD/+A8Avv8PAKr0DwBE9AQAu/8AAP//AABE/QAA/w8AAA==";
 const OUTSIDE_PLAYER_SIDE_WALK_ALT_TILE_B64: &str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQVQBQ5Z4AVuruAAAAAAAAAAAAAAAAAAUAAFBeAADlXgAAmZlVAO6ZmQUA6K6aAOuqqgC0u7sANBGBABSBMQAUgTIAQDMzAABEM5mZmVm6m/kFu4j5AIiI+ACPiPgAL/MPACNDDwAz+AAAAABA1AAARI0AANT4APCE+ADPj/gAz/v/APBEDwAA/wBIuw8A/0v6AMy/+wDdvw8A///0AP9P9AAA8A8AAAAAAA==";
+// Full nine-cell sheets, converted with the source repository's `gbagfx`
+// invocation (`-mwidth 2 -mheight 4`). `sAnim_Run*` indexes cells 0..=8.
+const OUTSIDE_BRENDAN_RUNNING_SHEET_B64: &str = include_str!("../assets/overworld_brendan_running.4bpp.b64");
+const OUTSIDE_MAY_RUNNING_SHEET_B64: &str = include_str!("../assets/overworld_may_running.4bpp.b64");
 // May's complete nine-frame overworld sheet from
 // `graphics/object_events/pics/people/may/walking.png`. As in Emerald's
 // object-event table: 0/1/2 idle (south/north/west), then 3/4, 5/6, and 7/8
@@ -3575,6 +3579,26 @@ pub fn render_world_view_with_dynamic_objects(map_id: MapId, player: &TilePositi
 /// Dynamic map composition with the source-owned player-home television
 /// metatile state. Other maps ignore the flag.
 pub fn render_world_view_with_dynamic_objects_and_tv_state(map_id: MapId, player: &TilePosition, player_gender: PlayerGender, facing: Facing, walk_direction: Option<Facing>, walk_progress_frames: u8, npc_animation_tick: u64, npcs: &[NpcState], npc_walk_starts: &[NpcWalkStart], tv_screen_on: bool) -> Result<Vec<u8>, String> {
+    render_world_view_with_dynamic_objects_and_tv_state_and_running(
+        map_id,
+        player,
+        player_gender,
+        facing,
+        walk_direction,
+        walk_progress_frames,
+        npc_animation_tick,
+        npcs,
+        npc_walk_starts,
+        tv_screen_on,
+        false,
+        false,
+    )
+}
+
+/// Dynamic map composition with the post-Running-Shoes player animation
+/// state. The field compositor stays generic; only `sAnim_Run*` cell choice
+/// differs from ordinary walking.
+pub fn render_world_view_with_dynamic_objects_and_tv_state_and_running(map_id: MapId, player: &TilePosition, player_gender: PlayerGender, facing: Facing, walk_direction: Option<Facing>, walk_progress_frames: u8, npc_animation_tick: u64, npcs: &[NpcState], npc_walk_starts: &[NpcWalkStart], tv_screen_on: bool, player_running: bool, running_step_uses_second_foot: bool) -> Result<Vec<u8>, String> {
     // `TurnOffTVScreen` mutates only the active (player-home) layout. The
     // opposite house retains its authored static television tiles.
     let active_home_tv_screen_on = match (map_id, player_gender) {
@@ -3593,6 +3617,8 @@ pub fn render_world_view_with_dynamic_objects_and_tv_state(map_id: MapId, player
         npcs,
         npc_walk_starts,
         true,
+        player_running,
+        running_step_uses_second_foot,
         active_home_tv_screen_on,
     )
 }
@@ -3611,6 +3637,8 @@ fn render_world_view_with_dynamic_objects_and_player_visibility(
     npcs: &[NpcState],
     npc_walk_starts: &[NpcWalkStart],
     player_visible: bool,
+    player_running: bool,
+    running_step_uses_second_foot: bool,
     tv_screen_on: bool,
 ) -> Result<Vec<u8>, String> {
     render_world_view_with_dynamic_objects_and_player_y_offset(
@@ -3624,6 +3652,8 @@ fn render_world_view_with_dynamic_objects_and_player_visibility(
         npcs,
         npc_walk_starts,
         player_visible,
+        player_running,
+        running_step_uses_second_foot,
         tv_screen_on,
         0,
     )
@@ -3644,6 +3674,8 @@ fn render_world_view_with_dynamic_objects_and_player_y_offset(
     npcs: &[NpcState],
     npc_walk_starts: &[NpcWalkStart],
     player_visible: bool,
+    player_running: bool,
+    running_step_uses_second_foot: bool,
     tv_screen_on: bool,
     player_y_offset: i8,
 ) -> Result<Vec<u8>, String> {
@@ -3656,7 +3688,16 @@ fn render_world_view_with_dynamic_objects_and_player_y_offset(
         None,
         tv_screen_on,
     )?;
-    let mut vram = outside_player_vram_continuous(player_gender, facing, walk_progress_frames)?;
+    let mut vram = if player_running && walk_direction.is_some() {
+        outside_player_running_vram(
+            player_gender,
+            facing,
+            walk_progress_frames,
+            running_step_uses_second_foot,
+        )?
+    } else {
+        outside_player_vram_continuous(player_gender, facing, walk_progress_frames)?
+    };
     let mut palette = outside_player_palette(player_gender)?;
     apply_dynamic_npc_tiles(&mut vram, &mut palette, map_id, player_gender, npc_animation_tick, npcs, npc_walk_starts)?;
     let mut oam = dynamic_object_oam(
@@ -3949,6 +3990,8 @@ pub fn render_littleroot_truck_door_approach(
                     &visual_npcs,
                     &visual_walks,
                     true,
+                    false,
+                    false,
                     true,
                 )?,
                 door_visual,
@@ -3986,6 +4029,8 @@ pub fn render_littleroot_truck_door_approach(
                     &visual_npcs,
                     &visual_walks,
                     elapsed < PLAYER_ENTERS_END_FRAME,
+                    false,
+                    false,
                     true,
                 )?,
                 door_visual,
@@ -4020,6 +4065,8 @@ pub fn render_littleroot_truck_door_approach(
                 &visual_npcs,
                 &visual_walks,
                 true,
+                false,
+                false,
                 true,
                 jump_y_offset,
             )?,
@@ -5887,6 +5934,33 @@ fn outside_player_vram_continuous(player_gender: PlayerGender, facing: Facing, w
     if tile.len() != 256 { return Err("invalid source overworld player animation tile".to_owned()); }
     let mut vram = OUTSIDE_IDLE_OBJ_VRAM.to_vec();
     vram[..tile.len()].copy_from_slice(&tile);
+    Ok(vram)
+}
+
+/// Emerald's `sAnim_Run*` tables use their own nine-cell sheets rather than
+/// cycling the ordinary walking graphics. One eight-frame stride holds a
+/// foot pose for five frames, then its directional standing pose for three;
+/// `SetStepAnimHandleAlternation` selects the other foot on the next stride.
+fn outside_player_running_vram(player_gender: PlayerGender, facing: Facing, walk_progress_frames: u8, second_foot: bool) -> Result<Vec<u8>, String> {
+    const CELL_BYTES: usize = 16 * 32 / 2;
+    const RUNNING_CELL_COUNT: usize = 9;
+    let (foot_cell, standing_cell) = match facing {
+        Facing::Down => (if second_foot { 4 } else { 3 }, 0),
+        Facing::Up => (if second_foot { 6 } else { 5 }, 1),
+        Facing::Left | Facing::Right => (if second_foot { 8 } else { 7 }, 2),
+    };
+    let cell = if walk_progress_frames < 5 { foot_cell } else { standing_cell };
+    let encoded = match player_gender {
+        PlayerGender::Brendan => OUTSIDE_BRENDAN_RUNNING_SHEET_B64,
+        PlayerGender::May => OUTSIDE_MAY_RUNNING_SHEET_B64,
+    };
+    let sheet = decode_base64(encoded)?;
+    if sheet.len() != RUNNING_CELL_COUNT * CELL_BYTES {
+        return Err("invalid source Running Shoes player sheet".to_owned());
+    }
+    let start = cell * CELL_BYTES;
+    let mut vram = OUTSIDE_IDLE_OBJ_VRAM.to_vec();
+    vram[..CELL_BYTES].copy_from_slice(&sheet[start..start + CELL_BYTES]);
     Ok(vram)
 }
 
