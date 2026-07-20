@@ -5000,13 +5000,14 @@ pub fn render_world_view_with_dynamic_objects_and_tv_state(map_id: MapId, player
         tv_screen_on,
         false,
         false,
+        None,
     )
 }
 
 /// Dynamic map composition with the post-Running-Shoes player animation
 /// state. The field compositor stays generic; only `sAnim_Run*` cell choice
 /// differs from ordinary walking.
-pub fn render_world_view_with_dynamic_objects_and_tv_state_and_running(map_id: MapId, player: &TilePosition, player_gender: PlayerGender, facing: Facing, walk_direction: Option<Facing>, walk_progress_frames: u8, npc_animation_tick: u64, npcs: &[NpcState], npc_walk_starts: &[NpcWalkStart], tv_screen_on: bool, player_running: bool, running_step_uses_second_foot: bool) -> Result<Vec<u8>, String> {
+pub fn render_world_view_with_dynamic_objects_and_tv_state_and_running(map_id: MapId, player: &TilePosition, player_gender: PlayerGender, facing: Facing, walk_direction: Option<Facing>, walk_progress_frames: u8, npc_animation_tick: u64, npcs: &[NpcState], npc_walk_starts: &[NpcWalkStart], tv_screen_on: bool, player_running: bool, running_step_uses_second_foot: bool, player_in_place_faster_elapsed: Option<u8>) -> Result<Vec<u8>, String> {
     // `TurnOffTVScreen` mutates only the active (player-home) layout. The
     // opposite house retains its authored static television tiles.
     let active_home_tv_screen_on = match (map_id, player_gender) {
@@ -5027,6 +5028,7 @@ pub fn render_world_view_with_dynamic_objects_and_tv_state_and_running(map_id: M
         true,
         player_running,
         running_step_uses_second_foot,
+        player_in_place_faster_elapsed,
         active_home_tv_screen_on,
     )
 }
@@ -5047,6 +5049,7 @@ fn render_world_view_with_dynamic_objects_and_player_visibility(
     player_visible: bool,
     player_running: bool,
     running_step_uses_second_foot: bool,
+    player_in_place_faster_elapsed: Option<u8>,
     tv_screen_on: bool,
 ) -> Result<Vec<u8>, String> {
     render_world_view_with_dynamic_objects_and_player_y_offset(
@@ -5062,6 +5065,7 @@ fn render_world_view_with_dynamic_objects_and_player_visibility(
         player_visible,
         player_running,
         running_step_uses_second_foot,
+        player_in_place_faster_elapsed,
         tv_screen_on,
         0,
     )
@@ -5084,6 +5088,7 @@ fn render_world_view_with_dynamic_objects_and_player_y_offset(
     player_visible: bool,
     player_running: bool,
     running_step_uses_second_foot: bool,
+    player_in_place_faster_elapsed: Option<u8>,
     tv_screen_on: bool,
     player_y_offset: i8,
 ) -> Result<Vec<u8>, String> {
@@ -5107,22 +5112,32 @@ fn render_world_view_with_dynamic_objects_and_player_y_offset(
         npcs,
         npc_walk_starts,
     );
-    let mut vram = if player_running && walk_direction.is_some() {
+    // `MovementAction_WalkInPlaceFasterRight_Step0` changes the ObjectEvent
+    // facing before it runs the four-frame no-translation callback.  Keep
+    // this sprite-only override out of the terrain/camera state.
+    let player_sprite_facing = if player_in_place_faster_elapsed.is_some() {
+        Facing::Right
+    } else {
+        facing
+    };
+    let mut vram = if let Some(elapsed) = player_in_place_faster_elapsed {
+        outside_player_vram_in_place_faster(player_gender, player_sprite_facing, elapsed)?
+    } else if player_running && walk_direction.is_some() {
         outside_player_running_vram(
             player_gender,
-            facing,
+            player_sprite_facing,
             walk_progress_frames,
             running_step_uses_second_foot,
         )?
     } else {
-        outside_player_vram_continuous(player_gender, facing, walk_progress_frames)?
+        outside_player_vram_continuous(player_gender, player_sprite_facing, walk_progress_frames)?
     };
     let mut palette = outside_player_palette(player_gender)?;
     apply_dynamic_npc_tiles(&mut vram, &mut palette, map_id, player_gender, npc_animation_tick, npcs, npc_walk_starts)?;
     let mut oam = dynamic_object_oam(
         map_id,
         player,
-        facing,
+        player_sprite_facing,
         walk_direction,
         walk_progress_frames,
         player_gender,
@@ -5415,6 +5430,7 @@ pub fn render_littleroot_truck_door_approach(
                     true,
                     false,
                     false,
+                    None,
                     true,
                 )?,
                 door_visual,
@@ -5455,6 +5471,7 @@ pub fn render_littleroot_truck_door_approach(
                     elapsed < PLAYER_ENTERS_END_FRAME,
                     false,
                     false,
+                    None,
                     true,
                 )?,
                 door_visual,
@@ -5491,6 +5508,7 @@ pub fn render_littleroot_truck_door_approach(
                 true,
                 false,
                 false,
+                None,
                 true,
                 jump_y_offset,
             )?,
@@ -7392,6 +7410,19 @@ fn outside_player_vram_continuous(player_gender: PlayerGender, facing: Facing, w
     let mut vram = OUTSIDE_IDLE_OBJ_VRAM.to_vec();
     vram[..tile.len()].copy_from_slice(&tile);
     Ok(vram)
+}
+
+/// The four-frame source `sAnim_GoFasterEast` sequence starts with the
+/// east-mirrored first-foot cell for two frames, then holds its east-mirrored
+/// standing cell for two. `walk_in_place_faster_right` uses the same sheet
+/// sequence without changing its field coordinate.
+fn outside_player_vram_in_place_faster(
+    player_gender: PlayerGender,
+    facing: Facing,
+    elapsed: u8,
+) -> Result<Vec<u8>, String> {
+    let source_cell_progress = if elapsed.min(3) < 2 { 1 } else { 0 };
+    outside_player_vram_continuous(player_gender, facing, source_cell_progress)
 }
 
 /// Emerald's `sAnim_Run*` tables use their own nine-cell sheets rather than

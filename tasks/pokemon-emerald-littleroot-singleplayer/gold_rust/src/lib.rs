@@ -2304,6 +2304,7 @@ impl LittlerootSession {
                 self.world.tv_screen_on,
                 self.world.running_shoes_field_motion(),
                 self.world.running_step_uses_second_foot,
+                self.world.oldale_rival_player_faster_right_elapsed(),
             ),
         }.expect("staged Little Root terrain and object assets must render");
         if self.world.map == MapId::LittlerootTown && !captured_directional_48 {

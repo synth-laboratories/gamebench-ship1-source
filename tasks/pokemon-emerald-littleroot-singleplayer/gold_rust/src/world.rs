@@ -2799,6 +2799,15 @@ impl WorldState {
         true
     }
 
+    /// Returns the active cell time for Oldale's source
+    /// `walk_in_place_faster_right` player action.  The map script keeps the
+    /// actor fixed for four frames; native composition uses this only for the
+    /// source OBJ-cell cadence, never for terrain or coordinate motion.
+    pub fn oldale_rival_player_faster_right_elapsed(&self) -> Option<u8> {
+        let remaining = self.oldale_rival_approach_frames?;
+        (remaining <= 4).then_some(4 - remaining)
+    }
+
     /// Runs the south-edge approach before Oldale's rival shows the
     /// homeward message.  The map scripts select two, one, or zero normal
     /// left walks from the rival's `(11,19)` home tile, then make the player
