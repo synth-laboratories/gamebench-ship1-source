@@ -402,6 +402,11 @@ impl LittlerootSession {
             self.redraw();
             return;
         }
+        if self.world.advance_battle_player_intro_sendout(request.frames) {
+            self.input_log.push(request);
+            self.redraw();
+            return;
+        }
         if self.world.battle.is_some() {
             if self.world.battle.as_ref().is_some_and(|battle| battle.party_screen_open) {
                 match request.action {

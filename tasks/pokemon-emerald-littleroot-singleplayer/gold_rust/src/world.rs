@@ -272,6 +272,10 @@ pub const BATTLE_COMMAND_FIGHT: u8 = 0;
 pub const BATTLE_COMMAND_BAG: u8 = 1;
 pub const BATTLE_COMMAND_POKEMON: u8 = 2;
 pub const BATTLE_COMMAND_RUN: u8 = 3;
+/// `PlayerHandleIntroTrainerBallThrow` translates the player trainer back
+/// sprite from `(80, 80)` to `(-40, 80)` over fifty frames before the
+/// regular Poké Ball release controller takes over.
+pub const BATTLE_PLAYER_INTRO_SENDOUT_FRAMES: u8 = 50;
 
 /// A source moveset slot, retained independently of the currently selected
 /// move so an opponent controller can choose from the original four slots.
@@ -406,6 +410,17 @@ pub struct BattleState {
     /// command screen rather than replaying a new introduction.
     #[serde(default = "default_battle_intro_stage")]
     pub intro_stage: u8,
+    /// The displayed `Go!` page is distinct from ordinary battle text so
+    /// confirming it can begin Emerald's player trainer exit rather than
+    /// treating a later move-result page as a second send-out.
+    #[serde(default)]
+    pub intro_player_sendout_pending: bool,
+    /// Remaining source ticks in `PlayerHandleIntroTrainerBallThrow`'s
+    /// 50-frame player-back-sprite exit. This is serialized so a replay
+    /// resumed during the hand-off retains the same visual phase and input
+    /// lock without consulting an emulator.
+    #[serde(default)]
+    pub intro_player_sendout_frames: u8,
     /// Outcome metadata for the most recently resolved move. It keeps the
     /// deterministic RNG decision observable without inventing battle UI.
     #[serde(default)]
@@ -704,7 +719,7 @@ fn opening_battle_state(opponent: BattleOpponent, player: CombatantBattleProfile
         player_hp: player.max_hp, player_max_hp: player.max_hp, player_level: player.level, player_attack: player.attack, player_defense: player.defense, player_speed: player.speed, player_special_attack: player.special_attack, player_special_defense: player.special_defense,
         rival_hp: enemy.max_hp, opponent_max_hp: enemy.max_hp, opponent_level: enemy.level, opponent_attack: enemy.attack, opponent_defense: enemy.defense, opponent_speed: enemy.speed, opponent_special_attack: enemy.special_attack, opponent_special_defense: enemy.special_defense,
         player_move_damage, player_move_name: player_physical.name.to_owned(), player_status_move_name: player_status.name.to_owned(), player_move_pp: player_physical.pp, player_status_move_pp: player_status.pp,
-        opponent_attack_stage: 0, opponent_defense_stage: 0, player_attack_stage: 0, player_defense_stage: 0, player_speed_stage: 0, command_cursor: BATTLE_COMMAND_FIGHT, selecting_move: false, party_screen_open: false, escaped: false, opponent_fled: false, wild, move_cursor: 0, player_fainted: false, message: Some(message), entry_transition_frames, intro_stage: 0, last_move_hit: false, last_move_critical: false, last_damage_variance: None,
+        opponent_attack_stage: 0, opponent_defense_stage: 0, player_attack_stage: 0, player_defense_stage: 0, player_speed_stage: 0, command_cursor: BATTLE_COMMAND_FIGHT, selecting_move: false, party_screen_open: false, escaped: false, opponent_fled: false, wild, move_cursor: 0, player_fainted: false, message: Some(message), entry_transition_frames, intro_stage: 0, intro_player_sendout_pending: false, intro_player_sendout_frames: 0, last_move_hit: false, last_move_critical: false, last_damage_variance: None,
     }
 }
 
@@ -5020,6 +5035,18 @@ impl WorldState {
         true
     }
 
+    /// Advances only the source player-trainer exit that follows the opening
+    /// `Go!` page. The ball/release controller that follows it remains a
+    /// separate visual gap; keeping this timer narrow prevents ordinary
+    /// battle messages from accidentally re-entering the intro sequence.
+    pub fn advance_battle_player_intro_sendout(&mut self, frames: u32) -> bool {
+        let Some(battle) = self.battle.as_mut() else { return false; };
+        if battle.intro_player_sendout_frames == 0 { return false; }
+        battle.intro_player_sendout_frames = battle.intro_player_sendout_frames
+            .saturating_sub(frames.min(u32::from(u8::MAX)) as u8);
+        true
+    }
+
     pub fn move_battle_command_cursor(&mut self, direction: Facing) {
         if let Some(battle) = self.battle.as_mut() {
             if battle.message.is_none() && !battle.selecting_move {
@@ -5149,6 +5176,12 @@ impl WorldState {
         let trainer_name = rival_trainer_name(self.player_gender);
         let Some(battle) = self.battle.as_mut() else { return; };
         if battle.message.take().is_some() {
+            if battle.intro_player_sendout_pending {
+                battle.intro_player_sendout_pending = false;
+                battle.intro_player_sendout_frames = BATTLE_PLAYER_INTRO_SENDOUT_FRAMES;
+                battle.intro_stage = 2;
+                return;
+            }
             match (battle.opponent, battle.intro_stage) {
                 (BattleOpponent::Rival, 0) => {
                     battle.intro_stage = 1;
@@ -5157,6 +5190,7 @@ impl WorldState {
                 }
                 (_, 0) | (BattleOpponent::Rival, 1) => {
                     battle.intro_stage += 1;
+                    battle.intro_player_sendout_pending = true;
                     battle.message = Some(format!("Go! {starter_name}!"));
                     return;
                 }
