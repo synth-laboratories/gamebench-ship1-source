@@ -7106,11 +7106,13 @@ fn apply_dynamic_npc_tiles(vram: &mut [u8], palette: &mut [u8], map_id: MapId, p
                     })
                 })
                 .unwrap_or_else(|| {
-                    if npc_is_enemy_zigzagoon(map_id, &npc.id) {
-                        // Route101's map object uses
-                        // MOVEMENT_TYPE_JOG_IN_PLACE_LEFT, which dispatches
-                        // the standard fast walk sequence without a tile
-                        // translation while the rescue script is idle.
+                    if route101_npc_jogs_in_place(map_id, &npc.id) {
+                        // Route101's event data gives Birch
+                        // MOVEMENT_TYPE_JOG_IN_PLACE_RIGHT and the Enemy
+                        // Zigzagoon MOVEMENT_TYPE_JOG_IN_PLACE_LEFT. Both
+                        // dispatch the source fast-walk cell sequence
+                        // without translating their map coordinates while
+                        // the rescue script is idle.
                         npc_walk_sprite_column(sprite_facing, npc_animation_tick, 8)
                     } else {
                         npc_idle_sprite_column(sprite_facing)
@@ -7180,6 +7182,13 @@ fn npc_is_birchs_bag(map_id: MapId, id: &str) -> bool {
 
 fn npc_is_enemy_zigzagoon(map_id: MapId, id: &str) -> bool {
     matches!((map_id, id), (MapId::Route101, "zigzagoon"))
+}
+
+fn route101_npc_jogs_in_place(map_id: MapId, id: &str) -> bool {
+    matches!(
+        (map_id, id),
+        (MapId::Route101, "birch" | "zigzagoon")
+    )
 }
 
 fn stage_npc_palette(palette: &mut [u8], bank: usize, source: &[u8]) -> Result<(), String> {
