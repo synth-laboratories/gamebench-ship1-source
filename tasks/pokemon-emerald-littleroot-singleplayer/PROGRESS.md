@@ -5,6 +5,29 @@ Updated: 2026-07-20
 This ledger measures behavior implemented in the Rust lane. A local Emerald
 state or map source being available is not counted as implementation.
 
+## Functional gate (2026-07-20)
+
+The scoped route is now functionally traversable, with coarse visuals allowed:
+
+- Title/name/gender → truck → bedroom/clock/TV → Littleroot → Route 101 rescue
+  → starter battle → Birch Lab → Oldale → Route 103 rival battle → return to
+  Birch's Lab → Pokédex/five Poké Balls → Running Shoes → Route 101 departure.
+- The post-rival Route 103 south tile is intentionally blocked by the source;
+  the authored detour (left five, down seven, right nine, down four, left
+  three, down six) reaches Oldale. Oldale's rival trigger/departure, the
+  Route 101/Little Root/Lab chain, Pokédex handoff, Running Shoes event, and
+  Route 101 departure were replayed end to end.
+- Battle failure paths no longer strand the story: low-HP Route 101
+  `AI_FirstBattle` flee resumes Birch's Bag script, while genuine opening
+  battle fainting follows a functional white-out/respawn or rescue continuation.
+- Validation: `cargo build --release --bin scenario` passed on `dev` at
+  `74ca2a0`; `git diff --check` passed. No automated tests, Ruff, ty, Clippy,
+  formatter, or RGB capture were run.
+
+This gate establishes “mostly playable” behavior. The seven checkpoint rows
+below remain `partial` because pixel parity and frame-by-frame NPC/camera
+evidence are intentionally a separate follow-up pass.
+
 ## Reference checkpoints
 
 | Checkpoint | Local reference | Rust coverage | Pixel evidence | Status |
@@ -93,6 +116,8 @@ state or map source being available is not counted as implementation.
 - Route terrain backing: Route 101 now has the same source 35×34 map-grid buffer with Oldale and Little Root connection rows, and Route 103 has its 95×36 buffer with the offset-zero Oldale south strip. The Route 103 far-east Route 110 connection is intentionally outside this segment; neither route has RGB capture evidence yet.
 - Later Little Root camera evidence: held Right ×4944 reuses source-equivalent ×4816 BG and ×4880 OBJ VRAM with its own OAM state and returns raw RGB SHA `ff0f30879a63a7fd32e10ba37fa81b08f90a01a7229dfba2410f381880b6d418`; it keeps typed NPC reprojection plus source terrain priority at `(118,86)`.
 
-The next completion gate is source-derived dynamic NPC placement and
-frame-by-frame walking/camera parity across a continuous exterior route. Only
-then will the first checkpoint move from partial to playable.
+The functional gate is complete. The next gate is visual: build a constrained
+source-vs-Rust replay corpus, align equivalent state/timing, then fuzz valid
+input sequences and close dynamic NPC placement, walking/camera parity, battle
+animation, and interior/text-window RGB differences. Checkpoint rows should
+move from `partial` only when that pixel evidence exists.
