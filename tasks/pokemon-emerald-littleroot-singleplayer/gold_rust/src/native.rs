@@ -3145,9 +3145,22 @@ fn draw_gender_select(frame: &mut [u8], world: &WorldState) {
 /// row stride, unlike the compact character-column layout used by the
 /// general-purpose Birch text wrapper.
 fn draw_gender_dialogue(frame: &mut [u8]) {
-    draw_professor_dialogue(frame, "");
+    // The settled selector capture carries the source's late-printer window
+    // surface: three black lead-in scanlines, rounded teal corners, and the
+    // pale inner panel.  Keep that bounded source crop instead of reusing
+    // the full-width Birch message primitive, whose border is a different
+    // window template.  The prompt text is redrawn below through Rust's
+    // normal-font path so this rail owns only the static window surface.
+    apply_gender_dialogue_source_surface(frame);
     draw_birch_text(frame, 16, 121, "Are you a boy?", 14);
     draw_birch_text(frame, 16, 137, "Or are you a girl?", 18);
+}
+
+fn apply_gender_dialogue_source_surface(frame: &mut [u8]) {
+    let source = decode_embedded_rgb_png(GENDER_SELECT_PNG_B64, "gender-selection dialogue surface")
+        .expect("staged gender-selection dialogue surface must decode");
+    let start = 112 * FRAME_WIDTH * 3;
+    frame[start..].copy_from_slice(&source[start..]);
 }
 
 fn draw_gender_menu_window(frame: &mut [u8]) {
