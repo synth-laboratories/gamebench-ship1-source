@@ -3262,6 +3262,28 @@ fn render_house(map: &[u8], width: usize, height: usize) -> Result<Vec<u8>, Stri
     )
 }
 
+/// `UpdateTVScreensOnMap` and `TurnOffTVScreen` scan the active map for
+/// `MB_TELEVISION` and replace each with the source Building TV metatile.
+/// `MapGridSetMetatileIdAt` preserves elevation while taking the supplied
+/// collision bits, so mirror its `MAPGRID_COLLISION_MASK` write exactly.
+fn render_house_with_tv_screen(map: &[u8], width: usize, height: usize, tv_screen_on: bool) -> Result<Vec<u8>, String> {
+    const METATILE_MASK: u16 = 0x03ff;
+    const COLLISION_MASK: u16 = 0x0c00;
+    const ELEVATION_MASK: u16 = 0xf000;
+    const TV_OFF: u16 = 0x002;
+    const TV_ON: u16 = 0x003;
+
+    let replacement = if tv_screen_on { TV_ON } else { TV_OFF };
+    let mut stateful_map = map.to_vec();
+    for entry in stateful_map.chunks_exact_mut(2) {
+        let value = u16::from_le_bytes([entry[0], entry[1]]);
+        if matches!(value & METATILE_MASK, TV_OFF | TV_ON) {
+            entry.copy_from_slice(&((value & ELEVATION_MASK) | COLLISION_MASK | replacement).to_le_bytes());
+        }
+    }
+    render_house(&stateful_map, width, height)
+}
+
 fn render_map(map: &[u8], width: usize, height: usize, primary: TilesetAssets, secondary: TilesetAssets) -> Result<Vec<u8>, String> {
     if map.len() != width * height * 2 { return Err("map blockdata dimensions do not match layout".to_owned()); }
     let primary_tiles = decode_indexed(primary.tiles)?;
@@ -3345,6 +3367,30 @@ pub fn render_world_view_with_dynamic_player(map_id: MapId, player: &TilePositio
 /// source-captured object snapshot. The staged object VRAM supplies two
 /// reusable overworld NPC tiles until each map's full sprite sheet is staged.
 pub fn render_world_view_with_dynamic_objects(map_id: MapId, player: &TilePosition, player_gender: PlayerGender, facing: Facing, walk_direction: Option<Facing>, walk_progress_frames: u8, npc_animation_tick: u64, npcs: &[NpcState], npc_walk_starts: &[NpcWalkStart]) -> Result<Vec<u8>, String> {
+    render_world_view_with_dynamic_objects_and_tv_state(
+        map_id,
+        player,
+        player_gender,
+        facing,
+        walk_direction,
+        walk_progress_frames,
+        npc_animation_tick,
+        npcs,
+        npc_walk_starts,
+        true,
+    )
+}
+
+/// Dynamic map composition with the source-owned player-home television
+/// metatile state. Other maps ignore the flag.
+pub fn render_world_view_with_dynamic_objects_and_tv_state(map_id: MapId, player: &TilePosition, player_gender: PlayerGender, facing: Facing, walk_direction: Option<Facing>, walk_progress_frames: u8, npc_animation_tick: u64, npcs: &[NpcState], npc_walk_starts: &[NpcWalkStart], tv_screen_on: bool) -> Result<Vec<u8>, String> {
+    // `TurnOffTVScreen` mutates only the active (player-home) layout. The
+    // opposite house retains its authored static television tiles.
+    let active_home_tv_screen_on = match (map_id, player_gender) {
+        (MapId::BrendansHouse1F, PlayerGender::Brendan)
+        | (MapId::MaysHouse1F, PlayerGender::May) => tv_screen_on,
+        _ => true,
+    };
     render_world_view_with_dynamic_objects_and_player_visibility(
         map_id,
         player,
@@ -3356,6 +3402,7 @@ pub fn render_world_view_with_dynamic_objects(map_id: MapId, player: &TilePositi
         npcs,
         npc_walk_starts,
         true,
+        active_home_tv_screen_on,
     )
 }
 
@@ -3373,8 +3420,17 @@ fn render_world_view_with_dynamic_objects_and_player_visibility(
     npcs: &[NpcState],
     npc_walk_starts: &[NpcWalkStart],
     player_visible: bool,
+    tv_screen_on: bool,
 ) -> Result<Vec<u8>, String> {
-    let mut frame = render_world_view_with_motion(map_id, player, walk_direction, walk_progress_frames)?;
+    let mut frame = render_world_view_with_motion_at_tick_and_tv_state(
+        map_id,
+        player,
+        walk_direction,
+        walk_progress_frames,
+        None,
+        None,
+        tv_screen_on,
+    )?;
     let mut vram = outside_player_vram_continuous(player_gender, facing, walk_progress_frames)?;
     let mut palette = outside_player_palette(player_gender)?;
     apply_dynamic_npc_tiles(&mut vram, &mut palette, map_id, player_gender, npc_animation_tick, npcs, npc_walk_starts)?;
@@ -3662,6 +3718,7 @@ pub fn render_littleroot_truck_door_approach(
                     &visual_npcs,
                     &visual_walks,
                     true,
+                    true,
                 )?,
                 door_visual,
             )
@@ -3698,6 +3755,7 @@ pub fn render_littleroot_truck_door_approach(
                     &visual_npcs,
                     &visual_walks,
                     elapsed < PLAYER_ENTERS_END_FRAME,
+                    true,
                 )?,
                 door_visual,
             )
@@ -3852,6 +3910,18 @@ pub fn render_world_view_with_motion(map_id: MapId, player: &TilePosition, walk_
 /// of the compact logical tile/stride state. Callers that own the frame clock
 /// provide it here; generic map rendering intentionally remains untimed.
 fn render_world_view_with_motion_at_tick(map_id: MapId, player: &TilePosition, walk_direction: Option<Facing>, walk_progress_frames: u8, timing_tick: Option<u64>, camera_handoff_from: Option<Facing>) -> Result<Vec<u8>, String> {
+    render_world_view_with_motion_at_tick_and_tv_state(
+        map_id,
+        player,
+        walk_direction,
+        walk_progress_frames,
+        timing_tick,
+        camera_handoff_from,
+        true,
+    )
+}
+
+fn render_world_view_with_motion_at_tick_and_tv_state(map_id: MapId, player: &TilePosition, walk_direction: Option<Facing>, walk_progress_frames: u8, timing_tick: Option<u64>, camera_handoff_from: Option<Facing>, tv_screen_on: bool) -> Result<Vec<u8>, String> {
     if map_id == MapId::BrendansHouse2F {
         return render_brendans_house_2f_source_view();
     }
@@ -3863,9 +3933,9 @@ fn render_world_view_with_motion_at_tick(map_id: MapId, player: &TilePosition, w
         MapId::Route101 => (render_route101_map()?, MAP_WIDTH, MAP_HEIGHT),
         MapId::OldaleTown => (render_oldale_town_map()?, MAP_WIDTH, MAP_HEIGHT),
         MapId::Route103 => (render_route103_map()?, ROUTE103_WIDTH, ROUTE103_HEIGHT),
-        MapId::BrendansHouse1F => (render_brendans_house_1f()?, 11, 9),
+        MapId::BrendansHouse1F => (render_house_with_tv_screen(BRENDANS_HOUSE_1F_MAP, 11, 9, tv_screen_on)?, 11, 9),
         MapId::BrendansHouse2F => unreachable!("handled by the fixed source viewport above"),
-        MapId::MaysHouse1F => (render_mays_house_1f()?, 11, 9),
+        MapId::MaysHouse1F => (render_house_with_tv_screen(MAYS_HOUSE_1F_MAP, 11, 9, tv_screen_on)?, 11, 9),
         MapId::MaysHouse2F => render_mays_house_2f_runtime_map()?,
         MapId::ProfessorBirchsLab => (render_professor_birchs_lab()?, 13, 13),
     };
