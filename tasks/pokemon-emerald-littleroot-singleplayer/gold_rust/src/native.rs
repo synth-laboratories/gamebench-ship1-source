@@ -140,6 +140,9 @@ const BATTLE_HEALTHBOX_SINGLES_OPPONENT_B64: &str = include_str!("../assets/batt
 // (`ball_display.png`) palette.
 const BATTLE_HP_BAR_B64: &str = include_str!("../assets/battle_hpbar.png.b64");
 const BATTLE_HP_BAR_ANIM_B64: &str = include_str!("../assets/battle_hpbar_anim.png.b64");
+// `FldEff_ExclamationMarkIcon` creates this source 16x16 field-effect OBJ
+// above the Route 103 rival during `Common_Movement_ExclamationMark`.
+const FIELD_EFFECT_EMOTION_EXCLAMATION_B64: &str = include_str!("../assets/field_effect_emotion_exclamation.png.b64");
 // `CB2_ChooseStarter` loads this dedicated 8bpp Birch-bag/grass tileset,
 // its two source tilemaps, and the Poké Ball / reveal-circle OBJ sheets.
 const STARTER_CHOOSE_TILES_B64: &str = include_str!("../assets/starter_choose_tiles.png.b64");
@@ -164,6 +167,7 @@ static BATTLE_HEALTHBOX_SINGLES_PLAYER: OnceLock<SourceIndexedSheet> = OnceLock:
 static BATTLE_HEALTHBOX_SINGLES_OPPONENT: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_HP_BAR: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_HP_BAR_ANIM: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static FIELD_EFFECT_EMOTION_EXCLAMATION: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static STARTER_CHOOSE_TILES: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static STARTER_CHOOSE_POKEBALL_SELECTION: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static STARTER_CHOOSE_CIRCLE: OnceLock<SourceIndexedSheet> = OnceLock::new();
@@ -1936,9 +1940,25 @@ fn draw_solid_rect(frame: &mut [u8], x: usize, y: usize, width: usize, height: u
 }
 
 fn draw_exclamation_marker(frame: &mut [u8], x: usize, y: usize) {
-    draw_solid_rect(frame, x.saturating_sub(1), y, 5, 11, [24, 24, 24]);
-    draw_solid_rect(frame, x, y + 1, 3, 7, [239, 239, 239]);
-    draw_solid_rect(frame, x, y + 9, 3, 2, [239, 239, 239]);
+    let source = FIELD_EFFECT_EMOTION_EXCLAMATION.get_or_init(|| {
+        decode_source_indexed_sheet(FIELD_EFFECT_EMOTION_EXCLAMATION_B64)
+            .expect("staged Emerald exclamation field-effect asset must decode")
+    });
+    // Existing callers express the old five-pixel placeholder around the
+    // event's 16x32 OAM origin as `(origin.x + 7, origin.y - 14)`. The source
+    // icon instead uses a 16x16 OAM, centers on that event, and its first
+    // `SpriteCB_TrainerIcons` tick applies y2 = -5: `(origin.x, origin.y -
+    // 13)`. Convert the retained call contract to that source placement.
+    draw_source_indexed_crop(
+        frame,
+        source,
+        0,
+        0,
+        16,
+        16,
+        x.saturating_sub(7),
+        y.saturating_add(1),
+    );
 }
 
 /// Source-derived Gen III wild/trainer battle field. The opening maps select
