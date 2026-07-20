@@ -4826,10 +4826,11 @@ impl WorldState {
 
     pub fn cancel_clock(&mut self) {
         if self.clock_confirming {
+            // `Task_SetClock_HandleConfirmInput` treats B as NO and resumes
+            // the editor. `Task_SetClock_HandleInput` has no B branch, so a
+            // raw editor B press must remain input-locked rather than letting
+            // the opening script's `lockall` be bypassed.
             self.clock_confirming = false;
-        } else {
-            self.clock_editing = None;
-            self.clock_period_transition = None;
         }
     }
 
