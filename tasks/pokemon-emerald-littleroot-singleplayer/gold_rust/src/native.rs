@@ -3611,6 +3611,40 @@ fn render_world_view_with_dynamic_objects_and_player_visibility(
     player_visible: bool,
     tv_screen_on: bool,
 ) -> Result<Vec<u8>, String> {
+    render_world_view_with_dynamic_objects_and_player_y_offset(
+        map_id,
+        player,
+        player_gender,
+        facing,
+        walk_direction,
+        walk_progress_frames,
+        npc_animation_tick,
+        npcs,
+        npc_walk_starts,
+        player_visible,
+        tv_screen_on,
+        0,
+    )
+}
+
+/// Composes a map-owned player sprite with a source movement callback's
+/// transient `sprite->y2` displacement. Most field movement remains at zero;
+/// the truck handoff's `jump_right` is the one Little Root rail that carries
+/// a visible vertical arc while the camera keeps the player screen anchored.
+fn render_world_view_with_dynamic_objects_and_player_y_offset(
+    map_id: MapId,
+    player: &TilePosition,
+    player_gender: PlayerGender,
+    facing: Facing,
+    walk_direction: Option<Facing>,
+    walk_progress_frames: u8,
+    npc_animation_tick: u64,
+    npcs: &[NpcState],
+    npc_walk_starts: &[NpcWalkStart],
+    player_visible: bool,
+    tv_screen_on: bool,
+    player_y_offset: i8,
+) -> Result<Vec<u8>, String> {
     let mut frame = render_world_view_with_motion_at_tick_and_tv_state(
         map_id,
         player,
@@ -3634,6 +3668,12 @@ fn render_world_view_with_dynamic_objects_and_player_visibility(
         npcs,
         npc_walk_starts,
     );
+    if player_y_offset != 0 {
+        let mut attr0 = u16::from_le_bytes([oam[0], oam[1]]);
+        let y = i16::from((attr0 & 0x00ff) as u8) + i16::from(player_y_offset);
+        attr0 = (attr0 & !0x00ff) | (y.rem_euclid(256) as u16);
+        oam[..2].copy_from_slice(&attr0.to_le_bytes());
+    }
     if !player_visible {
         oam[..2].copy_from_slice(&0x0200_u16.to_le_bytes());
     }
@@ -3951,17 +3991,35 @@ pub fn render_littleroot_truck_door_approach(
         }
     } else if let Some(remaining) = arrival_frames {
         let elapsed = ARRIVAL_TOTAL_FRAMES.saturating_sub(remaining.min(ARRIVAL_TOTAL_FRAMES));
+        // `LittlerootTown_Movement_PlayerStepOffTruck` begins with
+        // `jump_right`. `InitJumpRegular` immediately selects the east-facing
+        // walk pose, then `DoJumpSpriteMovement` applies its sixteen source
+        // y2 offsets while the field camera tracks the stride underneath it.
+        let (step_direction, step_progress, step_facing, jump_y_offset) =
+            if elapsed < 16 {
+                (
+                    Some(Facing::Right),
+                    elapsed as u8,
+                    Facing::Right,
+                    littleroot_truck_step_off_jump_y(elapsed),
+                )
+            } else {
+                (None, 0, facing, 0)
+            };
         (
-            render_world_view_with_dynamic_objects(
+            render_world_view_with_dynamic_objects_and_player_y_offset(
                 MapId::LittlerootTown,
                 player,
                 player_gender,
-                facing,
-                None,
-                0,
+                step_facing,
+                step_direction,
+                step_progress,
                 npc_animation_tick,
                 &visual_npcs,
                 &visual_walks,
+                true,
+                true,
+                jump_y_offset,
             )?,
             littleroot_arrival_door_visual(elapsed),
         )
@@ -3986,6 +4044,16 @@ pub fn render_littleroot_truck_door_approach(
         draw_littleroot_door_animation(&mut frame, player, player_gender, art_frame)?;
     }
     Ok(frame)
+}
+
+/// `DoJumpSpriteMovement` indexes Emerald's `sJumpY_Normal` table once per
+/// frame for a normal one-tile jump. Keep this local to the moving-truck
+/// callback rather than changing ordinary 16-frame field walking.
+fn littleroot_truck_step_off_jump_y(elapsed: u16) -> i8 {
+    const NORMAL_JUMP_Y: [i8; 16] = [
+        -2, -4, -6, -8, -9, -10, -10, -10, -9, -8, -6, -5, -3, -2, 0, 0,
+    ];
+    NORMAL_JUMP_Y[usize::from(elapsed.min(15))]
 }
 
 /// `field_door.c` draws Little Root's one-metatile-wide animation over the
