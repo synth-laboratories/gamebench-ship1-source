@@ -655,22 +655,52 @@ impl LittlerootSession {
             Input::Start if self.world.phase == world::StoryPhase::TitleIntro => {}
             Input::Start => self.world.open_menu(),
             Input::B => {
-                // `GiveRunningShoesTrigger` uses ordinary `msgbox` pages.
-                // Emerald's field-message wait accepts either A or B, so a
-                // ready Running Shoes page must advance the script on B just
-                // as it does on A.  Keep B's outdoor dash behavior for the
-                // post-handoff field, and leave an active printer to the
-                // frame-printer gate above (the current request cannot both
-                // finish printing and dismiss the page).
-                let running_shoes_page_ready = self.world.pending_running_shoes
-                    && self.world.dialogue.is_some()
-                    && self.world.running_shoes_wait_frames.is_none()
-                    && self.world.running_shoes_dialogue_frames.is_none();
-                if running_shoes_page_ready {
+                // Intro `msgbox` scripts use the same field text task as the
+                // rest of Emerald.  Once a page is printed, its wait state
+                // accepts either A or B (`TextPrinterWait` checks
+                // `JOY_NEW(A_BUTTON | B_BUTTON)`).  Keep B's dash meaning on
+                // the post-shoes field, but let it advance the truck/home
+                // pages so the opening remains playable with either source
+                // confirmation button.
+                let intro_dialogue_ready = self.world.dialogue.is_some()
+                    && matches!(
+                        self.world.phase,
+                        world::StoryPhase::TruckArrival
+                            | world::StoryPhase::NewHome
+                            | world::StoryPhase::ClockSet
+                            | world::StoryPhase::ClockVisit
+                            | world::StoryPhase::TvBroadcast
+                    );
+                if intro_dialogue_ready {
                     self.world.advance_opening_script();
+                    // Match the A path's same-sample carry when a page closes
+                    // directly into one of the authored movement streams.
+                    self.world.advance_new_home_orientation(request.frames);
+                    self.world.advance_tv_broadcast_approach(request.frames);
+                    self.world.advance_tv_broadcast_view(request.frames);
+                    if self.world.clock_prompt_active {
+                        self.world.advance_field_dialogue_printer(request.frames);
+                    }
                     self.world.advance_running_shoes_scene(request.frames);
+                    self.world.advance_oldale_mart_scene(request.frames);
                 } else {
-                    self.world.toggle_running();
+                    // `GiveRunningShoesTrigger` uses ordinary `msgbox` pages.
+                    // Emerald's field-message wait accepts either A or B, so a
+                    // ready Running Shoes page must advance the script on B just
+                    // as it does on A.  Keep B's outdoor dash behavior for the
+                    // post-handoff field, and leave an active printer to the
+                    // frame-printer gate above (the current request cannot both
+                    // finish printing and dismiss the page).
+                    let running_shoes_page_ready = self.world.pending_running_shoes
+                        && self.world.dialogue.is_some()
+                        && self.world.running_shoes_wait_frames.is_none()
+                        && self.world.running_shoes_dialogue_frames.is_none();
+                    if running_shoes_page_ready {
+                        self.world.advance_opening_script();
+                        self.world.advance_running_shoes_scene(request.frames);
+                    } else {
+                        self.world.toggle_running();
+                    }
                 }
             }
             Input::A => {
