@@ -259,6 +259,11 @@ impl LittlerootSession {
             self.redraw();
             return;
         }
+        if self.world.advance_oldale_rival_approach(request.frames) {
+            self.input_log.push(request);
+            self.redraw();
+            return;
+        }
         if self.world.advance_oldale_rival_departure(request.frames) {
             self.input_log.push(request);
             self.redraw();

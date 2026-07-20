@@ -1180,6 +1180,11 @@ pub struct WorldState {
     /// Remaining frames in Oldale's post-Route-103 rival exit script.
     #[serde(default)]
     pub oldale_rival_departure_frames: Option<u16>,
+    /// Oldale's south-edge rival approach runs before its homeward message.
+    /// The three source triggers use zero, one, or two leftward strides,
+    /// followed by the player's four-frame faster right turn.
+    #[serde(default)]
+    pub oldale_rival_approach_frames: Option<u8>,
     /// Remaining frames in the Oldale Mart employee's guided walk to the
     /// storefront after the introductory invitation closes.
     #[serde(default)]
@@ -1420,6 +1425,7 @@ impl WorldState {
             rival_arrival_frames: None,
             rival_departure_frames: None,
             oldale_rival_departure_frames: None,
+            oldale_rival_approach_frames: None,
             oldale_mart_scene_frames: None,
             oldale_mart_scene_stage: 0,
             oldale_mart_scene_route: None,
@@ -1548,6 +1554,7 @@ impl WorldState {
             rival_arrival_frames: None,
             rival_departure_frames: None,
             oldale_rival_departure_frames: None,
+            oldale_rival_approach_frames: None,
             oldale_mart_scene_frames: None,
             oldale_mart_scene_stage: 0,
             oldale_mart_scene_route: None,
@@ -1679,6 +1686,7 @@ impl WorldState {
             rival_arrival_frames: None,
             rival_departure_frames: None,
             oldale_rival_departure_frames: None,
+            oldale_rival_approach_frames: None,
             oldale_mart_scene_frames: None,
             oldale_mart_scene_stage: 0,
             oldale_mart_scene_route: None,
@@ -1806,6 +1814,7 @@ impl WorldState {
             rival_arrival_frames: None,
             rival_departure_frames: None,
             oldale_rival_departure_frames: None,
+            oldale_rival_approach_frames: None,
             oldale_mart_scene_frames: None,
             oldale_mart_scene_stage: 0,
             oldale_mart_scene_route: None,
@@ -1962,6 +1971,7 @@ impl WorldState {
             rival_arrival_frames: None,
             rival_departure_frames: None,
             oldale_rival_departure_frames: None,
+            oldale_rival_approach_frames: None,
             oldale_mart_scene_frames: None,
             oldale_mart_scene_stage: 0,
             oldale_mart_scene_route: None,
@@ -2655,6 +2665,71 @@ impl WorldState {
             self.npcs.retain(|npc| npc.id != "oldale_rival");
         } else {
             self.oldale_rival_departure_frames = Some(next_remaining);
+        }
+        true
+    }
+
+    /// Runs the south-edge approach before Oldale's rival shows the
+    /// homeward message.  The map scripts select two, one, or zero normal
+    /// left walks from the rival's `(11,19)` home tile, then make the player
+    /// perform `walk_in_place_faster_right` before opening the message.
+    pub fn advance_oldale_rival_approach(&mut self, frames: u32) -> bool {
+        let Some(remaining) = self.oldale_rival_approach_frames else { return false; };
+        let consumed = frames.min(u32::from(u8::MAX)) as u8;
+        let next_remaining = remaining.saturating_sub(consumed);
+        let approach_steps = (10_i16 - self.player.x).clamp(0, 2) as u8;
+        let rival_walk_frames = approach_steps * 16;
+        let total_frames = rival_walk_frames + 4;
+        let elapsed_before = total_frames.saturating_sub(remaining);
+        let elapsed_after = total_frames.saturating_sub(next_remaining);
+
+        for step in 0..approach_steps {
+            let start = step * 16;
+            if elapsed_before <= start && start < elapsed_after {
+                let position = {
+                    let rival = self.npcs.iter().find(|npc| npc.id == "oldale_rival")
+                        .expect("Oldale rival must exist during its scripted approach");
+                    TilePosition { x: rival.position.x - 1, y: rival.position.y }
+                };
+                let request_offset = u32::from(start.saturating_sub(elapsed_before));
+                let source_frame = self.frame.saturating_sub(u64::from(
+                    frames.saturating_sub(request_offset),
+                ));
+                self.move_scripted_npc_with_duration_at_frame(
+                    "oldale_rival",
+                    MapId::OldaleTown,
+                    position,
+                    Facing::Left,
+                    16,
+                    source_frame,
+                );
+            }
+        }
+
+        // `Common_Movement_WalkInPlaceFasterRight` starts as soon as the
+        // rival's final normal stride completes.  The port has no separate
+        // player in-place OBJ cadence yet, but its visible facing changes at
+        // the source boundary and input remains locked for all four frames.
+        if elapsed_before <= rival_walk_frames && rival_walk_frames < elapsed_after {
+            self.facing = Facing::Right;
+        }
+
+        if next_remaining == 0 {
+            self.oldale_rival_approach_frames = None;
+            self.walk_direction = None;
+            self.walk_progress_frames = 0;
+            self.walk_elapsed_frames = 0;
+            self.walk_render_origin = None;
+            self.begin_field_dialogue(match self.player_gender {
+                PlayerGender::Brendan => format!("MAY: {}!\nOver here!\nLet's hurry home!", self.player_name),
+                PlayerGender::May => format!("BRENDAN: I'm heading back to my dad's\nLAB now.\n{}, you should hustle back, too.", self.player_name),
+            });
+            // A long held request can cross both the approach and the first
+            // source message boundary.  Preserve that carry instead of
+            // starting the printer only on a later Noop request.
+            self.advance_field_dialogue_printer(frames.saturating_sub(u32::from(remaining)));
+        } else {
+            self.oldale_rival_approach_frames = Some(next_remaining);
         }
         true
     }
@@ -6392,10 +6467,18 @@ impl WorldState {
                 self.advance_running_shoes_wait(held_frames.saturating_sub(frames_to_trigger));
             }
             self.apply_oldale_rival_trigger();
+            if self.oldale_rival_approach_frames.is_some() {
+                let frames_to_trigger = u32::from(cadence)
+                    .saturating_sub(prior_walk_elapsed)
+                    .saturating_add(tile_index * u32::from(cadence));
+                self.advance_oldale_rival_approach(
+                    held_frames.saturating_sub(frames_to_trigger),
+                );
+            }
             self.begin_route101_poochyena_encounter();
             self.begin_route101_wurmple_encounter();
             self.begin_route103_wingull_encounter();
-            if self.dialogue.is_some() || self.battle.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() || self.pokedex_poke_ball_fanfare_frames.is_some() { break; }
+            if self.dialogue.is_some() || self.battle.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.oldale_rival_approach_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() || self.pokedex_poke_ball_fanfare_frames.is_some() { break; }
         }
         moved
     }
@@ -6412,14 +6495,23 @@ impl WorldState {
         {
             return;
         }
-        let Some(rival) = self.npcs.iter_mut().find(|npc| npc.id == "oldale_rival") else { return; };
-        rival.position.x = self.player.x + 1;
-        rival.facing = Facing::Left;
-        self.facing = Facing::Right;
-        self.dialogue = Some(match self.player_gender {
-            PlayerGender::Brendan => format!("MAY: {}!\nOver here!\nLet's hurry home!", self.player_name),
-            PlayerGender::May => format!("BRENDAN: I'm heading back to my dad's\nLAB now.\n{}, you should hustle back, too.", self.player_name),
-        });
+        let approach_steps = (10_i16 - self.player.x).clamp(0, 2) as u8;
+        if approach_steps == 0 {
+            // Trigger 3 is only `face_left`, whose source action completes
+            // immediately before the player's four-frame turn.
+            if let Some(rival) = self.npcs.iter_mut().find(|npc| npc.id == "oldale_rival") {
+                rival.facing = Facing::Left;
+            }
+        }
+        // The triggering stride has reached its tile boundary. The source
+        // script locks the player before the rival's first walk, so do not
+        // let any excess held-direction frames translate the player toward
+        // the south exit while the OBJ approach is on screen.
+        self.walk_direction = None;
+        self.walk_progress_frames = 0;
+        self.walk_elapsed_frames = 0;
+        self.walk_render_origin = None;
+        self.oldale_rival_approach_frames = Some(approach_steps * 16 + 4);
     }
 
     fn is_rival_house(&self) -> bool {
