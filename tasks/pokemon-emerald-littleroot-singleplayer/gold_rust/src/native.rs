@@ -157,6 +157,59 @@ const WALLCLOCK_CLOCK_B64: &str = include_str!("../assets/wallclock_clock.png.b6
 const WALLCLOCK_START_TILEMAP_B64: &str = include_str!("../assets/wallclock_start.bin.b64");
 const WALLCLOCK_MALE_PALETTE_B64: &str = include_str!("../assets/wallclock_male.pal.b64");
 const WALLCLOCK_FEMALE_PALETTE_B64: &str = include_str!("../assets/wallclock_female.pal.b64");
+// The source graphics conversion of `graphics/wallclock/hand.png`. Its tile
+// offsets are the same values consumed by `sAnim_MinuteHand`,
+// `sAnim_HourHand`, `sAnim_AM`, and `sAnim_PM` in `wallclock.c`.
+const WALLCLOCK_HAND_TILES_B64: &str = include_str!("../assets/wallclock_hand.4bpp.b64");
+// The exact signed pivot offsets authored as `sClockHandCoords` in
+// `wallclock.c`, indexed by the source angle in degrees.
+const WALLCLOCK_HAND_COORDS: [(i8, i8); 360] = [
+    (0, -24), (1, -25), (1, -25), (2, -25), (2, -25), (2, -25), (3, -24), (3, -25),
+    (4, -25), (4, -25), (4, -25), (5, -25), (5, -25), (6, -24), (6, -24), (6, -24),
+    (7, -24), (7, -24), (7, -24), (8, -24), (8, -24), (9, -24), (9, -24), (10, -23),
+    (10, -23), (11, -22), (11, -22), (11, -22), (12, -22), (12, -21), (13, -21), (13, -21),
+    (13, -21), (14, -21), (14, -21), (14, -20), (14, -20), (15, -20), (15, -19), (16, -19),
+    (16, -19), (16, -19), (16, -18), (16, -18), (17, -18), (17, -17), (17, -17), (18, -17),
+    (18, -17), (18, -16), (18, -16), (19, -16), (19, -15), (19, -15), (20, -15), (20, -14),
+    (20, -14), (20, -13), (20, -13), (21, -13), (21, -13), (21, -12), (22, -12), (22, -12),
+    (22, -11), (22, -11), (22, -10), (23, -10), (23, -9), (23, -9), (23, -9), (23, -9),
+    (23, -8), (23, -8), (23, -7), (23, -7), (23, -6), (24, -6), (24, -6), (25, -5),
+    (25, -5), (24, -4), (25, -4), (24, -3), (25, -3), (25, -3), (25, -2), (25, -2),
+    (24, -1), (25, -1), (24, 0), (24, 0), (24, 0), (24, 1), (24, 1), (25, 2),
+    (24, 2), (25, 2), (24, 3), (24, 3), (25, 4), (24, 4), (24, 5), (24, 5),
+    (24, 5), (24, 6), (23, 6), (23, 6), (23, 7), (23, 8), (23, 8), (23, 8),
+    (23, 9), (23, 9), (23, 10), (22, 10), (22, 10), (22, 11), (22, 11), (22, 11),
+    (22, 12), (21, 12), (21, 12), (21, 13), (20, 13), (20, 13), (19, 13), (19, 13),
+    (19, 14), (19, 14), (19, 15), (19, 15), (18, 15), (18, 16), (17, 16), (17, 16),
+    (17, 17), (17, 17), (16, 17), (16, 18), (16, 18), (15, 18), (14, 18), (15, 19),
+    (14, 19), (14, 19), (13, 19), (13, 20), (13, 20), (13, 20), (12, 20), (12, 20),
+    (12, 21), (11, 21), (11, 21), (11, 21), (10, 21), (10, 22), (10, 22), (9, 22),
+    (9, 22), (8, 22), (7, 22), (7, 23), (7, 23), (6, 23), (6, 23), (5, 23),
+    (5, 23), (5, 24), (4, 24), (4, 24), (4, 24), (3, 24), (2, 24), (2, 24),
+    (1, 24), (1, 24), (0, 24), (0, 24), (-1, 23), (0, 24), (0, 24), (-1, 24),
+    (-1, 24), (-2, 24), (-2, 24), (-3, 24), (-3, 24), (-4, 24), (-4, 24), (-5, 24),
+    (-5, 23), (-5, 23), (-6, 23), (-6, 23), (-7, 23), (-7, 23), (-7, 23), (-8, 23),
+    (-8, 22), (-9, 22), (-9, 22), (-10, 22), (-10, 22), (-10, 21), (-11, 21), (-11, 21),
+    (-11, 21), (-11, 20), (-12, 20), (-12, 20), (-13, 20), (-13, 20), (-13, 19), (-14, 19),
+    (-14, 19), (-14, 19), (-14, 18), (-15, 18), (-15, 18), (-15, 17), (-16, 17), (-16, 17),
+    (-17, 17), (-17, 16), (-17, 16), (-18, 16), (-17, 15), (-18, 15), (-18, 15), (-19, 15),
+    (-19, 14), (-19, 14), (-19, 13), (-19, 13), (-20, 13), (-20, 12), (-20, 12), (-21, 12),
+    (-21, 12), (-21, 11), (-21, 11), (-21, 10), (-21, 10), (-21, 9), (-22, 9), (-22, 9),
+    (-22, 8), (-22, 8), (-22, 7), (-23, 7), (-23, 7), (-23, 6), (-23, 6), (-23, 5),
+    (-24, 5), (-23, 4), (-23, 4), (-24, 4), (-24, 4), (-24, 3), (-24, 3), (-24, 2),
+    (-24, 2), (-24, 1), (-24, 1), (-24, 1), (-24, 0), (-25, 0), (-24, -1), (-25, -1),
+    (-24, -1), (-24, -2), (-24, -2), (-24, -3), (-24, -3), (-24, -4), (-24, -4), (-24, -4),
+    (-24, -5), (-24, -5), (-24, -6), (-24, -6), (-23, -6), (-23, -7), (-23, -7), (-23, -8),
+    (-23, -8), (-23, -9), (-23, -9), (-22, -9), (-22, -9), (-22, -10), (-22, -10), (-21, -10),
+    (-21, -11), (-22, -11), (-22, -12), (-21, -12), (-21, -13), (-21, -13), (-20, -13), (-21, -14),
+    (-20, -14), (-20, -14), (-19, -14), (-19, -15), (-19, -15), (-18, -16), (-18, -16), (-18, -16),
+    (-18, -17), (-18, -17), (-17, -17), (-17, -18), (-17, -18), (-16, -18), (-16, -18), (-16, -19),
+    (-16, -19), (-15, -19), (-15, -19), (-15, -20), (-14, -20), (-14, -20), (-14, -21), (-13, -21),
+    (-13, -21), (-13, -21), (-12, -21), (-12, -22), (-11, -22), (-11, -22), (-11, -22), (-10, -22),
+    (-10, -22), (-9, -22), (-9, -23), (-9, -23), (-8, -23), (-8, -23), (-7, -23), (-7, -23),
+    (-7, -24), (-6, -24), (-6, -24), (-5, -24), (-5, -24), (-4, -24), (-4, -24), (-4, -24),
+    (-4, -25), (-3, -25), (-2, -25), (-2, -24), (-2, -24), (-1, -25), (-1, -25), (0, -25),
+];
 // `CB2_ChooseStarter` loads this dedicated 8bpp Birch-bag/grass tileset,
 // its two source tilemaps, and the Poké Ball / reveal-circle OBJ sheets.
 const STARTER_CHOOSE_TILES_B64: &str = include_str!("../assets/starter_choose_tiles.png.b64");
@@ -190,6 +243,7 @@ static WALLCLOCK_CLOCK: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static WALLCLOCK_START_TILEMAP: OnceLock<Vec<u8>> = OnceLock::new();
 static WALLCLOCK_MALE_PALETTE: OnceLock<[[u8; 3]; 16]> = OnceLock::new();
 static WALLCLOCK_FEMALE_PALETTE: OnceLock<[[u8; 3]; 16]> = OnceLock::new();
+static WALLCLOCK_HAND_TILES: OnceLock<Vec<u8>> = OnceLock::new();
 static STARTER_CHOOSE_TILES: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static STARTER_CHOOSE_POKEBALL_SELECTION: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static STARTER_CHOOSE_CIRCLE: OnceLock<SourceIndexedSheet> = OnceLock::new();
@@ -3007,16 +3061,33 @@ fn draw_wallclock_editor(frame: &mut [u8], world: &WorldState) {
     draw_wallclock_start_background(frame, clock, palette);
 
     let time = world.clock_minutes.unwrap_or(720);
-    let minute_angle = f32::from(time % 60) * 6.0;
-    let hour_angle = f32::from((time / 60) % 12) * 30.0
-        + f32::from((time % 60) / 10) * 5.0;
-    // `SpriteCB_MinuteHand` / `SpriteCB_HourHand` rotate their source hand
-    // OBJ around this exact center. The typed model carries a discrete time,
-    // so project its settled source angle instead of retaining the removed
-    // provisional HH:MM text window.
-    draw_wallclock_hand(frame, minute_angle, 25, palette[8]);
-    draw_wallclock_hand(frame, hour_angle, 17, palette[7]);
-    draw_solid_rect(frame, 118, 78, 5, 5, [0, 0, 0]);
+    let minute_angle = (time % 60) * 6;
+    let hour_angle = ((time / 60) % 12) * 30 + ((time % 60) / 10) * 5;
+    let hand_tiles = wallclock_hand_tiles();
+    // `SpriteCB_MinuteHand` and `SpriteCB_HourHand` use 64x64 OAMs with
+    // source tile offsets 0 and 64. Preserve their affine matrix and pivot
+    // offsets instead of replacing the source pixels with vector linework.
+    draw_wallclock_affine_hand(frame, hand_tiles, 0, minute_angle, palette);
+    draw_wallclock_affine_hand(frame, hand_tiles, 64, hour_angle, palette);
+
+    // The AM/PM markers are separate 16x16 source OAMs at tile offsets 128
+    // and 132. Their callbacks settle at these authored angles for a stable
+    // clock period (`SpriteCB_AMIndicator` / `SpriteCB_PMIndicator`).
+    let is_pm = time / 60 >= 12;
+    draw_wallclock_period_indicator(
+        frame,
+        hand_tiles,
+        128,
+        if is_pm { 105 } else { 90 },
+        palette,
+    );
+    draw_wallclock_period_indicator(
+        frame,
+        hand_tiles,
+        132,
+        if is_pm { 60 } else { 45 },
+        palette,
+    );
 
     // `WIN_BUTTON_LABEL` is at tile (24, 16), with the source's custom
     // prompt palette. Its text begins at y + 1 pixel.
@@ -3109,32 +3180,101 @@ fn decode_wallclock_palette(encoded: &str) -> [[u8; 3]; 16] {
     palette
 }
 
-fn draw_wallclock_hand(frame: &mut [u8], angle: f32, length: i32, color: [u8; 3]) {
-    let radians = angle.to_radians();
-    let end_x = 120 + (radians.sin() * length as f32).round() as i32;
-    let end_y = 80 - (radians.cos() * length as f32).round() as i32;
-    let mut x = 120_i32;
-    let mut y = 80_i32;
-    let dx = (end_x - x).abs();
-    let sx = if x < end_x { 1 } else { -1 };
-    let dy = -(end_y - y).abs();
-    let sy = if y < end_y { 1 } else { -1 };
-    let mut error = dx + dy;
-    loop {
-        if x >= 0 && y >= 0 {
-            put_pixel(frame, x as usize, y as usize, color);
-        }
-        if x == end_x && y == end_y { break; }
-        let doubled = error * 2;
-        if doubled >= dy {
-            error += dy;
-            x += sx;
-        }
-        if doubled <= dx {
-            error += dx;
-            y += sy;
+fn wallclock_hand_tiles() -> &'static [u8] {
+    WALLCLOCK_HAND_TILES.get_or_init(|| {
+        let tiles = decode_base64(WALLCLOCK_HAND_TILES_B64)
+            .expect("staged Emerald wall-clock hand tiles must decode");
+        assert_eq!(tiles.len(), 64 * 144 / 2, "wall-clock hand tile data has invalid length");
+        tiles
+    })
+}
+
+/// Projects the exact 4bpp hand OBJ through the source's `SetOamMatrix`
+/// transform. The source uses normal (rather than double-size) affine OAM,
+/// so sampling remains inside the original 64x64 allocation.
+fn draw_wallclock_affine_hand(
+    frame: &mut [u8],
+    tiles: &[u8],
+    tile_offset: usize,
+    angle: u16,
+    palette: &[[u8; 3]; 16],
+) {
+    let radians = f32::from(angle).to_radians();
+    let cosine = radians.cos();
+    let sine = radians.sin();
+    let (x2, y2) = wallclock_hand_pivot_offset(angle);
+    let center_x = 120_i32 + i32::from(x2);
+    let center_y = 80_i32 + i32::from(y2);
+    for output_y in 0..64_i32 {
+        for output_x in 0..64_i32 {
+            let dx = output_x as f32 - 32.0;
+            let dy = output_y as f32 - 32.0;
+            // Affine OBJ hardware applies `SetOamMatrix(cos, sin, -sin, cos)`
+            // while looking up the source texel. This makes the upward source
+            // hand rotate clockwise as the source angle increases.
+            let source_x = (cosine * dx + sine * dy).round() as i32 + 32;
+            let source_y = (-sine * dx + cosine * dy).round() as i32 + 32;
+            if !(0..64).contains(&source_x) || !(0..64).contains(&source_y) { continue; }
+            let Some(color_index) = wallclock_tile_pixel(
+                tiles,
+                tile_offset,
+                8,
+                source_x as usize,
+                source_y as usize,
+            ) else {
+                continue;
+            };
+            if color_index == 0 { continue; }
+            let x = center_x + output_x - 32;
+            let y = center_y + output_y - 32;
+            if x < 0 || y < 0 { continue; }
+            put_pixel(frame, x as usize, y as usize, palette[usize::from(color_index)]);
         }
     }
+}
+
+/// `sClockHandCoords` compensates for the hand art's pivot below the 64x64
+/// OAM center. Use its exact authored rounding rather than approximating the
+/// offset with a generic sine/cosine radius.
+fn wallclock_hand_pivot_offset(angle: u16) -> (i16, i16) {
+    let (x, y) = WALLCLOCK_HAND_COORDS[usize::from(angle)];
+    (i16::from(x), i16::from(y))
+}
+
+fn draw_wallclock_period_indicator(
+    frame: &mut [u8],
+    tiles: &[u8],
+    tile_offset: usize,
+    angle: u16,
+    palette: &[[u8; 3]; 16],
+) {
+    let radians = f32::from(angle).to_radians();
+    let center_x = 120_i32 + (radians.cos() * 30.0) as i32;
+    let center_y = 80_i32 + (radians.sin() * 30.0) as i32;
+    for row in 0..16 {
+        for column in 0..16 {
+            let Some(color_index) = wallclock_tile_pixel(tiles, tile_offset, 2, column, row) else {
+                continue;
+            };
+            if color_index == 0 { continue; }
+            let x = center_x - 8 + column as i32;
+            let y = center_y - 8 + row as i32;
+            if x < 0 || y < 0 { continue; }
+            put_pixel(frame, x as usize, y as usize, palette[usize::from(color_index)]);
+        }
+    }
+}
+
+fn wallclock_tile_pixel(
+    tiles: &[u8],
+    tile_offset: usize,
+    tiles_per_row: usize,
+    x: usize,
+    y: usize,
+) -> Option<u8> {
+    let tile = tile_offset + (y / 8) * tiles_per_row + x / 8;
+    let byte = *tiles.get(tile * 32 + (y % 8) * 4 + (x % 8) / 2)?;
+    Some(if x & 1 == 0 { byte & 0x0f } else { byte >> 4 })
 }
 
 fn draw_starter_choose_label(frame: &mut [u8], starter: StarterSpecies) {
