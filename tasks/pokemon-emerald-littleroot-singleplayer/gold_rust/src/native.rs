@@ -1610,10 +1610,15 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             // exclamation frame for 60 frames. The existing prelude scheduler
             // reaches 72 after its FacePlayer slice, so this inclusive window
             // keeps the cue present for all 60 authored animation frames.
+            // `SpriteCB_TrainerIcons` also gives the field-effect a brief
+            // launch-and-settle arc; retain the source asset and phase rather
+            // than freezing it at the first callback position.
             if (13..=72).contains(&remaining) {
                 if let Some(rival) = world.npcs.iter().find(|npc| npc.id == "rival" && npc.map == MapId::Route103) {
                     let x = (112 + i32::from(rival.position.x - world.player.x) * 16 + 7).max(0) as usize;
-                    let y = (56 + i32::from(rival.position.y - world.player.y) * 16 - 14).max(0) as usize;
+                    let y = (56 + i32::from(rival.position.y - world.player.y) * 16 - 14
+                        + route103_exclamation_y_delta(72 - remaining))
+                        .max(0) as usize;
                     draw_exclamation_marker(frame, x, y);
                 }
             }
@@ -1959,6 +1964,20 @@ fn draw_solid_rect(frame: &mut [u8], x: usize, y: usize, width: usize, height: u
             put_pixel(frame, px, py, color);
         }
     }
+}
+
+/// Returns the source field-effect icon's vertical displacement relative to
+/// the first `SpriteCB_TrainerIcons` callback. That callback starts at y2=-5,
+/// rises to -15, and settles back to zero before the 60-frame icon animation
+/// completes. `draw_exclamation_marker` retains the first-callback placement,
+/// so this is the additional per-frame adjustment for Route 103 only.
+fn route103_exclamation_y_delta(elapsed: u16) -> i32 {
+    const SOURCE_Y2: [i32; 11] = [-5, -9, -12, -14, -15, -15, -14, -12, -9, -5, 0];
+    SOURCE_Y2
+        .get(usize::from(elapsed))
+        .copied()
+        .unwrap_or(0)
+        + 5
 }
 
 fn draw_exclamation_marker(frame: &mut [u8], x: usize, y: usize) {
