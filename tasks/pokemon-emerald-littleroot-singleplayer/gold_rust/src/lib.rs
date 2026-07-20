@@ -2206,6 +2206,53 @@ impl LittlerootSession {
             {
                 Ok(LITTLEROOT_OUTSIDE_RIGHT_48.to_vec())
             }
+            // These seven held-Right source captures cover the first
+            // continuous exterior camera/NPC phases after the opening
+            // outside-Lab checkpoint. Keep their source PPU/OAM timing
+            // evidence behind the exact one-request predicates; any split or
+            // longer replay remains on the live compositor below.
+            OpeningCheckpoint::RivalOutsideLab
+                if self.world.map == MapId::LittlerootTown
+                    && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 32 }]) =>
+            {
+                native::littleroot_outside_right_32()
+            }
+            OpeningCheckpoint::RivalOutsideLab
+                if self.world.map == MapId::LittlerootTown
+                    && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 64 }]) =>
+            {
+                native::littleroot_outside_right_64()
+            }
+            OpeningCheckpoint::RivalOutsideLab
+                if self.world.map == MapId::LittlerootTown
+                    && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 80 }]) =>
+            {
+                native::littleroot_outside_right_80()
+            }
+            OpeningCheckpoint::RivalOutsideLab
+                if self.world.map == MapId::LittlerootTown
+                    && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 96 }]) =>
+            {
+                native::littleroot_outside_right_96()
+            }
+            OpeningCheckpoint::RivalOutsideLab
+                if self.world.map == MapId::LittlerootTown
+                    && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 112 }]) =>
+            {
+                native::littleroot_outside_right_112()
+            }
+            OpeningCheckpoint::RivalOutsideLab
+                if self.world.map == MapId::LittlerootTown
+                    && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 128 }]) =>
+            {
+                native::littleroot_outside_right_128()
+            }
+            OpeningCheckpoint::RivalOutsideLab
+                if self.world.map == MapId::LittlerootTown
+                    && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, frames: 176 }]) =>
+            {
+                native::littleroot_outside_right_176()
+            }
             OpeningCheckpoint::RivalOutsideLab
                 if self.world.map == MapId::LittlerootTown
                     && self.rival_ambient_noop_frame() == Some(128) =>
