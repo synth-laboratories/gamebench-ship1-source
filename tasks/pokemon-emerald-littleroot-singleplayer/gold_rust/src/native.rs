@@ -131,6 +131,12 @@ const BATTLE_WURMPLE_FRONT_B64: &str = include_str!("../assets/battle_wurmple_fr
 const BATTLE_TALL_GRASS_TILES_B64: &str = include_str!("../assets/battle_tall_grass_tiles.png.b64");
 const BATTLE_TALL_GRASS_PALETTE_B64: &str = include_str!("../assets/battle_tall_grass_palette.pal.b64");
 const BATTLE_TALL_GRASS_MAP_B64: &str = include_str!("../assets/battle_tall_grass_map.bin.b64");
+// `LoadBattleTextboxAndBackground` loads these BG0 assets before the opening
+// action-selection page, then adds the default `text_window/1.png` frame.
+const BATTLE_TEXTBOX_TILES_B64: &str = include_str!("../assets/battle_textbox_tiles.png.b64");
+const BATTLE_TEXTBOX_PALETTE_B64: &str = include_str!("../assets/battle_textbox_palette.gbapal.b64");
+const BATTLE_TEXTBOX_MAP_B64: &str = include_str!("../assets/battle_textbox_map.bin.b64");
+const BATTLE_TEXTBOX_WINDOW_FRAME_B64: &str = include_str!("../assets/battle_textbox_window_frame.png.b64");
 // Exact single-battle healthbox OBJ atlases. Both carry the same palette as
 // `ball_status_bar.png`, which source loads under `TAG_HEALTHBOX_PAL`.
 const BATTLE_HEALTHBOX_SINGLES_PLAYER_B64: &str = include_str!("../assets/battle_healthbox_singles_player.png.b64");
@@ -163,6 +169,10 @@ static BATTLE_WURMPLE_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_TALL_GRASS_TILES: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_TALL_GRASS_PALETTE: OnceLock<Vec<[u8; 3]>> = OnceLock::new();
 static BATTLE_TALL_GRASS_MAP: OnceLock<Vec<u8>> = OnceLock::new();
+static BATTLE_TEXTBOX_TILES: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static BATTLE_TEXTBOX_PALETTE: OnceLock<Vec<u8>> = OnceLock::new();
+static BATTLE_TEXTBOX_MAP: OnceLock<Vec<u8>> = OnceLock::new();
+static BATTLE_TEXTBOX_WINDOW_FRAME: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_HEALTHBOX_SINGLES_PLAYER: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_HEALTHBOX_SINGLES_OPPONENT: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_HP_BAR: OnceLock<SourceIndexedSheet> = OnceLock::new();
@@ -1736,21 +1746,19 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
                 draw_cursor(frame, 6, match battle.move_cursor { 0 => 120, _ => 136 });
             }
         } else {
-            draw_menu_window(frame, 0, 112, 128, 48);
-            draw_menu_window(frame, 128, 112, 112, 48);
-            draw_text(frame, 8, 120, &format!("What will {player}"), 10);
-            draw_text(frame, 8, 136, "do?", 10);
-            draw_text(frame, 146, 120, "FIGHT", 10);
-            draw_text(frame, 146, 136, "BAG", 10);
-            draw_text(frame, 194, 120, "POKéMON", 10);
-            draw_text(frame, 194, 136, "RUN", 10);
-            let (cursor_x, cursor_y) = match battle.command_cursor {
-                0 => (136, 120),
-                1 => (136, 136),
-                2 => (184, 120),
-                _ => (184, 136),
-            };
-            draw_cursor(frame, cursor_x, cursor_y);
+            draw_battle_action_chrome(frame, battle.command_cursor);
+            // `B_WIN_ACTION_PROMPT` starts at (1, 35), and its text offset
+            // is (1, 1), after BG0's source Y scroll of 160 pixels.
+            const PROMPT_TEXT_PALETTE: [[u8; 3]; 3] = [[255, 255, 255], [107, 90, 115], [107, 165, 165]];
+            draw_text_with_palette(frame, 9, 121, &format!("What will {player}"), 10, PROMPT_TEXT_PALETTE);
+            draw_text_with_palette(frame, 9, 137, "do?", 10, PROMPT_TEXT_PALETTE);
+            // `B_WIN_ACTION_MENU`'s `text.pal` supplies fg/shadow/bg
+            // 13/15/14. Preserve the state's established command ordering.
+            const ACTION_TEXT_PALETTE: [[u8; 3]; 3] = [[74, 74, 74], [213, 213, 205], [255, 255, 255]];
+            draw_text_with_palette(frame, 136, 121, "FIGHT", 10, ACTION_TEXT_PALETTE);
+            draw_text_with_palette(frame, 136, 137, "BAG", 10, ACTION_TEXT_PALETTE);
+            draw_text_with_palette(frame, 192, 121, "POKéMON", 10, ACTION_TEXT_PALETTE);
+            draw_text_with_palette(frame, 192, 137, "RUN", 10, ACTION_TEXT_PALETTE);
         }
         return;
     }
@@ -2042,6 +2050,151 @@ fn draw_battle_background(frame: &mut [u8]) {
             }
         }
     }
+}
+
+/// Replays the stable opening action-selection page from the same BG0
+/// composition Emerald loads in `LoadBattleTextboxAndBackground`. Its 32×64
+/// tilemap is scrolled by `gBattle_BG0_Y = 160`; the action windows therefore
+/// occupy screen rows 112–159. The command cursor itself is the source's two
+/// textbox tiles at `(16 + 7 * (cursor & 1), 35 + (cursor & 2))`.
+fn draw_battle_action_chrome(frame: &mut [u8], command_cursor: u8) {
+    let tiles = BATTLE_TEXTBOX_TILES.get_or_init(|| {
+        decode_source_indexed_sheet(BATTLE_TEXTBOX_TILES_B64)
+            .expect("staged Emerald battle textbox tiles must decode")
+    });
+    let palette = BATTLE_TEXTBOX_PALETTE.get_or_init(|| {
+        decode_base64(BATTLE_TEXTBOX_PALETTE_B64)
+            .expect("staged Emerald battle textbox palette must decode")
+    });
+    let tilemap = BATTLE_TEXTBOX_MAP.get_or_init(|| {
+        decode_base64(BATTLE_TEXTBOX_MAP_B64)
+            .expect("staged Emerald battle textbox map must decode")
+    });
+    let window_frame = BATTLE_TEXTBOX_WINDOW_FRAME.get_or_init(|| {
+        decode_source_indexed_sheet(BATTLE_TEXTBOX_WINDOW_FRAME_B64)
+            .expect("staged Emerald default battle window frame must decode")
+    });
+
+    const MAP_WIDTH_TILES: usize = 32;
+    const MAP_HEIGHT_TILES: usize = 64;
+    const BG0_Y: usize = 160;
+    const ACTION_CHROME_TOP: usize = 112;
+    assert_eq!(tilemap.len(), MAP_WIDTH_TILES * MAP_HEIGHT_TILES * 2);
+    assert_eq!(palette.len(), 2 * 16 * 2);
+    assert_eq!(tiles.width % 8, 0);
+    assert_eq!(tiles.height % 8, 0);
+    assert_eq!(window_frame.width, 24);
+    assert_eq!(window_frame.height, 24);
+
+    let source_tiles_per_row = tiles.width / 8;
+    let source_tile_count = source_tiles_per_row * (tiles.height / 8);
+    let frame_tiles_per_row = window_frame.width / 8;
+    for y in ACTION_CHROME_TOP..FRAME_HEIGHT {
+        let map_y = (y + BG0_Y) % (MAP_HEIGHT_TILES * 8);
+        let tile_y = map_y / 8;
+        let pixel_y = map_y % 8;
+        for x in 0..FRAME_WIDTH {
+            let tile_x = x / 8;
+            let pixel_x = x % 8;
+            let entry_offset = (tile_y * MAP_WIDTH_TILES + tile_x) * 2;
+            let entry = u16::from_le_bytes([tilemap[entry_offset], tilemap[entry_offset + 1]]);
+            let tile = usize::from(entry & 0x03ff);
+            let flip_x = entry & 0x0400 != 0;
+            let flip_y = entry & 0x0800 != 0;
+            let palette_bank = usize::from((entry >> 12) & 0x0f);
+            let source_column = if flip_x { 7 - pixel_x } else { pixel_x };
+            let source_row = if flip_y { 7 - pixel_y } else { pixel_y };
+
+            let color = if palette_bank == 1 {
+                if let Some(frame_tile) = tile.checked_sub(0x12).filter(|tile| *tile < 9) {
+                    let source_x = (frame_tile % frame_tiles_per_row) * 8 + source_column;
+                    let source_y = (frame_tile / frame_tiles_per_row) * 8 + source_row;
+                    let color_index = usize::from(window_frame.pixels[source_y * window_frame.width + source_x]);
+                    window_frame.palette.get(color_index).copied()
+                } else if let Some(frame_tile) = tile.checked_sub(0x22).filter(|tile| *tile < 9) {
+                    let source_x = (frame_tile % frame_tiles_per_row) * 8 + source_column;
+                    let source_y = (frame_tile / frame_tiles_per_row) * 8 + source_row;
+                    let color_index = usize::from(window_frame.pixels[source_y * window_frame.width + source_x]);
+                    window_frame.palette.get(color_index).copied()
+                } else {
+                    None
+                }
+            } else if palette_bank == 0 && tile < source_tile_count {
+                let source_x = (tile % source_tiles_per_row) * 8 + source_column;
+                let source_y = (tile / source_tiles_per_row) * 8 + source_row;
+                let color_index = usize::from(tiles.pixels[source_y * tiles.width + source_x]);
+                battle_textbox_palette_color(palette, color_index)
+            } else {
+                None
+            };
+            if let Some(color) = color {
+                put_pixel(frame, x, y, color);
+            }
+        }
+    }
+
+    // `BattlePutTextOnWindow` replaces these source map regions with the
+    // two action windows before it prints prompt/command text.
+    let prompt_fill = battle_textbox_palette_color(palette, 15)
+        .expect("staged Emerald battle textbox palette must have prompt fill");
+    draw_solid_rect(frame, 8, 120, 14 * 8, 4 * 8, prompt_fill);
+    draw_solid_rect(frame, 17 * 8, 120, 12 * 8, 4 * 8, [255, 255, 255]);
+
+    // The existing saved-state command IDs are column-major (FIGHT/BAG,
+    // then POKéMON/RUN), whereas Emerald's BG cursor positions are row-major.
+    // This display-only translation preserves input/state behavior while each
+    // cursor tile is still placed at its source coordinate.
+    let source_cursor: u8 = match command_cursor {
+        0 => 0,
+        1 => 2,
+        2 => 1,
+        _ => 3,
+    };
+    let cursor_tile_x = 16 + 7 * usize::from(source_cursor & 1);
+    let cursor_tile_y = 35 + usize::from(source_cursor & 2);
+    for (tile_offset, tile) in [1, 2].into_iter().enumerate() {
+        draw_battle_textbox_tile(
+            frame,
+            tiles,
+            palette,
+            tile,
+            cursor_tile_x * 8,
+            (cursor_tile_y + tile_offset) * 8 - BG0_Y,
+        );
+    }
+}
+
+fn draw_battle_textbox_tile(
+    frame: &mut [u8],
+    tiles: &SourceIndexedSheet,
+    palette: &[u8],
+    tile: usize,
+    x: usize,
+    y: usize,
+) {
+    let tiles_per_row = tiles.width / 8;
+    let tile_count = tiles_per_row * (tiles.height / 8);
+    if tile >= tile_count { return; }
+    for row in 0..8 {
+        for column in 0..8 {
+            let source_x = (tile % tiles_per_row) * 8 + column;
+            let source_y = (tile / tiles_per_row) * 8 + row;
+            let color_index = usize::from(tiles.pixels[source_y * tiles.width + source_x]);
+            if let Some(color) = battle_textbox_palette_color(palette, color_index) {
+                put_pixel(frame, x + column, y + row, color);
+            }
+        }
+    }
+}
+
+fn battle_textbox_palette_color(palette: &[u8], color_index: usize) -> Option<[u8; 3]> {
+    let offset = color_index.checked_mul(2)?;
+    let bgr555 = u16::from_le_bytes([*palette.get(offset)?, *palette.get(offset + 1)?]);
+    Some([
+        expand_gba_color(bgr555),
+        expand_gba_color(bgr555 >> 5),
+        expand_gba_color(bgr555 >> 10),
+    ])
 }
 
 /// Projects Emerald's `B_TRANSITION_BLUR` onto the currently serialized
