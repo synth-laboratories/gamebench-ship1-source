@@ -1280,6 +1280,11 @@ pub fn render_name_entry(world: &WorldState) -> Result<Vec<u8>, String> {
         name_entry_cursor_position(world.name_cursor),
         world.naming_action_button_pulse,
     )?;
+    // The source naming screen redraws WIN_TEXT_ENTRY after every character
+    // selection.  The staged idle/OAM surface intentionally contains only
+    // the empty input line, so keep the live buffer Rust-owned here instead
+    // of leaving typed names invisible outside the one captured `A` frame.
+    draw_name_entry_input_text(&mut frame, world);
     // These source patches are exact captures of the player-name title flow;
     // the starter screen below reuses the keyboard art but has its own title
     // and input line.
@@ -1319,6 +1324,31 @@ pub fn render_name_entry(world: &WorldState) -> Result<Vec<u8>, String> {
         _ => {}
     }
     Ok(frame)
+}
+
+fn draw_name_entry_input_text(frame: &mut [u8], world: &WorldState) {
+    let text = world.name_entry_text();
+    if text.is_empty() {
+        return;
+    }
+    // `WIN_TEXT_ENTRY` starts at screen (64, 48).  DrawTextEntry places the
+    // player (7-char) buffer at window x=34 and the starter (10-char) buffer
+    // at window x=22, both one pixel below the window's top edge.  The
+    // naming screen uses BG palette bank 10: foreground 2 is dark gray,
+    // background 1 is white, and shadow 3 is light gray.
+    let (x, max_chars) = if world.is_starter_nickname_entry() {
+        (86, 10)
+    } else {
+        (98, 7)
+    };
+    draw_text_with_palette(
+        frame,
+        x,
+        49,
+        text,
+        max_chars,
+        [[99, 99, 99], [255, 255, 255], [214, 214, 206]],
+    );
 }
 
 /// `NAMING_SCREEN_NICKNAME` reuses the same keyboard controls as the player
