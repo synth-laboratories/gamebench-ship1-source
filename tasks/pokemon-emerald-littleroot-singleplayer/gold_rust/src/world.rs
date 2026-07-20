@@ -3336,10 +3336,16 @@ impl WorldState {
                 TilePosition { x: home_x, y: 10 }, Facing::Down,
             );
         }
-        if elapsed_before < 146 && 146 <= elapsed_after {
-            self.move_faster_scripted_npc(
-                "truck_arrival_mom", MapId::LittlerootTown,
-                TilePosition { x: home_x, y: 10 }, Facing::Left,
+        // The second command in `MomApproachPlayerAtTruck` is
+        // `walk_in_place_faster_left`: it begins after the preceding
+        // sixteen-frame southward stride and advances only Mom's OBJ pose.
+        if elapsed_before < 154 && 154 <= elapsed_after {
+            self.animate_scripted_npc_in_place_at_frame(
+                "truck_arrival_mom",
+                MapId::LittlerootTown,
+                Facing::Left,
+                4,
+                self.frame,
             );
         }
         if next_remaining == 0 {
