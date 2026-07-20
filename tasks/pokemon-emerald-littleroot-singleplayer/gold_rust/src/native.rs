@@ -1739,7 +1739,15 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
     }
     if let Some(dialogue) = world.rendered_dialogue() {
         if world.map == MapId::ProfessorIntro {
-            draw_professor_dialogue(frame, &dialogue);
+            if world.phase == StoryPhase::IntroFarewell {
+                // `gText_Birch_YourePlayer` and `gText_Birch_AreYouReady`
+                // both use \p/\l waits.  The coarse existing farewell state
+                // advances those pages on A, so retain its state ownership
+                // while exposing the source printer's waited-page marker.
+                draw_professor_dialogue_with_advance_marker(frame, &dialogue, world.frame);
+            } else {
+                draw_professor_dialogue(frame, &dialogue);
+            }
             if world.phase == StoryPhase::NameConfirm {
                 draw_menu_window(frame, 16, 8, 56, 40);
                 draw_text(frame, 32, 17, "YES", 3);
@@ -3932,6 +3940,27 @@ fn draw_starter_choose_standard_frame(
 /// The title introduction uses Emerald's full-width lower text window rather
 /// than the compact overworld dialogue box used by the later checkpoint UI.
 fn draw_professor_dialogue(frame: &mut [u8], text: &str) {
+    draw_professor_dialogue_inner(frame, text, None);
+}
+
+/// The later Birch/Lotad strings contain `\p` and `\l` controls in
+/// `gText_Birch_YourePlayer` / `gText_Birch_AreYouReady`.  The source text
+/// printer owns an eight-frame delay between its 0/1/2/1-pixel arrow poses.
+/// Keep that marker in the title window's white text palette rather than
+/// borrowing the overworld message palette.
+fn draw_professor_dialogue_with_advance_marker(
+    frame: &mut [u8],
+    text: &str,
+    frame_counter: u64,
+) {
+    draw_professor_dialogue_inner(frame, text, Some(frame_counter));
+}
+
+fn draw_professor_dialogue_inner(
+    frame: &mut [u8],
+    text: &str,
+    advance_marker_frame: Option<u64>,
+) {
     // NewGameBirchSpeech_CreateDialogueWindowBorder wraps the inner window
     // at tiles (2, 15), size 27×4: the visible frame is therefore 240×48
     // pixels at the bottom of the screen. The source uses teal edging, a
@@ -3950,7 +3979,10 @@ fn draw_professor_dialogue(frame: &mut [u8], text: &str) {
         let tile = if column == 0 { 1 } else if column == 1 { 3 } else if column == 28 { 5 } else if column == 29 { 6 } else { 4 };
         draw_message_box_tile(frame, tiles, tile, x + column * 8, y + 40, true);
     }
-    draw_professor_dialogue_text(frame, x + 16, y + 9, text);
+    let (cursor_x, cursor_y) = draw_professor_dialogue_text(frame, x + 16, y + 9, text);
+    if let Some(frame_counter) = advance_marker_frame {
+        draw_title_dialogue_down_arrow(frame, cursor_x, cursor_y, frame_counter);
+    }
 }
 
 /// `AddTextPrinterForMessage` creates its normal-font printer at `(0, 1)` in
@@ -3958,12 +3990,19 @@ fn draw_professor_dialogue(frame: &mut [u8], text: &str) {
 /// advance is therefore each glyph's proportional `FONT_NORMAL` width, not a
 /// six-pixel character cell.  Keep the two available text rows and the full
 /// 27-tile content width owned by that source window.
-fn draw_professor_dialogue_text(frame: &mut [u8], x: usize, y: usize, text: &str) {
+fn draw_professor_dialogue_text(
+    frame: &mut [u8],
+    x: usize,
+    y: usize,
+    text: &str,
+) -> (usize, usize) {
     const CONTENT_WIDTH: usize = 27 * 8;
     const CONTENT_ROWS: usize = 2;
 
     let mut row = 0_usize;
     let mut cursor_x = 0_usize;
+    let mut visible_row = 0_usize;
+    let mut visible_cursor_x = 0_usize;
     for (source_row, source_line) in text.split('\n').enumerate() {
         if source_row != 0 {
             row += 1;
@@ -3984,6 +4023,40 @@ fn draw_professor_dialogue_text(frame: &mut [u8], x: usize, y: usize, text: &str
             }
             draw_birch_text(frame, x + cursor_x, y + row * 16, word, word.chars().count());
             cursor_x += word_width;
+            visible_row = row;
+            visible_cursor_x = cursor_x;
+        }
+    }
+    (x + visible_cursor_x, y + visible_row * 16)
+}
+
+/// `TextPrinterDrawDownArrow` uses the common 8×48 source sheet but fills
+/// the New Game Birch window with `TEXT_COLOR_WHITE` before each blit.  Its
+/// visible dark-gray / light-gray glyph colors follow the title dialogue
+/// palette already used by `draw_birch_text`.
+fn draw_title_dialogue_down_arrow(frame: &mut [u8], x: usize, y: usize, frame_counter: u64) {
+    const SOURCE_Y_OFFSETS: [usize; 4] = [0, 1, 2, 1];
+    const FRAME_DELAY: u64 = 9;
+    const TITLE_DIALOGUE_PALETTE: [[u8; 3]; 4] = [
+        [255, 255, 255],
+        [255, 255, 255],
+        [99, 99, 99],
+        [214, 214, 206],
+    ];
+
+    let arrow = EMERALD_DIALOGUE_DOWN_ARROW.get_or_init(|| {
+        decode_source_indexed_sheet(EMERALD_DIALOGUE_DOWN_ARROW_B64)
+            .expect("staged Emerald dialogue down-arrow must decode")
+    });
+    let source_y = SOURCE_Y_OFFSETS[((frame_counter / FRAME_DELAY) % 4) as usize];
+    for row in 0..16 {
+        for column in 0..8 {
+            let index = arrow.pixels[(source_y + row) * arrow.width + column] as usize;
+            let color = TITLE_DIALOGUE_PALETTE
+                .get(index)
+                .copied()
+                .unwrap_or(TITLE_DIALOGUE_PALETTE[1]);
+            put_pixel(frame, x + column, y + row, color);
         }
     }
 }
