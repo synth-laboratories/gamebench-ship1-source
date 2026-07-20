@@ -251,6 +251,13 @@ pub enum NamingTarget { Player, Starter }
 #[serde(rename_all = "snake_case")]
 pub enum NamingActionButton { Page, Back, Ok }
 
+/// The source naming keyboard's three pages.  Emerald cycles these in the
+/// order symbols -> uppercase -> lowercase -> symbols; the initial page for
+/// both player and Pokémon nickname screens is uppercase.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum NamingKeyboardPage { Symbols, LettersUpper, LettersLower }
+
 /// Serialized mirror of `Task_UpdateButtonFlash` in `naming_screen.c`.
 /// `applied_color` is the most recent value written into the source's faded
 /// OBJ palette; the remaining fields directly model the task's data slots.
@@ -1105,6 +1112,8 @@ fn default_starter_confirm_yes() -> bool { true }
 
 fn default_naming_target() -> NamingTarget { NamingTarget::Player }
 
+fn default_name_entry_page() -> NamingKeyboardPage { NamingKeyboardPage::LettersUpper }
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct MapTransition {
     pub destination_map: MapId,
@@ -1466,7 +1475,14 @@ pub struct WorldState {
     /// Frames since the naming screen opened; its input grid is not ready immediately.
     pub name_entry_ready_frames: u32,
     /// Whether the name keyboard is showing its lowercase/effect character page.
+    /// Kept as a compatibility projection for old serialized checkpoints;
+    /// `name_entry_page` is the authoritative source page state.
     pub name_entry_lowercase: bool,
+    /// Current source naming keyboard page.  This is intentionally persisted
+    /// separately from the cursor because page swaps do not reset the text
+    /// buffer or the cursor's physical row.
+    #[serde(default = "default_name_entry_page")]
+    pub name_entry_page: NamingKeyboardPage,
     /// Selected answer in the source's post-name YES/NO confirmation menu.
     pub name_confirm_yes: bool,
     /// The naming keyboard remains visible for the confirming input frame;
@@ -1601,6 +1617,7 @@ impl WorldState {
             naming_action_button_pulse: None,
             name_entry_ready_frames: 0,
             name_entry_lowercase: false,
+            name_entry_page: NamingKeyboardPage::LettersUpper,
             name_confirm_yes: true,
             name_confirm_transition_frames: None,
             frame: 0,
@@ -1735,6 +1752,7 @@ impl WorldState {
             naming_action_button_pulse: None,
             name_entry_ready_frames: 0,
             name_entry_lowercase: false,
+            name_entry_page: NamingKeyboardPage::LettersUpper,
             name_confirm_yes: true,
             name_confirm_transition_frames: None,
             frame: 0,
@@ -1869,6 +1887,7 @@ impl WorldState {
             naming_action_button_pulse: None,
             name_entry_ready_frames: 0,
             name_entry_lowercase: false,
+            name_entry_page: NamingKeyboardPage::LettersUpper,
             name_confirm_yes: true,
             name_confirm_transition_frames: None,
             frame: 0,
@@ -2001,6 +2020,7 @@ impl WorldState {
             naming_action_button_pulse: None,
             name_entry_ready_frames: 0,
             name_entry_lowercase: false,
+            name_entry_page: NamingKeyboardPage::LettersUpper,
             name_confirm_yes: true,
             name_confirm_transition_frames: None,
             frame: 0,
@@ -2162,6 +2182,7 @@ impl WorldState {
             naming_action_button_pulse: None,
             name_entry_ready_frames: 0,
             name_entry_lowercase: false,
+            name_entry_page: NamingKeyboardPage::LettersUpper,
             name_confirm_yes: true,
             name_confirm_transition_frames: None,
             frame: 0,
@@ -5186,6 +5207,7 @@ impl WorldState {
         self.naming_action_button_pulse = None;
         self.name_entry_ready_frames = 0;
         self.name_entry_lowercase = false;
+        self.name_entry_page = NamingKeyboardPage::LettersUpper;
         self.name_confirm_transition_frames = None;
         self.title_intro_step = 2;
         self.dialogue = None;
@@ -5911,85 +5933,176 @@ impl WorldState {
         }
     }
 
+    /// Returns the source page, accepting the legacy lowercase projection
+    /// when restoring a pre-page-cycle checkpoint that only serialized the
+    /// old boolean field.
+    pub fn name_keyboard_page(&self) -> NamingKeyboardPage {
+        if self.name_entry_page == NamingKeyboardPage::LettersUpper && self.name_entry_lowercase {
+            NamingKeyboardPage::LettersLower
+        } else {
+            self.name_entry_page
+        }
+    }
+
+    /// Emerald's `currentPage` starts on uppercase and advances
+    /// `symbols -> uppercase -> lowercase -> symbols`.  The page swap keeps
+    /// the input buffer and physical cursor row, so only the page state and
+    /// legacy lowercase projection change here.
+    pub fn cycle_name_entry_page(&mut self) {
+        if self.phase != StoryPhase::NameEntry { return; }
+        let next = match self.name_keyboard_page() {
+            NamingKeyboardPage::Symbols => NamingKeyboardPage::LettersUpper,
+            NamingKeyboardPage::LettersUpper => NamingKeyboardPage::LettersLower,
+            NamingKeyboardPage::LettersLower => NamingKeyboardPage::Symbols,
+        };
+        self.name_entry_page = next;
+        self.name_entry_lowercase = next == NamingKeyboardPage::LettersLower;
+    }
+
+    fn name_page_column_count(page: NamingKeyboardPage) -> u8 {
+        match page {
+            NamingKeyboardPage::Symbols => 6,
+            NamingKeyboardPage::LettersUpper | NamingKeyboardPage::LettersLower => 8,
+        }
+    }
+
+    /// Converts the serialized cursor id to the source keyboard's physical
+    /// `(x, y)` position.  IDs 28..31 remain the compatibility control ids;
+    /// symbols use a dense six-column grid while letter pages retain their
+    /// captured punctuation ids.
+    pub fn name_cursor_position(&self) -> Option<(u8, u8)> {
+        let page = self.name_keyboard_page();
+        let cursor = self.name_cursor;
+        match cursor {
+            28 => Some((Self::name_page_column_count(page), 0)),
+            29 => Some((Self::name_page_column_count(page), 1)),
+            30 => Some((Self::name_page_column_count(page), 1)),
+            31 => Some((Self::name_page_column_count(page), 2)),
+            _ => match page {
+                NamingKeyboardPage::Symbols if cursor < 24 => Some((cursor % 6, cursor / 6)),
+                NamingKeyboardPage::LettersUpper | NamingKeyboardPage::LettersLower => match cursor {
+                    0..=5 => Some((cursor, 0)),
+                    6..=11 => Some((cursor - 6, 1)),
+                    12..=18 => Some((cursor - 12, 2)),
+                    19..=25 => Some((cursor - 19, 3)),
+                    26 => Some((7, 0)),
+                    27 => Some((7, 1)),
+                    // These four source cells contain spaces. They were not
+                    // represented by the original Rust cursor enum, but
+                    // remain selectable so page navigation follows the GBA.
+                    32 => Some((6, 0)),
+                    33 => Some((6, 1)),
+                    34 => Some((7, 2)),
+                    35 => Some((7, 3)),
+                    _ => None,
+                },
+                NamingKeyboardPage::Symbols => None,
+            },
+        }
+    }
+
+    fn name_cursor_from_position(page: NamingKeyboardPage, x: u8, y: u8, button_provenance: Option<u8>) -> u8 {
+        let columns = Self::name_page_column_count(page);
+        if x == columns {
+            // When entering the button column from a keyboard row, the
+            // source maps rows 0/1/2/3 to PAGE/BACK/BACK/OK respectively.
+            // `button_provenance` retains the two distinct middle-row ids;
+            // vertical movement on the physical column supplies the simpler
+            // three-row y=0/1/2 mapping below.
+            return button_provenance.unwrap_or(match y {
+                0 => 28,
+                1 => 29,
+                2 | 3 => 31,
+                _ => 28,
+            });
+        }
+        match page {
+            NamingKeyboardPage::Symbols => y.saturating_mul(6).saturating_add(x),
+            NamingKeyboardPage::LettersUpper | NamingKeyboardPage::LettersLower => match (x, y) {
+                (0..=5, 0) => x,
+                (0..=5, 1) => 6 + x,
+                (0..=6, 2) => 12 + x,
+                (0..=6, 3) => 19 + x,
+                (7, 0) => 26,
+                (7, 1) => 27,
+                (6, 0) => 32,
+                (6, 1) => 33,
+                (7, 2) => 34,
+                (7, 3) => 35,
+                _ => 0,
+            },
+        }
+    }
+
     pub fn move_name_cursor(&mut self, horizontal: i8, vertical: i8) {
         if self.phase != StoryPhase::NameEntry { return; }
         self.name_entry_touched = true;
-        // Latin letters occupy four uneven rows. The remaining cells are the
-        // visible ? / . / LOWER / BACK / B BUTTON / OK controls.
-        const STARTS: [u8; 4] = [0, 6, 12, 19];
-        const LENGTHS: [u8; 4] = [6, 6, 7, 7];
-        const QUESTION: u8 = 26;
-        const PERIOD: u8 = 27;
-        const LOWER: u8 = 28;
-        const BACK: u8 = 29;
-        const B_BUTTON: u8 = 30;
-        const OK: u8 = 31;
-
-        if matches!(self.name_cursor, LOWER | BACK | B_BUTTON | OK) {
-            if vertical != 0 {
-                // The source has three physical button rows (PAGE, BACK,
-                // OK).  BACK is reachable from either of the two middle
-                // keyboard rows, so B_BUTTON is only a provenance marker for
-                // the same physical y=1 button.  Vertical movement therefore
-                // wraps modulo three rows instead of cycling four Rust cells.
-                self.name_cursor = match (self.name_cursor, vertical.signum()) {
-                    (LOWER, 1) => BACK,
-                    (LOWER, -1) => OK,
-                    (BACK | B_BUTTON, 1) => OK,
-                    (BACK | B_BUTTON, -1) => LOWER,
-                    (OK, 1) => LOWER,
-                    (OK, -1) => BACK,
-                    _ => self.name_cursor,
-                };
-            } else if horizontal < 0 {
-                self.name_cursor = match self.name_cursor { LOWER => QUESTION, BACK => PERIOD, B_BUTTON => 18, OK => 25, _ => unreachable!() };
-            }
-            return;
-        }
-
-        if horizontal > 0 {
-            self.name_cursor = match self.name_cursor {
-                5 => QUESTION,
-                QUESTION => LOWER,
-                11 => PERIOD,
-                PERIOD => BACK,
-                18 => B_BUTTON,
-                25 => OK,
-                value => value + 1,
-            };
-            return;
-        }
-        if horizontal < 0 {
-            self.name_cursor = match self.name_cursor {
-                QUESTION => 5,
-                PERIOD => 11,
-                0 => 5,
-                6 => 11,
-                12 => 18,
-                19 => 25,
-                value => value - 1,
-            };
-            return;
-        }
-
-        if self.name_cursor == QUESTION {
-            self.name_cursor = PERIOD;
-            return;
-        }
-        if self.name_cursor == PERIOD {
-            self.name_cursor = QUESTION;
-            return;
-        }
-        let row = STARTS.iter().rposition(|start| *start <= self.name_cursor).unwrap_or(0);
-        let column = self.name_cursor - STARTS[row];
-        let target_row = (i16::try_from(row).expect("four rows") + i16::from(vertical)).rem_euclid(4) as usize;
-        let target_length = LENGTHS[target_row];
-        let target_column = if horizontal != 0 {
-            (i16::from(column) + i16::from(horizontal)).rem_euclid(i16::from(LENGTHS[row])) as u8
-        } else {
-            column.min(target_length - 1)
+        let page = self.name_keyboard_page();
+        let columns = Self::name_page_column_count(page);
+        let Some((mut x, mut y)) = self.name_cursor_position() else { return; };
+        let mut button_provenance = match self.name_cursor {
+            30 => Some(30),
+            29 => Some(29),
+            _ => None,
         };
-        self.name_cursor = STARTS[target_row] + target_column;
+
+        if horizontal != 0 {
+            let next_x = (i16::from(x) + i16::from(horizontal)).rem_euclid(i16::from(columns + 1)) as u8;
+            if x == columns {
+                // Moving off the physical button column restores the source
+                // key row represented by the middle-button provenance.
+                x = if horizontal < 0 {
+                    match self.name_cursor {
+                        28 => columns.saturating_sub(1),
+                        29 => Self::name_page_column_count(page).saturating_sub(1),
+                        30 => Self::name_page_column_count(page).saturating_sub(1),
+                        31 => Self::name_page_column_count(page).saturating_sub(1),
+                        _ => columns.saturating_sub(1),
+                    }
+                } else { 0 };
+                if horizontal < 0 {
+                    y = match self.name_cursor {
+                        28 => 0,
+                        29 => 1,
+                        30 => 2,
+                        31 => 3,
+                        _ => y,
+                    };
+                } else {
+                    y = match self.name_cursor {
+                        28 => 0,
+                        29 => 1,
+                        30 => 2,
+                        31 => 3,
+                        _ => y,
+                    };
+                }
+                button_provenance = None;
+            } else {
+                x = next_x;
+                if x == columns {
+                    button_provenance = match y {
+                        0 => Some(28),
+                        1 => Some(29),
+                        2 => Some(30),
+                        3 => Some(31),
+                        _ => None,
+                    };
+                }
+            }
+        } else if vertical != 0 {
+            if x == columns {
+                y = (i16::from(y) + i16::from(vertical)).rem_euclid(3) as u8;
+                self.name_cursor = Self::name_cursor_from_position(page, x, y, match y {
+                    1 => Some(if self.name_cursor == 30 { 30 } else { 29 }),
+                    _ => None,
+                });
+                return;
+            }
+            y = (i16::from(y) + i16::from(vertical)).rem_euclid(4) as u8;
+        }
+
+        self.name_cursor = Self::name_cursor_from_position(page, x, y, button_provenance);
     }
 
     /// Emerald's physical Start shortcut moves the keyboard cursor to its
@@ -6051,6 +6164,7 @@ impl WorldState {
         self.dialogue = None;
         self.name_entry_ready_frames = 0;
         self.name_entry_lowercase = false;
+        self.name_entry_page = NamingKeyboardPage::LettersUpper;
         self.naming_action_button_pulse = None;
     }
 
@@ -6104,18 +6218,47 @@ impl WorldState {
     pub fn select_name_cell(&mut self) {
         if self.phase != StoryPhase::NameEntry { return; }
         self.name_entry_touched = true;
+        if self.name_cursor == 28 {
+            self.cycle_name_entry_page();
+            return;
+        }
         match self.name_cursor {
-            0..=25 => {
-                let base = if self.name_entry_lowercase { b'a' } else { b'A' };
-                self.append_name_entry_character((base + self.name_cursor) as char);
-            }
-            26 => self.append_name_entry_character('?'),
-            27 => self.append_name_entry_character('.'),
-            28 => self.name_entry_lowercase = !self.name_entry_lowercase,
             29 => self.delete_name_character(),
             30 => {}, // The source's B-button help cell does not alter the name.
             31 => self.confirm_name(),
-            _ => unreachable!("name cursor must reference a keyboard cell"),
+            _ => {
+                if let Some((x, y)) = self.name_cursor_position() {
+                    let character = match self.name_keyboard_page() {
+                        NamingKeyboardPage::Symbols => match y {
+                            0 => ['0', '1', '2', '3', '4', ' '][usize::from(x)],
+                            1 => ['5', '6', '7', '8', '9', ' '][usize::from(x)],
+                            2 => ['!', '?', '♂', '♀', '/', '-'][usize::from(x)],
+                            3 => ['…', '“', '”', '‘', '\'', ' '][usize::from(x)],
+                            _ => return,
+                        },
+                        NamingKeyboardPage::LettersUpper | NamingKeyboardPage::LettersLower => {
+                            match (x, y) {
+                                (0..=5, 0) => (b'A' + x) as char,
+                                (7, 0) => '.',
+                                (0..=5, 1) => (b'G' + x) as char,
+                                (7, 1) => ',',
+                                (0..=6, 2) => (b'M' + x) as char,
+                                (0..=6, 3) => (b'T' + x) as char,
+                                _ => ' ',
+                            }
+                        }
+                    };
+                    let character = if self.name_keyboard_page() == NamingKeyboardPage::LettersLower {
+                        match character {
+                            'A'..='Z' => character.to_ascii_lowercase(),
+                            _ => character,
+                        }
+                    } else {
+                        character
+                    };
+                    self.append_name_entry_character(character);
+                }
+            }
         }
     }
 
