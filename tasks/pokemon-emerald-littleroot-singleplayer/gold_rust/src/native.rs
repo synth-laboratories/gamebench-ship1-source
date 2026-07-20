@@ -8884,16 +8884,46 @@ fn decode_indexed(bytes: &[u8]) -> Result<IndexedTiles, String> {
     let mut reader = decoder.read_info().map_err(|error| error.to_string())?;
     let mut buffer = vec![0; reader.output_buffer_size()];
     let info = reader.next_frame(&mut buffer).map_err(|error| error.to_string())?;
-    if info.color_type != ColorType::Indexed || info.bit_depth != png::BitDepth::Four {
-        return Err("expected 4-bit indexed Porymap tile PNG".to_owned());
+    if info.color_type != ColorType::Indexed {
+        return Err("expected indexed Porymap tile PNG".to_owned());
     }
+    let width = info.width as usize;
+    let height = info.height as usize;
     let packed = &buffer[..info.buffer_size()];
-    let mut pixels = Vec::with_capacity((info.width * info.height) as usize);
-    for byte in packed {
-        pixels.push(byte >> 4);
-        pixels.push(byte & 0x0f);
+    let mut pixels = Vec::with_capacity(width * height);
+    match info.bit_depth {
+        // Porymap's 4bpp tiles pack two indices per byte. Decode by row so
+        // an odd-width sheet cannot leak the row padding into the next row.
+        png::BitDepth::Four => {
+            let row_bytes = width.div_ceil(2);
+            if packed.len() < row_bytes * height {
+                return Err("4-bit indexed PNG is shorter than its dimensions".to_owned());
+            }
+            for row in 0..height {
+                let mut row_pixels = 0;
+                for byte in &packed[row * row_bytes..(row + 1) * row_bytes] {
+                    pixels.push(byte >> 4);
+                    row_pixels += 1;
+                    if row_pixels < width {
+                        pixels.push(byte & 0x0f);
+                        row_pixels += 1;
+                    }
+                }
+            }
+        }
+        // The Little Root door animation is an indexed 8bpp export even
+        // though the surrounding map tiles are 4bpp. Keep the shared tile
+        // decoder able to consume both source formats instead of panicking
+        // when a replay reaches the generic door choreography.
+        png::BitDepth::Eight => {
+            if packed.len() < width * height {
+                return Err("8-bit indexed PNG is shorter than its dimensions".to_owned());
+            }
+            pixels.extend_from_slice(&packed[..width * height]);
+        }
+        _ => return Err("expected 4-bit or 8-bit indexed Porymap tile PNG".to_owned()),
     }
-    Ok(IndexedTiles { width: info.width as usize, pixels })
+    Ok(IndexedTiles { width, pixels })
 }
 
 fn decode_source_indexed_sheet(encoded: &str) -> Result<SourceIndexedSheet, String> {
