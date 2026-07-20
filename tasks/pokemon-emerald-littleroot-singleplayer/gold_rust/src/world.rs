@@ -2591,13 +2591,16 @@ impl WorldState {
 
     pub fn adjust_clock(&mut self, delta: i16) {
         if self.clock_confirming { return; }
-        let Some(field) = self.clock_editing else { return; };
-        let step = match field { ClockField::Hours => 60, ClockField::Minutes => 1 };
+        let Some(_field) = self.clock_editing else { return; };
         let current = i16::try_from(self.clock_minutes.unwrap_or(WALL_CLOCK_START_MINUTES))
             .unwrap_or(i16::try_from(WALL_CLOCK_START_MINUTES).expect("wall-clock default fits i16"));
         let was_pm = current >= 12 * 60;
         let (pm_angle, am_angle) = self.clock_period_indicator_angles();
-        let adjusted = (current + delta * step).rem_euclid(1440) as u16;
+        // `Task_SetClock_HandleInput` advances one minute per completed
+        // movement and maps LEFT/RIGHT to decrement/increment.  The public
+        // replay input is sampled as a directional action, so keep each
+        // sample to one logical minute and leave cadence to the caller.
+        let adjusted = (current + delta).rem_euclid(1440) as u16;
         let is_pm = adjusted >= 12 * 60;
         self.clock_minutes = Some(adjusted);
         if was_pm != is_pm {
