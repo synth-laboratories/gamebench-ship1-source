@@ -127,6 +127,10 @@ const BATTLE_WURMPLE_FRONT_B64: &str = include_str!("../assets/battle_wurmple_fr
 const BATTLE_TALL_GRASS_TILES_B64: &str = include_str!("../assets/battle_tall_grass_tiles.png.b64");
 const BATTLE_TALL_GRASS_PALETTE_B64: &str = include_str!("../assets/battle_tall_grass_palette.pal.b64");
 const BATTLE_TALL_GRASS_MAP_B64: &str = include_str!("../assets/battle_tall_grass_map.bin.b64");
+// Exact single-battle healthbox OBJ atlases. Both carry the same palette as
+// `ball_status_bar.png`, which source loads under `TAG_HEALTHBOX_PAL`.
+const BATTLE_HEALTHBOX_SINGLES_PLAYER_B64: &str = include_str!("../assets/battle_healthbox_singles_player.png.b64");
+const BATTLE_HEALTHBOX_SINGLES_OPPONENT_B64: &str = include_str!("../assets/battle_healthbox_singles_opponent.png.b64");
 // `CB2_ChooseStarter` loads this dedicated 8bpp Birch-bag/grass tileset,
 // its two source tilemaps, and the Poké Ball / reveal-circle OBJ sheets.
 const STARTER_CHOOSE_TILES_B64: &str = include_str!("../assets/starter_choose_tiles.png.b64");
@@ -147,6 +151,8 @@ static BATTLE_WURMPLE_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_TALL_GRASS_TILES: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_TALL_GRASS_PALETTE: OnceLock<Vec<[u8; 3]>> = OnceLock::new();
 static BATTLE_TALL_GRASS_MAP: OnceLock<Vec<u8>> = OnceLock::new();
+static BATTLE_HEALTHBOX_SINGLES_PLAYER: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static BATTLE_HEALTHBOX_SINGLES_OPPONENT: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static STARTER_CHOOSE_TILES: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static STARTER_CHOOSE_POKEBALL_SELECTION: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static STARTER_CHOOSE_CIRCLE: OnceLock<SourceIndexedSheet> = OnceLock::new();
@@ -2019,8 +2025,7 @@ fn draw_wurmple_entry_phase(frame: &mut [u8], world: &WorldState, battle: &crate
     }
 
     draw_battle_background(frame);
-    draw_menu_window(frame, 8, 18, 104, 24);
-    draw_menu_window(frame, 132, 76, 100, 32);
+    draw_wurmple_healthbox_backgrounds(frame);
     draw_menu_window(frame, 0, 112, 240, 48);
     if elapsed < 192 {
         return;
@@ -2047,6 +2052,29 @@ fn draw_wurmple_entry_phase(frame: &mut [u8], world: &WorldState, battle: &crate
     draw_text(frame, 140, 94, "HP", 2);
     draw_battle_hp_bar(frame, 160, 95, battle.player_hp, battle.player_max_hp);
     draw_text(frame, 198, 99, &format!("{}/{}", battle.player_hp, battle.player_max_hp), 6);
+}
+
+/// Source single-battle healthbox OBJ composition used during Route 101's
+/// Wurmple hand-off. `CreateBattlerHealthboxSprites` splits each atlas over
+/// two 64px OAM sprites, and `InitBattlerHealthboxCoords` places their main
+/// centers at `(44, 30)` (opponent) and `(158, 88)` (player).
+fn draw_wurmple_healthbox_backgrounds(frame: &mut [u8]) {
+    let opponent = BATTLE_HEALTHBOX_SINGLES_OPPONENT.get_or_init(|| {
+        decode_source_indexed_sheet(BATTLE_HEALTHBOX_SINGLES_OPPONENT_B64)
+            .expect("staged Emerald opponent healthbox atlas must decode")
+    });
+    // The opponent remains the source template's 64×32 OAM shape, so its
+    // `centerToCornerVec` makes the combined 128×32 atlas begin at (12, 14).
+    draw_source_indexed_crop(frame, opponent, 0, 0, 128, 32, 12, 14);
+
+    let player = BATTLE_HEALTHBOX_SINGLES_PLAYER.get_or_init(|| {
+        decode_source_indexed_sheet(BATTLE_HEALTHBOX_SINGLES_PLAYER_B64)
+            .expect("staged Emerald player healthbox atlas must decode")
+    });
+    // The source changes each player healthbox OAM shape to square only *after*
+    // `CreateSprite` calculates its 64×32 corner vector. Thus its atlas starts
+    // at x=158-32, y=88-16 rather than at the later 64×64 visual corner.
+    draw_source_indexed_crop(frame, player, 0, 0, 128, 64, 126, 72);
 }
 
 /// Compact GBA-style health gauge used by both opening battle opponents and
