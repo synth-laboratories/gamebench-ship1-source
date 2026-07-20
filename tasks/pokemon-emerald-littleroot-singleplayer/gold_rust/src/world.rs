@@ -49,7 +49,17 @@ const TV_BROADCAST_VIEW_FRAMES: u16 = TV_BROADCAST_VIEW_MOM_STEP_FRAMES
 /// `MomApproachDoor` completes after its 24-frame pause and normal walk;
 /// `PlayerApproachDoor` adds a four-frame fast up-facing turn, which controls
 /// the shared `waitmovement` release.
-const TRUCK_DEPARTURE_FRAMES: u16 = 44;
+const TRUCK_DEPARTURE_APPROACH_FRAMES: u16 = 44;
+/// `opendoor` / `closedoor` each run four five-tick source frames before
+/// `waitdooranim` releases the Little Root moving-in script.
+const LITTLEROOT_DOOR_ANIMATION_FRAMES: u16 = 20;
+/// `MomEnterHouse` is a single normal upward stride, while
+/// `PlayerEnterHouse` takes two; both start as soon as the door opens.
+const TRUCK_DEPARTURE_ENTRY_FRAMES: u16 = 32;
+const TRUCK_DEPARTURE_FRAMES: u16 = TRUCK_DEPARTURE_APPROACH_FRAMES
+    + LITTLEROOT_DOOR_ANIMATION_FRAMES
+    + TRUCK_DEPARTURE_ENTRY_FRAMES
+    + LITTLEROOT_DOOR_ANIMATION_FRAMES;
 const NEW_HOME_FACE_PLAYER_FRAMES: u8 = 1;
 // `walk_in_place_faster_{left,right}` follows Mom's source `face_player`
 // action and lasts four frames, rather than the eight-frame fast cadence.
@@ -3209,13 +3219,17 @@ impl WorldState {
     }
 
     /// After Mom's final arrival page, the source walks both characters to
-    /// the house before beginning the fade; it is not an immediate warp.
+    /// the house, opens the Little Root door, walks them inside, and closes
+    /// it before beginning the silent-warp fade.
     pub fn advance_truck_departure(&mut self, frames: u32) -> bool {
         let Some(remaining) = self.truck_departure_frames else { return false; };
         let elapsed = frames.min(u32::from(u16::MAX)) as u16;
         let next_remaining = remaining.saturating_sub(elapsed);
         let elapsed_before = TRUCK_DEPARTURE_FRAMES.saturating_sub(remaining);
         let elapsed_after = TRUCK_DEPARTURE_FRAMES.saturating_sub(next_remaining);
+        let door_open_end = TRUCK_DEPARTURE_APPROACH_FRAMES + LITTLEROOT_DOOR_ANIMATION_FRAMES;
+        let mom_enters_end = door_open_end + 16;
+        let player_enters_end = door_open_end + TRUCK_DEPARTURE_ENTRY_FRAMES;
         let home_x = match self.player_gender {
             PlayerGender::Brendan => 5,
             PlayerGender::May => 14,
@@ -3232,9 +3246,21 @@ impl WorldState {
             self.player.x += 1;
             self.facing = Facing::Right;
         }
-        if elapsed_before < TRUCK_DEPARTURE_FRAMES
-            && TRUCK_DEPARTURE_FRAMES <= elapsed_after
+        if elapsed_before < TRUCK_DEPARTURE_APPROACH_FRAMES
+            && TRUCK_DEPARTURE_APPROACH_FRAMES <= elapsed_after
         {
+            self.facing = Facing::Up;
+        }
+        // Both entry movements begin after the real `waitdooranim` gate.
+        // Mom's one-step movement sets itself invisible; the player then
+        // takes the second of its two upward strides before `hideplayer`.
+        if elapsed_before < mom_enters_end && mom_enters_end <= elapsed_after {
+            self.npcs.retain(|npc| npc.id != "truck_arrival_mom");
+            self.player.y -= 1;
+            self.facing = Facing::Up;
+        }
+        if elapsed_before < player_enters_end && player_enters_end <= elapsed_after {
+            self.player.y -= 1;
             self.facing = Facing::Up;
         }
         if next_remaining == 0 {

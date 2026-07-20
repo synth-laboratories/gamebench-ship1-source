@@ -90,10 +90,12 @@ const ROUTE103_MAP_B64: &str = include_str!("../assets/porymap/layouts/route103_
 const INSIDE_OF_TRUCK_MAP_B64: &str = include_str!("../assets/porymap/layouts/inside_of_truck_map.bin.b64");
 const INSIDE_OF_TRUCK_METATILES_B64: &str = include_str!("../assets/porymap/inside_of_truck/metatiles.bin.b64");
 const INSIDE_OF_TRUCK_TILES_B64: &str = include_str!("../assets/porymap/inside_of_truck/tiles.png.b64");
+const LITTLEROOT_DOOR_ANIM_PNG_B64: &str = include_str!("../assets/littleroot_door_anim.png.b64");
 static ROUTE101_MAP: OnceLock<Vec<u8>> = OnceLock::new();
 static OLDALE_TOWN_MAP: OnceLock<Vec<u8>> = OnceLock::new();
 static ROUTE103_MAP: OnceLock<Vec<u8>> = OnceLock::new();
 static INSIDE_OF_TRUCK_TILES: OnceLock<IndexedTiles> = OnceLock::new();
+static LITTLEROOT_DOOR_ANIM_TILES: OnceLock<IndexedTiles> = OnceLock::new();
 const OUTSIDE_IDLE_OBJ_VRAM: &[u8] = include_bytes!("../assets/littleroot_outside_idle.obj_vram.bin");
 const OUTSIDE_IDLE_OBJ_PALETTE: &[u8] = include_bytes!("../assets/littleroot_outside_idle.obj_palette.bin");
 const OUTSIDE_IDLE_OAM: &[u8] = include_bytes!("../assets/littleroot_outside_idle.oam.bin");
@@ -3147,11 +3149,40 @@ pub fn render_world_view_with_dynamic_player(map_id: MapId, player: &TilePositio
 /// source-captured object snapshot. The staged object VRAM supplies two
 /// reusable overworld NPC tiles until each map's full sprite sheet is staged.
 pub fn render_world_view_with_dynamic_objects(map_id: MapId, player: &TilePosition, player_gender: PlayerGender, facing: Facing, walk_direction: Option<Facing>, walk_progress_frames: u8, npc_animation_tick: u64, npcs: &[NpcState], npc_walk_starts: &[NpcWalkStart]) -> Result<Vec<u8>, String> {
+    render_world_view_with_dynamic_objects_and_player_visibility(
+        map_id,
+        player,
+        player_gender,
+        facing,
+        walk_direction,
+        walk_progress_frames,
+        npc_animation_tick,
+        npcs,
+        npc_walk_starts,
+        true,
+    )
+}
+
+/// The Little Root moving-in script calls `hideplayer` before its final
+/// `closedoor`; preserve map-owned NPC rendering while withholding just the
+/// player OBJ during that source-only interval.
+fn render_world_view_with_dynamic_objects_and_player_visibility(
+    map_id: MapId,
+    player: &TilePosition,
+    player_gender: PlayerGender,
+    facing: Facing,
+    walk_direction: Option<Facing>,
+    walk_progress_frames: u8,
+    npc_animation_tick: u64,
+    npcs: &[NpcState],
+    npc_walk_starts: &[NpcWalkStart],
+    player_visible: bool,
+) -> Result<Vec<u8>, String> {
     let mut frame = render_world_view_with_motion(map_id, player, walk_direction, walk_progress_frames)?;
     let mut vram = outside_player_vram_continuous(player_gender, facing, walk_progress_frames)?;
     let mut palette = outside_player_palette(player_gender)?;
     apply_dynamic_npc_tiles(&mut vram, &mut palette, map_id, player_gender, npc_animation_tick, npcs, npc_walk_starts)?;
-    let oam = dynamic_object_oam(
+    let mut oam = dynamic_object_oam(
         map_id,
         player,
         facing,
@@ -3162,6 +3193,9 @@ pub fn render_world_view_with_dynamic_objects(map_id: MapId, player: &TilePositi
         npcs,
         npc_walk_starts,
     );
+    if !player_visible {
+        oam[..2].copy_from_slice(&0x0200_u16.to_le_bytes());
+    }
     composite_oam_4bpp(&mut frame, &vram, &palette, &oam)?;
     if is_brendans_house_2f_terminal_oracle(
         map_id,
@@ -3212,12 +3246,82 @@ pub fn render_world_view_with_dynamic_objects(map_id: MapId, player: &TilePositi
     Ok(frame)
 }
 
-/// Presents the parallel movement portion of Little Root's first home entry.
-/// `MomApproachDoor` and `PlayerApproachDoor` both wait 24 frames, then walk
-/// for 16 frames; only the player adds a four-frame faster turn afterward.
-/// The serialized world commits the object coordinates at frame 40, so this
-/// renderer derives the prior 16-frame visual stride from its existing
-/// departure countdown without changing gameplay or transition state.
+#[derive(Clone, Copy)]
+enum LittlerootDoorVisual {
+    Closed,
+    Opening(u16),
+    Open,
+    Closing(u16),
+}
+
+impl LittlerootDoorVisual {
+    /// Emerald's door task uses four frames with a `time: 4` counter. The
+    /// counter visits zero through four, so each visual frame persists for
+    /// five game ticks before `waitdooranim` can release the script.
+    fn animation_art_frame(self) -> Option<usize> {
+        const FRAME_HOLD: u16 = 5;
+        match self {
+            Self::Closed => None,
+            Self::Open => Some(2),
+            Self::Opening(elapsed) => match elapsed / FRAME_HOLD {
+                0 => None,
+                1 => Some(0),
+                2 => Some(1),
+                _ => Some(2),
+            },
+            Self::Closing(elapsed) => match elapsed / FRAME_HOLD {
+                0 => Some(2),
+                1 => Some(1),
+                2 => Some(0),
+                _ => None,
+            },
+        }
+    }
+}
+
+/// `GoInsideWithMom` opens the home door immediately before Mom is added to
+/// the map, leaves it open for her one downward stride, and closes it before
+/// her short pause. The existing arrival rail calibrates those source events
+/// to frames 60 through 116 of its 176-frame lock.
+fn littleroot_arrival_door_visual(elapsed: u16) -> LittlerootDoorVisual {
+    const OPEN_START: u16 = 60;
+    const OPEN_END: u16 = 80;
+    const CLOSE_START: u16 = 96;
+    const CLOSE_END: u16 = 116;
+    if (OPEN_START..OPEN_END).contains(&elapsed) {
+        LittlerootDoorVisual::Opening(elapsed - OPEN_START)
+    } else if (OPEN_END..CLOSE_START).contains(&elapsed) {
+        LittlerootDoorVisual::Open
+    } else if (CLOSE_START..CLOSE_END).contains(&elapsed) {
+        LittlerootDoorVisual::Closing(elapsed - CLOSE_START)
+    } else {
+        LittlerootDoorVisual::Closed
+    }
+}
+
+/// After the two characters finish their 44-frame approach, the source waits
+/// for a 20-frame open, spends 32 frames on their parallel entry movements,
+/// then waits for a 20-frame close before `warpsilent` starts fading indoors.
+fn littleroot_departure_door_visual(elapsed: u16) -> LittlerootDoorVisual {
+    const APPROACH_END: u16 = 44;
+    const OPEN_END: u16 = 64;
+    const ENTRY_END: u16 = 96;
+    const CLOSE_END: u16 = 116;
+    if (APPROACH_END..OPEN_END).contains(&elapsed) {
+        LittlerootDoorVisual::Opening(elapsed - APPROACH_END)
+    } else if (OPEN_END..ENTRY_END).contains(&elapsed) {
+        LittlerootDoorVisual::Open
+    } else if (ENTRY_END..CLOSE_END).contains(&elapsed) {
+        LittlerootDoorVisual::Closing(elapsed - ENTRY_END)
+    } else {
+        LittlerootDoorVisual::Closed
+    }
+}
+
+/// Presents Little Root's first home-entry choreography. The source runs the
+/// same Petalburg/Little Root door art for both the initial Mom exit and the
+/// later player/Mom entry, so this renderer owns the real four-frame door task
+/// as well as the existing approach interpolation.
 pub fn render_littleroot_truck_door_approach(
     player: &TilePosition,
     player_gender: PlayerGender,
@@ -3225,11 +3329,16 @@ pub fn render_littleroot_truck_door_approach(
     npc_animation_tick: u64,
     npcs: &[NpcState],
     npc_walk_starts: &[NpcWalkStart],
+    arrival_frames: Option<u16>,
     departure_frames: Option<u16>,
 ) -> Result<Vec<u8>, String> {
-    const TOTAL_FRAMES: u16 = 44;
+    const ARRIVAL_TOTAL_FRAMES: u16 = 176;
+    const DEPARTURE_TOTAL_FRAMES: u16 = 116;
     const WALK_START_FRAME: u16 = 24;
     const WALK_END_FRAME: u16 = 40;
+    const DOOR_OPEN_END_FRAME: u16 = 64;
+    const MOM_ENTERS_END_FRAME: u16 = 80;
+    const PLAYER_ENTERS_END_FRAME: u16 = 96;
 
     let mut visual_npcs = npcs.to_vec();
     // The gameplay endpoint records Mom's normal walk at frame 40. Do not
@@ -3241,58 +3350,168 @@ pub fn render_littleroot_truck_door_approach(
         .cloned()
         .collect::<Vec<_>>();
 
-    let Some(remaining) = departure_frames else {
-        return render_world_view_with_dynamic_objects(
-            MapId::LittlerootTown,
-            player,
-            player_gender,
-            facing,
-            None,
-            0,
-            npc_animation_tick,
-            &visual_npcs,
-            &visual_walks,
-        );
-    };
-    let elapsed = TOTAL_FRAMES.saturating_sub(remaining.min(TOTAL_FRAMES));
-    if (WALK_START_FRAME..WALK_END_FRAME).contains(&elapsed) {
-        if let Some(mom) = visual_npcs.iter_mut().find(|npc| npc.id == "truck_arrival_mom") {
-            // The source object-event coordinate commits at the end of the
-            // upward stride, while the OBJ layer interpolates from its prior
-            // tile for the preceding sixteen frames.
-            mom.position.y -= 1;
-            mom.facing = Facing::Up;
-            visual_walks.push(NpcWalkStart {
-                id: "truck_arrival_mom".to_owned(),
-                frame: npc_animation_tick.saturating_sub(u64::from(elapsed - WALK_START_FRAME)),
-                duration_frames: 16,
-                sprite_facing: Some(Facing::Up),
-            });
+    let (mut frame, door_visual) = if let Some(remaining) = departure_frames {
+        let elapsed = DEPARTURE_TOTAL_FRAMES.saturating_sub(remaining.min(DEPARTURE_TOTAL_FRAMES));
+        let door_visual = littleroot_departure_door_visual(elapsed);
+        if (WALK_START_FRAME..WALK_END_FRAME).contains(&elapsed) {
+            if let Some(mom) = visual_npcs.iter_mut().find(|npc| npc.id == "truck_arrival_mom") {
+                // The source object-event coordinate commits at the end of
+                // the upward stride, while the OBJ layer interpolates from
+                // its prior tile for the preceding sixteen frames.
+                mom.position.y -= 1;
+                mom.facing = Facing::Up;
+                visual_walks.push(NpcWalkStart {
+                    id: "truck_arrival_mom".to_owned(),
+                    frame: npc_animation_tick.saturating_sub(u64::from(elapsed - WALK_START_FRAME)),
+                    duration_frames: 16,
+                    sprite_facing: Some(Facing::Up),
+                });
+            }
+            (
+                render_world_view_with_dynamic_objects_and_player_visibility(
+                    MapId::LittlerootTown,
+                    player,
+                    player_gender,
+                    Facing::Right,
+                    Some(Facing::Right),
+                    (elapsed - WALK_START_FRAME) as u8,
+                    npc_animation_tick,
+                    &visual_npcs,
+                    &visual_walks,
+                    true,
+                )?,
+                door_visual,
+            )
+        } else {
+            let (walk_direction, walk_progress_frames) = if (DOOR_OPEN_END_FRAME..MOM_ENTERS_END_FRAME).contains(&elapsed) {
+                if let Some(mom) = visual_npcs.iter_mut().find(|npc| npc.id == "truck_arrival_mom") {
+                    // Mom's logical position remains at the destination until
+                    // `set_invisible`; interpolate her source stride from the
+                    // doorway tile one row below it.
+                    mom.position.y -= 1;
+                    mom.facing = Facing::Up;
+                    visual_walks.push(NpcWalkStart {
+                        id: "truck_arrival_mom".to_owned(),
+                        frame: npc_animation_tick.saturating_sub(u64::from(elapsed - DOOR_OPEN_END_FRAME)),
+                        duration_frames: 16,
+                        sprite_facing: Some(Facing::Up),
+                    });
+                }
+                (Some(Facing::Up), (elapsed - DOOR_OPEN_END_FRAME) as u8)
+            } else if (MOM_ENTERS_END_FRAME..PLAYER_ENTERS_END_FRAME).contains(&elapsed) {
+                (Some(Facing::Up), (elapsed - MOM_ENTERS_END_FRAME) as u8)
+            } else {
+                (None, 0)
+            };
+            (
+                render_world_view_with_dynamic_objects_and_player_visibility(
+                    MapId::LittlerootTown,
+                    player,
+                    player_gender,
+                    facing,
+                    walk_direction,
+                    walk_progress_frames,
+                    npc_animation_tick,
+                    &visual_npcs,
+                    &visual_walks,
+                    elapsed < PLAYER_ENTERS_END_FRAME,
+                )?,
+                door_visual,
+            )
         }
-        return render_world_view_with_dynamic_objects(
-            MapId::LittlerootTown,
-            player,
-            player_gender,
-            Facing::Right,
-            Some(Facing::Right),
-            (elapsed - WALK_START_FRAME) as u8,
-            npc_animation_tick,
-            &visual_npcs,
-            &visual_walks,
-        );
-    }
+    } else if let Some(remaining) = arrival_frames {
+        let elapsed = ARRIVAL_TOTAL_FRAMES.saturating_sub(remaining.min(ARRIVAL_TOTAL_FRAMES));
+        (
+            render_world_view_with_dynamic_objects(
+                MapId::LittlerootTown,
+                player,
+                player_gender,
+                facing,
+                None,
+                0,
+                npc_animation_tick,
+                &visual_npcs,
+                &visual_walks,
+            )?,
+            littleroot_arrival_door_visual(elapsed),
+        )
+    } else {
+        (
+            render_world_view_with_dynamic_objects(
+                MapId::LittlerootTown,
+                player,
+                player_gender,
+                facing,
+                None,
+                0,
+                npc_animation_tick,
+                &visual_npcs,
+                &visual_walks,
+            )?,
+            LittlerootDoorVisual::Closed,
+        )
+    };
 
-    render_world_view_with_dynamic_objects(
-        MapId::LittlerootTown,
-        player,
-        player_gender,
-        facing,
-        None,
-        0,
-        npc_animation_tick,
-        &visual_npcs,
-        &visual_walks,
-    )
+    if let Some(art_frame) = door_visual.animation_art_frame() {
+        draw_littleroot_door_animation(&mut frame, player, player_gender, art_frame)?;
+    }
+    Ok(frame)
+}
+
+/// `field_door.c` draws Little Root's one-metatile-wide animation over the
+/// closed source map. The 16×96 asset holds its three live 16×32 frames;
+/// palette 10 belongs to the top tile row and palette 6 to the other three.
+fn draw_littleroot_door_animation(
+    frame: &mut [u8],
+    player: &TilePosition,
+    player_gender: PlayerGender,
+    art_frame: usize,
+) -> Result<(), String> {
+    const DOOR_WIDTH: usize = 16;
+    const DOOR_HEIGHT: usize = 32;
+    const BORDER_PIXELS: i32 = (LITTLEROOT_RUNTIME_BORDER_METATILES * METATILE_SIZE) as i32;
+    const RUNTIME_PIXELS: i32 = ((MAP_WIDTH + LITTLEROOT_RUNTIME_BORDER_METATILES * 2) * METATILE_SIZE) as i32;
+    let door_x = match player_gender {
+        PlayerGender::Brendan => 5_i32,
+        PlayerGender::May => 14_i32,
+    };
+    let player_x = i32::from(player.x.max(0));
+    let player_y = i32::from(player.y.max(0));
+    let camera_x = (BORDER_PIXELS + player_x * METATILE_SIZE as i32 + (METATILE_SIZE / 2) as i32 - 136)
+        .clamp(0, RUNTIME_PIXELS - FRAME_WIDTH as i32);
+    let camera_y = (BORDER_PIXELS + player_y * METATILE_SIZE as i32 + (METATILE_SIZE / 2) as i32 - 16)
+        .clamp(0, RUNTIME_PIXELS - FRAME_HEIGHT as i32);
+    let screen_x = BORDER_PIXELS + door_x * METATILE_SIZE as i32 - camera_x;
+    // `opendoor x, y` redraws the top metatile at y - 1 and the bottom one
+    // at y; both Little Root home doors use y = 8.
+    let screen_y = BORDER_PIXELS + 7 * METATILE_SIZE as i32 - camera_y;
+    let tiles = LITTLEROOT_DOOR_ANIM_TILES.get_or_init(|| {
+        let bytes = decode_base64(LITTLEROOT_DOOR_ANIM_PNG_B64.trim())
+            .expect("Little Root door animation base64 must decode");
+        decode_indexed(&bytes).expect("Little Root door animation PNG must decode")
+    });
+    if art_frame >= 3 || tiles.width != DOOR_WIDTH || tiles.pixels.len() != DOOR_WIDTH * DOOR_HEIGHT * 3 {
+        return Err("Little Root door animation asset dimensions are invalid".to_owned());
+    }
+    let top_palette = parse_palette(PETALBURG_PALETTES[10])?;
+    let bottom_palette = parse_palette(PETALBURG_PALETTES[6])?;
+    for y in 0..DOOR_HEIGHT {
+        let palette = if y < TILE_SIZE { &top_palette } else { &bottom_palette };
+        for x in 0..DOOR_WIDTH {
+            let destination_x = screen_x + x as i32;
+            let destination_y = screen_y + y as i32;
+            if !(0..FRAME_WIDTH as i32).contains(&destination_x)
+                || !(0..FRAME_HEIGHT as i32).contains(&destination_y)
+            {
+                continue;
+            }
+            let source_y = art_frame * DOOR_HEIGHT + y;
+            let index = tiles.pixels[source_y * DOOR_WIDTH + x] as usize;
+            let output = (destination_y as usize * FRAME_WIDTH + destination_x as usize) * 3;
+            frame[output..output + 3].copy_from_slice(&palette[index]);
+        }
+    }
+    Ok(())
 }
 
 fn is_brendans_house_2f_terminal_oracle(

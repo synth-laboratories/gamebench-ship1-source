@@ -2084,7 +2084,8 @@ impl LittlerootSession {
             OpeningCheckpoint::TruckArrival if self.truck_held_right_frames() == Some(48) => native::opening_truck_right_48(),
             _ if self.world.map == MapId::MovingTruck => native::render_truck_idle(),
             _ if self.world.map == MapId::LittlerootTown
-                && (self.world.truck_departure_frames.is_some()
+                && (self.world.truck_arrival_frames.is_some()
+                    || self.world.truck_departure_frames.is_some()
                     || (self.world.phase == world::StoryPhase::NewHome
                         && self.world.transition.is_some())) =>
             {
@@ -2095,6 +2096,7 @@ impl LittlerootSession {
                     self.world.frame,
                     &self.world.npcs,
                     &self.world.npc_walk_starts,
+                    self.world.truck_arrival_frames,
                     self.world.truck_departure_frames,
                 )
             }
