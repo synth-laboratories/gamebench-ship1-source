@@ -664,6 +664,7 @@ const LITTLEROOT_DOWN48_PLAYER_B64: &str = include_str!("../assets/littleroot_do
 const LITTLEROOT_DOWN48_FLOWER_A_B64: &str = include_str!("../assets/littleroot_down48_flower_a.rgb.b64");
 const LITTLEROOT_DOWN48_FLOWER_B_B64: &str = include_str!("../assets/littleroot_down48_flower_b.rgb.b64");
 const LITTLEROOT_BORDER_B64: &str = include_str!("../assets/porymap/littleroot_border.bin.b64");
+const ROUTE101_BORDER_B64: &str = include_str!("../assets/porymap/route101_border.bin.b64");
 const OLDALE_TOWN_BORDER_B64: &str = include_str!("../assets/porymap/oldale_town_border.bin.b64");
 // Emerald's General tileset advances these source flower frames as 0, 1, 0,
 // 2 at sixteen-frame intervals. The live terrain pass consumes this sequence.
@@ -851,6 +852,10 @@ const LITTLEROOT_RUNTIME_BORDER_METATILES: usize = 8;
 // MAP_OFFSET)`. Its backing width is `layout_width + MAP_OFFSET_W`, so a
 // 20-wide town has seven source border metatiles to the west and eight to the
 // east. Vertically it has seven on both sides (`MAP_OFFSET_H`).
+const ROUTE101_RUNTIME_LEFT_BORDER_METATILES: usize = 7;
+const ROUTE101_RUNTIME_RIGHT_BORDER_METATILES: usize = 8;
+const ROUTE101_RUNTIME_TOP_BORDER_METATILES: usize = 7;
+const ROUTE101_RUNTIME_BOTTOM_BORDER_METATILES: usize = 7;
 const OLDALE_TOWN_RUNTIME_LEFT_BORDER_METATILES: usize = 7;
 const OLDALE_TOWN_RUNTIME_RIGHT_BORDER_METATILES: usize = 8;
 const OLDALE_TOWN_RUNTIME_TOP_BORDER_METATILES: usize = 7;
@@ -4606,6 +4611,93 @@ fn render_littleroot_runtime_map() -> Result<(Vec<u8>, usize, usize), String> {
     Ok((runtime, width_metatiles, height_metatiles))
 }
 
+/// Builds Route 101's source map-grid backing surface rather than clamping
+/// its 20×20 authored layout at the rescue scene's south edge.
+/// `InitBackupMapLayoutData` places the layout after a seven-metatile
+/// perimeter (and retains its extra east column); `FillNorthConnection` and
+/// `FillSouthConnection` then replace the corresponding border rows with
+/// Oldale's trailing rows and Little Root's leading rows. The typed world
+/// still owns actual map transitions.
+fn render_route101_runtime_map() -> Result<(Vec<u8>, usize, usize), String> {
+    let interior = render_route101_map()?;
+    let border_entries = decode_base64(ROUTE101_BORDER_B64.trim())?;
+    if border_entries.len() != 8 {
+        return Err("Route 101 border must contain four metatiles".to_owned());
+    }
+    let border = render_map(
+        &border_entries,
+        2,
+        2,
+        TilesetAssets {
+            tiles: GENERAL_TILES,
+            metatiles: GENERAL_METATILES,
+            palettes: &GENERAL_PALETTES,
+        },
+        TilesetAssets {
+            tiles: PETALBURG_TILES,
+            metatiles: PETALBURG_METATILES,
+            palettes: &PETALBURG_PALETTES,
+        },
+    )?;
+    let width_metatiles = MAP_WIDTH
+        + ROUTE101_RUNTIME_LEFT_BORDER_METATILES
+        + ROUTE101_RUNTIME_RIGHT_BORDER_METATILES;
+    let height_metatiles = MAP_HEIGHT
+        + ROUTE101_RUNTIME_TOP_BORDER_METATILES
+        + ROUTE101_RUNTIME_BOTTOM_BORDER_METATILES;
+    let width = width_metatiles * METATILE_SIZE;
+    let height = height_metatiles * METATILE_SIZE;
+    let inset_x = ROUTE101_RUNTIME_LEFT_BORDER_METATILES * METATILE_SIZE;
+    let inset_y = ROUTE101_RUNTIME_TOP_BORDER_METATILES * METATILE_SIZE;
+    let interior_width = MAP_WIDTH * METATILE_SIZE;
+    let interior_height = MAP_HEIGHT * METATILE_SIZE;
+    let mut runtime = vec![0; width * height * 3];
+    for y in 0..height {
+        for x in 0..width {
+            let target = (y * width + x) * 3;
+            let inside = (inset_x..inset_x + interior_width).contains(&x)
+                && (inset_y..inset_y + interior_height).contains(&y);
+            if inside {
+                let source = ((y - inset_y) * interior_width + (x - inset_x)) * 3;
+                runtime[target..target + 3].copy_from_slice(&interior[source..source + 3]);
+            } else {
+                let border_x = (i32::try_from(x).expect("runtime width fits i32")
+                    - i32::try_from(inset_x).expect("runtime inset fits i32"))
+                    .rem_euclid(32) as usize;
+                let border_y = (i32::try_from(y).expect("runtime height fits i32")
+                    - i32::try_from(inset_y).expect("runtime inset fits i32"))
+                    .rem_euclid(32) as usize;
+                let source = (border_y * 32 + border_x) * 3;
+                runtime[target..target + 3].copy_from_slice(&border[source..source + 3]);
+            }
+        }
+    }
+    // Route101/map.json connects OldaleTown upward at offset 0. In the
+    // source `FillNorthConnection` begins at x=MAP_OFFSET and imports the
+    // final MAP_OFFSET rows of the 20-wide connected layout.
+    let north = render_oldale_town_map()?;
+    let north_source_y = (MAP_HEIGHT - ROUTE101_RUNTIME_TOP_BORDER_METATILES)
+        * METATILE_SIZE;
+    for row in 0..inset_y {
+        let destination = (row * width + inset_x) * 3;
+        let source = ((north_source_y + row) * interior_width) * 3;
+        runtime[destination..destination + interior_width * 3]
+            .copy_from_slice(&north[source..source + interior_width * 3]);
+    }
+    // The south connection begins at the same source x insertion point and
+    // imports Little Root's first seven rows; the east-buffer column remains
+    // the authored Route 101 border just as `FillSouthConnection` leaves it.
+    let south = render_littleroot_map()?;
+    let south_y = inset_y + interior_height;
+    for row in 0..ROUTE101_RUNTIME_BOTTOM_BORDER_METATILES * METATILE_SIZE {
+        let destination = ((south_y + row) * width + inset_x) * 3;
+        let source = row * interior_width * 3;
+        runtime[destination..destination + interior_width * 3]
+            .copy_from_slice(&south[source..source + interior_width * 3]);
+    }
+    Ok((runtime, width_metatiles, height_metatiles))
+}
+
 /// Builds Oldale's source map-grid backing surface rather than clamping the
 /// 20×20 authored layout at the camera edge. `InitBackupMapLayout` reserves
 /// a seven-metatile border around the town (and an eighth column on the east)
@@ -5398,7 +5490,7 @@ fn render_world_view_with_motion_at_tick_and_tv_state(map_id: MapId, player: &Ti
         MapId::ProfessorIntro => return Err("the Professor Birch introduction has no native renderer yet".to_owned()),
         MapId::MovingTruck => return Err("the moving-truck scene has no native terrain renderer yet".to_owned()),
         MapId::LittlerootTown => render_littleroot_runtime_map()?,
-        MapId::Route101 => (render_route101_map()?, MAP_WIDTH, MAP_HEIGHT),
+        MapId::Route101 => render_route101_runtime_map()?,
         MapId::OldaleTown => render_oldale_town_runtime_map()?,
         MapId::Route103 => (render_route103_map()?, ROUTE103_WIDTH, ROUTE103_HEIGHT),
         MapId::BrendansHouse1F => (render_house_with_tv_screen(BRENDANS_HOUSE_1F_MAP, 11, 9, tv_screen_on)?, 11, 9),
@@ -5414,6 +5506,10 @@ fn render_world_view_with_motion_at_tick_and_tv_state(map_id: MapId, player: &Ti
             let inset = LITTLEROOT_RUNTIME_BORDER_METATILES * METATILE_SIZE;
             (inset, inset)
         }
+        MapId::Route101 => (
+            ROUTE101_RUNTIME_LEFT_BORDER_METATILES * METATILE_SIZE,
+            ROUTE101_RUNTIME_TOP_BORDER_METATILES * METATILE_SIZE,
+        ),
         MapId::OldaleTown => (
             OLDALE_TOWN_RUNTIME_LEFT_BORDER_METATILES * METATILE_SIZE,
             OLDALE_TOWN_RUNTIME_TOP_BORDER_METATILES * METATILE_SIZE,
