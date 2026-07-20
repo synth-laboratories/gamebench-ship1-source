@@ -1842,10 +1842,15 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
                 draw_wurmple_entry_phase(frame, world, battle, elapsed);
                 return;
             }
-            let band_phase = elapsed.saturating_sub(entry_frames.saturating_sub(48));
-            let band_height = (band_phase * 80 / 48).min(80);
-            draw_solid_rect(frame, 0, 0, 240, band_height, [0, 0, 0]);
-            draw_solid_rect(frame, 0, 160 - band_height, 240, band_height, [0, 0, 0]);
+            // Route 101 Poochyena and Route 103 Wingull both enter the
+            // grass environment.  Their source `BattleIntroSlide1` expands
+            // WIN0 from the center while the registered BG2 scanlines slide
+            // the upper/lower terrain halves in opposite directions.  Keep
+            // the compact model's 48-frame input lock, but project the full
+            // source task across that serialized hand-off instead of drawing
+            // the old invented black bands.
+            let intro_phase = elapsed.saturating_sub(entry_frames.saturating_sub(48));
+            draw_grass_battle_intro_slide_phase(frame, intro_phase);
             return;
         }
         draw_battle_background(frame);
@@ -2163,6 +2168,20 @@ fn draw_exclamation_marker(frame: &mut [u8], x: usize, y: usize) {
 /// `BATTLE_ENVIRONMENT_GRASS`, whose source assets are the tall-grass BG2
 /// tiles, tilemap, and three associated palette banks.
 fn draw_battle_background(frame: &mut [u8]) {
+    draw_battle_background_windowed(frame, 0, FRAME_HEIGHT, 0, 0);
+}
+
+/// Samples the source 64×32 grass battle map through the hardware offsets
+/// used by `BattleIntroSlide1`.  `upper_x_offset` and `lower_x_offset` are
+/// the two BG2 HBlank values; the source applies the former through scanline
+/// 79 and the latter from scanline 80 onward.
+fn draw_battle_background_windowed(
+    frame: &mut [u8],
+    top: usize,
+    bottom: usize,
+    upper_x_offset: i32,
+    lower_x_offset: i32,
+) {
     let tiles = BATTLE_TALL_GRASS_TILES.get_or_init(|| {
         decode_source_indexed_sheet(BATTLE_TALL_GRASS_TILES_B64)
             .expect("staged Emerald tall-grass battle tiles must decode")
@@ -2203,15 +2222,24 @@ fn draw_battle_background(frame: &mut [u8]) {
     assert_eq!(tilemap.len(), MAP_WIDTH_TILES * MAP_HEIGHT_TILES * 2);
     let source_tiles_per_row = tiles.width / 8;
     let source_tile_count = source_tiles_per_row * (tiles.height / 8);
+    let map_width_pixels = (MAP_WIDTH_TILES * 8) as i32;
+    let first_row = top.min(FRAME_HEIGHT);
+    let last_row = bottom.min(FRAME_HEIGHT);
     // `BattleIntro` restores gBattle_BG2_X/Y to zero before the command UI
-    // opens, so the stable opening field samples the source 64×32 map at its
-    // top-left hardware origin.
-    for y in 0..FRAME_HEIGHT {
+    // opens, so the settled caller samples the source map at top-left.  The
+    // intro caller instead preserves the source per-half HBlank offsets.
+    for y in first_row..last_row {
         let tile_y = y / 8;
         let pixel_y = y % 8;
+        let x_offset = if y < FRAME_HEIGHT / 2 {
+            upper_x_offset
+        } else {
+            lower_x_offset
+        };
         for x in 0..FRAME_WIDTH {
-            let tile_x = x / 8;
-            let pixel_x = x % 8;
+            let source_screen_x = ((x as i32 + x_offset).rem_euclid(map_width_pixels)) as usize;
+            let tile_x = source_screen_x / 8;
+            let pixel_x = source_screen_x % 8;
             let entry_offset = (tile_y * MAP_WIDTH_TILES + tile_x) * 2;
             let entry = u16::from_le_bytes([tilemap[entry_offset], tilemap[entry_offset + 1]]);
             let tile = usize::from(entry & 0x03ff);
@@ -2227,6 +2255,56 @@ fn draw_battle_background(frame: &mut [u8]) {
             }
         }
     }
+}
+
+/// Source `BattleIntroSlide1` for the grass environment, compressed onto the
+/// port's pre-existing 48-frame encounter hand-off.  The C task executes two
+/// setup ticks, 32 one-pixel WIN0 expansions, then 120 two-pixel scanline
+/// slides.  The state model intentionally owns only the 48-frame lock, so
+/// sampling that source task proportionally makes every typed intermediate
+/// frame use the real BG/window timing without inventing a separate clock.
+fn draw_grass_battle_intro_slide_phase(frame: &mut [u8], serialized_phase: usize) {
+    const SERIALIZED_FRAMES: usize = 48;
+    const SOURCE_TASK_TICKS: usize = 154;
+    const INITIAL_WINDOW_TOP: usize = FRAME_HEIGHT / 2;
+    const INITIAL_WINDOW_BOTTOM: usize = INITIAL_WINDOW_TOP + 1;
+
+    draw_solid_rect(frame, 0, 0, FRAME_WIDTH, FRAME_HEIGHT, [0, 0, 0]);
+    let source_tick = serialized_phase.min(SERIALIZED_FRAMES - 1)
+        * (SOURCE_TASK_TICKS - 1)
+        / (SERIALIZED_FRAMES - 1);
+
+    // Before `BattleIntroSlide1` enables WIN0, source BGs are masked.  The
+    // first two task ticks therefore remain the source black hand-off.
+    if source_tick < 2 {
+        return;
+    }
+
+    let (top, bottom, upper_x_offset, lower_x_offset) = if source_tick < 34 {
+        // State 2: `gBattle_WIN0V -= 0xFF`, which moves the top edge one
+        // line upward and the bottom edge one line downward per source tick.
+        let expansion = source_tick - 1;
+        (
+            INITIAL_WINDOW_TOP.saturating_sub(expansion),
+            (INITIAL_WINDOW_BOTTOM + expansion).min(FRAME_HEIGHT),
+            240,
+            -240,
+        )
+    } else {
+        // State 3 first decrements the two source HBlank offsets from
+        // ±240 to ±238, then widens WIN0 by four scanlines per edge.  Its
+        // 120th tick reaches the stable zero-offset, full-screen field.
+        let slide_tick = source_tick - 34;
+        let widening = slide_tick * 4;
+        let x_offset = 238_i32.saturating_sub((slide_tick * 2) as i32);
+        (
+            44_usize.saturating_sub(widening),
+            (117 + widening).min(FRAME_HEIGHT),
+            x_offset,
+            -x_offset,
+        )
+    };
+    draw_battle_background_windowed(frame, top, bottom, upper_x_offset, lower_x_offset);
 }
 
 /// Replays the settled one-member `OpenPartyMenuInBattle` screen used by the
