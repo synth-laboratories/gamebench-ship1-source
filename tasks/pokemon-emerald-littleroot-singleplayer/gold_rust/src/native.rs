@@ -4,7 +4,7 @@ use crate::{FRAME_BYTES, FRAME_HEIGHT, FRAME_WIDTH};
 use crate::world::{
     BATTLE_COMMAND_BAG, BATTLE_COMMAND_RUN, Facing, MapId,
     NamingActionButton, NamingActionButtonPulse, NpcState, NpcWalkStart,
-    PlayerGender, StarterSpecies, StoryPhase,
+    PlayerGender, StarterSpecies, StoryPhase, BATTLE_PLAYER_INTRO_SENDOUT_FRAMES,
     TilePosition, WorldState,
 };
 use std::io::{Cursor, Read};
@@ -130,6 +130,11 @@ const BATTLE_ZIGZAGOON_FRONT_B64: &str = include_str!("../assets/battle_zigzagoo
 const BATTLE_POOCHYENA_FRONT_B64: &str = include_str!("../assets/battle_poochyena_front.png.b64");
 const BATTLE_WINGULL_FRONT_B64: &str = include_str!("../assets/battle_wingull_front.png.b64");
 const BATTLE_WURMPLE_FRONT_B64: &str = include_str!("../assets/battle_wurmple_front.png.b64");
+// `gTrainerBackPic_{Brendan,May}` are 64x256 source sheets with four
+// hardware frames. `PlayerHandleIntroTrainerBallThrow` starts animation 1
+// while the trainer exits before the normal ball-release controller begins.
+const BATTLE_TRAINER_BACK_BRENDAN_B64: &str = include_str!("../assets/battle_trainer_back_brendan.png.b64");
+const BATTLE_TRAINER_BACK_MAY_B64: &str = include_str!("../assets/battle_trainer_back_may.png.b64");
 // The opening Route 101/103 battles use Emerald's normal tall-grass battle
 // environment: a 64×32 BG2 tilemap, its 4bpp tiles, and three palette banks.
 const BATTLE_TALL_GRASS_TILES_B64: &str = include_str!("../assets/battle_tall_grass_tiles.png.b64");
@@ -242,6 +247,8 @@ static BATTLE_ZIGZAGOON_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_POOCHYENA_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_WINGULL_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_WURMPLE_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
+static BATTLE_TRAINER_BACK_BRENDAN: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static BATTLE_TRAINER_BACK_MAY: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_TALL_GRASS_TILES: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_TALL_GRASS_PALETTE: OnceLock<Vec<[u8; 3]>> = OnceLock::new();
 static BATTLE_TALL_GRASS_MAP: OnceLock<Vec<u8>> = OnceLock::new();
@@ -1864,6 +1871,18 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             return;
         }
         draw_battle_background(frame);
+        let player_intro_sendout = battle.intro_player_sendout_frames > 0;
+        if player_intro_sendout {
+            // The trainer is an OBJ beneath the retained status chrome. The
+            // settled starter OBJ is deliberately absent until this bounded
+            // source exit completes; the later ball/release phase remains
+            // outside this pass.
+            draw_battle_player_intro_sendout_trainer(
+                frame,
+                world.player_gender,
+                battle.intro_player_sendout_frames,
+            );
+        }
         draw_battle_healthbox_backgrounds(frame);
         // The status pane identifies the active opposing Pokémon, including
         // in trainer battles; the trainer identity belongs to the intro text.
@@ -1884,7 +1903,9 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
         draw_text(frame, 140, 94, "HP", 2);
         draw_source_battle_hp_bar(frame, 160, 95, battle.player_hp, battle.player_max_hp);
         draw_text(frame, 198, 99, &format!("{}/{}", battle.player_hp, battle.player_max_hp), 6);
-        draw_battle_player_sprite(frame, world.starter);
+        if !player_intro_sendout {
+            draw_battle_player_sprite(frame, world.starter);
+        }
         if battle.party_screen_open {
             draw_opening_battle_party_menu(frame, world, battle, player);
             return;
@@ -3313,6 +3334,57 @@ fn draw_battle_player_sprite(
         crate::world::StarterSpecies::Torchic | crate::world::StarterSpecies::Mudkip => 5,
     };
     draw_battle_sprite_centered(frame, battle_back_sprite(starter), 72, 80 + y_offset);
+}
+
+/// Projects the opening player-side trainer exit before the starter appears.
+/// Source `PlayerHandleIntroTrainerBallThrow` moves the selected back sprite
+/// from `(80, 80)` to `(-40, 80)` over fifty ticks and starts animation 1;
+/// `sAnimCmd_{Brendan,May}_1` selects frames 0, 1, then 2 during that
+/// interval. The subsequent Poké Ball arc and release particles are not
+/// included in this bounded pass.
+fn draw_battle_player_intro_sendout_trainer(
+    frame: &mut [u8],
+    gender: PlayerGender,
+    frames_remaining: u8,
+) {
+    const SPRITE_SIZE: usize = 64;
+    let elapsed = usize::from(BATTLE_PLAYER_INTRO_SENDOUT_FRAMES.saturating_sub(frames_remaining));
+    let source_frame = match elapsed {
+        0..=23 => 0,
+        24..=32 => 1,
+        _ => 2,
+    };
+    let source = match gender {
+        PlayerGender::Brendan => BATTLE_TRAINER_BACK_BRENDAN.get_or_init(|| {
+            decode_source_indexed_sheet(BATTLE_TRAINER_BACK_BRENDAN_B64)
+                .expect("staged Brendan battle-back source asset must decode")
+        }),
+        PlayerGender::May => BATTLE_TRAINER_BACK_MAY.get_or_init(|| {
+            decode_source_indexed_sheet(BATTLE_TRAINER_BACK_MAY_B64)
+                .expect("staged May battle-back source asset must decode")
+        }),
+    };
+    if source.width != SPRITE_SIZE || source.height < (source_frame + 1) * SPRITE_SIZE {
+        return;
+    }
+
+    // `StartAnimLinearTranslation` uses the controller's authored duration
+    // rather than a camera-relative motion: `(80, 80)` → `(-40, 80)` in 50.
+    let center_x = 80_i16 - (120 * elapsed / usize::from(BATTLE_PLAYER_INTRO_SENDOUT_FRAMES)) as i16;
+    let center_y = 80_i16;
+    let origin_x = center_x - (SPRITE_SIZE as i16 / 2);
+    let origin_y = center_y - (SPRITE_SIZE as i16 / 2);
+    let source_y = source_frame * SPRITE_SIZE;
+    for row in 0..SPRITE_SIZE {
+        for column in 0..SPRITE_SIZE {
+            let color_index = usize::from(source.pixels[(source_y + row) * source.width + column]);
+            if color_index == 0 || color_index >= source.palette.len() { continue; }
+            let x = origin_x + column as i16;
+            let y = origin_y + row as i16;
+            if x < 0 || y < 0 { continue; }
+            put_pixel(frame, x as usize, y as usize, source.palette[color_index]);
+        }
+    }
 }
 
 /// Nearest-neighbor presentation of Emerald's affine 64×64 battle OBJ.
