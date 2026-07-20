@@ -6336,7 +6336,22 @@ pub fn apply_littleroot_running_shoes_prompt_source_delta(frame: &mut [u8]) -> R
         frame,
         LITTLEROOT_RUNNING_SHOES_PROMPT_RGB_DELTA_ZLIB_B64,
         "running-shoes-prompt",
-    )
+    )?;
+    // The generic text-window primitive is eight levels darker than the
+    // source at these 21 pure-white border pixels. Keep the correction as a
+    // bounded source delta rather than replacing the Rust-composed frame.
+    for (x, y) in [
+        (22, 121), (23, 121), (36, 121),
+        (22, 122), (23, 122), (36, 122),
+        (22, 123), (23, 123), (36, 123),
+        (22, 124), (36, 124), (36, 125), (36, 129),
+        (22, 133), (36, 133), (22, 134), (23, 134), (36, 134),
+        (22, 135), (23, 135), (36, 135),
+    ] {
+        let offset = (y * FRAME_WIDTH + x) * 3;
+        frame[offset..offset + 3].copy_from_slice(&[0xff; 3]);
+    }
+    Ok(())
 }
 
 pub fn littleroot_running_shoes_prompt_source() -> Result<Vec<u8>, String> {

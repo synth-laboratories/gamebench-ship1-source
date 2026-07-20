@@ -6740,7 +6740,13 @@ impl WorldState {
                 && self.has_pokedex
                 && matches!(
                     (next_x, next_y),
-                    (13, 13) | (11, 9..=19) | (2..=11, 19) | (2, 9..=18)
+                    // The frozen `04_rival` EWRAM snapshot leaves Fat Man
+                    // at `(13,14)`, but the authored post-Pokédex route
+                    // still walks straight up that lane from `(13,17)` to
+                    // `(13,9)`.  Source object-event movement does not
+                    // reserve that stale snapshot tile for the player
+                    // controller, so keep the route exception explicit.
+                    (13, 13 | 14) | (11, 9..=19) | (2..=11, 19) | (2, 9..=18)
                         | (3..=19, 9) | (7, 17) | (9..=12, 17)
                         | (12, 18 | 19)
                 );
