@@ -3540,9 +3540,15 @@ impl WorldState {
             let boundary = TV_BROADCAST_APPROACH_STEP_FRAMES * (index as u16 + 1);
             if elapsed_before < boundary && boundary <= elapsed_after {
                 let player = stepped_position(&self.player, direction);
-                self.elevation = crate::native::tile_elevation(self.map, player.x, player.y)
-                    .expect("TV approach destination must be inside the staged house map");
-                self.player = player;
+                // The source movement script is authored for the matching
+                // house layout. A caller can still feed an arbitrary input
+                // stream into the serialized state, though; keep that probe
+                // from turning a harmless out-of-bounds scripted step into a
+                // process panic while preserving the source-facing turn.
+                if let Ok(elevation) = crate::native::tile_elevation(self.map, player.x, player.y) {
+                    self.elevation = elevation;
+                    self.player = player;
+                }
                 self.facing = direction;
             }
         }
@@ -3577,40 +3583,40 @@ impl WorldState {
             self.stop_walking();
         }
         if elapsed_before < mom_step_boundary && mom_step_boundary <= elapsed_after {
-            let mom = self.npcs.iter()
+            if let Some(mom) = self.npcs.iter()
                 .find(|npc| npc.id == "mom" && npc.map == self.map)
-                .expect("Mom must exist during the Petalburg Gym broadcast")
-                .position
-                .clone();
-            let start_frame = self.frame.saturating_sub(u64::from(
-                elapsed_after.saturating_sub(mom_step_boundary),
-            ));
-            self.move_scripted_npc_with_duration_at_frame(
-                "mom",
-                self.map,
-                stepped_position(&mom, side),
-                side,
-                TV_BROADCAST_VIEW_MOM_STEP_FRAMES as u8,
-                start_frame,
-            );
+                .map(|npc| npc.position.clone())
+            {
+                let start_frame = self.frame.saturating_sub(u64::from(
+                    elapsed_after.saturating_sub(mom_step_boundary),
+                ));
+                self.move_scripted_npc_with_duration_at_frame(
+                    "mom",
+                    self.map,
+                    stepped_position(&mom, side),
+                    side,
+                    TV_BROADCAST_VIEW_MOM_STEP_FRAMES as u8,
+                    start_frame,
+                );
+            }
         }
         if elapsed_before < mom_turn_boundary && mom_turn_boundary <= elapsed_after {
-            let mom = self.npcs.iter()
+            if let Some(mom) = self.npcs.iter()
                 .find(|npc| npc.id == "mom" && npc.map == self.map)
-                .expect("Mom must exist for the Petalburg Gym viewing turn")
-                .position
-                .clone();
-            let start_frame = self.frame.saturating_sub(u64::from(
-                elapsed_after.saturating_sub(mom_turn_boundary),
-            ));
-            self.move_scripted_npc_with_duration_at_frame(
-                "mom",
-                self.map,
-                mom,
-                mom_turn,
-                TV_BROADCAST_VIEW_FASTER_TURN_FRAMES as u8,
-                start_frame,
-            );
+                .map(|npc| npc.position.clone())
+            {
+                let start_frame = self.frame.saturating_sub(u64::from(
+                    elapsed_after.saturating_sub(mom_turn_boundary),
+                ));
+                self.move_scripted_npc_with_duration_at_frame(
+                    "mom",
+                    self.map,
+                    mom,
+                    mom_turn,
+                    TV_BROADCAST_VIEW_FASTER_TURN_FRAMES as u8,
+                    start_frame,
+                );
+            }
         }
         if elapsed_before < mom_turn_boundary && mom_turn_boundary <= elapsed_after {
             // The source walk changes the player object's facing as its
@@ -3619,9 +3625,13 @@ impl WorldState {
         }
         if elapsed_before < player_step_boundary && player_step_boundary <= elapsed_after {
             let player = stepped_position(&self.player, side);
-            self.elevation = crate::native::tile_elevation(self.map, player.x, player.y)
-                .expect("TV destination must be inside the staged house map");
-            self.player = player;
+            // As above, retain the scripted timer/facing even if a malformed
+            // external replay places the player against the map edge. Valid
+            // source paths still take the exact authored destination.
+            if let Ok(elevation) = crate::native::tile_elevation(self.map, player.x, player.y) {
+                self.elevation = elevation;
+                self.player = player;
+            }
         }
         self.walk_direction = (elapsed_after > mom_turn_boundary
             && elapsed_after < player_step_boundary)
