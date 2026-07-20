@@ -16,7 +16,7 @@ RGB frames from locally represented map, sprite, palette, and timing data.
 ## Current scope
 
 - Fixed 240×160 RGB framebuffer and SHA-256 frame fingerprinting.
-- Sixty-one byte-identical mGBA oracle frames embedded in the Rust gold crate,
+- Seventy-three byte-identical mGBA oracle frames embedded in the Rust gold crate,
   covering title timing through the first Professor Birch-intro frame, staged
   checkpoint idles, all four bedroom movement directions at 16/32/48 frames,
   outdoor first-step movement, and the opening Pokédex navigation sequence.

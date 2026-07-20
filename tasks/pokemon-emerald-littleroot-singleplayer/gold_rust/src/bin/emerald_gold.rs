@@ -65,7 +65,7 @@ async fn info() -> Json<Value> {
         "env_family": ENV_FAMILY,
         "frame": { "width": FRAME_WIDTH, "height": FRAME_HEIGHT, "pixel_format": "rgb8" },
         "parity_status": "partial_exact_trace_corpus",
-        "exact_reference_frames": 61,
+        "exact_reference_frames": 73,
         "native_fallback": true,
     }))
 }
