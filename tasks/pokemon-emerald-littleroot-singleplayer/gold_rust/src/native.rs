@@ -5909,17 +5909,18 @@ fn apply_dynamic_npc_tiles(vram: &mut [u8], palette: &mut [u8], map_id: MapId, p
         let sprite_facing = latest_walk
             .and_then(|walk| walk.sprite_facing)
             .unwrap_or(npc.facing);
-        let walking_frame = latest_walk
+        let sprite_column = latest_walk
             .and_then(|walk| {
                 let elapsed = npc_animation_tick.saturating_sub(walk.frame);
-                (elapsed < u64::from(walk.duration_frames.max(1)))
-                    .then(|| 1 + (elapsed as usize * 2) / usize::from(walk.duration_frames.max(1)))
+                (elapsed < u64::from(walk.duration_frames.max(1))).then(|| {
+                    npc_walk_sprite_column(sprite_facing, elapsed, walk.duration_frames)
+                })
             })
-            .unwrap_or(0);
+            .unwrap_or_else(|| npc_idle_sprite_column(sprite_facing));
         if npc_is_small_mon(map_id, &npc.id) {
             stage_small_mon_frame(vram, 64 + entry * 8, &sheet, sprite_facing)?;
         } else {
-            stage_npc_sprite_frame(vram, 64 + entry * 8, &sheet, sprite_facing, walking_frame)?;
+            stage_npc_sprite_frame(vram, 64 + entry * 8, &sheet, sprite_column)?;
         }
         stage_npc_palette(palette, entry % 15 + 1, &sheet.palette)?;
     }
@@ -5975,16 +5976,59 @@ fn stage_npc_palette(palette: &mut [u8], bank: usize, source: &[u8]) -> Result<(
     Ok(())
 }
 
-fn stage_npc_sprite_frame(vram: &mut [u8], tile: usize, sheet: &NpcSpriteSheet, facing: Facing, walk_frame: usize) -> Result<(), String> {
-    if vram.len() != 0x8000 || sheet.width != 144 || sheet.height != 32 || walk_frame > 2 || tile + 8 > 1024 {
+/// Standard object-event sheets are nine 16x32 cells wide.  Their source
+/// `sAnim_Go*` tables use the directional standing cells `0..=2` plus the
+/// matching first/second foot cells `3..=8`; they are not three vertical
+/// directional strips.  Keep the source command cadence separate from the
+/// sheet blit so all dynamic exterior NPCs use the same layout.
+fn npc_idle_sprite_column(facing: Facing) -> usize {
+    match facing {
+        Facing::Down => 0,
+        Facing::Up => 1,
+        Facing::Left | Facing::Right => 2,
+    }
+}
+
+fn npc_walk_sprite_column(facing: Facing, elapsed: u64, duration_frames: u8) -> usize {
+    // `sAnim_Go*`, `sAnim_GoFast*`, `sAnim_GoFaster*`, and
+    // `sAnim_GoFastest*` hold each animation command for 8, 4, 2, and 1
+    // frames respectively.  Slower actions retain the ordinary eight-frame
+    // command cadence and therefore run the full step/idle/step/idle loop.
+    let command_frames = match duration_frames {
+        0..=2 => 1,
+        3..=4 => 2,
+        5..=8 => 4,
+        _ => 8,
+    };
+    let phase = (elapsed / command_frames) % 4;
+    let (first_step, idle, second_step) = match facing {
+        Facing::Down => (3, 0, 4),
+        Facing::Up => (5, 1, 6),
+        Facing::Left | Facing::Right => (7, 2, 8),
+    };
+    match phase {
+        0 => first_step,
+        1 | 3 => idle,
+        2 => second_step,
+        _ => unreachable!("object-event animation phase is modulo four"),
+    }
+}
+
+fn stage_npc_sprite_frame(
+    vram: &mut [u8],
+    tile: usize,
+    sheet: &NpcSpriteSheet,
+    sprite_column: usize,
+) -> Result<(), String> {
+    if vram.len() != 0x8000
+        || sheet.width != 144
+        || sheet.height != 32
+        || sprite_column > 8
+        || tile + 8 > 1024
+    {
         return Err("invalid staged object-event sprite frame".to_owned());
     }
-    let column = match facing {
-        Facing::Down => walk_frame,
-        Facing::Up => 3 + walk_frame,
-        Facing::Left | Facing::Right => 6 + walk_frame,
-    };
-    let left = column * 16;
+    let left = sprite_column * 16;
     for tile_y in 0..4 {
         for tile_x in 0..2 {
             let target = (tile + tile_y * 2 + tile_x) * 32;
