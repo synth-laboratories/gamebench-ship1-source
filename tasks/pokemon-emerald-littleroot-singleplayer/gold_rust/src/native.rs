@@ -265,6 +265,7 @@ const LITTLEROOT_RIGHT_4848_BG_VRAM_ZLIB_B64: &str = include_str!("../assets/lit
 const LITTLEROOT_RIGHT_4864_BG_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4864.bg_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4880_BG_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4880.bg_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4896_BG_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4896.bg_vram.zlib.b64");
+const LITTLEROOT_RIGHT_4912_BG_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4912.bg_vram.zlib.b64");
 const LITTLEROOT_RIGHT_5120_BG_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_5120.bg_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4160_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4160.obj_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4288_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4288.obj_vram.zlib.b64");
@@ -281,6 +282,7 @@ const LITTLEROOT_RIGHT_4848_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/li
 const LITTLEROOT_RIGHT_4864_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4864.obj_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4880_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4880.obj_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4896_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4896.obj_vram.zlib.b64");
+const LITTLEROOT_RIGHT_4912_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4912.obj_vram.zlib.b64");
 const LITTLEROOT_RIGHT_5120_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_5120.obj_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4160_OAM_B64: &str = include_str!("../assets/littleroot_right_4160.oam.b64");
 const LITTLEROOT_RIGHT_4224_OAM_B64: &str = include_str!("../assets/littleroot_right_4224.oam.b64");
@@ -299,6 +301,7 @@ const LITTLEROOT_RIGHT_4848_OAM_B64: &str = include_str!("../assets/littleroot_r
 const LITTLEROOT_RIGHT_4864_OAM_B64: &str = include_str!("../assets/littleroot_right_4864.oam.b64");
 const LITTLEROOT_RIGHT_4880_OAM_B64: &str = include_str!("../assets/littleroot_right_4880.oam.b64");
 const LITTLEROOT_RIGHT_4896_OAM_B64: &str = include_str!("../assets/littleroot_right_4896.oam.b64");
+const LITTLEROOT_RIGHT_4912_OAM_B64: &str = include_str!("../assets/littleroot_right_4912.oam.b64");
 const LITTLEROOT_RIGHT_5120_OAM_B64: &str = include_str!("../assets/littleroot_right_5120.oam.b64");
 const LITTLEROOT_RIGHT_192_OAM_B64: &str = include_str!("../assets/littleroot_right_192.oam.b64");
 const LITTLEROOT_RIGHT_192_OBJ_TILES_B64: &str = include_str!("../assets/littleroot_right_192.obj_tiles.b64");
@@ -6119,6 +6122,7 @@ fn littleroot_stopped_right_phase_state(frame: u64) -> Option<(&'static str, &'s
         4864 => Some((LITTLEROOT_RIGHT_4864_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4864_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4864_OAM_B64)),
         4880 => Some((LITTLEROOT_RIGHT_4880_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4880_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4880_OAM_B64)),
         4896 => Some((LITTLEROOT_RIGHT_4896_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4896_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4896_OAM_B64)),
+        4912 => Some((LITTLEROOT_RIGHT_4912_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4912_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4912_OAM_B64)),
         5120 => Some((LITTLEROOT_RIGHT_5120_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_5120_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_5120_OAM_B64)),
         _ => None,
     }
@@ -6223,7 +6227,7 @@ fn restore_littleroot_stopped_right_player_priority_pixels(
         (116, 86),
     ];
     match phase {
-        4816 | 4848 | 4880 => pixels.push((118, 86)),
+        4816 | 4848 | 4880 | 4912 => pixels.push((118, 86)),
         4832 | 4896 => pixels.extend([(117, 86), (118, 86), (116, 87), (117, 87)]),
         _ => {}
     }
