@@ -1750,9 +1750,12 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             return;
         }
         if let Some(message) = battle.message.as_deref() {
-            draw_menu_window(frame, 0, 112, 240, 48);
-            draw_text(frame, 8, 120, message, 34);
-            draw_text(frame, 220, 144, "A", 1);
+            let text_palette = draw_battle_message_chrome(frame);
+            draw_text_with_palette(frame, 16, 121, message, 34, text_palette);
+            // `B_WIN_MSG` owns the source down-arrow through the live text
+            // printer's wait state. The typed battle state does not yet
+            // serialize that blink phase, so do not substitute the former
+            // invented literal "A" for source UI art here.
         } else if battle.selecting_move {
             draw_menu_window(frame, 0, 112, 128, 48);
             draw_menu_window(frame, 128, 112, 112, 48);
@@ -2074,6 +2077,77 @@ fn draw_battle_background(frame: &mut [u8]) {
             }
         }
     }
+}
+
+/// Replays normal `B_WIN_MSG` from the source BG0 layer. The static textbox
+/// map supplies the six-tile message frame at screen rows 112–159; source
+/// `BattlePutTextOnWindow` then clears the 26×4 inner window at `(2, 15)`
+/// with palette index 15 before it draws its normal-font message at `(0, 1)`.
+fn draw_battle_message_chrome(frame: &mut [u8]) -> [[u8; 3]; 3] {
+    let tiles = BATTLE_TEXTBOX_TILES.get_or_init(|| {
+        decode_source_indexed_sheet(BATTLE_TEXTBOX_TILES_B64)
+            .expect("staged Emerald battle textbox tiles must decode")
+    });
+    let palette = BATTLE_TEXTBOX_PALETTE.get_or_init(|| {
+        decode_base64(BATTLE_TEXTBOX_PALETTE_B64)
+            .expect("staged Emerald battle textbox palette must decode")
+    });
+    let tilemap = BATTLE_TEXTBOX_MAP.get_or_init(|| {
+        decode_base64(BATTLE_TEXTBOX_MAP_B64)
+            .expect("staged Emerald battle textbox map must decode")
+    });
+
+    const MAP_WIDTH_TILES: usize = 32;
+    const MAP_HEIGHT_TILES: usize = 64;
+    const MESSAGE_FRAME_TOP: usize = 14 * 8;
+    const MESSAGE_FRAME_BOTTOM: usize = 20 * 8;
+    const MESSAGE_LEFT: usize = 2 * 8;
+    const MESSAGE_TOP: usize = 15 * 8;
+    const MESSAGE_WIDTH: usize = 26 * 8;
+    const MESSAGE_HEIGHT: usize = 4 * 8;
+    assert_eq!(tilemap.len(), MAP_WIDTH_TILES * MAP_HEIGHT_TILES * 2);
+    assert_eq!(palette.len(), 2 * 16 * 2);
+    assert_eq!(tiles.width % 8, 0);
+    assert_eq!(tiles.height % 8, 0);
+
+    let source_tiles_per_row = tiles.width / 8;
+    let source_tile_count = source_tiles_per_row * (tiles.height / 8);
+    for y in MESSAGE_FRAME_TOP..MESSAGE_FRAME_BOTTOM {
+        let tile_y = y / 8;
+        let pixel_y = y % 8;
+        for x in 0..FRAME_WIDTH {
+            let tile_x = x / 8;
+            let pixel_x = x % 8;
+            let entry_offset = (tile_y * MAP_WIDTH_TILES + tile_x) * 2;
+            let entry = u16::from_le_bytes([tilemap[entry_offset], tilemap[entry_offset + 1]]);
+            let tile = usize::from(entry & 0x03ff);
+            let palette_bank = usize::from((entry >> 12) & 0x0f);
+            if palette_bank != 0 || tile >= source_tile_count { continue; }
+            let source_x = (tile % source_tiles_per_row) * 8
+                + if entry & 0x0400 != 0 { 7 - pixel_x } else { pixel_x };
+            let source_y = (tile / source_tiles_per_row) * 8
+                + if entry & 0x0800 != 0 { 7 - pixel_y } else { pixel_y };
+            let color_index = usize::from(tiles.pixels[source_y * tiles.width + source_x]);
+            // Color zero is transparent on source BG0, so the battle field
+            // remains visible through the unused map cells beside the frame.
+            if color_index == 0 { continue; }
+            if let Some(color) = battle_textbox_palette_color(palette, color_index) {
+                put_pixel(frame, x, y, color);
+            }
+        }
+    }
+
+    let fill = battle_textbox_palette_color(palette, 15)
+        .expect("staged Emerald battle textbox palette must have message fill");
+    draw_solid_rect(frame, MESSAGE_LEFT, MESSAGE_TOP, MESSAGE_WIDTH, MESSAGE_HEIGHT, fill);
+
+    [
+        battle_textbox_palette_color(palette, 1)
+            .expect("staged Emerald battle textbox palette must have message foreground"),
+        battle_textbox_palette_color(palette, 6)
+            .expect("staged Emerald battle textbox palette must have message shadow"),
+        fill,
+    ]
 }
 
 /// Replays the stable opening action-selection page from the same BG0
