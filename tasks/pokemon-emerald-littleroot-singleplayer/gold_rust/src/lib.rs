@@ -2279,7 +2279,22 @@ impl LittlerootSession {
             {
                 native::render_birch_exterior_with_idle_objects(self.world.render_player())
             }
-            _ => native::render_world_view_with_dynamic_objects_and_tv_state(self.world.map, self.world.render_player(), self.world.player_gender, self.world.facing, self.world.walk_direction, self.world.walk_progress_frames, self.world.frame, &self.world.npcs, &self.world.npc_walk_starts, self.world.tv_screen_on),
+            _ => native::render_world_view_with_dynamic_objects_and_tv_state_and_running(
+                self.world.map,
+                self.world.render_player(),
+                self.world.player_gender,
+                self.world.facing,
+                self.world.walk_direction,
+                self.world.walk_progress_frames,
+                self.world.frame,
+                &self.world.npcs,
+                &self.world.npc_walk_starts,
+                self.world.tv_screen_on,
+                self.world.running
+                    && self.world.phase == world::StoryPhase::RunningShoesReceived
+                    && self.world.map == world::MapId::LittlerootTown,
+                self.world.running_step_uses_second_foot,
+            ),
         }.expect("staged Little Root terrain and object assets must render");
         if self.world.map == MapId::LittlerootTown && !captured_directional_48 {
             native::apply_littleroot_continuous_composite_delta(&mut frame, self.world.walk_direction, self.world.frame)

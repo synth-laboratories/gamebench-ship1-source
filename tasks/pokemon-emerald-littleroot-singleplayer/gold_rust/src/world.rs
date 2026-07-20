@@ -1259,6 +1259,10 @@ pub struct WorldState {
     #[serde(default)]
     pub walk_render_origin: Option<TilePosition>,
     pub running: bool,
+    /// The source run animation switches feet after each eight-frame stride.
+    /// This affects only player rendering; `walk_bounds` retains field logic.
+    #[serde(default)]
+    pub running_step_uses_second_foot: bool,
     pub starter: Option<StarterSpecies>,
     /// The source's gPlayerParty[0] projection for the opening starter.
     /// Older snapshots lazily construct it from the selected starter.
@@ -1433,6 +1437,7 @@ impl WorldState {
             camera_handoff_from: None,
             walk_render_origin: None,
             running: false,
+            running_step_uses_second_foot: false,
             starter: None,
             starter_party: None,
             starter_reveal_frames: None,
@@ -1560,6 +1565,7 @@ impl WorldState {
             camera_handoff_from: None,
             walk_render_origin: None,
             running: false,
+            running_step_uses_second_foot: false,
             starter: None,
             starter_party: None,
             starter_reveal_frames: None,
@@ -1690,6 +1696,7 @@ impl WorldState {
             camera_handoff_from: None,
             walk_render_origin: None,
             running: false,
+            running_step_uses_second_foot: false,
             starter: None,
             starter_party: None,
             starter_reveal_frames: None,
@@ -1816,6 +1823,7 @@ impl WorldState {
             camera_handoff_from: None,
             walk_render_origin: None,
             running: false,
+            running_step_uses_second_foot: false,
             starter: Some(StarterSpecies::Treecko),
             starter_party: None,
             starter_reveal_frames: None,
@@ -1971,6 +1979,7 @@ impl WorldState {
             camera_handoff_from: None,
             walk_render_origin: None,
             running: false,
+            running_step_uses_second_foot: false,
             starter: Some(StarterSpecies::Treecko),
             starter_party: None,
             starter_reveal_frames: None,
@@ -4330,6 +4339,9 @@ impl WorldState {
     pub fn toggle_running(&mut self) {
         if self.phase == StoryPhase::RunningShoesReceived && self.map == MapId::LittlerootTown && self.dialogue.is_none() {
             self.running = !self.running;
+            // A stationary player is on a face command, so the next source
+            // `SetStepAnimHandleAlternation` starts at its first run foot.
+            self.running_step_uses_second_foot = false;
             self.walk_progress_frames = 0;
             self.walk_elapsed_frames = 0;
             self.walk_render_origin = None;
@@ -6183,6 +6195,11 @@ impl WorldState {
                 .unwrap_or_else(|| prior_player.clone());
             self.walk_render_origin = Some(prior_render);
             self.player = TilePosition { x: next_x, y: next_y };
+            if self.running && self.map == MapId::LittlerootTown {
+                // `sAnim_Run*` alternates first/second foot pairs at each
+                // committed MOVE_SPEED_FAST_1 stride.
+                self.running_step_uses_second_foot = !self.running_step_uses_second_foot;
+            }
             if let Some(render_position) = self.render_position.as_mut() {
                 render_position.x += next_x - prior_player.x;
                 render_position.y += next_y - prior_player.y;
