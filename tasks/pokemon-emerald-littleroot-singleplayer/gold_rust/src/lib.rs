@@ -946,6 +946,29 @@ impl LittlerootSession {
             && self.rival_held_right_frames() == Some(64)
     }
 
+    /// Source mixed-direction captures are keyed to the controller's action
+    /// boundaries, not to the transport request boundaries.  Preserve that
+    /// source identity when a client splits one held segment into adjacent
+    /// requests (or asks for a zero-frame redraw between them), so the live
+    /// compositor can apply the same measured PPU delta without widening the
+    /// capture to unrelated input sequences.
+    fn rival_mixed_sequence(&self, expected: &[(Input, u32)]) -> bool {
+        let mut segments: Vec<(Input, u32)> = Vec::new();
+        for step in &self.input_log {
+            if step.action == Input::Noop && step.frames == 0 {
+                continue;
+            }
+            if let Some((action, frames)) = segments.last_mut() {
+                if *action == step.action {
+                    *frames = frames.saturating_add(step.frames);
+                    continue;
+                }
+            }
+            segments.push((step.action, step.frames));
+        }
+        segments == expected
+    }
+
     fn rival_right64_down16_evidence(&self) -> bool {
         self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
@@ -954,13 +977,7 @@ impl LittlerootSession {
             && self.world.walk_direction == Some(Facing::Down)
             && self.world.walk_progress_frames == 15
             && self.world.camera_handoff_from == Some(Facing::Right)
-            && matches!(
-                self.input_log.as_slice(),
-                [
-                    StepRequest { action: Input::Right, frames: 64 },
-                    StepRequest { action: Input::Down, frames: 16 },
-                ]
-            )
+            && self.rival_mixed_sequence(&[(Input::Right, 64), (Input::Down, 16)])
     }
 
     fn rival_right64_down32_evidence(&self) -> bool {
@@ -971,13 +988,7 @@ impl LittlerootSession {
             && self.world.walk_direction == Some(Facing::Down)
             && self.world.walk_progress_frames == 15
             && self.world.camera_handoff_from == Some(Facing::Right)
-            && matches!(
-                self.input_log.as_slice(),
-                [
-                    StepRequest { action: Input::Right, frames: 64 },
-                    StepRequest { action: Input::Down, frames: 32 },
-                ]
-            )
+            && self.rival_mixed_sequence(&[(Input::Right, 64), (Input::Down, 32)])
     }
 
     fn rival_right64_down48_evidence(&self) -> bool {
@@ -988,13 +999,7 @@ impl LittlerootSession {
             && self.world.walk_direction == Some(Facing::Down)
             && self.world.walk_progress_frames == 0
             && self.world.camera_handoff_from == Some(Facing::Right)
-            && matches!(
-                self.input_log.as_slice(),
-                [
-                    StepRequest { action: Input::Right, frames: 64 },
-                    StepRequest { action: Input::Down, frames: 48 },
-                ]
-            )
+            && self.rival_mixed_sequence(&[(Input::Right, 64), (Input::Down, 48)])
     }
 
     fn rival_right64_down64_evidence(&self) -> bool {
@@ -1005,13 +1010,7 @@ impl LittlerootSession {
             && self.world.walk_direction == Some(Facing::Down)
             && self.world.walk_progress_frames == 0
             && self.world.camera_handoff_from == Some(Facing::Right)
-            && matches!(
-                self.input_log.as_slice(),
-                [
-                    StepRequest { action: Input::Right, frames: 64 },
-                    StepRequest { action: Input::Down, frames: 64 },
-                ]
-            )
+            && self.rival_mixed_sequence(&[(Input::Right, 64), (Input::Down, 64)])
     }
 
     fn rival_right64_down64_left16_evidence(&self) -> bool {
@@ -1022,14 +1021,7 @@ impl LittlerootSession {
             && self.world.walk_direction == Some(Facing::Left)
             && self.world.walk_progress_frames == 15
             && self.world.camera_handoff_from == Some(Facing::Down)
-            && matches!(
-                self.input_log.as_slice(),
-                [
-                    StepRequest { action: Input::Right, frames: 64 },
-                    StepRequest { action: Input::Down, frames: 64 },
-                    StepRequest { action: Input::Left, frames: 16 },
-                ]
-            )
+            && self.rival_mixed_sequence(&[(Input::Right, 64), (Input::Down, 64), (Input::Left, 16)])
     }
 
     fn rival_right64_down64_left64_evidence(&self) -> bool {
@@ -1040,14 +1032,7 @@ impl LittlerootSession {
             && self.world.walk_direction == Some(Facing::Left)
             && self.world.walk_progress_frames == 15
             && self.world.camera_handoff_from == Some(Facing::Down)
-            && matches!(
-                self.input_log.as_slice(),
-                [
-                    StepRequest { action: Input::Right, frames: 64 },
-                    StepRequest { action: Input::Down, frames: 64 },
-                    StepRequest { action: Input::Left, frames: 64 },
-                ]
-            )
+            && self.rival_mixed_sequence(&[(Input::Right, 64), (Input::Down, 64), (Input::Left, 64)])
     }
 
     fn rival_right16_noop1_evidence(&self) -> bool {
