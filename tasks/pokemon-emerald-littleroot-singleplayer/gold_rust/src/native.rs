@@ -6,7 +6,8 @@ use crate::world::{
     NamingActionButton, NamingActionButtonPulse, NpcState, NpcWalkStart,
     PlayerGender, StarterSpecies, StoryPhase, BATTLE_PLAYER_INTRO_SENDOUT_FRAMES,
     BATTLE_PLAYER_SENDOUT_BALL_ARC_FRAMES, BATTLE_PLAYER_SENDOUT_BALL_FIRST_ARC_FRAME,
-    BATTLE_PLAYER_SENDOUT_BALL_SPAWN_FRAME, BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES,
+    BATTLE_PLAYER_SENDOUT_BALL_SPAWN_FRAME, BATTLE_PLAYER_SENDOUT_COMPLETE_FRAMES,
+    BATTLE_PLAYER_SENDOUT_RELEASE_FRAMES, BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES,
     TilePosition, WorldState,
 };
 use std::io::{Cursor, Read};
@@ -1891,7 +1892,7 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
         }
         draw_battle_background(frame);
         let player_intro_sendout = (battle.intro_player_sendout_started
-            && battle.intro_player_sendout_elapsed_frames <= BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES)
+            && battle.intro_player_sendout_elapsed_frames <= BATTLE_PLAYER_SENDOUT_COMPLETE_FRAMES)
             || battle.intro_player_sendout_frames > 0;
         if player_intro_sendout {
             // Both objects are source OBJ layers beneath the retained status
@@ -1913,8 +1914,13 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
                     battle.intro_player_sendout_elapsed_frames,
                     world.starter,
                 );
-                if battle.intro_player_sendout_elapsed_frames == BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES {
-                    draw_battle_player_intro_sendout_release(frame, world.starter);
+                if battle.intro_player_sendout_elapsed_frames >= BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES {
+                    draw_battle_player_intro_sendout_release(
+                        frame,
+                        world.starter,
+                        battle.intro_player_sendout_elapsed_frames
+                            .saturating_sub(BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES),
+                    );
                 }
             }
         }
@@ -3443,7 +3449,7 @@ fn battle_player_sendout_pokeball_center(
     elapsed_frames: u8,
     starter: Option<StarterSpecies>,
 ) -> Option<(i16, i16)> {
-    if !(BATTLE_PLAYER_SENDOUT_BALL_SPAWN_FRAME..=BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES)
+    if !(BATTLE_PLAYER_SENDOUT_BALL_SPAWN_FRAME..=BATTLE_PLAYER_SENDOUT_COMPLETE_FRAMES)
         .contains(&elapsed_frames)
     {
         return None;
@@ -3467,6 +3473,14 @@ fn battle_player_sendout_pokeball_center(
         StarterSpecies::Treecko => 118,
         StarterSpecies::Torchic | StarterSpecies::Mudkip => 117,
     };
+    // After the final arc callback the ball stays on its target while
+    // `SpriteCB_ReleaseMonFromBall` plays the open-ball cell and starts the
+    // affine emerge. The source task keeps the same 16×16 OBJ alive during
+    // that hand-off rather than snapping it away with the Pokémon.
+    if elapsed_frames > BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES {
+        return Some((TARGET_X, target_y));
+    }
+
     let arc_tick = elapsed_frames
         .saturating_sub(BATTLE_PLAYER_SENDOUT_BALL_FIRST_ARC_FRAME)
         .min(BATTLE_PLAYER_SENDOUT_BALL_ARC_FRAMES);
@@ -3501,9 +3515,19 @@ fn draw_battle_player_intro_sendout_pokeball(
     });
     if ball.width != 16 { return; }
     // `SpriteCB_ReleaseMonFromBall` starts sequence 1 at the final arc
-    // callback. The first sequence cell is the source sheet's middle 16×16
-    // crop; all preceding arc frames remain on cell zero.
-    let source_y = if elapsed_frames == BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES { 16 } else { 0 };
+    // callback. `sBallAnimSeq1` holds tile 4 for five ticks, then tile 8 for
+    // five ticks (`graphics/balls/poke.png` rows y=16 and y=32); the OBJ is
+    // hidden after that ten-tick open sequence.
+    let release_elapsed = elapsed_frames.saturating_sub(BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES);
+    let source_y = if elapsed_frames < BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES {
+        0
+    } else {
+        match release_elapsed {
+            0..=4 => 16,
+            5..=9 => 32,
+            _ => return,
+        }
+    };
     if ball.height < source_y + 16 { return; }
     draw_source_indexed_crop(
         frame,
@@ -3526,17 +3550,32 @@ fn draw_battle_player_intro_sendout_pokeball(
 fn draw_battle_player_intro_sendout_release(
     frame: &mut [u8],
     starter: Option<StarterSpecies>,
+    release_elapsed: u8,
 ) {
     let y_offset = match starter.unwrap_or(StarterSpecies::Treecko) {
         StarterSpecies::Treecko => 6,
         StarterSpecies::Torchic | StarterSpecies::Mudkip => 5,
     };
+    let release_elapsed = release_elapsed.min(BATTLE_PLAYER_SENDOUT_RELEASE_FRAMES);
+    // `sAffineAnim_Battler_Emerge` is
+    // `FRAME(0x28, 0x28, 0, 0)` followed by twelve ticks of
+    // `FRAME(0x12, 0x12, 0, 12)`. The source sprite begins at y2=0x1000
+    // and `HandleBallAnimEnd` subtracts 0x120 each tick until the ball and
+    // affine animation finish, so preserve that small upward hand-off too.
+    let scale = 0x28 + 0x12 * u16::from(release_elapsed);
+    let y2 = if release_elapsed >= BATTLE_PLAYER_SENDOUT_RELEASE_FRAMES {
+        // `HandleBallAnimEnd` observes `affineAnimEnded` before applying the
+        // final decrement and explicitly clears y2 on that terminal tick.
+        0
+    } else {
+        ((0x1000_u16.saturating_sub(0x120 * u16::from(release_elapsed))) >> 8) as i16
+    };
     draw_battle_sprite_scaled_centered(
         frame,
         battle_back_sprite(starter),
         72,
-        80 + y_offset,
-        0x28,
+        80 + y_offset + y2,
+        scale,
     );
 }
 
