@@ -50,8 +50,9 @@ The complete 73-trace visual manifest now passes on the same release binary:
 - The current source-backed visual batch also includes the exact touched gender
   selector platform/trainer stage, player-ball opening and affine emergence,
   wall-clock indicator quantization, split-hold mixed-camera phases, generic
-  Start-menu frame geometry, the Route 103 sign event, and the source A|B
-  Running Shoes page wait.
+  Start-menu frame geometry, Route 103 sign text plus its `CHAR_DOWN_ARROW`
+  glyph, source-faithful ball release particles, and the source A|B Running
+  Shoes page wait.
 
 ## Reference checkpoints
 
@@ -136,10 +137,10 @@ The complete 73-trace visual manifest now passes on the same release binary:
 - Pokédex initial-index proof: the Treecko page and the first Down cursor move now compose the exact staged Emerald index pages from the stateful Pokédex screen. `Start ×16, A ×60` and `Start ×16, A ×60, Down ×16` each measure 0 differing pixels / 0 channels; later regional-index positions remain Rust-rendered until corresponding source pages are staged.
 - Native touched-gender measurement: the selector's source trainer/platform, standard-frame-1 menu border, title message border, trainer palettes, and Birch-scene font palette render from Rust-owned source assets. The touched selector now measures 0 differing pixels / 0 channels against its captured source frame; the untouched initial selector remains an exact embedded checkpoint. The selector's two-phase sprite slide is modeled but has no captured animation-frame oracle yet.
 - Clock source state: `CB2_StartWallClock` now opens the typed editor at its authored 10:00 AM default (hands 0°/300°); stable AM/PM markers use source 90°/45° and 135°/90° targets. The source 21-VBlank AM/PM flip cadence is modeled in the serialized clock transition; the clock-screen frame oracle remains open.
-- Route 103 exit visuals: the post-battle rival stream now starts every movement command at its source boundary, including a 32-frame two-tile `jump_2_down` with `JUMP_TYPE_HIGH` y-offsets. The source 16×8 medium shadow field effect is now rendered beneath the rival during that jump, and the south sign at `(11,9)` dispatches `ROUTE 103 ↓ OLDALE TOWN`; other exit OBJ/particle timing and RGB capture remain open.
+- Route 103 exit visuals: the post-battle rival stream now starts every movement command at its source boundary, including a 32-frame two-tile `jump_2_down` with `JUMP_TYPE_HIGH` y-offsets. The source 16×8 medium shadow field effect is now rendered beneath the rival during that jump, and the south sign at `(11,9)` dispatches `ROUTE 103 ↓ OLDALE TOWN` using Emerald glyph `0x7A`; other exit OBJ/particle timing and RGB capture remain open.
 - Oldale terrain backing: the live 20×20 town now renders inside its source 35×34 map-grid buffer with exact border tiles, the north Route 103 strip, and the south Route 101 strip. Route 102’s west connection is still the authored border fallback and no Oldale RGB capture is claimed.
 - Route terrain backing: Route 101 now has the same source 35×34 map-grid buffer with Oldale and Little Root connection rows, and Route 103 has its 95×36 buffer with the offset-zero Oldale south strip. The Route 103 far-east Route 110 connection is intentionally outside this segment; neither route has RGB capture evidence yet.
-- Later Little Root camera evidence: held Right ×4944 reuses source-equivalent ×4816 BG and ×4880 OBJ VRAM with its own OAM state and returns raw RGB SHA `ff0f30879a63a7fd32e10ba37fa81b08f90a01a7229dfba2410f381880b6d418`; it keeps typed NPC reprojection plus source terrain priority at `(118,86)`.
+- Later Little Root camera evidence: held Right ×4944 reuses source-equivalent ×4816 BG and ×4880 OBJ VRAM with its own OAM state and returns raw RGB SHA `ff0f30879a63a7fd32e10ba37fa81b08f90a01a7229dfba2410f381880b6d418`; it keeps typed NPC reprojection plus source terrain priority at `(118,86)`. The source-backed Right×136/180/184 edge crops now tolerate only their measured ±1-pixel payload variance instead of panicking; the missing edge pixel remains Rust-owned.
 
 The functional gate is complete. The next gate is visual: build a constrained
 source-vs-Rust replay corpus, align equivalent state/timing, then fuzz valid
