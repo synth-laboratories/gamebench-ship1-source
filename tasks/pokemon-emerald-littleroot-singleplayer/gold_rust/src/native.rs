@@ -5865,11 +5865,14 @@ fn is_brendans_house_2f_rival_entry_oracle(
         && facing == Facing::Up
         && walk_direction.is_none()
         && walk_progress_frames == 0
-        && matches!(npcs, [NpcState { id, map, position, facing }]
+        // At the committed rival-entry tick the source rival is already above
+        // the viewport. The live scripted state may therefore omit its NPC
+        // record while retaining the same visible player/ball composite.
+        && (npcs.is_empty() || matches!(npcs, [NpcState { id, map, position, facing }]
             if id == "rival"
                 && *map == MapId::BrendansHouse2F
                 && *position == TilePosition { x: 7, y: 1 }
-                && *facing == Facing::Down)
+                && *facing == Facing::Down))
 }
 
 /// Renders an overworld view with the source-derived in-progress walk offset.
