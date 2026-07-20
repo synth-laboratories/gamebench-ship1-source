@@ -80,6 +80,9 @@ const POKE_BALL_GIFT_FANFARE_REMAINING_FRAMES: u16 = 144;
 /// `MomEnters{Male,Female}` takes 68 frames. The wall-clock script then
 /// waits for the player's four-frame `WalkInPlaceFaster` turn before Mom can
 /// open her upstairs message.
+/// `CB2_StartWallClock` initializes its editable clock to 10:00 AM before
+/// it creates the two hand sprites (`tHours = 10`, `tMinutes = 0`).
+const WALL_CLOCK_START_MINUTES: u16 = 10 * 60;
 const CLOCK_VISIT_MOM_ENTRY_FRAMES: u16 = 68;
 const CLOCK_VISIT_PLAYER_TURN_FRAMES: u16 = 4;
 const CLOCK_VISIT_ENTRY_FRAMES: u16 =
@@ -2370,7 +2373,7 @@ impl WorldState {
     }
 
     fn start_clock_editor(&mut self) {
-        self.clock_minutes.get_or_insert(720);
+        self.clock_minutes.get_or_insert(WALL_CLOCK_START_MINUTES);
         self.clock_editing = Some(ClockField::Hours);
         self.clock_confirming = false;
         self.clock_confirm_yes = true;
@@ -2392,7 +2395,8 @@ impl WorldState {
         if self.clock_confirming { return; }
         let Some(field) = self.clock_editing else { return; };
         let step = match field { ClockField::Hours => 60, ClockField::Minutes => 1 };
-        let current = i16::try_from(self.clock_minutes.unwrap_or(720)).unwrap_or(720);
+        let current = i16::try_from(self.clock_minutes.unwrap_or(WALL_CLOCK_START_MINUTES))
+            .unwrap_or(i16::try_from(WALL_CLOCK_START_MINUTES).expect("wall-clock default fits i16"));
         self.clock_minutes = Some((current + delta * step).rem_euclid(1440) as u16);
     }
 

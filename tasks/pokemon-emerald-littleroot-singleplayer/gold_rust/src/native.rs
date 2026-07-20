@@ -3530,7 +3530,10 @@ fn draw_wallclock_editor(frame: &mut [u8], world: &WorldState) {
     let palette = wallclock_palette(world.player_gender);
     draw_wallclock_start_background(frame, clock, palette);
 
-    let time = world.clock_minutes.unwrap_or(720);
+    // `CB2_StartWallClock` begins its editable state at 10:00 AM. The world
+    // inserts the same value before entering this compositor; retain it as
+    // the fallback so an older serialized state cannot redraw noon instead.
+    let time = world.clock_minutes.unwrap_or(10 * 60);
     let minute_angle = (time % 60) * 6;
     let hour_angle = ((time / 60) % 12) * 30 + ((time % 60) / 10) * 5;
     let hand_tiles = wallclock_hand_tiles();
@@ -3541,21 +3544,22 @@ fn draw_wallclock_editor(frame: &mut [u8], world: &WorldState) {
     draw_wallclock_affine_hand(frame, hand_tiles, 64, hour_angle, palette);
 
     // The AM/PM markers are separate 16x16 source OAMs at tile offsets 128
-    // and 132. Their callbacks settle at these authored angles for a stable
-    // clock period (`SpriteCB_AMIndicator` / `SpriteCB_PMIndicator`).
+    // and 132. `CB2_StartWallClock` creates AM at 90° and PM at 45°; when
+    // `UpdateClockPeriod` flips to PM, `SpriteCB_AMIndicator` settles at
+    // 135° and `SpriteCB_PMIndicator` settles at 90°.
     let is_pm = time / 60 >= 12;
     draw_wallclock_period_indicator(
         frame,
         hand_tiles,
         128,
-        if is_pm { 105 } else { 90 },
+        if is_pm { 135 } else { 90 },
         palette,
     );
     draw_wallclock_period_indicator(
         frame,
         hand_tiles,
         132,
-        if is_pm { 60 } else { 45 },
+        if is_pm { 90 } else { 45 },
         palette,
     );
 
