@@ -5,6 +5,8 @@ use crate::world::{
     BATTLE_COMMAND_BAG, BATTLE_COMMAND_RUN, Facing, MapId,
     NamingActionButton, NamingActionButtonPulse, NpcState, NpcWalkStart,
     PlayerGender, StarterSpecies, StoryPhase, BATTLE_PLAYER_INTRO_SENDOUT_FRAMES,
+    BATTLE_PLAYER_SENDOUT_BALL_ARC_FRAMES, BATTLE_PLAYER_SENDOUT_BALL_FIRST_ARC_FRAME,
+    BATTLE_PLAYER_SENDOUT_BALL_SPAWN_FRAME, BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES,
     TilePosition, WorldState,
 };
 use std::io::{Cursor, Read};
@@ -135,6 +137,10 @@ const BATTLE_WURMPLE_FRONT_B64: &str = include_str!("../assets/battle_wurmple_fr
 // while the trainer exits before the normal ball-release controller begins.
 const BATTLE_TRAINER_BACK_BRENDAN_B64: &str = include_str!("../assets/battle_trainer_back_brendan.png.b64");
 const BATTLE_TRAINER_BACK_MAY_B64: &str = include_str!("../assets/battle_trainer_back_may.png.b64");
+// `gBallGfx_Poke` is the player party's default source ball sheet. During
+// `SpriteCB_PlayerMonSendOut_2` the active `sBallAnimSeq0` holds frame zero
+// while the affine-double 16×16 OBJ crosses its arc.
+const BATTLE_PLAYER_SENDOUT_POKEBALL_B64: &str = include_str!("../assets/battle_player_sendout_pokeball.png.b64");
 // The opening Route 101/103 battles use Emerald's normal tall-grass battle
 // environment: a 64×32 BG2 tilemap, its 4bpp tiles, and three palette banks.
 const BATTLE_TALL_GRASS_TILES_B64: &str = include_str!("../assets/battle_tall_grass_tiles.png.b64");
@@ -252,6 +258,7 @@ static BATTLE_WINGULL_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_WURMPLE_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_TRAINER_BACK_BRENDAN: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_TRAINER_BACK_MAY: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static BATTLE_PLAYER_SENDOUT_POKEBALL: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_TALL_GRASS_TILES: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_TALL_GRASS_PALETTE: OnceLock<Vec<[u8; 3]>> = OnceLock::new();
 static BATTLE_TALL_GRASS_MAP: OnceLock<Vec<u8>> = OnceLock::new();
@@ -1883,17 +1890,28 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             return;
         }
         draw_battle_background(frame);
-        let player_intro_sendout = battle.intro_player_sendout_frames > 0;
+        let player_intro_sendout = (battle.intro_player_sendout_started
+            && battle.intro_player_sendout_elapsed_frames <= BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES)
+            || battle.intro_player_sendout_frames > 0;
         if player_intro_sendout {
-            // The trainer is an OBJ beneath the retained status chrome. The
-            // settled starter OBJ is deliberately absent until this bounded
-            // source exit completes; the later ball/release phase remains
-            // outside this pass.
-            draw_battle_player_intro_sendout_trainer(
-                frame,
-                world.player_gender,
-                battle.intro_player_sendout_frames,
-            );
+            // Both objects are source OBJ layers beneath the retained status
+            // chrome. The ball begins while the trainer is still exiting,
+            // then hands off at the release callback; affine emergence and
+            // particles deliberately remain outside this bounded rail.
+            if battle.intro_player_sendout_frames > 0 {
+                draw_battle_player_intro_sendout_trainer(
+                    frame,
+                    world.player_gender,
+                    battle.intro_player_sendout_frames,
+                );
+            }
+            if battle.intro_player_sendout_started {
+                draw_battle_player_intro_sendout_pokeball(
+                    frame,
+                    battle.intro_player_sendout_elapsed_frames,
+                    world.starter,
+                );
+            }
         }
         draw_battle_healthbox_backgrounds(frame);
         // The status pane identifies the active opposing Pokémon, including
@@ -3352,8 +3370,7 @@ fn draw_battle_player_sprite(
 /// Source `PlayerHandleIntroTrainerBallThrow` moves the selected back sprite
 /// from `(80, 80)` to `(-40, 80)` over fifty ticks and starts animation 1;
 /// `sAnimCmd_{Brendan,May}_1` selects frames 0, 1, then 2 during that
-/// interval. The subsequent Poké Ball arc and release particles are not
-/// included in this bounded pass.
+/// interval. The separately rendered ball task starts before this exit ends.
 fn draw_battle_player_intro_sendout_trainer(
     frame: &mut [u8],
     gender: PlayerGender,
@@ -3397,6 +3414,84 @@ fn draw_battle_player_intro_sendout_trainer(
             put_pixel(frame, x as usize, y as usize, source.palette[color_index]);
         }
     }
+}
+
+/// Source position through `SpriteCB_PlayerMonSendOut_2`'s arc. The source
+/// task starts its 25-tick trajectory from `(24, 68)` to the player-side
+/// `GetBattlerSpriteCoord(..., Y_PIC_OFFSET) + 24` point. `InitAnimLinearTranslation`
+/// stores even Q8.8 deltas, while `TranslateAnimHorizontalArc` adds the
+/// source Q8.8 sine displacement after each of those ticks.
+fn battle_player_sendout_pokeball_center(
+    elapsed_frames: u8,
+    starter: Option<StarterSpecies>,
+) -> Option<(i16, i16)> {
+    if !(BATTLE_PLAYER_SENDOUT_BALL_SPAWN_FRAME..=BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES)
+        .contains(&elapsed_frames)
+    {
+        return None;
+    }
+
+    const START_X: i16 = 24;
+    const START_Y: i16 = 68;
+    const TARGET_X: i16 = 72;
+    // `gSineTable[(0x8000 / 25 * tick) >> 8]` passed through
+    // `Sin(index, -30)`, retained as signed source pixel offsets for the
+    // twenty-five `TranslateAnimHorizontalArc` ticks.
+    const ARC_SINE_Y_OFFSETS: [i16; 25] = [
+        -4, -8, -11, -15, -18, -21, -23, -25, -28, -29, -30, -30, -30,
+        -30, -29, -28, -26, -24, -21, -18, -15, -12, -8, -5, -1,
+    ];
+
+    // The 16×16 player back sprites are centered at `(72, 80)`; Emerald's
+    // `GetBattlerSpriteFinal_Y(..., TRUE)` adds the back-picture y offset
+    // and the player-side eight-pixel adjustment before the ball adds 24.
+    let target_y = match starter.unwrap_or(StarterSpecies::Treecko) {
+        StarterSpecies::Treecko => 118,
+        StarterSpecies::Torchic | StarterSpecies::Mudkip => 117,
+    };
+    let arc_tick = elapsed_frames
+        .saturating_sub(BATTLE_PLAYER_SENDOUT_BALL_FIRST_ARC_FRAME)
+        .min(BATTLE_PLAYER_SENDOUT_BALL_ARC_FRAMES);
+    let duration = i16::from(BATTLE_PLAYER_SENDOUT_BALL_ARC_FRAMES);
+    let x_delta = (((TARGET_X - START_X) << 8) / duration) & !1_i16;
+    let y_delta = (((target_y - START_Y) << 8) / duration) & !1_i16;
+    let linear_x = (x_delta * i16::from(arc_tick)) >> 8;
+    let linear_y = (y_delta * i16::from(arc_tick)) >> 8;
+    let sine_y = if arc_tick == 0 {
+        0
+    } else {
+        ARC_SINE_Y_OFFSETS[usize::from(arc_tick - 1)]
+    };
+
+    Some((START_X + linear_x, START_Y + linear_y + sine_y))
+}
+
+/// Source `sBallOamData` is a 16×16 affine-double OBJ with priority 2. Its
+/// arc uses `sBallAnimSeq0`, so the first 16×16 cell of `gBallGfx_Poke` stays
+/// visible until the next release callback switches to the opening sequence.
+fn draw_battle_player_intro_sendout_pokeball(
+    frame: &mut [u8],
+    elapsed_frames: u8,
+    starter: Option<StarterSpecies>,
+) {
+    let Some((center_x, center_y)) = battle_player_sendout_pokeball_center(elapsed_frames, starter) else {
+        return;
+    };
+    let ball = BATTLE_PLAYER_SENDOUT_POKEBALL.get_or_init(|| {
+        decode_source_indexed_sheet(BATTLE_PLAYER_SENDOUT_POKEBALL_B64)
+            .expect("staged Emerald player-send-out Poké Ball source asset must decode")
+    });
+    if ball.width != 16 || ball.height < 16 { return; }
+    draw_source_indexed_crop(
+        frame,
+        ball,
+        0,
+        0,
+        16,
+        16,
+        (center_x - 8).max(0) as usize,
+        (center_y - 8).max(0) as usize,
+    );
 }
 
 /// Nearest-neighbor presentation of Emerald's affine 64×64 battle OBJ.
