@@ -165,6 +165,9 @@ const PARTY_MENU_SMALL_FONT_B64: &str = include_str!("../assets/party_menu_latin
 // `FldEff_ExclamationMarkIcon` creates this source 16x16 field-effect OBJ
 // above the Route 103 rival during `Common_Movement_ExclamationMark`.
 const FIELD_EFFECT_EMOTION_EXCLAMATION_B64: &str = include_str!("../assets/field_effect_emotion_exclamation.png.b64");
+// `FldEff_Shadow` selects this 16×8 `SHADOW_SIZE_M` source OBJ for the
+// Route 103 counterpart rival while `MovementAction_Jump2Down` is active.
+const FIELD_EFFECT_SHADOW_MEDIUM_B64: &str = include_str!("../assets/field_effect_shadow_medium.png.b64");
 // `CB2_StartWallClock` replaces the field renderer with this dedicated 4bpp
 // clock scene before it creates its hand OBJ sprites. The source swaps only
 // palette entries 5..8 for the selected player gender.
@@ -262,6 +265,7 @@ static PARTY_MENU_TORCHIC_ICON: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static PARTY_MENU_MUDKIP_ICON: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static PARTY_MENU_SMALL_FONT: OnceLock<IndexedTiles> = OnceLock::new();
 static FIELD_EFFECT_EMOTION_EXCLAMATION: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static FIELD_EFFECT_SHADOW_MEDIUM: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static WALLCLOCK_CLOCK: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static WALLCLOCK_START_TILEMAP: OnceLock<Vec<u8>> = OnceLock::new();
 static WALLCLOCK_MALE_PALETTE: OnceLock<[[u8; 3]; 16]> = OnceLock::new();
@@ -5018,6 +5022,17 @@ fn render_world_view_with_dynamic_objects_and_player_y_offset(
         None,
         tv_screen_on,
     )?;
+    // `InitJumpRegular` starts FLDEFF_SHADOW before the rival's 32-frame
+    // Route 103 `jump_2_down`. The field-effect sprite is composited below
+    // the object OBJ but above terrain, so paint it before dynamic OAM.
+    draw_route103_jump_shadow(
+        &mut frame,
+        map_id,
+        player,
+        npc_animation_tick,
+        npcs,
+        npc_walk_starts,
+    );
     let mut vram = if player_running && walk_direction.is_some() {
         outside_player_running_vram(
             player_gender,
@@ -7672,6 +7687,60 @@ fn route103_jump2_high_y(elapsed: u64) -> i32 {
         -11, -10, -9, -8, -6, -4, 0, 0,
     ];
     HIGH_JUMP_Y[(elapsed as usize / 2).min(HIGH_JUMP_Y.len() - 1)]
+}
+
+/// `UpdateShadowFieldEffect` keeps the medium shadow at the jump's original
+/// ground anchor: it follows the linked sprite's base `x/y`, not its Step1 or
+/// high-jump `x2/y2`. Route 103's counterpart rival uses SHADOW_SIZE_M
+/// (16×8); its source 16×32 object center and 12-pixel `sYOffset` place the
+/// shadow 24 pixels below the renderer's object top-left.
+fn draw_route103_jump_shadow(
+    frame: &mut [u8],
+    map_id: MapId,
+    player: &TilePosition,
+    npc_animation_tick: u64,
+    npcs: &[NpcState],
+    npc_walk_starts: &[NpcWalkStart],
+) {
+    if map_id != MapId::Route103 {
+        return;
+    }
+    let Some(rival) = npcs.iter().find(|npc| npc.id == "rival" && npc.map == MapId::Route103) else {
+        return;
+    };
+    let Some(walk) = npc_walk_starts.iter().rev().find(|walk| {
+        walk.id == "rival" && route103_rival_jump2_down(map_id, &walk.id, walk)
+    }) else {
+        return;
+    };
+    let elapsed = npc_animation_tick.saturating_sub(walk.frame);
+    if elapsed >= u64::from(walk.duration_frames) {
+        return;
+    }
+    let shadow = FIELD_EFFECT_SHADOW_MEDIUM.get_or_init(|| {
+        decode_source_indexed_sheet(FIELD_EFFECT_SHADOW_MEDIUM_B64)
+            .expect("staged Emerald medium shadow field-effect asset must decode")
+    });
+    let screen_x = 112 + i32::from(rival.position.x - player.x) * 16;
+    // The typed world commits the far-jump endpoint at the source action
+    // boundary, while the source field effect remains at the prior tile for
+    // all 32 callbacks. Undo that 32-pixel destination displacement.
+    let shadow_y = 56 + i32::from(rival.position.y - player.y) * 16
+        - i32::from(walk.duration_frames)
+        + 24;
+    if screen_x < 0 || shadow_y < 0 {
+        return;
+    }
+    draw_source_indexed_crop(
+        frame,
+        shadow,
+        0,
+        0,
+        16,
+        8,
+        screen_x as usize,
+        shadow_y as usize,
+    );
 }
 
 /// Supplies the source OBJ sheets whose slots are overwritten dynamically by
