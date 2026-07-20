@@ -4718,7 +4718,13 @@ fn emerald_glyph_id(character: char) -> Option<usize> {
         '!' => 0xAB, '?' => 0xAC, '.' => 0xAD, '-' => 0xAE, '…' => 0xB0, ',' => 0xB8,
         '/' => 0xBA, ':' => 0xF0, '\'' => 0xB4, '"' => 0xB2,
         '(' => 0x5C, ')' => 0x5D, '&' => 0x2D, '+' => 0x2E,
-        'é' | 'É' => 0x06, '▶' => 0xEF,
+        'é' | 'É' => 0x06,
+        // Route103's source sign expands `{DOWN_ARROW}` to CHAR_DOWN_ARROW
+        // (0x7A) in the normal font. Keep the authored Unicode spelling
+        // used by the field text, but resolve it to the real Emerald glyph
+        // instead of silently dropping the character from the sign.
+        '↓' => 0x7A,
+        '▶' => 0xEF,
         _ => return None,
     })
 }
