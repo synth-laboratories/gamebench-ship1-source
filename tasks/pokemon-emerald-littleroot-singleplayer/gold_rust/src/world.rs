@@ -866,22 +866,21 @@ fn select_route103_rival_move(battle: &mut BattleState) -> usize {
         let status_move = opponent_move_data(battle, status_slot)
             .expect("selected rival status move must remain usable");
         scores[status_index] = if battle.rival_setup_first_turn {
-            if battle.opponent_turn_count == 0 {
-                // Brendan's Route 103 Treecko has AI_SCRIPT_SETUP_FIRST_TURN.
-                // Leer is its sole setup effect, and the script scores it +2
-                // only when `if_random_less_than 80` does not jump.
-                100 + if battle_random(battle) % 256 >= 80 { 2 } else { 0 }
-            } else {
-                // That trainer does not also enable AI_SCRIPT_CHECK_VIABILITY.
-                100
-            }
+            // `AI_SCRIPT_SETUP_FIRST_TURN` only encourages the source's
+            // positive setup effects (the list at
+            // `data/battle_ai_scripts.s:2641-2647`); LEER is not in that
+            // list. `AI_TryToFaint` still subtracts one because a status move
+            // is not the most powerful move (`s:2616-2638`).
+            99
         } else {
+            // Torchic/Mudkip and May's Treecko use viability, with the
+            // source routine selected by the actual status move effect. The
+            // common `AI_TryToFaint` pass first subtracts one from this
+            // non-damaging move before viability applies its penalties.
             match status_move.name {
-                // Torchic/Mudkip and May's Treecko use viability, with the
-                // source routine selected by the actual status move effect.
-                "GROWL" => 100 - rival_attack_down_score_penalty(battle),
-                "LEER" => 100 - rival_defense_down_score_penalty(battle),
-                _ => 100,
+                "GROWL" => 99 - rival_attack_down_score_penalty(battle),
+                "LEER" => 99 - rival_defense_down_score_penalty(battle),
+                _ => 99,
             }
         };
     }
