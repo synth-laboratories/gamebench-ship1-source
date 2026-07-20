@@ -21,12 +21,27 @@ The scoped route is now functionally traversable, with coarse visuals allowed:
   `AI_FirstBattle` flee resumes Birch's Bag script, while genuine opening
   battle fainting follows a functional white-out/respawn or rescue continuation.
 - Validation: `cargo build --release --bin scenario` passed on `dev` at
-  `74ca2a0`; `git diff --check` passed. No automated tests, Ruff, ty, Clippy,
-  formatter, or RGB capture were run.
+  `507b5fe`; `git diff --check` passed. No automated tests, Ruff, ty, Clippy,
+  formatter, or ad-hoc RGB capture were run.
 
 This gate establishes “mostly playable” behavior. The seven checkpoint rows
 below remain `partial` because pixel parity and frame-by-frame NPC/camera
 evidence are intentionally a separate follow-up pass.
+
+## Visual gate (2026-07-20)
+
+The complete 73-trace visual manifest now passes on the same release binary:
+
+- `./target/release/scenario --verify-manifest ../fixtures/gold/frames/manifest.json`
+  returned `{"failures":[],"passed":73,"traces":73}`.
+- The pass closes the seven held-Right Little Root phases, the Running Shoes
+  initial prompt, and the title-to-MetRival entry composite. The Running Shoes
+  route fix is source-grounded: the frozen `04_rival` snapshot leaves Fat Man
+  at `(13,14)`, while Emerald's authored post-Pokédex corridor walks through
+  that tile to `(13,9)`.
+- This is manifest coverage, not a claim of whole-route pixel parity. The
+  checkpoint rows remain `partial` for uncaptured continuous NPC/camera
+  phases, battle animation/UI, interiors, and late text-window timing.
 
 ## Reference checkpoints
 
