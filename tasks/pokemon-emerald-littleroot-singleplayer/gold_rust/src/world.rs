@@ -218,6 +218,14 @@ pub enum StarterSpecies { Treecko, Torchic, Mudkip }
 #[serde(rename_all = "snake_case")]
 pub enum BattleOpponent { Zigzagoon, Poochyena, Wingull, Wurmple, Rival }
 
+// `gActionSelectionCursor` is a row-major two-bit source cursor. Keeping the
+// state values identical to `HandleInputChooseAction` lets the renderer use
+// `ActionSelectionCreateCursorAt`'s tile coordinates directly.
+pub const BATTLE_COMMAND_FIGHT: u8 = 0;
+pub const BATTLE_COMMAND_BAG: u8 = 1;
+pub const BATTLE_COMMAND_POKEMON: u8 = 2;
+pub const BATTLE_COMMAND_RUN: u8 = 3;
+
 /// A source moveset slot, retained independently of the currently selected
 /// move so an opponent controller can choose from the original four slots.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -313,7 +321,8 @@ pub struct BattleState {
     pub player_defense_stage: i8,
     #[serde(default)]
     pub player_speed_stage: i8,
-    /// Cursor in the four-command battle menu: FIGHT, BAG, POKéMON, RUN.
+    /// Source `gActionSelectionCursor`: FIGHT/BAG across the top, then
+    /// POKéMON/RUN across the bottom (0 through 3 in row-major order).
     #[serde(default)]
     pub command_cursor: u8,
     /// True after choosing FIGHT, when the two opening moves are shown.
@@ -643,7 +652,7 @@ fn opening_battle_state(opponent: BattleOpponent, player: CombatantBattleProfile
         player_hp: player.max_hp, player_max_hp: player.max_hp, player_level: player.level, player_attack: player.attack, player_defense: player.defense, player_speed: player.speed, player_special_attack: player.special_attack, player_special_defense: player.special_defense,
         rival_hp: enemy.max_hp, opponent_max_hp: enemy.max_hp, opponent_level: enemy.level, opponent_attack: enemy.attack, opponent_defense: enemy.defense, opponent_speed: enemy.speed, opponent_special_attack: enemy.special_attack, opponent_special_defense: enemy.special_defense,
         player_move_damage, player_move_name: player_physical.name.to_owned(), player_status_move_name: player_status.name.to_owned(), player_move_pp: player_physical.pp, player_status_move_pp: player_status.pp,
-        opponent_attack_stage: 0, opponent_defense_stage: 0, player_attack_stage: 0, player_defense_stage: 0, player_speed_stage: 0, command_cursor: 0, selecting_move: false, party_screen_open: false, escaped: false, opponent_fled: false, wild, move_cursor: 0, player_fainted: false, message: Some(message), entry_transition_frames, intro_stage: 0, last_move_hit: false, last_move_critical: false, last_damage_variance: None,
+        opponent_attack_stage: 0, opponent_defense_stage: 0, player_attack_stage: 0, player_defense_stage: 0, player_speed_stage: 0, command_cursor: BATTLE_COMMAND_FIGHT, selecting_move: false, party_screen_open: false, escaped: false, opponent_fled: false, wild, move_cursor: 0, player_fainted: false, message: Some(message), entry_transition_frames, intro_stage: 0, last_move_hit: false, last_move_critical: false, last_damage_variance: None,
     }
 }
 
@@ -4543,14 +4552,15 @@ impl WorldState {
     pub fn move_battle_command_cursor(&mut self, direction: Facing) {
         if let Some(battle) = self.battle.as_mut() {
             if battle.message.is_none() && !battle.selecting_move {
-                // Command positions are column-major: FIGHT/BAG on the left
-                // and POKéMON/RUN on the right. Do not linearly wrap an edge
-                // press into an unrelated command.
+                // This is the same bitwise direct-navigation layout as
+                // `HandleInputChooseAction`: bit 0 selects the column and
+                // bit 1 selects the row. Do not wrap an edge press into an
+                // unrelated command.
                 battle.command_cursor = match (battle.command_cursor, direction) {
-                    (1 | 3, Facing::Up) => battle.command_cursor - 1,
-                    (0 | 2, Facing::Down) => battle.command_cursor + 1,
-                    (2 | 3, Facing::Left) => battle.command_cursor - 2,
-                    (0 | 1, Facing::Right) => battle.command_cursor + 2,
+                    (BATTLE_COMMAND_BAG | BATTLE_COMMAND_RUN, Facing::Left) => battle.command_cursor ^ 1,
+                    (BATTLE_COMMAND_FIGHT | BATTLE_COMMAND_POKEMON, Facing::Right) => battle.command_cursor ^ 1,
+                    (BATTLE_COMMAND_POKEMON | BATTLE_COMMAND_RUN, Facing::Up) => battle.command_cursor ^ 2,
+                    (BATTLE_COMMAND_FIGHT | BATTLE_COMMAND_BAG, Facing::Down) => battle.command_cursor ^ 2,
                     _ => battle.command_cursor,
                 };
             }
@@ -4577,8 +4587,8 @@ impl WorldState {
         let Some(battle) = self.battle.as_mut() else { return; };
         if battle.message.is_some() || battle.selecting_move { return; }
         match battle.command_cursor {
-            0 => battle.selecting_move = true,
-            1 => {
+            BATTLE_COMMAND_FIGHT => battle.selecting_move = true,
+            BATTLE_COMMAND_BAG => {
                 if self.potions == 0 {
                     battle.message = Some("The BAG is empty.".to_owned());
                 } else {
@@ -4586,18 +4596,19 @@ impl WorldState {
                     battle.selecting_move = true;
                 }
             }
-            2 => battle.party_screen_open = true,
-            _ if battle.wild => {
+            BATTLE_COMMAND_POKEMON => battle.party_screen_open = true,
+            BATTLE_COMMAND_RUN if battle.wild => {
                 battle.escaped = true;
                 battle.message = Some("Got away safely!".to_owned());
             }
-            _ => battle.message = Some(match battle.opponent {
+            BATTLE_COMMAND_RUN => battle.message = Some(match battle.opponent {
                 BattleOpponent::Rival => "No! There's no running from a TRAINER battle!".to_owned(),
                 BattleOpponent::Zigzagoon => "Can't escape!".to_owned(),
                 BattleOpponent::Poochyena => unreachable!("Route 101 Poochyena is wild"),
                 BattleOpponent::Wingull => unreachable!("Route 103 Wingull is wild"),
                 BattleOpponent::Wurmple => unreachable!("all Wurmple encounters are wild"),
             }),
+            _ => unreachable!("battle command cursor must be a source action-selection ID"),
         }
     }
 
@@ -4614,7 +4625,7 @@ impl WorldState {
 
     pub fn choose_battle_move(&mut self) {
         let use_potion = self.battle.as_ref().is_some_and(|battle| {
-            battle.message.is_none() && !battle.player_fainted && battle.selecting_move && battle.command_cursor == 1
+            battle.message.is_none() && !battle.player_fainted && battle.selecting_move && battle.command_cursor == BATTLE_COMMAND_BAG
         });
         if use_potion {
             if self.potions == 0 {
