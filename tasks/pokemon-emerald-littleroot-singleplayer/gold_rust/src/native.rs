@@ -120,6 +120,11 @@ const BATTLE_ZIGZAGOON_FRONT_B64: &str = include_str!("../assets/battle_zigzagoo
 const BATTLE_POOCHYENA_FRONT_B64: &str = include_str!("../assets/battle_poochyena_front.png.b64");
 const BATTLE_WINGULL_FRONT_B64: &str = include_str!("../assets/battle_wingull_front.png.b64");
 const BATTLE_WURMPLE_FRONT_B64: &str = include_str!("../assets/battle_wurmple_front.png.b64");
+// The opening Route 101/103 battles use Emerald's normal tall-grass battle
+// environment: a 64×32 BG2 tilemap, its 4bpp tiles, and three palette banks.
+const BATTLE_TALL_GRASS_TILES_B64: &str = include_str!("../assets/battle_tall_grass_tiles.png.b64");
+const BATTLE_TALL_GRASS_PALETTE_B64: &str = include_str!("../assets/battle_tall_grass_palette.pal.b64");
+const BATTLE_TALL_GRASS_MAP_B64: &str = include_str!("../assets/battle_tall_grass_map.bin.b64");
 // `CB2_ChooseStarter` loads this dedicated 8bpp Birch-bag/grass tileset,
 // its two source tilemaps, and the Poké Ball / reveal-circle OBJ sheets.
 const STARTER_CHOOSE_TILES_B64: &str = include_str!("../assets/starter_choose_tiles.png.b64");
@@ -137,6 +142,9 @@ static BATTLE_ZIGZAGOON_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_POOCHYENA_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_WINGULL_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
 static BATTLE_WURMPLE_FRONT: OnceLock<NpcSpriteSheet> = OnceLock::new();
+static BATTLE_TALL_GRASS_TILES: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static BATTLE_TALL_GRASS_PALETTE: OnceLock<Vec<[u8; 3]>> = OnceLock::new();
+static BATTLE_TALL_GRASS_MAP: OnceLock<Vec<u8>> = OnceLock::new();
 static STARTER_CHOOSE_TILES: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static STARTER_CHOOSE_POKEBALL_SELECTION: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static STARTER_CHOOSE_CIRCLE: OnceLock<SourceIndexedSheet> = OnceLock::new();
@@ -1855,18 +1863,74 @@ fn draw_exclamation_marker(frame: &mut [u8], x: usize, y: usize) {
     draw_solid_rect(frame, x, y + 9, 3, 2, [239, 239, 239]);
 }
 
-/// Source-derived Gen III wild/trainer battle field. The battle UI no longer
-/// inherits its overworld map beneath sprites and windows; species sprites,
-/// HP, and commands remain state-driven overlays.
+/// Source-derived Gen III wild/trainer battle field. The opening maps select
+/// `BATTLE_ENVIRONMENT_GRASS`, whose source assets are the tall-grass BG2
+/// tiles, tilemap, and three associated palette banks.
 fn draw_battle_background(frame: &mut [u8]) {
-    draw_solid_rect(frame, 0, 0, 240, 160, [222, 255, 214]);
-    for y in (2..112).step_by(4) {
-        draw_solid_rect(frame, 0, y, 240, 1, [181, 231, 148]);
+    let tiles = BATTLE_TALL_GRASS_TILES.get_or_init(|| {
+        decode_source_indexed_sheet(BATTLE_TALL_GRASS_TILES_B64)
+            .expect("staged Emerald tall-grass battle tiles must decode")
+    });
+    let tilemap = BATTLE_TALL_GRASS_MAP.get_or_init(|| {
+        decode_base64(BATTLE_TALL_GRASS_MAP_B64)
+            .expect("staged Emerald tall-grass battle tilemap must decode")
+    });
+    let palette = BATTLE_TALL_GRASS_PALETTE.get_or_init(|| {
+        let bytes = decode_base64(BATTLE_TALL_GRASS_PALETTE_B64)
+            .expect("staged Emerald tall-grass battle palette must decode");
+        let source = std::str::from_utf8(&bytes)
+            .expect("staged Emerald tall-grass battle palette must be UTF-8");
+        let mut lines = source.lines();
+        assert_eq!(lines.next(), Some("JASC-PAL"));
+        assert_eq!(lines.next(), Some("0100"));
+        let count = lines.next()
+            .expect("JASC palette must contain a color count")
+            .parse::<usize>()
+            .expect("JASC palette color count must be numeric");
+        let colors = lines.take(count).map(|line| {
+            let mut channels = line.split_whitespace();
+            let red = channels.next().expect("JASC color must have red").parse::<u8>()
+                .expect("JASC red channel must be numeric");
+            let green = channels.next().expect("JASC color must have green").parse::<u8>()
+                .expect("JASC green channel must be numeric");
+            let blue = channels.next().expect("JASC color must have blue").parse::<u8>()
+                .expect("JASC blue channel must be numeric");
+            assert!(channels.next().is_none(), "JASC color must have exactly three channels");
+            [red, green, blue]
+        }).collect::<Vec<_>>();
+        assert_eq!(colors.len(), 48, "tall-grass battle palette must have three 4bpp banks");
+        colors
+    });
+
+    const MAP_WIDTH_TILES: usize = 64;
+    const MAP_HEIGHT_TILES: usize = 32;
+    assert_eq!(tilemap.len(), MAP_WIDTH_TILES * MAP_HEIGHT_TILES * 2);
+    let source_tiles_per_row = tiles.width / 8;
+    let source_tile_count = source_tiles_per_row * (tiles.height / 8);
+    // `BattleIntro` restores gBattle_BG2_X/Y to zero before the command UI
+    // opens, so the stable opening field samples the source 64×32 map at its
+    // top-left hardware origin.
+    for y in 0..FRAME_HEIGHT {
+        let tile_y = y / 8;
+        let pixel_y = y % 8;
+        for x in 0..FRAME_WIDTH {
+            let tile_x = x / 8;
+            let pixel_x = x % 8;
+            let entry_offset = (tile_y * MAP_WIDTH_TILES + tile_x) * 2;
+            let entry = u16::from_le_bytes([tilemap[entry_offset], tilemap[entry_offset + 1]]);
+            let tile = usize::from(entry & 0x03ff);
+            if tile >= source_tile_count { continue; }
+            let source_x = (tile % source_tiles_per_row) * 8
+                + if entry & 0x0400 != 0 { 7 - pixel_x } else { pixel_x };
+            let source_y = (tile / source_tiles_per_row) * 8
+                + if entry & 0x0800 != 0 { 7 - pixel_y } else { pixel_y };
+            let color_index = usize::from(tiles.pixels[source_y * tiles.width + source_x]);
+            let palette_bank = usize::from((entry >> 12) & 0x0f);
+            if let Some(color) = palette.get(palette_bank * 16 + color_index) {
+                put_pixel(frame, x, y, *color);
+            }
+        }
     }
-    // Source field rings: the opposing platform is clipped by the right
-    // viewport edge, while the player's is clipped by the left edge.
-    draw_battle_platform(frame, 193, 64, 52, 16);
-    draw_battle_platform(frame, 59, 108, 64, 15);
 }
 
 /// Projects Emerald's `B_TRANSITION_BLUR` onto the currently serialized
@@ -1957,36 +2021,6 @@ fn draw_wurmple_entry_phase(frame: &mut [u8], world: &WorldState, battle: &crate
     draw_text(frame, 140, 94, "HP", 2);
     draw_battle_hp_bar(frame, 160, 95, battle.player_hp, battle.player_max_hp);
     draw_text(frame, 198, 99, &format!("{}/{}", battle.player_hp, battle.player_max_hp), 6);
-}
-
-fn draw_battle_platform(frame: &mut [u8], center_x: usize, center_y: usize, radius_x: usize, radius_y: usize) {
-    for y in center_y.saturating_sub(radius_y)..=(center_y + radius_y).min(159) {
-        for x in center_x.saturating_sub(radius_x)..=(center_x + radius_x).min(239) {
-            let dx = x.abs_diff(center_x);
-            let dy = y.abs_diff(center_y);
-            let radial = dx * dx * radius_y * radius_y + dy * dy * radius_x * radius_x;
-            let edge = radius_x * radius_x * radius_y * radius_y;
-            if radial > edge { continue; }
-            // Emerald's battle platforms are concentric, flattened grass
-            // rings rather than solid terrain patches. The band thresholds
-            // preserve the pale center and alternating green contour seen in
-            // the captured Route 101 battle frame.
-            let color = if radial * 100 >= edge * 88 {
-                [99, 197, 82]
-            } else if radial * 100 >= edge * 69 {
-                [123, 214, 132]
-            } else if radial * 100 >= edge * 52 {
-                [181, 231, 148]
-            } else if radial * 100 >= edge * 36 {
-                [123, 214, 132]
-            } else if radial * 100 >= edge * 20 {
-                [181, 231, 148]
-            } else {
-                [222, 255, 214]
-            };
-            put_pixel(frame, x, y, color);
-        }
-    }
 }
 
 /// Compact GBA-style health gauge used by both opening battle opponents and
