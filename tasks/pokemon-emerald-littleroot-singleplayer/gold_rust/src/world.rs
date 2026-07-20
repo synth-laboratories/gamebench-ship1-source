@@ -4214,8 +4214,15 @@ impl WorldState {
                         })
                         .expect("Twin must exist during Route 101 gate scene");
                     if terminal_faster_turn {
-                        self.move_faster_scripted_npc(
-                            "twin", MapId::LittlerootTown, position, *direction,
+                        // The terminal return command is
+                        // `walk_in_place_faster_down`, not a four-frame tile
+                        // walk. Keep Twin on its committed tile while the
+                        // source walk-cycle pose advances; marking it as a
+                        // moving stride introduces a visible four-pixel
+                        // displacement during the warning return phase.
+                        self.animate_scripted_npc_in_place_at_frame(
+                            "twin", MapId::LittlerootTown, *direction,
+                            4, self.frame,
                         );
                     } else if *fast {
                         self.move_fast_scripted_npc("twin", MapId::LittlerootTown, position, *direction);
