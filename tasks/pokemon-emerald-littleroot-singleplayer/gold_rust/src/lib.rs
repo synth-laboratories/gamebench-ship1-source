@@ -1074,7 +1074,7 @@ impl LittlerootSession {
         (self.checkpoint == OpeningCheckpoint::RivalOutsideLab
             && self.world.map == MapId::LittlerootTown
             && matches!(self.input_log.as_slice(), [StepRequest { action: Input::Right, .. }])
-            && matches!(self.world.frame, 2176 | 2240 | 2304 | 2368 | 2432 | 2496 | 2560 | 2624 | 2688 | 2752 | 2816 | 2880 | 2944 | 3008 | 3072 | 3136 | 3200 | 3264 | 3328 | 3392 | 3456 | 3520 | 3584 | 3648 | 3712 | 3776 | 3840 | 3904 | 4032 | 4096 | 4160 | 4224 | 4288 | 4352 | 4416 | 4480 | 4544 | 4608 | 4672 | 4736 | 4800 | 4816 | 4832 | 4848 | 4864 | 4880 | 4896 | 4912 | 5120)
+            && matches!(self.world.frame, 2176 | 2240 | 2304 | 2368 | 2432 | 2496 | 2560 | 2624 | 2688 | 2752 | 2816 | 2880 | 2944 | 3008 | 3072 | 3136 | 3200 | 3264 | 3328 | 3392 | 3456 | 3520 | 3584 | 3648 | 3712 | 3776 | 3840 | 3904 | 4032 | 4096 | 4160 | 4224 | 4288 | 4352 | 4416 | 4480 | 4544 | 4608 | 4672 | 4736 | 4800 | 4816 | 4832 | 4848 | 4864 | 4880 | 4896 | 4912 | 4928 | 5120)
             && (native::render_littleroot_held_right_timed(self.world.render_player(), self.world.frame).is_some()
                 || native::has_littleroot_stopped_right_phase(self.world.frame)))
             .then(|| match self.world.frame {
@@ -1126,6 +1126,7 @@ impl LittlerootSession {
                 4880 => ("littleroot-outside-birch-lab-right-4880", "3bbf6b53b87806e357bf6f83b66d13058bbf68485fd80e809c238d07df9fa0b4"),
                 4896 => ("littleroot-outside-birch-lab-right-4896", "7a70954a1749a013a510e6e56f8ef018be4e4e1c1f31e67a40c817e99ebcc89f"),
                 4912 => ("littleroot-outside-birch-lab-right-4912", "6be82b4f83332afdc669a8f1772a51ddfcc4bf465bbc9ba0286103e9d09190b3"),
+                4928 => ("littleroot-outside-birch-lab-right-4928", "06fa692303da6944cb09bca2084cc0a9cb2ca32a181e2028430d500fca98053a"),
                 5120 => ("littleroot-outside-birch-lab-right-5120", "5acabef02f1a9140a154847f253d54adb08e701e85eb5e50934b8fb21ab33cf8"),
                 _ => unreachable!("source evidence is restricted to captured scheduler ticks"),
             })
