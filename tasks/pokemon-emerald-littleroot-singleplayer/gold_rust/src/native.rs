@@ -135,6 +135,11 @@ const BATTLE_TALL_GRASS_MAP_B64: &str = include_str!("../assets/battle_tall_gras
 // `ball_status_bar.png`, which source loads under `TAG_HEALTHBOX_PAL`.
 const BATTLE_HEALTHBOX_SINGLES_PLAYER_B64: &str = include_str!("../assets/battle_healthbox_singles_player.png.b64");
 const BATTLE_HEALTHBOX_SINGLES_OPPONENT_B64: &str = include_str!("../assets/battle_healthbox_singles_opponent.png.b64");
+// `gHealthboxElementsGfxTable`'s twelve base tiles and its yellow/red
+// continuation. Their embedded palette is the source `TAG_HEALTHBAR_PAL`
+// (`ball_display.png`) palette.
+const BATTLE_HP_BAR_B64: &str = include_str!("../assets/battle_hpbar.png.b64");
+const BATTLE_HP_BAR_ANIM_B64: &str = include_str!("../assets/battle_hpbar_anim.png.b64");
 // `CB2_ChooseStarter` loads this dedicated 8bpp Birch-bag/grass tileset,
 // its two source tilemaps, and the Poké Ball / reveal-circle OBJ sheets.
 const STARTER_CHOOSE_TILES_B64: &str = include_str!("../assets/starter_choose_tiles.png.b64");
@@ -157,6 +162,8 @@ static BATTLE_TALL_GRASS_PALETTE: OnceLock<Vec<[u8; 3]>> = OnceLock::new();
 static BATTLE_TALL_GRASS_MAP: OnceLock<Vec<u8>> = OnceLock::new();
 static BATTLE_HEALTHBOX_SINGLES_PLAYER: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static BATTLE_HEALTHBOX_SINGLES_OPPONENT: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static BATTLE_HP_BAR: OnceLock<SourceIndexedSheet> = OnceLock::new();
+static BATTLE_HP_BAR_ANIM: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static STARTER_CHOOSE_TILES: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static STARTER_CHOOSE_POKEBALL_SELECTION: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static STARTER_CHOOSE_CIRCLE: OnceLock<SourceIndexedSheet> = OnceLock::new();
@@ -1667,7 +1674,7 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
         draw_text(frame, 16, 24, &opponent, 10);
         draw_text(frame, 86, 24, &format!("L{}", battle.opponent_level), 2);
         draw_text(frame, 16, 34, "HP", 10);
-        draw_battle_hp_bar(frame, 38, 34, battle.rival_hp, battle.opponent_max_hp);
+        draw_source_battle_hp_bar(frame, 38, 34, battle.rival_hp, battle.opponent_max_hp);
         draw_battle_sprite(frame, battle_front_sprite(&battle.opponent_species), 160, 18);
         let player = match world.starter {
             Some(crate::world::StarterSpecies::Treecko) => "TREECKO",
@@ -1678,7 +1685,7 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
         draw_text(frame, 140, 82, player, 10);
         draw_text(frame, 212, 82, &format!("L{}", battle.player_level), 2);
         draw_text(frame, 140, 94, "HP", 2);
-        draw_battle_hp_bar(frame, 160, 95, battle.player_hp, battle.player_max_hp);
+        draw_source_battle_hp_bar(frame, 160, 95, battle.player_hp, battle.player_max_hp);
         draw_text(frame, 198, 99, &format!("{}/{}", battle.player_hp, battle.player_max_hp), 6);
         draw_battle_sprite(frame, battle_back_sprite(world.starter), 24, 52);
         if battle.party_screen_open {
@@ -2085,11 +2092,11 @@ fn draw_wurmple_entry_phase(frame: &mut [u8], world: &WorldState, battle: &crate
     draw_text(frame, 16, 24, &battle.opponent_species, 10);
     draw_text(frame, 86, 24, &format!("L{}", battle.opponent_level), 2);
     draw_text(frame, 16, 34, "HP", 10);
-    draw_battle_hp_bar(frame, 38, 34, battle.rival_hp, battle.opponent_max_hp);
+    draw_source_battle_hp_bar(frame, 38, 34, battle.rival_hp, battle.opponent_max_hp);
     draw_text(frame, 140, 82, player, 10);
     draw_text(frame, 212, 82, &format!("L{}", battle.player_level), 2);
     draw_text(frame, 140, 94, "HP", 2);
-    draw_battle_hp_bar(frame, 160, 95, battle.player_hp, battle.player_max_hp);
+    draw_source_battle_hp_bar(frame, 160, 95, battle.player_hp, battle.player_max_hp);
     draw_text(frame, 198, 99, &format!("{}/{}", battle.player_hp, battle.player_max_hp), 6);
 }
 
@@ -2117,9 +2124,61 @@ fn draw_battle_healthbox_backgrounds(frame: &mut [u8]) {
     draw_source_indexed_crop(frame, player, 0, 0, 128, 64, 126, 72);
 }
 
-/// Compact GBA-style health gauge used by both opening battle opponents and
-/// the player's starter. The state keeps integer HP, so this is derived at
-/// render time and cannot desynchronize from battle damage or Potion heals.
+/// Source single-battle HP body: `MoveBattleBarGraphically` composes six
+/// 8px tiles from `hpbar.png` (green) or `hpbar_anim.png` (yellow/red).
+/// Existing opening-battle text remains independently positioned, so this
+/// owns only the 48px bar body and preserves every caller's text geometry.
+fn draw_source_battle_hp_bar(frame: &mut [u8], x: usize, y: usize, current: u8, maximum: u8) {
+    const SOURCE_WIDTH: usize = 48;
+    const SEGMENT_WIDTH: usize = 8;
+    let filled = if maximum == 0 {
+        0
+    } else {
+        let source_pixels = usize::from(current) * SOURCE_WIDTH / usize::from(maximum);
+        if source_pixels == 0 && current > 0 { 1 } else { source_pixels.min(SOURCE_WIDTH) }
+    };
+    let base = BATTLE_HP_BAR.get_or_init(|| {
+        decode_source_indexed_sheet(BATTLE_HP_BAR_B64)
+            .expect("staged Emerald HP bar base tiles must decode")
+    });
+    let animated = BATTLE_HP_BAR_ANIM.get_or_init(|| {
+        decode_source_indexed_sheet(BATTLE_HP_BAR_ANIM_B64)
+            .expect("staged Emerald HP bar color tiles must decode")
+    });
+
+    // `HEALTHBOX_GFX_HP_BAR_GREEN` begins after blank/H/P (tile 3).
+    // `hpbar_anim.png` packs yellow fill 0..8 followed by red fill 0..8.
+    for segment in 0..(SOURCE_WIDTH / SEGMENT_WIDTH) {
+        let segment_fill = filled.saturating_sub(segment * SEGMENT_WIDTH).min(SEGMENT_WIDTH);
+        if filled > SOURCE_WIDTH / 2 {
+            draw_source_indexed_crop(
+                frame,
+                base,
+                (3 + segment_fill) * SEGMENT_WIDTH,
+                0,
+                SEGMENT_WIDTH,
+                SEGMENT_WIDTH,
+                x + segment * SEGMENT_WIDTH,
+                y,
+            );
+        } else {
+            let color_offset = if filled > SOURCE_WIDTH / 5 { 0 } else { 9 };
+            draw_source_indexed_crop(
+                frame,
+                animated,
+                (color_offset + segment_fill) * SEGMENT_WIDTH,
+                0,
+                SEGMENT_WIDTH,
+                SEGMENT_WIDTH,
+                x + segment * SEGMENT_WIDTH,
+                y,
+            );
+        }
+    }
+}
+
+/// Compact generic gauge retained for the Party-screen projection. The field
+/// and Wurmple opening paths use the source-tile healthbar above.
 fn draw_battle_hp_bar(frame: &mut [u8], x: usize, y: usize, current: u8, maximum: u8) {
     const WIDTH: usize = 42;
     draw_solid_rect(frame, x, y, WIDTH + 2, 5, [24, 32, 40]);
