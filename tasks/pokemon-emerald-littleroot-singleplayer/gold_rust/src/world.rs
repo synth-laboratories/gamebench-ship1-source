@@ -4269,18 +4269,59 @@ impl WorldState {
     pub fn advance_pokedex_rival_approach(&mut self, frames: u32) -> bool {
         let Some(remaining) = self.pokedex_rival_frames else { return false; };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
-        // The first 16 frames are the rival's normal `walk_down`; its
-        // following four-frame faster turn and the player's four-frame
-        // faster turn complete the serialized 24-frame source stream.
-        if remaining > 8 && next_remaining <= 8 {
-            self.move_scripted_npc("rival", MapId::ProfessorBirchsLab, TilePosition { x: 7, y: 5 }, Facing::Down);
+        const RIVAL_WALK_DOWN_FRAMES: u16 = 16;
+        const RIVAL_FASTER_LEFT_FRAMES: u16 = 4;
+        const PLAYER_FASTER_RIGHT_FRAMES: u16 = 4;
+        const TOTAL_FRAMES: u16 = RIVAL_WALK_DOWN_FRAMES
+            + RIVAL_FASTER_LEFT_FRAMES
+            + PLAYER_FASTER_RIGHT_FRAMES;
+        let elapsed_before = TOTAL_FRAMES.saturating_sub(remaining);
+        let elapsed_after = TOTAL_FRAMES.saturating_sub(next_remaining);
+
+        // `Movement_RivalApproachPlayer` is `walk_down` followed by
+        // `walk_in_place_faster_left`.  Start both source actions at their
+        // actual frame boundaries, rather than at the end of a potentially
+        // batched rollout request, so the dynamic OBJ renderer sees the
+        // destination-relative walk and the four-frame in-place cell.
+        if elapsed_before == 0 {
+            let start_frame = self.frame.saturating_sub(u64::from(elapsed_after));
+            self.move_scripted_npc_with_duration_at_frame(
+                "rival",
+                MapId::ProfessorBirchsLab,
+                TilePosition { x: 7, y: 5 },
+                Facing::Down,
+                RIVAL_WALK_DOWN_FRAMES as u8,
+                start_frame,
+            );
+        }
+        if elapsed_before < RIVAL_WALK_DOWN_FRAMES
+            && RIVAL_WALK_DOWN_FRAMES <= elapsed_after
+        {
+            let start_frame = self.frame.saturating_sub(u64::from(
+                elapsed_after - RIVAL_WALK_DOWN_FRAMES,
+            ));
+            self.animate_scripted_npc_in_place_at_frame(
+                "rival",
+                MapId::ProfessorBirchsLab,
+                Facing::Left,
+                RIVAL_FASTER_LEFT_FRAMES as u8,
+                start_frame,
+            );
+        }
+        if elapsed_before < RIVAL_WALK_DOWN_FRAMES + RIVAL_FASTER_LEFT_FRAMES
+            && RIVAL_WALK_DOWN_FRAMES + RIVAL_FASTER_LEFT_FRAMES <= elapsed_after
+        {
+            // The following source action is the player's four-frame
+            // in-place east turn; the generic player layer has no separate
+            // in-place callback, but its visible facing still changes at
+            // the authored boundary.
+            self.facing = Facing::Right;
         }
         if next_remaining != 0 {
             self.pokedex_rival_frames = Some(next_remaining);
             return true;
         }
         self.pokedex_rival_frames = None;
-        self.move_faster_scripted_npc("rival", MapId::ProfessorBirchsLab, TilePosition { x: 7, y: 5 }, Facing::Left);
         self.facing = Facing::Right;
         self.title_intro_step = 3;
         self.dialogue = Some(pokedex_handoff_page(3, self.player_gender, &self.player_name));
