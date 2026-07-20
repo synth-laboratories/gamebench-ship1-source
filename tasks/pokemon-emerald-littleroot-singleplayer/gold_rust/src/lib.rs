@@ -2301,9 +2301,7 @@ impl LittlerootSession {
                 &self.world.npcs,
                 &self.world.npc_walk_starts,
                 self.world.tv_screen_on,
-                self.world.running
-                    && self.world.phase == world::StoryPhase::RunningShoesReceived
-                    && self.world.map == world::MapId::LittlerootTown,
+                self.world.running_shoes_field_motion(),
                 self.world.running_step_uses_second_foot,
             ),
         }.expect("staged Little Root terrain and object assets must render");
