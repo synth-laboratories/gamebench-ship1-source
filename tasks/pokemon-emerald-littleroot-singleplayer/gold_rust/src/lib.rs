@@ -269,6 +269,11 @@ impl LittlerootSession {
             self.redraw();
             return;
         }
+        if self.world.advance_oldale_blocked_path(request.frames) {
+            self.input_log.push(request);
+            self.redraw();
+            return;
+        }
         if self.world.advance_oldale_mart_item_fanfare(request.frames) {
             self.input_log.push(request);
             self.redraw();
@@ -739,6 +744,9 @@ impl LittlerootSession {
                     // its dismissing A request begins the employee/player
                     // `applymovement` stream before the next input arrives.
                     self.world.advance_oldale_mart_scene(request.frames);
+                    // The Oldale west-entrance coordinate event releases its
+                    // return movement immediately after the warning closes.
+                    self.world.advance_oldale_blocked_path(request.frames);
                 } else {
                     // Ordinary object interactions enter the source text
                     // printer during this same held-A sample window.
