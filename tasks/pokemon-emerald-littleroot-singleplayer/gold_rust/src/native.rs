@@ -4062,9 +4062,16 @@ fn draw_wallclock_period_indicator(
     angle: u16,
     palette: &[[u8; 3]; 16],
 ) {
-    let radians = f32::from(angle).to_radians();
-    let center_x = 120_i32 + (radians.cos() * 30.0) as i32;
-    let center_y = 80_i32 + (radians.sin() * 30.0) as i32;
+    // `SpriteCB_PMIndicator` and `SpriteCB_AMIndicator` use the decomp's
+    // degree-indexed `Sin2`/`Cos2` table, not a floating-point circle.  The
+    // table is Q4.12 and the source callback truncates the product after
+    // multiplying by its 30-pixel radius.  Quantize the host calculation to
+    // that same representation before applying the signed division so the
+    // four 16x16 OAM badges land on the source pixel coordinates at every
+    // transition angle.
+    let (x_offset, y_offset) = wallclock_period_indicator_offset(angle);
+    let center_x = 120_i32 + x_offset;
+    let center_y = 80_i32 + y_offset;
     for row in 0..16 {
         for column in 0..16 {
             let Some(color_index) = wallclock_tile_pixel(tiles, tile_offset, 2, column, row) else {
@@ -4077,6 +4084,32 @@ fn draw_wallclock_period_indicator(
             put_pixel(frame, x as usize, y as usize, palette[usize::from(color_index)]);
         }
     }
+}
+
+/// Reproduces the source `Sin2`/`Cos2` Q4.12 table closely enough to preserve
+/// its integer sprite callback contract without carrying a second 180-entry
+/// lookup table into the renderer.  `gSineDegreeTable` is the rounded
+/// `sin(angle) * 4096` table from `src/trig.c`; GBA's callback then performs
+/// `value * 30 / 0x1000` with signed truncation toward zero.
+fn wallclock_period_indicator_offset(angle: u16) -> (i32, i32) {
+    let sin_q4_12 = wallclock_sine_q4_12(angle);
+    let cos_q4_12 = wallclock_sine_q4_12(angle.saturating_add(90));
+    (cos_q4_12 * 30 / 0x1000, sin_q4_12 * 30 / 0x1000)
+}
+
+fn wallclock_sine_q4_12(angle: u16) -> i32 {
+    let angle = angle % 360;
+    let magnitude_angle = angle % 180;
+    let radians = f64::from(magnitude_angle).to_radians();
+    // `Q_4_12` stores the source table's nearest integer.  Four entries in
+    // the decomp are one unit below the host rounding of their decimal
+    // literals; retain those authored values before applying the half-turn
+    // sign used by `Sin2`.
+    let mut magnitude = (radians.sin() * 4096.0).round() as i32;
+    if matches!(magnitude_angle, 84 | 88 | 92 | 96) {
+        magnitude -= 1;
+    }
+    if angle >= 180 { -magnitude } else { magnitude }
 }
 
 fn wallclock_tile_pixel(
