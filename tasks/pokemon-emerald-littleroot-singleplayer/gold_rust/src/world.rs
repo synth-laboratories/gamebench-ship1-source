@@ -103,6 +103,11 @@ const ROUTE103_RIVAL_EXIT_SIDE_FRAMES: u16 = 116;
 /// A south-facing player has no watcher movement; the first rival step holds
 /// the second stream for its normal 16-frame duration.
 const ROUTE103_RIVAL_EXIT_SOUTH_FRAMES: u16 = 112;
+/// `OldaleTown_EventScript_BlockedPath` first waits the player's eight-frame
+/// delay plus one normal step, then returns the footprints man in two normal
+/// strides after the warning message closes.
+const OLDALE_BLOCKED_PATH_APPROACH_FRAMES: u16 = 24;
+const OLDALE_BLOCKED_PATH_RETURN_FRAMES: u16 = 32;
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -1282,6 +1287,13 @@ pub struct WorldState {
     /// Remaining frames in Oldale's post-Route-103 rival exit script.
     #[serde(default)]
     pub oldale_rival_departure_frames: Option<u16>,
+    /// Source coordinate event at Oldale's west entrance while the adventure
+    /// flag is unset. Stage 1 is the player/man approach before the warning;
+    /// stage 2 owns the field message; stage 3 is the man's return path.
+    #[serde(default)]
+    pub oldale_blocked_path_frames: Option<u16>,
+    #[serde(default)]
+    pub oldale_blocked_path_stage: u8,
     /// Oldale's south-edge rival approach runs before its homeward message.
     /// The three source triggers use zero, one, or two leftward strides,
     /// followed by the player's four-frame faster right turn.
@@ -1529,6 +1541,8 @@ impl WorldState {
             rival_arrival_frames: None,
             rival_departure_frames: None,
             oldale_rival_departure_frames: None,
+            oldale_blocked_path_frames: None,
+            oldale_blocked_path_stage: 0,
             oldale_rival_approach_frames: None,
             oldale_mart_scene_frames: None,
             oldale_mart_scene_stage: 0,
@@ -1660,6 +1674,8 @@ impl WorldState {
             rival_arrival_frames: None,
             rival_departure_frames: None,
             oldale_rival_departure_frames: None,
+            oldale_blocked_path_frames: None,
+            oldale_blocked_path_stage: 0,
             oldale_rival_approach_frames: None,
             oldale_mart_scene_frames: None,
             oldale_mart_scene_stage: 0,
@@ -1794,6 +1810,8 @@ impl WorldState {
             rival_arrival_frames: None,
             rival_departure_frames: None,
             oldale_rival_departure_frames: None,
+            oldale_blocked_path_frames: None,
+            oldale_blocked_path_stage: 0,
             oldale_rival_approach_frames: None,
             oldale_mart_scene_frames: None,
             oldale_mart_scene_stage: 0,
@@ -1924,6 +1942,8 @@ impl WorldState {
             rival_arrival_frames: None,
             rival_departure_frames: None,
             oldale_rival_departure_frames: None,
+            oldale_blocked_path_frames: None,
+            oldale_blocked_path_stage: 0,
             oldale_rival_approach_frames: None,
             oldale_mart_scene_frames: None,
             oldale_mart_scene_stage: 0,
@@ -2083,6 +2103,8 @@ impl WorldState {
             rival_arrival_frames: None,
             rival_departure_frames: None,
             oldale_rival_departure_frames: None,
+            oldale_blocked_path_frames: None,
+            oldale_blocked_path_stage: 0,
             oldale_rival_approach_frames: None,
             oldale_mart_scene_frames: None,
             oldale_mart_scene_stage: 0,
@@ -2927,6 +2949,83 @@ impl WorldState {
             self.advance_field_dialogue_printer(frames.saturating_sub(u32::from(remaining)));
         } else {
             self.oldale_rival_approach_frames = Some(next_remaining);
+        }
+        true
+    }
+
+    /// Runs `OldaleTown_EventScript_BlockedPath` at the west entrance while
+    /// `VAR_OLDALE_TOWN_STATE` is still zero. The trigger is deliberately a
+    /// field coordinate event rather than collision: the player reaches
+    /// `(0,10)`, steps back to `(1,10)`, and the footprints man makes his
+    /// source-backed up/return movement around the warning message.
+    pub fn advance_oldale_blocked_path(&mut self, frames: u32) -> bool {
+        let Some(remaining) = self.oldale_blocked_path_frames else { return false; };
+        let stage = self.oldale_blocked_path_stage;
+        let total = match stage {
+            1 => OLDALE_BLOCKED_PATH_APPROACH_FRAMES,
+            3 => OLDALE_BLOCKED_PATH_RETURN_FRAMES,
+            _ => return false,
+        };
+        let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
+        let elapsed_before = total.saturating_sub(remaining);
+        let elapsed_after = total.saturating_sub(next_remaining);
+
+        if stage == 1 {
+            // `OldaleTown_Movement_PlayerStepBack`: delay 8, then one normal
+            // right stride. The man runs up, turns in place, then steps right
+            // before the shared waitmovement releases the warning message.
+            if elapsed_before < 8 && 8 <= elapsed_after {
+                self.player = TilePosition { x: 1, y: 10 };
+                self.facing = Facing::Right;
+                if let Some(man) = self.npcs.iter_mut().find(|npc| npc.id == "footprints_man" && npc.map == MapId::OldaleTown) {
+                    man.position = TilePosition { x: 1, y: 10 };
+                    man.facing = Facing::Up;
+                }
+            }
+            if elapsed_before < 12 && 12 <= elapsed_after {
+                if let Some(man) = self.npcs.iter_mut().find(|npc| npc.id == "footprints_man" && npc.map == MapId::OldaleTown) {
+                    man.facing = Facing::Left;
+                }
+            }
+            if elapsed_before < 20 && 20 <= elapsed_after {
+                if let Some(man) = self.npcs.iter_mut().find(|npc| npc.id == "footprints_man" && npc.map == MapId::OldaleTown) {
+                    man.position = TilePosition { x: 2, y: 10 };
+                    man.facing = Facing::Right;
+                }
+            }
+            if next_remaining == 0 {
+                self.oldale_blocked_path_frames = None;
+                self.oldale_blocked_path_stage = 2;
+                let dialogue = "Aaaaah! Wait!\nPlease don't come in here.\n\nI just discovered the footprints of\na rare POKéMON.\n\nWait until I finish sketching\nthem, okay?";
+                self.field_dialogue_frames = Some(dialogue_printer_duration(dialogue));
+                self.dialogue = Some(dialogue.to_owned());
+                self.advance_field_dialogue_printer(frames.saturating_sub(u32::from(remaining)));
+            } else {
+                self.oldale_blocked_path_frames = Some(next_remaining);
+            }
+            return true;
+        }
+
+        // `OldaleTown_Movement_ReturnToOriginalPosition` is two ordinary
+        // strides: down to `(2,11)`, then left to the authored `(1,11)`.
+        if elapsed_before == 0 && elapsed_after > 0 {
+            if let Some(man) = self.npcs.iter_mut().find(|npc| npc.id == "footprints_man" && npc.map == MapId::OldaleTown) {
+                man.position = TilePosition { x: 2, y: 11 };
+                man.facing = Facing::Down;
+            }
+        }
+        if elapsed_before < 16 && 16 <= elapsed_after {
+            if let Some(man) = self.npcs.iter_mut().find(|npc| npc.id == "footprints_man" && npc.map == MapId::OldaleTown) {
+                man.position = TilePosition { x: 1, y: 11 };
+                man.facing = Facing::Left;
+            }
+        }
+        if next_remaining == 0 {
+            self.oldale_blocked_path_frames = None;
+            self.oldale_blocked_path_stage = 0;
+            self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
+        } else {
+            self.oldale_blocked_path_frames = Some(next_remaining);
         }
         true
     }
@@ -6188,6 +6287,14 @@ impl WorldState {
                 self.birch_prompt_frames = Some(8);
                 return;
             }
+            if self.oldale_blocked_path_stage == 2 {
+                // `closemessage` is followed immediately by the man's
+                // `walk_down`, `walk_left`, and `waitmovement`; keep the
+                // player locked until both strides restore his source tile.
+                self.oldale_blocked_path_stage = 3;
+                self.oldale_blocked_path_frames = Some(OLDALE_BLOCKED_PATH_RETURN_FRAMES);
+                return;
+            }
             match self.oldale_mart_scene_stage {
                 1 => {
                     if self.oldale_mart_dialogue_page == 0 {
@@ -6583,7 +6690,7 @@ impl WorldState {
     /// separate so they cannot be mistaken for implemented behavior.
     pub fn walk_bounds(&mut self, facing: Facing, held_frames: u32) -> u32 {
         self.face(facing);
-        if self.menu_open || self.dialogue.is_some() || self.transition.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.birch_post_battle_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() || self.pokedex_receipt_fanfare_frames.is_some() || self.pokedex_poke_ball_fanfare_frames.is_some() || self.tv_broadcast_intro_frames.is_some() || self.tv_broadcast_approach_frames.is_some() || self.tv_broadcast_view_frames.is_some() {
+        if self.menu_open || self.dialogue.is_some() || self.transition.is_some() || self.oldale_blocked_path_frames.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.birch_post_battle_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() || self.pokedex_receipt_fanfare_frames.is_some() || self.pokedex_poke_ball_fanfare_frames.is_some() || self.tv_broadcast_intro_frames.is_some() || self.tv_broadcast_approach_frames.is_some() || self.tv_broadcast_view_frames.is_some() {
             return 0;
         }
 
@@ -6844,6 +6951,16 @@ impl WorldState {
             self.begin_littleroot_warp();
             self.apply_littleroot_coordinate_trigger();
             self.apply_route101_rescue_exit_guard();
+            self.apply_oldale_blocked_path_trigger();
+            if self.oldale_blocked_path_frames.is_some() {
+                // The source coordinate event owns the remainder of the same
+                // held request after the `(0,10)` boundary, just as a split
+                // movement followed by Noop would.
+                let frames_to_trigger = u32::from(cadence)
+                    .saturating_sub(prior_walk_elapsed)
+                    .saturating_add(tile_index * u32::from(cadence));
+                self.advance_oldale_blocked_path(held_frames.saturating_sub(frames_to_trigger));
+            }
             if self.running_shoes_wait_frames.is_some() {
                 // A held direction can cross the source Running Shoes
                 // trigger before its request ends. Those trailing frames
@@ -7200,6 +7317,23 @@ impl WorldState {
         };
         self.route101_exit_push = Some(blocked_facing);
         self.dialogue = Some("Wh-Where are you going?!\nDon't leave me like this!".to_owned());
+    }
+
+    /// `OldaleTown_MapCoordEvents` fires the source west-entrance script on
+    /// `(0,10)` until Birch's Pokédex handoff sets the adventure flag. It is
+    /// intentionally separate from collision so the authored step-back and
+    /// footprints-man movement can run before the warning message.
+    fn apply_oldale_blocked_path_trigger(&mut self) {
+        if self.map != MapId::OldaleTown
+            || self.phase >= StoryPhase::PokedexReceived
+            || self.player != (TilePosition { x: 0, y: 10 })
+            || self.oldale_blocked_path_stage != 0
+            || self.dialogue.is_some()
+        {
+            return;
+        }
+        self.oldale_blocked_path_stage = 1;
+        self.oldale_blocked_path_frames = Some(OLDALE_BLOCKED_PATH_APPROACH_FRAMES);
     }
 
     fn apply_littleroot_coordinate_trigger(&mut self) {
