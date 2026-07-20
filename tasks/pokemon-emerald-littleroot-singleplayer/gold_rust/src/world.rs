@@ -5950,6 +5950,8 @@ impl WorldState {
     /// legacy lowercase projection change here.
     pub fn cycle_name_entry_page(&mut self) {
         if self.phase != StoryPhase::NameEntry { return; }
+        let current = self.name_keyboard_page();
+        let cursor_position = self.name_cursor_position();
         let next = match self.name_keyboard_page() {
             NamingKeyboardPage::Symbols => NamingKeyboardPage::LettersUpper,
             NamingKeyboardPage::LettersUpper => NamingKeyboardPage::LettersLower,
@@ -5957,6 +5959,17 @@ impl WorldState {
         };
         self.name_entry_page = next;
         self.name_entry_lowercase = next == NamingKeyboardPage::LettersLower;
+        // `MainState_WaitPageSwap` keeps a button-column cursor on its
+        // physical column, but clamps an ordinary key cursor that exceeds the
+        // new page's column count (upper/lower have eight; symbols have six).
+        if let Some((x, y)) = cursor_position {
+            let current_columns = Self::name_page_column_count(current);
+            let next_columns = Self::name_page_column_count(next);
+            if x != current_columns {
+                let x = x.min(next_columns.saturating_sub(1));
+                self.name_cursor = Self::name_cursor_from_position(next, x, y, None);
+            }
+        }
     }
 
     fn name_page_column_count(page: NamingKeyboardPage) -> u8 {
