@@ -448,6 +448,10 @@ const BIRCH_IDLE_OBJ_PALETTE: &[u8] = include_bytes!("../assets/opening_birch_id
 const BIRCH_IDLE_OAM: &[u8] = include_bytes!("../assets/opening_birch_idle.oam.bin");
 const EMERALD_FONT_NORMAL: &[u8] = include_bytes!("../assets/fonts/latin_normal.png");
 static EMERALD_NORMAL_FONT: OnceLock<IndexedTiles> = OnceLock::new();
+// `FONT_NARROW` backs Emerald's move-selection names, PP label, and type
+// label. This is the unmodified source `graphics/fonts/latin_narrow.png`.
+const EMERALD_FONT_NARROW_B64: &str = include_str!("../assets/fonts/latin_narrow.png.b64");
+static EMERALD_NARROW_FONT: OnceLock<IndexedTiles> = OnceLock::new();
 const POKEDEX_TREECKO_SPECIMEN_ZLIB_B64: &str = include_str!("../assets/pokedex_treecko_specimen.rgb.zlib.b64");
 static POKEDEX_TREECKO_SPECIMEN: OnceLock<Vec<u8>> = OnceLock::new();
 const GENDER_BRENDAN_PNG_B64: &str = include_str!("../assets/opening_gender_brendan.png.b64");
@@ -1811,19 +1815,44 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             // serialize that blink phase, so do not substitute the former
             // invented literal "A" for source UI art here.
         } else if battle.selecting_move {
-            draw_menu_window(frame, 0, 112, 128, 48);
-            draw_menu_window(frame, 128, 112, 112, 48);
             if battle.command_cursor == BATTLE_COMMAND_BAG {
+                draw_menu_window(frame, 0, 112, 128, 48);
+                draw_menu_window(frame, 128, 112, 112, 48);
                 draw_text(frame, 16, 120, "ITEMS", 10);
                 draw_text(frame, 16, 136, &format!("POTION x{}", world.potions), 10);
                 draw_text(frame, 144, 120, &format!("POTION x{}", world.potions), 10);
                 draw_cursor(frame, 136, 120);
             } else {
-                draw_text(frame, 16, 120, &battle.player_move_name, 10);
-                draw_text(frame, 16, 136, &battle.player_status_move_name, 10);
-                draw_text(frame, 144, 120, &format!("PP {}/{}", battle.player_move_pp, 35), 10);
-                draw_text(frame, 144, 136, "TYPE/NORMAL", 10);
-                draw_cursor(frame, 6, match battle.move_cursor { 0 => 120, _ => 136 });
+                // `HandleChooseMoveAfterDma3` scrolls BG0 to 320 and then
+                // fills `B_WIN_MOVE_*` windows. Keep the typed two-move
+                // battle state intact while projecting its slots into the
+                // source's row-major top-left/top-right layout.
+                let move_cursor = battle.move_cursor & 3;
+                draw_battle_move_chrome(frame, move_cursor);
+                const MOVE_TEXT_PALETTE: [[u8; 3]; 3] = [[74, 74, 74], [213, 213, 205], [255, 255, 255]];
+                draw_narrow_text_with_palette(frame, 16, 121, &battle.player_move_name, 16, MOVE_TEXT_PALETTE);
+                draw_narrow_text_with_palette(frame, 88, 121, &battle.player_status_move_name, 16, MOVE_TEXT_PALETTE);
+
+                // Emerald recolors palette slots 12 and 11 from
+                // `text_pp.pal` for the selected move's remaining PP.
+                let (selected_pp, selected_move_name) = if move_cursor == 0 {
+                    (battle.player_move_pp, battle.player_move_name.as_str())
+                } else {
+                    (battle.player_status_move_pp, battle.player_status_move_name.as_str())
+                };
+                let selected_max_pp = opening_move_panel_max_pp(selected_move_name);
+                let pp_text_palette = battle_pp_text_palette(selected_pp, selected_max_pp);
+                draw_narrow_text_with_palette(frame, 168, 121, "PP ", 3, pp_text_palette);
+                draw_text_with_palette(
+                    frame,
+                    202,
+                    121,
+                    &format!("{selected_pp:>2}/{selected_max_pp:>2}"),
+                    5,
+                    pp_text_palette,
+                );
+                let type_name_x = draw_narrow_text_with_palette(frame, 168, 137, "TYPE/", 5, MOVE_TEXT_PALETTE);
+                draw_text_with_palette(frame, type_name_x, 137, "NORMAL", 10, MOVE_TEXT_PALETTE);
             }
         } else {
             draw_battle_action_chrome(frame, battle.command_cursor);
@@ -2204,6 +2233,159 @@ fn draw_battle_message_chrome(frame: &mut [u8]) -> [[u8; 3]; 3] {
     ]
 }
 
+/// Replays the normal move-selection page of Emerald's BG0. Source
+/// `HandleChooseMoveAfterDma3` sets `gBattle_BG0_Y = DISPLAY_HEIGHT * 2`,
+/// making the static page at tile rows 54–59 visible at screen rows 112–159.
+/// The move/PP windows then replace the map's interiors with palette-5 text
+/// buffers; their exact `B_WIN_MOVE_*` rectangles are filled below.
+fn draw_battle_move_chrome(frame: &mut [u8], move_cursor: u8) {
+    let tiles = BATTLE_TEXTBOX_TILES.get_or_init(|| {
+        decode_source_indexed_sheet(BATTLE_TEXTBOX_TILES_B64)
+            .expect("staged Emerald battle textbox tiles must decode")
+    });
+    let palette = BATTLE_TEXTBOX_PALETTE.get_or_init(|| {
+        decode_base64(BATTLE_TEXTBOX_PALETTE_B64)
+            .expect("staged Emerald battle textbox palette must decode")
+    });
+    let tilemap = BATTLE_TEXTBOX_MAP.get_or_init(|| {
+        decode_base64(BATTLE_TEXTBOX_MAP_B64)
+            .expect("staged Emerald battle textbox map must decode")
+    });
+    let window_frame = BATTLE_TEXTBOX_WINDOW_FRAME.get_or_init(|| {
+        decode_source_indexed_sheet(BATTLE_TEXTBOX_WINDOW_FRAME_B64)
+            .expect("staged Emerald default battle window frame must decode")
+    });
+
+    const MAP_WIDTH_TILES: usize = 32;
+    const MAP_HEIGHT_TILES: usize = 64;
+    const BG0_Y: usize = FRAME_HEIGHT * 2;
+    const MOVE_CHROME_TOP: usize = 112;
+    assert_eq!(tilemap.len(), MAP_WIDTH_TILES * MAP_HEIGHT_TILES * 2);
+    assert_eq!(palette.len(), 2 * 16 * 2);
+    assert_eq!(tiles.width % 8, 0);
+    assert_eq!(tiles.height % 8, 0);
+    assert_eq!(window_frame.width, 24);
+    assert_eq!(window_frame.height, 24);
+
+    let source_tiles_per_row = tiles.width / 8;
+    let source_tile_count = source_tiles_per_row * (tiles.height / 8);
+    let frame_tiles_per_row = window_frame.width / 8;
+    for y in MOVE_CHROME_TOP..FRAME_HEIGHT {
+        let map_y = (y + BG0_Y) % (MAP_HEIGHT_TILES * 8);
+        let tile_y = map_y / 8;
+        let pixel_y = map_y % 8;
+        for x in 0..FRAME_WIDTH {
+            let tile_x = x / 8;
+            let pixel_x = x % 8;
+            let entry_offset = (tile_y * MAP_WIDTH_TILES + tile_x) * 2;
+            let entry = u16::from_le_bytes([tilemap[entry_offset], tilemap[entry_offset + 1]]);
+            let tile = usize::from(entry & 0x03ff);
+            let flip_x = entry & 0x0400 != 0;
+            let flip_y = entry & 0x0800 != 0;
+            let palette_bank = usize::from((entry >> 12) & 0x0f);
+            let source_column = if flip_x { 7 - pixel_x } else { pixel_x };
+            let source_row = if flip_y { 7 - pixel_y } else { pixel_y };
+
+            let color = if palette_bank == 1 {
+                if let Some(frame_tile) = tile.checked_sub(0x12).filter(|tile| *tile < 9) {
+                    let source_x = (frame_tile % frame_tiles_per_row) * 8 + source_column;
+                    let source_y = (frame_tile / frame_tiles_per_row) * 8 + source_row;
+                    let color_index = usize::from(window_frame.pixels[source_y * window_frame.width + source_x]);
+                    window_frame.palette.get(color_index).copied()
+                } else if let Some(frame_tile) = tile.checked_sub(0x22).filter(|tile| *tile < 9) {
+                    let source_x = (frame_tile % frame_tiles_per_row) * 8 + source_column;
+                    let source_y = (frame_tile / frame_tiles_per_row) * 8 + source_row;
+                    let color_index = usize::from(window_frame.pixels[source_y * window_frame.width + source_x]);
+                    window_frame.palette.get(color_index).copied()
+                } else {
+                    None
+                }
+            } else if palette_bank == 0 && tile < source_tile_count {
+                let source_x = (tile % source_tiles_per_row) * 8 + source_column;
+                let source_y = (tile / source_tiles_per_row) * 8 + source_row;
+                let color_index = usize::from(tiles.pixels[source_y * tiles.width + source_x]);
+                battle_textbox_palette_color(palette, color_index)
+            } else {
+                None
+            };
+            if let Some(color) = color {
+                put_pixel(frame, x, y, color);
+            }
+        }
+    }
+
+    // `sStandardBattleWindowTemplates` places the four 8×2 move windows at
+    // (2,55), (11,55), (2,57), and (11,57), and the PP/type windows at the
+    // corresponding right-side coordinates. `BattlePutTextOnWindow` fills
+    // each buffer with palette index 14 (white) before printing.
+    const WINDOW_FILL: [u8; 3] = [255, 255, 255];
+    for (x, y, width) in [
+        (2 * 8, 55 * 8 - BG0_Y, 8 * 8),
+        (11 * 8, 55 * 8 - BG0_Y, 8 * 8),
+        (2 * 8, 57 * 8 - BG0_Y, 8 * 8),
+        (11 * 8, 57 * 8 - BG0_Y, 8 * 8),
+        (21 * 8, 55 * 8 - BG0_Y, 4 * 8),
+        (25 * 8, 55 * 8 - BG0_Y, 4 * 8),
+        (21 * 8, 57 * 8 - BG0_Y, 8 * 8),
+    ] {
+        draw_solid_rect(frame, x, y, width, 2 * 8, WINDOW_FILL);
+    }
+
+    // `MoveSelectionCreateCursorAt` writes source tiles 1/2 at
+    // `(1 + 9 * (cursor & 1), 55 + (cursor & 2))` with palette bank 1.
+    let move_cursor = usize::from(move_cursor & 3);
+    let cursor_tile_x = 1 + 9 * (move_cursor & 1);
+    let cursor_tile_y = 55 + (move_cursor & 2);
+    for (tile_offset, tile) in [1, 2].into_iter().enumerate() {
+        draw_battle_textbox_tile_with_palette(
+            frame,
+            tiles,
+            &window_frame.palette,
+            tile,
+            cursor_tile_x * 8,
+            (cursor_tile_y + tile_offset) * 8 - BG0_Y,
+        );
+    }
+}
+
+/// The projected opening battle has two source move slots. The battle model
+/// owns remaining PP; this renderer only reads the canonical opening maxima
+/// necessary for its source-format `current/max` label.
+fn opening_move_panel_max_pp(move_name: &str) -> u8 {
+    match move_name {
+        "LEER" => 30,
+        "GROWL" => 40,
+        _ => 35,
+    }
+}
+
+/// Direct projection of Emerald's `GetCurrentPpToMaxPpState` plus the four
+/// foreground/shadow pairs in `graphics/battle_interface/text_pp.pal`.
+fn battle_pp_text_palette(current_pp: u8, max_pp: u8) -> [[u8; 3]; 3] {
+    let state = if max_pp == current_pp {
+        3
+    } else if max_pp <= 2 {
+        if current_pp > 1 { 3 } else { 2 - current_pp }
+    } else if max_pp <= 7 {
+        if current_pp > 2 { 3 } else { 2 - current_pp }
+    } else if current_pp == 0 {
+        2
+    } else if current_pp <= max_pp / 4 {
+        1
+    } else if current_pp > max_pp / 2 {
+        3
+    } else {
+        0
+    };
+    let (foreground, shadow) = match state {
+        0 => ([213, 197, 0], [255, 246, 139]),
+        1 => ([255, 131, 0], [255, 238, 115]),
+        2 => ([230, 24, 0], [246, 222, 156]),
+        _ => ([74, 74, 74], [222, 222, 222]),
+    };
+    [foreground, shadow, [255, 255, 255]]
+}
+
 /// Replays the stable opening action-selection page from the same BG0
 /// composition Emerald loads in `LoadBattleTextboxAndBackground`. Its 32×64
 /// tilemap is scrolled by `gBattle_BG0_Y = 160`; the action windows therefore
@@ -2328,6 +2510,29 @@ fn draw_battle_textbox_tile(
             let source_y = (tile / tiles_per_row) * 8 + row;
             let color_index = usize::from(tiles.pixels[source_y * tiles.width + source_x]);
             if let Some(color) = battle_textbox_palette_color(palette, color_index) {
+                put_pixel(frame, x + column, y + row, color);
+            }
+        }
+    }
+}
+
+fn draw_battle_textbox_tile_with_palette(
+    frame: &mut [u8],
+    tiles: &SourceIndexedSheet,
+    palette: &[[u8; 3]],
+    tile: usize,
+    x: usize,
+    y: usize,
+) {
+    let tiles_per_row = tiles.width / 8;
+    let tile_count = tiles_per_row * (tiles.height / 8);
+    if tile >= tile_count { return; }
+    for row in 0..8 {
+        for column in 0..8 {
+            let source_x = (tile % tiles_per_row) * 8 + column;
+            let source_y = (tile / tiles_per_row) * 8 + row;
+            let color_index = usize::from(tiles.pixels[source_y * tiles.width + source_x]);
+            if let Some(color) = palette.get(color_index).copied() {
                 put_pixel(frame, x + column, y + row, color);
             }
         }
@@ -3634,6 +3839,48 @@ fn draw_text_with_palette(frame: &mut [u8], x: usize, y: usize, text: &str, max_
     }
 }
 
+/// Source `FONT_NARROW` text printer used by the battle move page. It shares
+/// Emerald's glyph IDs with `FONT_NORMAL`, but its five-pixel Latin glyphs
+/// keep two move names in the source's 8-tile columns.
+fn draw_narrow_text_with_palette(
+    frame: &mut [u8],
+    x: usize,
+    y: usize,
+    text: &str,
+    max_chars: usize,
+    palette: [[u8; 3]; 3],
+) -> usize {
+    let font = EMERALD_NARROW_FONT.get_or_init(|| {
+        let bytes = decode_base64(EMERALD_FONT_NARROW_B64)
+            .expect("staged Emerald narrow font must decode from base64");
+        decode_font_indexed(&bytes).expect("staged Emerald narrow font must decode")
+    });
+    let mut cursor_x = x;
+    let mut cursor_y = y;
+    for character in text.chars().take(max_chars) {
+        if character == '\n' {
+            cursor_x = x;
+            cursor_y = cursor_y.saturating_add(16);
+            continue;
+        }
+        let Some(glyph_id) = emerald_glyph_id(character) else { continue; };
+        let glyph_x = (glyph_id % 16) * 16;
+        let glyph_y = (glyph_id / 16) * 16;
+        for row in 0..15 {
+            for column in 0..16 {
+                match font.pixels[(glyph_y + row) * font.width + glyph_x + column] {
+                    1 => put_pixel(frame, cursor_x + column, cursor_y + row, palette[0]),
+                    2 => put_pixel(frame, cursor_x + column, cursor_y + row, palette[1]),
+                    3 => put_pixel(frame, cursor_x + column, cursor_y + row, palette[2]),
+                    _ => {}
+                }
+            }
+        }
+        cursor_x += emerald_narrow_glyph_width(character);
+    }
+    cursor_x
+}
+
 fn emerald_glyph_id(character: char) -> Option<usize> {
     Some(match character {
         ' ' => 0x00,
@@ -3654,6 +3901,18 @@ fn emerald_glyph_width(character: char) -> usize {
         '…' => 8,
         'M' | 'W' | 'm' | 'w' | '▶' => 8,
         _ => 6,
+    }
+}
+
+fn emerald_narrow_glyph_width(character: char) -> usize {
+    // Source `gFontNarrowLatinGlyphWidths` for the opening battle alphabet.
+    // The move/type panel uses uppercase move names, decimal digits, spaces,
+    // and the TYPE slash; all other staged opening glyphs advance five pixels.
+    match character {
+        ' ' => 3,
+        'I' | 'Y' => 4,
+        '/' => 6,
+        _ => 5,
     }
 }
 
