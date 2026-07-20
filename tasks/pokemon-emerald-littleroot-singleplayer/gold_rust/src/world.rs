@@ -312,6 +312,13 @@ pub const BATTLE_PLAYER_SENDOUT_RELEASE_FRAMES: u8 = 12;
 pub const BATTLE_PLAYER_SENDOUT_COMPLETE_FRAMES: u8 =
     BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES + BATTLE_PLAYER_SENDOUT_RELEASE_FRAMES;
 
+/// `BattleIntroSlide1` for the normal grass environment consumes two setup
+/// ticks, thirty-two one-line WIN0 expansion ticks, and 120 two-pixel
+/// scanline-slide ticks before `BattleIntroSlideEnd` resets the BG offsets.
+/// Keep the Route 103 trainer hand-off on that source timeline instead of the
+/// former 48-frame compressed presentation.
+pub const BATTLE_GRASS_INTRO_FRAMES: u16 = 154;
+
 /// A source moveset slot, retained independently of the currently selected
 /// move so an opponent controller can choose from the original four slots.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -5253,7 +5260,7 @@ impl WorldState {
             // normal viability configuration.
             let rival_setup_first_turn = self.player_gender == PlayerGender::May
                 && self.starter == Some(StarterSpecies::Mudkip);
-            let mut battle = opening_battle_state(BattleOpponent::Rival, starter_battle_profile(self.starter), rival_battle_profile(self.starter, self.player_gender), false, format!("RIVAL {} would like to battle!", rival_trainer_name(self.player_gender)), 48, self.ambient_rng, rival_setup_first_turn);
+            let mut battle = opening_battle_state(BattleOpponent::Rival, starter_battle_profile(self.starter), rival_battle_profile(self.starter, self.player_gender), false, format!("RIVAL {} would like to battle!", rival_trainer_name(self.player_gender)), BATTLE_GRASS_INTRO_FRAMES, self.ambient_rng, rival_setup_first_turn);
             self.apply_starter_party_to_battle(&mut battle);
             self.battle = Some(battle);
         }
