@@ -1621,7 +1621,7 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
         draw_text(frame, 86, 24, &format!("L{}", battle.opponent_level), 2);
         draw_text(frame, 16, 34, "HP", 10);
         draw_battle_hp_bar(frame, 38, 34, battle.rival_hp, battle.opponent_max_hp);
-        draw_battle_sprite(frame, battle_front_sprite(&battle.opponent_species), 160, 18);
+        draw_battle_opponent_sprite(frame, &battle.opponent_species);
         draw_menu_window(frame, 132, 76, 100, 32);
         let player = match world.starter {
             Some(crate::world::StarterSpecies::Treecko) => "TREECKO",
@@ -1634,7 +1634,7 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
         draw_text(frame, 140, 94, "HP", 2);
         draw_battle_hp_bar(frame, 160, 95, battle.player_hp, battle.player_max_hp);
         draw_text(frame, 198, 99, &format!("{}/{}", battle.player_hp, battle.player_max_hp), 6);
-        draw_battle_sprite(frame, battle_back_sprite(world.starter), 24, 52);
+        draw_battle_player_sprite(frame, world.starter);
         if battle.party_screen_open {
             draw_menu_window(frame, 20, 20, 200, 120);
             draw_text(frame, 32, 30, "POKéMON", 10);
@@ -2024,8 +2024,8 @@ fn draw_wurmple_entry_phase(frame: &mut [u8], world: &WorldState, battle: &crate
         return;
     }
 
-    draw_battle_sprite(frame, battle_front_sprite(&battle.opponent_species), 160, 18);
-    draw_battle_sprite(frame, battle_back_sprite(world.starter), 24, 52);
+    draw_battle_opponent_sprite(frame, &battle.opponent_species);
+    draw_battle_player_sprite(frame, world.starter);
     if elapsed < 288 {
         return;
     }
@@ -2303,18 +2303,67 @@ fn battle_front_sprite(species: &str) -> &'static NpcSpriteSheet {
     }
 }
 
-fn draw_battle_sprite(frame: &mut [u8], sprite: &NpcSpriteSheet, x: usize, y: usize) {
-    if sprite.width != 64 || sprite.height != 64 || sprite.palette.len() < 48 {
+/// Renders a source battle OBJ from its 64×64 hardware center. Emerald's
+/// single-battle controllers create opponent sprites at `(176, 40)` and player
+/// sprites at `(72, 80)` before applying the species picture y-offset. The
+/// sheets can carry multiple 64px animation frames vertically; stable battle
+/// presentation starts on source frame zero.
+fn draw_battle_sprite_centered(
+    frame: &mut [u8],
+    sprite: &NpcSpriteSheet,
+    center_x: i16,
+    center_y: i16,
+) {
+    if sprite.width != 64 || sprite.height < 64 || sprite.palette.len() < 48 {
         return;
     }
-    for row in 0..sprite.height {
-        for column in 0..sprite.width {
+    let origin_x = center_x - 32;
+    let origin_y = center_y - 32;
+    for row in 0..64 {
+        for column in 0..64 {
             let index = usize::from(sprite.pixels[row * sprite.width + column]);
             if index == 0 { continue; }
             let palette = &sprite.palette[index * 3..index * 3 + 3];
-            put_pixel(frame, x + column, y + row, [palette[0], palette[1], palette[2]]);
+            let x = origin_x + column as i16;
+            let y = origin_y + row as i16;
+            if x < 0 || y < 0 { continue; }
+            put_pixel(frame, x as usize, y as usize, [palette[0], palette[1], palette[2]]);
         }
     }
+}
+
+/// Source `GetBattlerSpriteDefault_Y` for the scoped single-battle opponent
+/// set. `sBattlerCoords` supplies the `(176, 40)` center and each value below
+/// is the matching `gMonFrontPicCoords[species].y_offset`.
+fn draw_battle_opponent_sprite(frame: &mut [u8], species: &str) {
+    let y_offset = match species {
+        "TREECKO" | "TORCHIC" => 8,
+        "MUDKIP" | "POOCHYENA" => 12,
+        "ZIGZAGOON" => 15,
+        "WINGULL" => 24,
+        "WURMPLE" => 14,
+        _ => 15, // The renderer's source fallback remains Zigzagoon.
+    };
+    draw_battle_sprite_centered(
+        frame,
+        battle_front_sprite(species),
+        176,
+        40 + y_offset,
+    );
+}
+
+/// Source `GetBattlerSpriteDefault_Y` for the player's scoped starters. The
+/// player side uses single-battle center `(72, 80)` plus the matching
+/// `gMonBackPicCoords[species].y_offset`.
+fn draw_battle_player_sprite(
+    frame: &mut [u8],
+    starter: Option<crate::world::StarterSpecies>,
+) {
+    let y_offset = match starter.unwrap_or(crate::world::StarterSpecies::Treecko) {
+        crate::world::StarterSpecies::Treecko => 6,
+        crate::world::StarterSpecies::Torchic | crate::world::StarterSpecies::Mudkip => 5,
+    };
+    draw_battle_sprite_centered(frame, battle_back_sprite(starter), 72, 80 + y_offset);
 }
 
 /// Nearest-neighbor presentation of Emerald's affine 64×64 battle OBJ.
