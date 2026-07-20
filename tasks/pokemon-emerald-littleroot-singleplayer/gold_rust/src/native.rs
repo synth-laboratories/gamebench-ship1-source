@@ -2,8 +2,9 @@ use png::{ColorType, Decoder, Transformations};
 use flate2::read::ZlibDecoder;
 use crate::{FRAME_BYTES, FRAME_HEIGHT, FRAME_WIDTH};
 use crate::world::{
-    ClockField, Facing, MapId, NamingActionButton, NamingActionButtonPulse,
-    NpcState, NpcWalkStart, PlayerGender, StarterSpecies, StoryPhase,
+    BATTLE_COMMAND_BAG, BATTLE_COMMAND_RUN, ClockField, Facing, MapId,
+    NamingActionButton, NamingActionButtonPulse, NpcState, NpcWalkStart,
+    PlayerGender, StarterSpecies, StoryPhase,
     TilePosition, WorldState,
 };
 use std::io::{Cursor, Read};
@@ -1733,7 +1734,7 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
         } else if battle.selecting_move {
             draw_menu_window(frame, 0, 112, 128, 48);
             draw_menu_window(frame, 128, 112, 112, 48);
-            if battle.command_cursor == 1 {
+            if battle.command_cursor == BATTLE_COMMAND_BAG {
                 draw_text(frame, 16, 120, "ITEMS", 10);
                 draw_text(frame, 16, 136, &format!("POTION x{}", world.potions), 10);
                 draw_text(frame, 144, 120, &format!("POTION x{}", world.potions), 10);
@@ -1753,11 +1754,11 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             draw_text_with_palette(frame, 9, 121, &format!("What will {player}"), 10, PROMPT_TEXT_PALETTE);
             draw_text_with_palette(frame, 9, 137, "do?", 10, PROMPT_TEXT_PALETTE);
             // `B_WIN_ACTION_MENU`'s `text.pal` supplies fg/shadow/bg
-            // 13/15/14. Preserve the state's established command ordering.
+            // 13/15/14. `gText_BattleMenu` prints in row-major order.
             const ACTION_TEXT_PALETTE: [[u8; 3]; 3] = [[74, 74, 74], [213, 213, 205], [255, 255, 255]];
             draw_text_with_palette(frame, 136, 121, "FIGHT", 10, ACTION_TEXT_PALETTE);
-            draw_text_with_palette(frame, 136, 137, "BAG", 10, ACTION_TEXT_PALETTE);
-            draw_text_with_palette(frame, 192, 121, "POKéMON", 10, ACTION_TEXT_PALETTE);
+            draw_text_with_palette(frame, 192, 121, "BAG", 10, ACTION_TEXT_PALETTE);
+            draw_text_with_palette(frame, 136, 137, "POKéMON", 10, ACTION_TEXT_PALETTE);
             draw_text_with_palette(frame, 192, 137, "RUN", 10, ACTION_TEXT_PALETTE);
         }
         return;
@@ -2140,18 +2141,13 @@ fn draw_battle_action_chrome(frame: &mut [u8], command_cursor: u8) {
     draw_solid_rect(frame, 8, 120, 14 * 8, 4 * 8, prompt_fill);
     draw_solid_rect(frame, 17 * 8, 120, 12 * 8, 4 * 8, [255, 255, 255]);
 
-    // The existing saved-state command IDs are column-major (FIGHT/BAG,
-    // then POKéMON/RUN), whereas Emerald's BG cursor positions are row-major.
-    // This display-only translation preserves input/state behavior while each
-    // cursor tile is still placed at its source coordinate.
-    let source_cursor: u8 = match command_cursor {
-        0 => 0,
-        1 => 2,
-        2 => 1,
-        _ => 3,
-    };
-    let cursor_tile_x = 16 + 7 * usize::from(source_cursor & 1);
-    let cursor_tile_y = 35 + usize::from(source_cursor & 2);
+    // State cursor IDs now match Emerald's row-major action selection
+    // directly: `ActionSelectionCreateCursorAt` uses bit 0 as column and
+    // bit 1 as row. Preserve the prior fallback-to-RUN behavior for a stale
+    // serialized out-of-range cursor without translating any valid command.
+    let command_cursor = command_cursor.min(BATTLE_COMMAND_RUN);
+    let cursor_tile_x = 16 + 7 * usize::from(command_cursor & 1);
+    let cursor_tile_y = 35 + usize::from(command_cursor & 2);
     for (tile_offset, tile) in [1, 2].into_iter().enumerate() {
         draw_battle_textbox_tile(
             frame,
