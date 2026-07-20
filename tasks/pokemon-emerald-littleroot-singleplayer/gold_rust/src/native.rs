@@ -272,6 +272,7 @@ static STARTER_CHOOSE_POKEBALL_SELECTION: OnceLock<SourceIndexedSheet> = OnceLoc
 static STARTER_CHOOSE_CIRCLE: OnceLock<SourceIndexedSheet> = OnceLock::new();
 static STARTER_CHOOSE_BIRCH_BAG_TILEMAP: OnceLock<Vec<u8>> = OnceLock::new();
 static STARTER_CHOOSE_BIRCH_GRASS_TILEMAP: OnceLock<Vec<u8>> = OnceLock::new();
+static INTRO_FAREWELL_LOTAD_FRONT: OnceLock<SourceIndexedSheet> = OnceLock::new();
 // Compact source-derived GBA BG state for the first held-right terrain phase.
 // It contains the four active screenblocks, palette, and referenced
 // 4bpp tiles; `restore_littleroot_right_192_bg_state` expands it into the
@@ -522,6 +523,10 @@ const PROFESSOR_IDLE_BG_PALETTE_B64: &str = include_str!("../assets/opening_prof
 const PROFESSOR_IDLE_OBJ_VRAM_B64: &str = include_str!("../assets/opening_professor_idle.obj_vram.b64");
 const PROFESSOR_IDLE_OBJ_PALETTE_B64: &str = include_str!("../assets/opening_professor_idle.obj_palette.b64");
 const PROFESSOR_IDLE_OAM_B64: &str = include_str!("../assets/opening_professor_idle.oam.b64");
+// `NewGameBirchSpeech_CreateLotadSprite` uses this 64×64 indexed front pic
+// with its normal palette. Retaining that source PNG lets the farewell stage
+// compose the OBJ independently of its Birch/background tile and OAM state.
+const INTRO_FAREWELL_LOTAD_FRONT_PNG_B64: &str = include_str!("../assets/intro_farewell_lotad_front.png.b64");
 const NAME_ENTRY_BG_VRAM_B64: &str = include_str!("../assets/opening_name_entry.bg_vram.b64");
 const NAME_ENTRY_BG_PALETTE_B64: &str = include_str!("../assets/opening_name_entry.bg_palette.b64");
 const NAME_ENTRY_OBJ_VRAM_B64: &str = include_str!("../assets/opening_name_entry.obj_vram.b64");
@@ -1414,10 +1419,21 @@ pub fn render_name_prompt(player_gender: PlayerGender) -> Vec<u8> {
     frame
 }
 
-/// The later intro-farewell state retains its existing neutral base until its
-/// separate Birch/Lotad transition is represented by the renderer.
-pub fn render_intro_farewell() -> Vec<u8> {
-    vec![0_u8; FRAME_WIDTH * 160 * 3]
+/// Compose the settled Birch/Lotad page after the player-name confirmation.
+/// The base reuses the source BG/OAM state from the Birch presentation; source
+/// `Task_NewGameBirchSpeech_ReshowBirchLotad` then restores Birch at `(136,
+/// 60)` and its 64×64 Lotad OBJ at center `(100, 0x4B)`.
+pub fn render_intro_farewell() -> Result<Vec<u8>, String> {
+    let mut frame = render_professor_intro_idle()?;
+    let lotad = INTRO_FAREWELL_LOTAD_FRONT.get_or_init(|| {
+        decode_source_indexed_sheet(INTRO_FAREWELL_LOTAD_FRONT_PNG_B64)
+            .expect("source Birch-speech Lotad front pic must decode")
+    });
+    // `CreateMonPicSprite_Affine` uses a 64×64 affine OAM, so source center
+    // `(100, 75)` translates to top-left `(68, 43)` before Lotad's indexed
+    // transparent pixels expose the source-composited stage beneath it.
+    draw_source_indexed_crop(&mut frame, lotad, 0, 0, 64, 64, 68, 43);
+    Ok(frame)
 }
 
 pub fn opening_name_entry() -> Result<Vec<u8>, String> {
