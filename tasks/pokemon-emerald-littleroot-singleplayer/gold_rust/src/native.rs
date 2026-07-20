@@ -1,6 +1,6 @@
 use png::{ColorType, Decoder, Transformations};
 use flate2::read::ZlibDecoder;
-use crate::{FRAME_BYTES, FRAME_WIDTH};
+use crate::{FRAME_BYTES, FRAME_HEIGHT, FRAME_WIDTH};
 use crate::world::{ClockField, Facing, MapId, NpcState, NpcWalkStart, PlayerGender, StarterSpecies, StoryPhase, TilePosition, WorldState};
 use std::io::{Cursor, Read};
 use std::sync::OnceLock;
@@ -1552,13 +1552,19 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             // a 352-frame encounter hand-off; the fresh Route 101 Poochyena
             // capture reaches the battle field after its 224-frame hand-off;
             // scripted battles use Emerald's shorter 48-frame entry. The
-            // current renderer only approximates the final band-close phase.
+            // first scripted Zigzagoon battle is specifically
+            // `CB2_GiveStarter`'s `B_TRANSITION_BLUR`, while the remaining
+            // routes retain their separately measured hand-off windows.
             let entry_frames: usize = match battle.opponent {
                 crate::world::BattleOpponent::Wurmple => 352,
                 crate::world::BattleOpponent::Poochyena | crate::world::BattleOpponent::Wingull => 224,
                 crate::world::BattleOpponent::Zigzagoon | crate::world::BattleOpponent::Rival => 48,
             };
             let elapsed = entry_frames.saturating_sub(usize::from(battle.entry_transition_frames));
+            if battle.opponent == crate::world::BattleOpponent::Zigzagoon {
+                draw_first_battle_blur_entry_phase(frame, elapsed);
+                return;
+            }
             if battle.opponent == crate::world::BattleOpponent::Wurmple {
                 draw_wurmple_entry_phase(frame, world, battle, elapsed);
                 return;
@@ -1861,6 +1867,47 @@ fn draw_battle_background(frame: &mut [u8]) {
     // viewport edge, while the player's is clipped by the left edge.
     draw_battle_platform(frame, 193, 64, 52, 16);
     draw_battle_platform(frame, 59, 108, 64, 15);
+}
+
+/// Projects Emerald's `B_TRANSITION_BLUR` onto the currently serialized
+/// first-battle hand-off. The source's visible sequence is 48 gray-pulse
+/// frames (`Task_BattleTransition_Intro`), then `Task_Blur`'s 2×2 through
+/// 16×16 BG mosaic and palette fade. The state machine's established
+/// 48-frame gate remains unchanged here; the projection removes the invented
+/// black-band wipe without changing when battle input becomes available.
+fn draw_first_battle_blur_entry_phase(frame: &mut [u8], elapsed: usize) {
+    const SERIALIZED_FRAMES: usize = 48;
+    const SOURCE_VISIBLE_FRAMES: usize = 120;
+    const SOURCE_INTRO_FRAMES: usize = 48;
+
+    let source_frame = elapsed.min(SERIALIZED_FRAMES - 1)
+        * (SOURCE_VISIBLE_FRAMES - 1)
+        / (SERIALIZED_FRAMES - 1);
+    if source_frame < SOURCE_INTRO_FRAMES {
+        // `Task_BattleTransition_Intro` steps its blend 0→16→0 three times
+        // in increments of two against the source `RGB(11, 11, 11)` target.
+        let pulse_frame = source_frame % 16;
+        let blend = if pulse_frame < 8 {
+            (pulse_frame + 1) * 2
+        } else {
+            (15 - pulse_frame) * 2
+        };
+        blend_frame_toward_rgb(frame, [90, 90, 90], blend as u8);
+        return;
+    }
+
+    // `Blur_Main` starts at mosaic register 0x11, advances the counter every
+    // fifth source frame, and begins `BeginNormalPaletteFade(... RGB_BLACK)`
+    // at counter ten. The native renderer owns one composited field raster,
+    // so the mosaic applies after its terrain/OAM composition rather than
+    // trying to infer separate PPU layers from unrelated battle state.
+    let blur_frame = source_frame - SOURCE_INTRO_FRAMES;
+    let mosaic_counter = (1 + blur_frame / 5).min(15);
+    apply_pixel_mosaic(frame, mosaic_counter + 1);
+    if mosaic_counter >= 10 {
+        let fade_frames = blur_frame.saturating_sub(45).min(16);
+        fade_to_black(frame, (fade_frames * 255 / 16) as u8);
+    }
 }
 
 /// Captures the measured state boundaries of the Route 101 Wurmple hand-off:
@@ -5297,6 +5344,34 @@ pub fn fade_to_black(frame: &mut [u8], alpha: u8) {
     let keep = u16::from(255_u8.saturating_sub(alpha));
     for channel in frame {
         *channel = (u16::from(*channel) * keep / 255) as u8;
+    }
+}
+
+fn blend_frame_toward_rgb(frame: &mut [u8], target: [u8; 3], blend: u8) {
+    let blend = u16::from(blend.min(16));
+    let inverse = 16 - blend;
+    for pixel in frame.chunks_exact_mut(3) {
+        for (channel, target_channel) in pixel.iter_mut().zip(target) {
+            *channel = ((u16::from(*channel) * inverse
+                + u16::from(target_channel) * blend)
+                / 16) as u8;
+        }
+    }
+}
+
+fn apply_pixel_mosaic(frame: &mut [u8], block: usize) {
+    if block <= 1 { return; }
+    for y in (0..FRAME_HEIGHT).step_by(block) {
+        for x in (0..FRAME_WIDTH).step_by(block) {
+            let source = (y * FRAME_WIDTH + x) * 3;
+            let color = [frame[source], frame[source + 1], frame[source + 2]];
+            for fill_y in y..(y + block).min(FRAME_HEIGHT) {
+                for fill_x in x..(x + block).min(FRAME_WIDTH) {
+                    let output = (fill_y * FRAME_WIDTH + fill_x) * 3;
+                    frame[output..output + 3].copy_from_slice(&color);
+                }
+            }
+        }
     }
 }
 
