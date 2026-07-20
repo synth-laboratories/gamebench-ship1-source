@@ -4913,6 +4913,89 @@ impl WorldState {
         party.status_move_pp = status_move.pp;
     }
 
+    /// `CB2_EndFirstBattle` resumes `Route101_EventScript_BirchsBag` for
+    /// both the scripted Zigzagoon's normal defeat and its low-HP flee. The
+    /// script then heals the party and runs Birch's one-step approach before
+    /// it permits the Lab handoff.
+    fn complete_birch_rescue_battle(&mut self) {
+        self.battle = None;
+        self.phase = StoryPhase::BirchRescued;
+        self.heal_starter_party();
+        // Route101_EventScript_BirchsBag resumes on Route 101 after the
+        // battle, fixes the player at (6,13), and has Birch approach before
+        // the Lab warp is allowed.
+        self.player = TilePosition { x: 6, y: 13 };
+        self.elevation = crate::native::tile_elevation(self.map, 6, 13)
+            .expect("Route 101 post-battle tile must be staged");
+        if let Some(birch) = self.npcs.iter_mut().find(|npc| {
+            npc.id == "birch" && npc.map == MapId::Route101
+        }) {
+            // `Route101_Movement_BirchApproachPlayer` has one ordinary
+            // `walk_right` from the chase endpoint.
+            birch.position = TilePosition { x: 4, y: 13 };
+            birch.facing = Facing::Right;
+        }
+        self.move_scripted_npc(
+            "birch",
+            MapId::Route101,
+            TilePosition { x: 5, y: 13 },
+            Facing::Right,
+        );
+        self.birch_post_battle_frames = Some(16);
+        self.dialogue = None;
+    }
+
+    /// `CB2_EndWildBattle` / `CB2_EndTrainerBattle` dispatch a genuine
+    /// defeat to `DoWhiteOut`, which heals the party and warps to the last
+    /// heal location. `InsideOfTruck` establishes the player's own bedroom
+    /// as that opening location. A lost Route 103 battle leaves its trainer
+    /// flag unset, so return to the pre-battle state where the rival can be
+    /// challenged again after the field trip back north.
+    fn white_out_from_opening_battle(&mut self) {
+        self.heal_starter_party();
+        self.battle = None;
+        self.dialogue = None;
+        self.field_dialogue_frames = None;
+        self.transition = None;
+        self.render_position = None;
+        self.walk_progress_frames = 0;
+        self.walk_elapsed_frames = 0;
+        self.walk_direction = None;
+        self.camera_handoff_from = None;
+        self.walk_render_origin = None;
+        self.running = false;
+        self.running_step_uses_second_foot = false;
+        self.npc_walk_starts.clear();
+        self.ambient_wanders.clear();
+        if self.phase == StoryPhase::RivalBattle {
+            self.phase = StoryPhase::StarterChosen;
+            self.title_intro_step = 0;
+            self.route103_rival_intro_frames = None;
+            self.route103_rival_intro_stage = 0;
+            self.rival_departure_frames = None;
+            self.route103_rival_departure_facing = None;
+        }
+        let (map, player) = match self.player_gender {
+            PlayerGender::Brendan => (
+                MapId::BrendansHouse2F,
+                TilePosition { x: 4, y: 2 },
+            ),
+            PlayerGender::May => (MapId::MaysHouse2F, TilePosition { x: 4, y: 2 }),
+        };
+        self.map = map;
+        self.player = player;
+        self.elevation = crate::native::tile_elevation(self.map, self.player.x, self.player.y)
+            .expect("opening white-out respawn tile must be staged");
+        self.facing = Facing::Down;
+        self.npcs = map_npcs(
+            self.map,
+            self.phase,
+            self.potions,
+            self.oldale_rival_departed,
+            self.player_gender,
+        );
+    }
+
     /// Birch's Lab uses three source `MSGBOX_YESNO` branches: nickname,
     /// `GoSeeRival`, and the decline loop. Each stays input-owned so an
     /// ordinary dialogue advance cannot skip Route 103 permission.
@@ -5287,7 +5370,22 @@ impl WorldState {
                 let wild = battle.wild;
                 let escaped = battle.escaped;
                 let opponent_fled = battle.opponent_fled;
+                let player_fainted = battle.player_fainted;
                 self.sync_starter_party_from_battle();
+                // The first battle's special controller ends at the field
+                // script for either a KO or AI_FirstBattle's low-HP flee.
+                // Without this continuation the old generic cleanup leaves
+                // `BirchBattle` with neither a battle nor a script owner.
+                if opponent == BattleOpponent::Zigzagoon
+                    && (opponent_fled || player_fainted)
+                {
+                    self.complete_birch_rescue_battle();
+                    return;
+                }
+                if player_fainted {
+                    self.white_out_from_opening_battle();
+                    return;
+                }
                 self.battle = None;
                 if escaped && wild {
                     match opponent {
@@ -5296,19 +5394,6 @@ impl WorldState {
                         BattleOpponent::Wurmple => self.route101_wurmple_resolved = true,
                         BattleOpponent::Rival | BattleOpponent::Zigzagoon => unreachable!("trainer and rescue battles are not wild"),
                     }
-                }
-                if !escaped && !opponent_fled {
-                    self.dialogue = Some(if wild {
-                        format!("Your POKéMON needs another try against {}.", battle_opponent_name(opponent))
-                    } else {
-                        match opponent {
-                            BattleOpponent::Rival => "Your POKéMON needs another try against your RIVAL.".to_owned(),
-                            BattleOpponent::Zigzagoon => "PROF. BIRCH: Try again! My POKéMON still needs help!".to_owned(),
-                            BattleOpponent::Poochyena => unreachable!("Route 101 Poochyena is wild"),
-                            BattleOpponent::Wingull => unreachable!("Route 103 Wingull is wild"),
-                            BattleOpponent::Wurmple => unreachable!("all Wurmple encounters are wild"),
-                        }
-                    });
                 }
             }
             return;
@@ -5383,30 +5468,7 @@ impl WorldState {
                     self.dialogue = Some(rival_defeated_text(self.player_gender, &self.player_name));
                 }
                 BattleOpponent::Zigzagoon => {
-                    self.phase = StoryPhase::BirchRescued;
-                    // Route101_EventScript_BirchsBag calls HealPlayerParty
-                    // before the post-battle Route 101 staging resumes.
-                    self.heal_starter_party();
-                    // Route101_EventScript_BirchsBag resumes on Route 101
-                    // after the battle, fixes the player at (6,13), and has
-                    // Birch approach before the Lab warp is allowed.
-                    self.player = TilePosition { x: 6, y: 13 };
-                    self.elevation = crate::native::tile_elevation(self.map, 6, 13)
-                        .expect("Route 101 post-battle tile must be staged");
-                    if let Some(birch) = self.npcs.iter_mut().find(|npc| npc.id == "birch" && npc.map == MapId::Route101) {
-                        // `Route101_Movement_BirchApproachPlayer` has one
-                        // ordinary `walk_right` from the chase endpoint.
-                        birch.position = TilePosition { x: 4, y: 13 };
-                        birch.facing = Facing::Right;
-                    }
-                    self.move_scripted_npc(
-                        "birch",
-                        MapId::Route101,
-                        TilePosition { x: 5, y: 13 },
-                        Facing::Right,
-                    );
-                    self.birch_post_battle_frames = Some(16);
-                    self.dialogue = None;
+                    self.complete_birch_rescue_battle();
                 }
                 BattleOpponent::Poochyena => {
                     self.route101_poochyena_resolved = true;
