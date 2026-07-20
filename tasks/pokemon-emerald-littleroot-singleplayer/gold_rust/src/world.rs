@@ -1492,6 +1492,12 @@ pub struct WorldState {
     /// buffer or the cursor's physical row.
     #[serde(default = "default_name_entry_page")]
     pub name_entry_page: NamingKeyboardPage,
+    /// Source `STATE_WAIT_PAGE_SWAP` lock.  The page remains on its old
+    /// value until the 32 video-frame BG hand-off completes; this keeps
+    /// keyboard input from landing on a moving/hidden page and lets a
+    /// checkpoint resume the swap deterministically.
+    #[serde(default)]
+    pub name_entry_page_swap_frames: Option<u8>,
     /// Selected answer in the source's post-name YES/NO confirmation menu.
     pub name_confirm_yes: bool,
     /// The naming keyboard remains visible for the confirming input frame;
@@ -1627,6 +1633,7 @@ impl WorldState {
             name_entry_ready_frames: 0,
             name_entry_lowercase: false,
             name_entry_page: NamingKeyboardPage::LettersUpper,
+            name_entry_page_swap_frames: None,
             name_confirm_yes: true,
             name_confirm_transition_frames: None,
             frame: 0,
@@ -1762,6 +1769,7 @@ impl WorldState {
             name_entry_ready_frames: 0,
             name_entry_lowercase: false,
             name_entry_page: NamingKeyboardPage::LettersUpper,
+            name_entry_page_swap_frames: None,
             name_confirm_yes: true,
             name_confirm_transition_frames: None,
             frame: 0,
@@ -1897,6 +1905,7 @@ impl WorldState {
             name_entry_ready_frames: 0,
             name_entry_lowercase: false,
             name_entry_page: NamingKeyboardPage::LettersUpper,
+            name_entry_page_swap_frames: None,
             name_confirm_yes: true,
             name_confirm_transition_frames: None,
             frame: 0,
@@ -2030,6 +2039,7 @@ impl WorldState {
             name_entry_ready_frames: 0,
             name_entry_lowercase: false,
             name_entry_page: NamingKeyboardPage::LettersUpper,
+            name_entry_page_swap_frames: None,
             name_confirm_yes: true,
             name_confirm_transition_frames: None,
             frame: 0,
@@ -2192,6 +2202,7 @@ impl WorldState {
             name_entry_ready_frames: 0,
             name_entry_lowercase: false,
             name_entry_page: NamingKeyboardPage::LettersUpper,
+            name_entry_page_swap_frames: None,
             name_confirm_yes: true,
             name_confirm_transition_frames: None,
             frame: 0,
@@ -5939,8 +5950,13 @@ impl WorldState {
             return;
         }
         for _ in 0..frames {
-            let button = self.name_entry_action_button();
-            self.try_start_name_entry_action_button_pulse(button, button.is_some(), false);
+            // `MainState_StartPageSwap` owns the page flash while input is
+            // disabled. Do not replace that pulse with the live cursor's
+            // ordinary key role until the 32-frame swap has completed.
+            if self.name_entry_page_swap_frames.is_none() {
+                let button = self.name_entry_action_button();
+                self.try_start_name_entry_action_button_pulse(button, button.is_some(), false);
+            }
             self.advance_name_entry_action_button_pulse_frame();
         }
     }
@@ -5956,12 +5972,51 @@ impl WorldState {
         }
     }
 
+    /// Starts the source `STATE_START_PAGE_SWAP` sequence. The visible page
+    /// remains unchanged while the serialized 32-frame hand-off runs.
+    pub fn start_name_entry_page_swap(&mut self) {
+        if self.phase != StoryPhase::NameEntry || self.name_entry_page_swap_frames.is_some() {
+            return;
+        }
+        self.name_entry_page_swap_frames = Some(0);
+        // `MainState_StartPageSwap` interrupts the page-button flash and
+        // releases it after the animation, even when SELECT triggered the
+        // swap away from the page-button cursor.
+        self.try_start_name_entry_action_button_pulse(Some(NamingActionButton::Page), false, true);
+    }
+
+    /// Advances the source page-swap task by video frames. The source task
+    /// increments its counter by four per VBlank and completes at 128, i.e.
+    /// 32 video frames. Inputs received while active are consumed.
+    pub fn advance_name_entry_page_swap(&mut self, frames: u32) -> bool {
+        if self.phase != StoryPhase::NameEntry {
+            self.name_entry_page_swap_frames = None;
+            return false;
+        }
+        let Some(elapsed) = self.name_entry_page_swap_frames else { return false; };
+        let elapsed = u32::from(elapsed).saturating_add(frames);
+        if elapsed < 32 {
+            self.name_entry_page_swap_frames = Some(elapsed as u8);
+            return true;
+        }
+        self.name_entry_page_swap_frames = None;
+        self.cycle_name_entry_page();
+        true
+    }
+
+    pub fn name_entry_page_swap_active(&self) -> bool {
+        self.phase == StoryPhase::NameEntry && self.name_entry_page_swap_frames.is_some()
+    }
+
     /// Emerald's `currentPage` starts on uppercase and advances
-    /// `symbols -> uppercase -> lowercase -> symbols`.  The page swap keeps
+    /// `symbols -> uppercase -> lowercase -> symbols`. The page swap keeps
     /// the input buffer and physical cursor row, so only the page state and
-    /// legacy lowercase projection change here.
-    pub fn cycle_name_entry_page(&mut self) {
-        if self.phase != StoryPhase::NameEntry { return; }
+    /// legacy lowercase projection change here. This is called after the
+    /// source's 32-frame hand-off, not directly from input dispatch.
+    fn cycle_name_entry_page(&mut self) {
+        if self.phase != StoryPhase::NameEntry || self.name_entry_page_swap_frames.is_some() {
+            return;
+        }
         let current = self.name_keyboard_page();
         let cursor_position = self.name_cursor_position();
         let next = match self.name_keyboard_page() {
@@ -6190,6 +6245,7 @@ impl WorldState {
         self.name_entry_ready_frames = 0;
         self.name_entry_lowercase = false;
         self.name_entry_page = NamingKeyboardPage::LettersUpper;
+        self.name_entry_page_swap_frames = None;
         self.naming_action_button_pulse = None;
     }
 
@@ -6244,7 +6300,7 @@ impl WorldState {
         if self.phase != StoryPhase::NameEntry { return; }
         self.name_entry_touched = true;
         if self.name_cursor == 28 {
-            self.cycle_name_entry_page();
+            self.start_name_entry_page_swap();
             return;
         }
         match self.name_cursor {

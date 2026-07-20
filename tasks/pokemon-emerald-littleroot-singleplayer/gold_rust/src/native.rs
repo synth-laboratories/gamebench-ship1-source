@@ -1286,9 +1286,18 @@ fn render_name_entry_with_cursor(
 
 pub fn render_name_entry(world: &WorldState) -> Result<Vec<u8>, String> {
     let page = world.name_keyboard_page();
+    // `MainState_StartPageSwap` hides the cursor for the full source
+    // animation. The BG sine/priority compositor remains a visual follow-up;
+    // retaining the old page here keeps the functional lock deterministic
+    // without exposing a cursor over a page that is mid-handoff.
+    let cursor = if world.name_entry_page_swap_active() {
+        None
+    } else {
+        name_entry_cursor_position_for_page(page, world.name_cursor)
+    };
     let mut frame = render_name_entry_with_cursor(
         page,
-        name_entry_cursor_position_for_page(page, world.name_cursor),
+        cursor,
         world.naming_action_button_pulse,
     )?;
     // The source naming screen redraws WIN_TEXT_ENTRY after every character

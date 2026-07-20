@@ -553,6 +553,16 @@ impl LittlerootSession {
                 self.redraw();
                 return;
             }
+            // `STATE_WAIT_PAGE_SWAP` disables the source naming input task
+            // for 32 video frames. Keep the page-button pulse advancing, but
+            // consume every input packet until the hand-off finishes.
+            if self.world.name_entry_page_swap_active() {
+                self.world.advance_name_entry_action_button_pulse(request.frames);
+                self.world.advance_name_entry_page_swap(request.frames);
+                self.input_log.push(request);
+                self.redraw();
+                return;
+            }
             match request.action {
                 Input::Up => self.world.move_name_cursor(0, -1),
                 Input::Down => self.world.move_name_cursor(0, 1),
@@ -566,10 +576,18 @@ impl LittlerootSession {
                 // `HandleKeyboardEvent` treats SELECT as the same page-swap
                 // command as the visible page button, without moving the
                 // cursor or clearing the input buffer.
-                Input::Select => self.world.cycle_name_entry_page(),
+                Input::Select => self.world.start_name_entry_page_swap(),
                 Input::Noop => {}
             }
-            self.world.advance_name_entry_action_button_pulse(request.frames);
+            if self.world.name_entry_page_swap_active() {
+                // Advance the pulse before the timer completes so the page
+                // button retains the source flash through the hand-off's
+                // final frame.
+                self.world.advance_name_entry_action_button_pulse(request.frames);
+                self.world.advance_name_entry_page_swap(request.frames);
+            } else {
+                self.world.advance_name_entry_action_button_pulse(request.frames);
+            }
             self.input_log.push(request);
             self.redraw();
             return;
