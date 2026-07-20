@@ -8,6 +8,7 @@ use crate::world::{
     BATTLE_PLAYER_SENDOUT_BALL_ARC_FRAMES, BATTLE_PLAYER_SENDOUT_BALL_FIRST_ARC_FRAME,
     BATTLE_PLAYER_SENDOUT_BALL_SPAWN_FRAME, BATTLE_PLAYER_SENDOUT_COMPLETE_FRAMES,
     BATTLE_PLAYER_SENDOUT_RELEASE_FRAMES, BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES,
+    BATTLE_GRASS_INTRO_FRAMES,
     TilePosition, WorldState,
 };
 use std::io::{Cursor, Read};
@@ -2035,14 +2036,15 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             // The Route 101 Wurmple capture keeps field input locked through
             // a 352-frame encounter hand-off; the fresh Route 101 Poochyena
             // capture reaches the battle field after its 224-frame hand-off;
-            // scripted battles use Emerald's shorter 48-frame entry. The
-            // first scripted Zigzagoon battle is specifically
+            // Route 103's grass trainer hand-off retains the source
+            // BattleIntroSlide1 timeline. The first scripted Zigzagoon battle
             // `CB2_GiveStarter`'s `B_TRANSITION_BLUR`, while the remaining
             // routes retain their separately measured hand-off windows.
             let entry_frames: usize = match battle.opponent {
                 crate::world::BattleOpponent::Wurmple => 352,
                 crate::world::BattleOpponent::Poochyena | crate::world::BattleOpponent::Wingull => 224,
-                crate::world::BattleOpponent::Zigzagoon | crate::world::BattleOpponent::Rival => 48,
+                crate::world::BattleOpponent::Zigzagoon => 48,
+                crate::world::BattleOpponent::Rival => usize::from(BATTLE_GRASS_INTRO_FRAMES),
             };
             let elapsed = entry_frames.saturating_sub(usize::from(battle.entry_transition_frames));
             if battle.opponent == crate::world::BattleOpponent::Zigzagoon {
@@ -2060,8 +2062,12 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             // the compact model's 48-frame input lock, but project the full
             // source task across that serialized hand-off instead of drawing
             // the old invented black bands.
-            let intro_phase = elapsed.saturating_sub(entry_frames.saturating_sub(48));
-            draw_grass_battle_intro_slide_phase(frame, intro_phase);
+            let (intro_phase, serialized_frames) = if battle.opponent == crate::world::BattleOpponent::Rival {
+                (elapsed, entry_frames)
+            } else {
+                (elapsed.saturating_sub(entry_frames.saturating_sub(48)), 48)
+            };
+            draw_grass_battle_intro_slide_phase(frame, intro_phase, serialized_frames);
             return;
         }
         draw_battle_background(frame);
@@ -2514,22 +2520,23 @@ fn draw_battle_background_windowed(
     }
 }
 
-/// Source `BattleIntroSlide1` for the grass environment, compressed onto the
-/// port's pre-existing 48-frame encounter hand-off.  The C task executes two
-/// setup ticks, 32 one-pixel WIN0 expansions, then 120 two-pixel scanline
-/// slides.  The state model intentionally owns only the 48-frame lock, so
-/// sampling that source task proportionally makes every typed intermediate
-/// frame use the real BG/window timing without inventing a separate clock.
-fn draw_grass_battle_intro_slide_phase(frame: &mut [u8], serialized_phase: usize) {
-    const SERIALIZED_FRAMES: usize = 48;
+/// `BattleIntroSlide1` executes two setup ticks, 32 one-pixel WIN0
+/// expansions, then 120 two-pixel scanline slides. Wild encounters still pass
+/// a 48-frame projection, while Route 103 passes the source 154-frame count.
+fn draw_grass_battle_intro_slide_phase(
+    frame: &mut [u8],
+    serialized_phase: usize,
+    serialized_frames: usize,
+) {
     const SOURCE_TASK_TICKS: usize = 154;
     const INITIAL_WINDOW_TOP: usize = FRAME_HEIGHT / 2;
     const INITIAL_WINDOW_BOTTOM: usize = INITIAL_WINDOW_TOP + 1;
 
     draw_solid_rect(frame, 0, 0, FRAME_WIDTH, FRAME_HEIGHT, [0, 0, 0]);
-    let source_tick = serialized_phase.min(SERIALIZED_FRAMES - 1)
+    let serialized_frames = serialized_frames.max(2);
+    let source_tick = serialized_phase.min(serialized_frames - 1)
         * (SOURCE_TASK_TICKS - 1)
-        / (SERIALIZED_FRAMES - 1);
+        / (serialized_frames - 1);
 
     // Before `BattleIntroSlide1` enables WIN0, source BGs are masked.  The
     // first two task ticks therefore remain the source black hand-off.
