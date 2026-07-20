@@ -175,19 +175,28 @@ Latest rail audit:
   starter, Poké Ball, affine-release, particle, and tall-grass BG1
   `anim_tiles`/`anim_map` assets are staged. The BG1 layer now composes inside
   the source WIN0 reveal with `BG1_X += 6` and delayed normal-grass `BG1_Y`
-  scrolling through the 154-tick rival entry. No exact battle RGB oracle is in
-  the 73-trace manifest, so sound, wipe timing, party animation, and full
-  battle UI pixel parity remain open.
+  scrolling through the 154-tick rival entry. The source player send-out
+  timing is already source-shaped; the remaining trainer-battle visual slice
+  is the opponent front-trainer slide, exact WIN0/scanline wipe, sound, and
+  party initialization animation. No exact battle RGB oracle is in the
+  73-trace manifest, so no front-pic or transition patch is accepted without
+  captured OAM/OBJ/palette/register evidence.
 - Interiors: bedroom idle/menu/cardinal movement traces are already manifest
   backed. Clock, generic door boundaries, and ordinary home/clock/TV/Running
   Shoes printer pages have source components or timing notes but no complete
   source RGB/hash oracle, so no speculative renderer changes are accepted.
+  The capture prerequisite is a synchronized 240x160 RGB plus BG tilemap,
+  palettes, OAM, and display-register set at clock angles/period rollover,
+  door ticks 0/5/10/15, and the post-clock downstairs/TV/dialogue phases.
 - Naming: uppercase/lowercase/symbol page state and character mapping are
   functional; the serialized source 32-frame page-swap lock and source
   label/button sheets are staged for non-uppercase pages and active swaps. The
   BG sine/page-priority tilemap animation, late Birch printer windows, and
-  exact utility-button RGB timing remain open. Emerald has no preset-name UI in
-  the scoped source path.
+  exact utility-button RGB timing remain open. The late Birch sequence is
+  seven pause-delimited source printer pages plus a 64-frame handoff, selected
+  player reveal, affine shrink, and fade-to-white; the current five-page flow
+  stays functional until those source captures exist. Emerald has no preset-name
+  UI in the scoped source path.
 
 The checkpoint summaries above still use `partial` for battle and naming
 because they lack continuous RGB oracles. Their remaining wording about
