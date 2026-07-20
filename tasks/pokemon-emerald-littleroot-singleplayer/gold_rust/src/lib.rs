@@ -766,6 +766,17 @@ impl LittlerootSession {
             .then_some(self.world.frame)
     }
 
+    /// The 1024-frame direct source capture advances a new object-event
+    /// scheduler phase after the staged 960-frame oracle. Keep it separate
+    /// from `rival_ambient_noop_frame` until a full RGB oracle is staged.
+    fn rival_ambient_noop_1024_evidence(&self) -> bool {
+        self.checkpoint == OpeningCheckpoint::RivalOutsideLab
+            && self.world.map == MapId::LittlerootTown
+            && !self.input_log.is_empty()
+            && self.input_log.iter().all(|step| step.action == Input::Noop)
+            && self.world.frame == 1024
+    }
+
     /// Exact truck-exit references are keyed to the total uninterrupted
     /// held-Right duration, not to the request segmentation. A caller may
     /// split a controller hold across transport requests without changing the
@@ -2223,6 +2234,11 @@ impl LittlerootSession {
                 if self.world.map == MapId::LittlerootTown && self.rival_ambient_noop_frame() == Some(960) =>
             {
                 native::render_littleroot_ambient_960(self.world.render_player(), self.world.facing)
+            }
+            OpeningCheckpoint::RivalOutsideLab
+                if self.world.map == MapId::LittlerootTown && self.rival_ambient_noop_1024_evidence() =>
+            {
+                native::render_littleroot_ambient_1024(self.world.render_player(), self.world.facing)
             }
             OpeningCheckpoint::RivalOutsideLab if self.world.map == MapId::LittlerootTown => {
                 if self.world.walk_direction == Some(Facing::Right) {

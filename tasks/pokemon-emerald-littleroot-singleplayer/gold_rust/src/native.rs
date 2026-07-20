@@ -473,6 +473,8 @@ const LITTLEROOT_NOOP_896_OBJ_VRAM_PATCH_B64: &str = include_str!("../assets/lit
 const LITTLEROOT_NOOP_896_OAM_B64: &str = include_str!("../assets/littleroot_noop896.oam.b64");
 const LITTLEROOT_NOOP_960_OBJ_VRAM_PATCH_B64: &str = include_str!("../assets/littleroot_noop960.obj_vram_patch.b64");
 const LITTLEROOT_NOOP_960_OAM_B64: &str = include_str!("../assets/littleroot_noop960.oam.b64");
+const LITTLEROOT_NOOP_1024_OBJ_VRAM_PATCH_B64: &str = include_str!("../assets/littleroot_noop1024.obj_vram_patch.b64");
+const LITTLEROOT_NOOP_1024_OAM_PATCH_B64: &str = include_str!("../assets/littleroot_noop1024.oam_patch.b64");
 const OUTSIDE_RIGHT_32_PNG_B64: &str = include_str!("../assets/littleroot_outside_right_32.png.b64");
 const OUTSIDE_RIGHT_64_RGB_B64: &str = include_str!("../assets/littleroot_outside_right_64.rgb.b64");
 const OUTSIDE_RIGHT_80_RGB_B64: &str = include_str!("../assets/littleroot_outside_right_80.rgb.b64");
@@ -5676,6 +5678,18 @@ pub fn render_littleroot_ambient_960(player: &TilePosition, _facing: Facing) -> 
     render_world_view_with_objects(MapId::LittlerootTown, player, None, 0, &vram, OUTSIDE_IDLE_OBJ_PALETTE, &oam)
 }
 
+/// The next 64-frame ambient scheduler beat advances the visible eastern
+/// resident while its source OBJ tile upload changes independently of OAM.
+/// Both patches are captured from the direct 04_rival checkpoint at frame
+/// 1024, relative to its source idle object memory.
+pub fn render_littleroot_ambient_1024(player: &TilePosition, _facing: Facing) -> Result<Vec<u8>, String> {
+    let mut vram = OUTSIDE_IDLE_OBJ_VRAM.to_vec();
+    apply_obj_vram_byte_patch(&mut vram, LITTLEROOT_NOOP_1024_OBJ_VRAM_PATCH_B64, "Little Root 1024-frame ambient")?;
+    let mut oam = OUTSIDE_IDLE_OAM.to_vec();
+    apply_oam_byte_patch(&mut oam, LITTLEROOT_NOOP_1024_OAM_PATCH_B64, "Little Root 1024-frame ambient")?;
+    render_world_view_with_objects(MapId::LittlerootTown, player, None, 0, &vram, OUTSIDE_IDLE_OBJ_PALETTE, &oam)
+}
+
 fn apply_obj_vram_byte_patch(vram: &mut [u8], encoded_patch: &str, label: &str) -> Result<(), String> {
     let patch = decode_base64(encoded_patch.trim())?;
     if patch.len() % 5 != 0 {
@@ -5685,6 +5699,24 @@ fn apply_obj_vram_byte_patch(vram: &mut [u8], encoded_patch: &str, label: &str) 
         let offset = u32::from_be_bytes([record[0], record[1], record[2], record[3]]) as usize;
         let Some(slot) = vram.get_mut(offset) else {
             return Err(format!("{label} OBJ VRAM patch offset exceeds staging buffer"));
+        };
+        *slot = record[4];
+    }
+    Ok(())
+}
+
+fn apply_oam_byte_patch(oam: &mut [u8], encoded_patch: &str, label: &str) -> Result<(), String> {
+    if oam.len() != 0x400 {
+        return Err(format!("invalid {label} OAM buffer"));
+    }
+    let patch = decode_base64(encoded_patch.trim())?;
+    if patch.len() % 5 != 0 {
+        return Err(format!("invalid {label} OAM patch"));
+    }
+    for record in patch.chunks_exact(5) {
+        let offset = u32::from_be_bytes([record[0], record[1], record[2], record[3]]) as usize;
+        let Some(slot) = oam.get_mut(offset) else {
+            return Err(format!("{label} OAM patch offset exceeds staging buffer"));
         };
         *slot = record[4];
     }
