@@ -1617,15 +1617,8 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
         // The status pane identifies the active opposing Pokémon, including
         // in trainer battles; the trainer identity belongs to the intro text.
         let opponent = battle.opponent_species.as_str();
-        let opponent_level = match battle.opponent {
-            crate::world::BattleOpponent::Zigzagoon => 3,
-            crate::world::BattleOpponent::Poochyena => 2,
-            crate::world::BattleOpponent::Wingull => 3,
-            crate::world::BattleOpponent::Wurmple => 2,
-            crate::world::BattleOpponent::Rival => 5,
-        };
         draw_text(frame, 16, 24, &opponent, 10);
-        draw_text(frame, 86, 24, &format!("L{opponent_level}"), 2);
+        draw_text(frame, 86, 24, &format!("L{}", battle.opponent_level), 2);
         draw_text(frame, 16, 34, "HP", 10);
         draw_battle_hp_bar(frame, 38, 34, battle.rival_hp, battle.opponent_max_hp);
         draw_battle_sprite(frame, battle_front_sprite(&battle.opponent_species), 160, 18);
@@ -1637,7 +1630,7 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
             None => "POKEMON",
         };
         draw_text(frame, 140, 82, player, 10);
-        draw_text(frame, 212, 82, "L5", 2);
+        draw_text(frame, 212, 82, &format!("L{}", battle.player_level), 2);
         draw_text(frame, 140, 94, "HP", 2);
         draw_battle_hp_bar(frame, 160, 95, battle.player_hp, battle.player_max_hp);
         draw_text(frame, 198, 99, &format!("{}/{}", battle.player_hp, battle.player_max_hp), 6);
@@ -2043,12 +2036,12 @@ fn draw_wurmple_entry_phase(frame: &mut [u8], world: &WorldState, battle: &crate
         Some(crate::world::StarterSpecies::Mudkip) => "MUDKIP",
         None => "POKEMON",
     };
-    draw_text(frame, 16, 24, "WURMPLE", 10);
-    draw_text(frame, 86, 24, "L2", 2);
+    draw_text(frame, 16, 24, &battle.opponent_species, 10);
+    draw_text(frame, 86, 24, &format!("L{}", battle.opponent_level), 2);
     draw_text(frame, 16, 34, "HP", 10);
     draw_battle_hp_bar(frame, 38, 34, battle.rival_hp, battle.opponent_max_hp);
     draw_text(frame, 140, 82, player, 10);
-    draw_text(frame, 212, 82, "L5", 2);
+    draw_text(frame, 212, 82, &format!("L{}", battle.player_level), 2);
     draw_text(frame, 140, 94, "HP", 2);
     draw_battle_hp_bar(frame, 160, 95, battle.player_hp, battle.player_max_hp);
     draw_text(frame, 198, 99, &format!("{}/{}", battle.player_hp, battle.player_max_hp), 6);
