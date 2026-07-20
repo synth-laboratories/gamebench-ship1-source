@@ -4739,16 +4739,18 @@ pub fn render_littleroot_truck_door_approach(
     const PLAYER_ENTERS_END_FRAME: u16 = 96;
 
     let mut visual_npcs = npcs.to_vec();
-    // The gameplay endpoint records Mom's normal walk at frame 40. Do not
-    // replay that marker after the source action has completed; the approach
-    // stride below is the only visual owner for this actor during the rail.
-    let mut visual_walks = npc_walk_starts
-        .iter()
-        .filter(|walk| walk.id != "truck_arrival_mom")
-        .cloned()
-        .collect::<Vec<_>>();
+    // Arrival owns its source `walk_down` and `walk_in_place_faster_left`
+    // markers directly, so keep them in the dynamic OBJ compositor. The
+    // departure rail below supplies its own corrected walk origins while
+    // the map state is committed ahead of the visible stride.
+    let mut visual_walks = npc_walk_starts.to_vec();
 
     let (mut frame, door_visual) = if let Some(remaining) = departure_frames {
+        // The gameplay endpoint records Mom's normal walk at frame 40. Do
+        // not replay that marker after the source action has completed; the
+        // approach stride below is the only visual owner for this actor
+        // during the departure rail.
+        visual_walks.retain(|walk| walk.id != "truck_arrival_mom");
         let elapsed = DEPARTURE_TOTAL_FRAMES.saturating_sub(remaining.min(DEPARTURE_TOTAL_FRAMES));
         let door_visual = littleroot_departure_door_visual(elapsed);
         if (WALK_START_FRAME..WALK_END_FRAME).contains(&elapsed) {
