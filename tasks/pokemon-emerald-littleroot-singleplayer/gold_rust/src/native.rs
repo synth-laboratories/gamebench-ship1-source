@@ -3679,14 +3679,14 @@ fn draw_wallclock_editor(frame: &mut [u8], world: &WorldState) {
         frame,
         hand_tiles,
         128,
-        am_indicator_angle,
+        u16::from(am_indicator_angle),
         palette,
     );
     draw_wallclock_period_indicator(
         frame,
         hand_tiles,
         132,
-        pm_indicator_angle,
+        u16::from(pm_indicator_angle),
         palette,
     );
 
