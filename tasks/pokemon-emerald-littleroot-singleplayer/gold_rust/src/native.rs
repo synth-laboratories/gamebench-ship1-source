@@ -4243,9 +4243,13 @@ fn draw_wallclock_affine_hand(
     angle: u16,
     palette: &[[u8; 3]; 16],
 ) {
-    let radians = f32::from(angle).to_radians();
-    let cosine = radians.cos();
-    let sine = radians.sin();
+    // `SpriteCB_{Minute,Hour}Hand` feeds `Sin2(angle) / 16` and
+    // `Cos2(angle) / 16` into `SetOamMatrix`.  Those are signed 8.8 GBA
+    // coefficients, so retain the source table's integer truncation before
+    // applying the matrix rather than deriving a fresh floating-point
+    // rotation from the degree value.
+    let sine = (wallclock_sine_q4_12(angle) / 16) as f32 / 256.0;
+    let cosine = (wallclock_sine_q4_12(angle.saturating_add(90)) / 16) as f32 / 256.0;
     let (x2, y2) = wallclock_hand_pivot_offset(angle);
     let center_x = 120_i32 + i32::from(x2);
     let center_y = 80_i32 + i32::from(y2);
