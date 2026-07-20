@@ -260,6 +260,7 @@ const LITTLEROOT_RIGHT_4816_BG_VRAM_ZLIB_B64: &str = include_str!("../assets/lit
 const LITTLEROOT_RIGHT_4832_BG_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4832.bg_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4848_BG_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4848.bg_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4864_BG_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4864.bg_vram.zlib.b64");
+const LITTLEROOT_RIGHT_4880_BG_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4880.bg_vram.zlib.b64");
 const LITTLEROOT_RIGHT_5120_BG_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_5120.bg_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4160_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4160.obj_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4288_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4288.obj_vram.zlib.b64");
@@ -274,6 +275,7 @@ const LITTLEROOT_RIGHT_4816_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/li
 const LITTLEROOT_RIGHT_4832_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4832.obj_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4848_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4848.obj_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4864_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4864.obj_vram.zlib.b64");
+const LITTLEROOT_RIGHT_4880_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_4880.obj_vram.zlib.b64");
 const LITTLEROOT_RIGHT_5120_OBJ_VRAM_ZLIB_B64: &str = include_str!("../assets/littleroot_right_5120.obj_vram.zlib.b64");
 const LITTLEROOT_RIGHT_4160_OAM_B64: &str = include_str!("../assets/littleroot_right_4160.oam.b64");
 const LITTLEROOT_RIGHT_4224_OAM_B64: &str = include_str!("../assets/littleroot_right_4224.oam.b64");
@@ -290,6 +292,7 @@ const LITTLEROOT_RIGHT_4816_OAM_B64: &str = include_str!("../assets/littleroot_r
 const LITTLEROOT_RIGHT_4832_OAM_B64: &str = include_str!("../assets/littleroot_right_4832.oam.b64");
 const LITTLEROOT_RIGHT_4848_OAM_B64: &str = include_str!("../assets/littleroot_right_4848.oam.b64");
 const LITTLEROOT_RIGHT_4864_OAM_B64: &str = include_str!("../assets/littleroot_right_4864.oam.b64");
+const LITTLEROOT_RIGHT_4880_OAM_B64: &str = include_str!("../assets/littleroot_right_4880.oam.b64");
 const LITTLEROOT_RIGHT_5120_OAM_B64: &str = include_str!("../assets/littleroot_right_5120.oam.b64");
 const LITTLEROOT_RIGHT_192_OAM_B64: &str = include_str!("../assets/littleroot_right_192.oam.b64");
 const LITTLEROOT_RIGHT_192_OBJ_TILES_B64: &str = include_str!("../assets/littleroot_right_192.obj_tiles.b64");
@@ -5930,13 +5933,14 @@ fn render_littleroot_stopped_right_phase(
         if oam.len() != 0x400 {
             return Err("Little Root held-right stopped-camera OAM is truncated".to_owned());
         }
-        // The next measured stopped-camera scheduler state is a complete
-        // object-event snapshot: its OAM positions, tile selection, and
-        // priorities are all live source state at Right ×5120. Reprojecting
-        // Rust's later ambient scheduler over it changes that measured frame,
-        // so preserve the staged source OAM at this exact boundary. Other
-        // stopped-camera phases continue to compose serialized NPC movement.
-        if frame != 5120 {
+        // These measured stopped-camera scheduler states are complete
+        // object-event snapshots: their OAM positions, tile selection, and
+        // priorities are live source state at Right ×4880 and ×5120.
+        // Reprojecting Rust's ambient scheduler changes either measured
+        // frame, so preserve staged source OAM at those exact boundaries.
+        // Other stopped-camera phases continue to compose serialized NPC
+        // movement.
+        if !matches!(frame, 4880 | 5120) {
             position_littleroot_stopped_right_npcs(&mut oam, player, npcs, npc_walk_starts, frame);
         }
         composite_oam_4bpp(&mut image, &vram, OUTSIDE_IDLE_OBJ_PALETTE, &oam)?;
@@ -5962,6 +5966,7 @@ fn littleroot_stopped_right_phase_state(frame: u64) -> Option<(&'static str, &'s
         4832 => Some((LITTLEROOT_RIGHT_4832_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4832_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4832_OAM_B64)),
         4848 => Some((LITTLEROOT_RIGHT_4848_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4848_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4848_OAM_B64)),
         4864 => Some((LITTLEROOT_RIGHT_4864_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4864_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4864_OAM_B64)),
+        4880 => Some((LITTLEROOT_RIGHT_4880_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4880_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_4880_OAM_B64)),
         5120 => Some((LITTLEROOT_RIGHT_5120_BG_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_5120_OBJ_VRAM_ZLIB_B64, LITTLEROOT_RIGHT_5120_OAM_B64)),
         _ => None,
     }
@@ -6066,7 +6071,7 @@ fn restore_littleroot_stopped_right_player_priority_pixels(
         (116, 86),
     ];
     match phase {
-        4816 | 4848 => pixels.push((118, 86)),
+        4816 | 4848 | 4880 => pixels.push((118, 86)),
         4832 => pixels.extend([(117, 86), (118, 86), (116, 87), (117, 87)]),
         _ => {}
     }
