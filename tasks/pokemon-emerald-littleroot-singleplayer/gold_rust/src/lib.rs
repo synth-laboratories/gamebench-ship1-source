@@ -543,7 +543,11 @@ impl LittlerootSession {
                 // `HandleKeyboardEvent` sends physical Start to the visible
                 // on-screen OK control before it waits for a later A press.
                 Input::Start => self.world.move_name_cursor_to_ok(),
-                Input::Select | Input::Noop => {}
+                // `HandleKeyboardEvent` treats SELECT as the same page-swap
+                // command as the visible page button, without moving the
+                // cursor or clearing the input buffer.
+                Input::Select => self.world.cycle_name_entry_page(),
+                Input::Noop => {}
             }
             self.world.advance_name_entry_action_button_pulse(request.frames);
             self.input_log.push(request);

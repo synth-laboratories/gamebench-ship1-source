@@ -3,7 +3,7 @@ use flate2::read::ZlibDecoder;
 use crate::{FRAME_BYTES, FRAME_HEIGHT, FRAME_WIDTH};
 use crate::world::{
     BATTLE_COMMAND_BAG, BATTLE_COMMAND_RUN, Facing, MapId,
-    NamingActionButton, NamingActionButtonPulse, NpcState, NpcWalkStart,
+    NamingActionButton, NamingActionButtonPulse, NamingKeyboardPage, NpcState, NpcWalkStart,
     PlayerGender, StarterSpecies, StoryPhase, BATTLE_PLAYER_INTRO_SENDOUT_FRAMES,
     BATTLE_PLAYER_SENDOUT_BALL_ARC_FRAMES, BATTLE_PLAYER_SENDOUT_BALL_FIRST_ARC_FRAME,
     BATTLE_PLAYER_SENDOUT_BALL_SPAWN_FRAME, BATTLE_PLAYER_SENDOUT_COMPLETE_FRAMES,
@@ -1219,10 +1219,11 @@ pub fn render_professor_intro_idle() -> Result<Vec<u8>, String> {
 }
 
 pub fn render_name_entry_idle() -> Result<Vec<u8>, String> {
-    render_name_entry_with_cursor(Some((0, 0)), None)
+    render_name_entry_with_cursor(NamingKeyboardPage::LettersUpper, Some((0, 0)), None)
 }
 
 fn render_name_entry_with_cursor(
+    page: NamingKeyboardPage,
     cursor: Option<(usize, usize)>,
     action_button_pulse: Option<NamingActionButtonPulse>,
 ) -> Result<Vec<u8>, String> {
@@ -1240,7 +1241,10 @@ fn render_name_entry_with_cursor(
             &vram,
             &palette,
             GbaTextBg { control, scroll_x: 0, scroll_y: 0, transparent_zero: true },
-        )?;
+            )?;
+    }
+    if page != NamingKeyboardPage::LettersUpper {
+        draw_name_keyboard_page(&mut frame, page);
     }
     let obj_vram = decode_base64(NAME_ENTRY_OBJ_VRAM_B64.trim())?;
     let mut obj_palette = decode_base64(NAME_ENTRY_OBJ_PALETTE_B64.trim())?;
@@ -1260,8 +1264,12 @@ fn render_name_entry_with_cursor(
         // staged 16x16 OAM cursor starts eight pixels left of that source
         // center, so the final punctuation column is 153 rather than the
         // regular 12-pixel grid cadence.
-        const SOURCE_CURSOR_X: [usize; 8] = [30, 42, 54, 86, 98, 110, 122, 153];
-        let sprite_x = SOURCE_CURSOR_X[cursor_x];
+        const SOURCE_CURSOR_X_UPPER: [usize; 8] = [30, 42, 54, 86, 98, 110, 122, 153];
+        const SOURCE_CURSOR_X_SYMBOLS: [usize; 6] = [30, 52, 74, 96, 118, 140];
+        let sprite_x = match page {
+            NamingKeyboardPage::Symbols => SOURCE_CURSOR_X_SYMBOLS[cursor_x],
+            NamingKeyboardPage::LettersUpper | NamingKeyboardPage::LettersLower => SOURCE_CURSOR_X_UPPER[cursor_x],
+        };
         let sprite_y = 80 + cursor_y * 16;
         cursor_oam[2..4].copy_from_slice(&(sprite_x as u16 | 0x4000).to_le_bytes());
         cursor_oam[0..2].copy_from_slice(&(sprite_y as u16 | 0x0400).to_le_bytes());
@@ -1276,8 +1284,10 @@ fn render_name_entry_with_cursor(
 }
 
 pub fn render_name_entry(world: &WorldState) -> Result<Vec<u8>, String> {
+    let page = world.name_keyboard_page();
     let mut frame = render_name_entry_with_cursor(
-        name_entry_cursor_position(world.name_cursor),
+        page,
+        name_entry_cursor_position_for_page(page, world.name_cursor),
         world.naming_action_button_pulse,
     )?;
     // The source naming screen redraws WIN_TEXT_ENTRY after every character
@@ -1376,21 +1386,109 @@ pub fn render_starter_nickname_entry(world: &WorldState) -> Result<Vec<u8>, Stri
     Ok(frame)
 }
 
-fn name_entry_cursor_position(cursor: u8) -> Option<(usize, usize)> {
+fn name_entry_cursor_position_for_page(page: NamingKeyboardPage, cursor: u8) -> Option<(usize, usize)> {
     match cursor {
-        0..=5 => Some((usize::from(cursor), 0)),
-        6..=11 => Some((usize::from(cursor - 6), 1)),
-        12..=18 => Some((usize::from(cursor - 12), 2)),
-        19..=25 => Some((usize::from(cursor - 19), 3)),
-        // The upper source keyboard reserves a blank column before its
-        // punctuation keys, leaving both of these at column seven.
-        26 => Some((7, 0)),
-        27 => Some((7, 1)),
-        // `SpriteCB_Cursor` in `naming_screen.c` hides the 16x16 cursor
-        // when it reaches the screen's right-hand action-button column.
-        // The button itself then supplies the source selection pulse.
         28..=31 => None,
+        32 => Some((6, 0)),
+        33 => Some((6, 1)),
+        34 => Some((7, 2)),
+        35 => Some((7, 3)),
+        _ if page == NamingKeyboardPage::Symbols && cursor < 24 => {
+            Some((usize::from(cursor % 6), usize::from(cursor / 6)))
+        }
+        _ if page != NamingKeyboardPage::Symbols => match cursor {
+            0..=5 => Some((usize::from(cursor), 0)),
+            6..=11 => Some((usize::from(cursor - 6), 1)),
+            12..=18 => Some((usize::from(cursor - 12), 2)),
+            19..=25 => Some((usize::from(cursor - 19), 3)),
+            // The upper source keyboard reserves a blank column before its
+            // punctuation keys, leaving both of these at column seven.
+            26 => Some((7, 0)),
+            27 => Some((7, 1)),
+            _ => None,
+        },
         _ => Some((0, 0)),
+    }
+}
+
+/// Compose an uncaptured source keyboard page over the staged initial screen.
+/// The source uses page-specific BG fill indices (14/15 for lower/symbols)
+/// and the same normal-font printer with page-specific clear spacing.  The
+/// exact uppercase capture intentionally bypasses this helper so the existing
+/// oracle phases remain byte-for-byte unchanged.
+fn draw_name_keyboard_page(frame: &mut [u8], page: NamingKeyboardPage) {
+    let fill = match page {
+        NamingKeyboardPage::Symbols => [148, 189, 107],
+        NamingKeyboardPage::LettersUpper => [123, 173, 198],
+        NamingKeyboardPage::LettersLower => [214, 156, 115],
+    };
+    // The source keyboard window begins at (24, 80), with its border owned by
+    // the page tilemap. Refill only the inner key surface before printing the
+    // page's glyphs, leaving the staged frame and action sprites untouched.
+    for y in 81..144 {
+        for x in 24..178 {
+            put_pixel(frame, x, y, fill);
+        }
+    }
+    let text_palette = [[99, 99, 99], [255, 255, 255], [214, 214, 206]];
+    let y_positions = [81, 97, 113, 129];
+    match page {
+        NamingKeyboardPage::LettersUpper | NamingKeyboardPage::LettersLower => {
+            let upper = page == NamingKeyboardPage::LettersUpper;
+            let rows: [[char; 8]; 4] = if upper {
+                [
+                    ['A', 'B', 'C', ' ', 'D', 'E', 'F', '.'],
+                    ['G', 'H', 'I', ' ', 'J', 'K', 'L', ','],
+                    ['M', 'N', 'O', 'P', 'Q', 'R', 'S', ' '],
+                    ['T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' '],
+                ]
+            } else {
+                [
+                    ['a', 'b', 'c', ' ', 'd', 'e', 'f', '.'],
+                    ['g', 'h', 'i', ' ', 'j', 'k', 'l', ','],
+                    ['m', 'n', 'o', 'p', 'q', 'r', 's', ' '],
+                    ['t', 'u', 'v', 'w', 'x', 'y', 'z', ' '],
+                ]
+            };
+            const X_OFFSETS: [usize; 8] = [0, 12, 24, 56, 68, 80, 92, 123];
+            for (row, chars) in rows.into_iter().enumerate() {
+                for (column, character) in chars.into_iter().enumerate() {
+                    if character != ' ' {
+                        draw_text_with_palette(
+                            frame,
+                            34 + X_OFFSETS[column],
+                            y_positions[row],
+                            &character.to_string(),
+                            1,
+                            text_palette,
+                        );
+                    }
+                }
+            }
+        }
+        NamingKeyboardPage::Symbols => {
+            let rows: [[char; 6]; 4] = [
+                ['0', '1', '2', '3', '4', ' '],
+                ['5', '6', '7', '8', '9', ' '],
+                ['!', '?', '♂', '♀', '/', '-'],
+                ['…', '“', '”', '‘', '\'', ' '],
+            ];
+            const X_OFFSETS: [usize; 6] = [0, 22, 44, 66, 88, 110];
+            for (row, chars) in rows.into_iter().enumerate() {
+                for (column, character) in chars.into_iter().enumerate() {
+                    if character != ' ' {
+                        draw_text_with_palette(
+                            frame,
+                            34 + X_OFFSETS[column],
+                            y_positions[row],
+                            &character.to_string(),
+                            1,
+                            text_palette,
+                        );
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -4962,7 +5060,8 @@ fn emerald_glyph_id(character: char) -> Option<usize> {
         'a'..='z' => 0xD5 + (character as usize - 'a' as usize),
         '0'..='9' => 0xA1 + (character as usize - '0' as usize),
         '!' => 0xAB, '?' => 0xAC, '.' => 0xAD, '-' => 0xAE, '…' => 0xB0, ',' => 0xB8,
-        '/' => 0xBA, ':' => 0xF0, '\'' => 0xB4, '"' => 0xB2,
+        '/' => 0xBA, ':' => 0xF0, '\'' => 0xB4, '’' => 0xB4, '"' => 0xB2,
+        '“' => 0xB1, '”' => 0xB2, '‘' => 0xB3, '♂' => 0xB5, '♀' => 0xB6,
         '(' => 0x5C, ')' => 0x5D, '&' => 0x2D, '+' => 0x2E,
         'é' | 'É' => 0x06,
         // Route103's source sign expands `{DOWN_ARROW}` to CHAR_DOWN_ARROW
