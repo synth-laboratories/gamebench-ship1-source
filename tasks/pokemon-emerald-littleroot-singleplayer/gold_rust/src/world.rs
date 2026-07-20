@@ -5277,7 +5277,10 @@ impl WorldState {
             }
             BATTLE_COMMAND_RUN => battle.message = Some(match battle.opponent {
                 BattleOpponent::Rival => "No! There's no running from a TRAINER battle!".to_owned(),
-                BattleOpponent::Zigzagoon => "Can't escape!".to_owned(),
+                // `BATTLE_TYPE_FIRST_BATTLE` returns B_MSG_DONT_LEAVE_BIRCH
+                // from `HandleAction_Run`; the tutorial's authored message
+                // is distinct from the generic wild-battle escape failure.
+                BattleOpponent::Zigzagoon => "PROF. BIRCH: Don't leave me like this!".to_owned(),
                 BattleOpponent::Poochyena => unreachable!("Route 101 Poochyena is wild"),
                 BattleOpponent::Wingull => unreachable!("Route 103 Wingull is wild"),
                 BattleOpponent::Wurmple => unreachable!("all Wurmple encounters are wild"),
