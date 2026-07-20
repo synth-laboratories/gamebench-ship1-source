@@ -22,9 +22,9 @@ struct IndexedTiles {
     pixels: Vec<u8>,
 }
 
-/// Source object-event sheet plus its original 4bpp palette.  Object-event
-/// PNGs carry the complete 9-frame (down/up/left) 16x32 sheet; right-facing
-/// animation is the hardware h-flip of the left sequence.
+/// Source object-event sheet plus its original 4bpp palette. Animated
+/// object-event PNGs carry nine directional/walk cells; right-facing poses
+/// are hardware h-flips of the west sequence.
 struct NpcSpriteSheet {
     width: usize,
     height: usize,
@@ -116,7 +116,10 @@ const NPC_MANIAC_SHEET_B64: &str = include_str!("../assets/npc_maniac.png.b64");
 const NPC_SCIENTIST_1_SHEET_B64: &str = include_str!("../assets/npc_scientist_1.png.b64");
 const NPC_BRENDAN_SHEET_B64: &str = include_str!("../assets/npc_brendan.png.b64");
 const NPC_MAY_SHEET_B64: &str = include_str!("../assets/npc_may.png.b64");
-const NPC_ZIGZAGOON_SHEET_B64: &str = include_str!("../assets/npc_zigzagoon.png.b64");
+// Route 101's scripted rescue uses its own 32×32, nine-cell object-event
+// sheet rather than the ordinary 16×16 wandering Zigzagoon graphic.
+const NPC_ENEMY_ZIGZAGOON_SHEET_B64: &str = include_str!("../assets/npc_enemy_zigzagoon.png.b64");
+const NPC_BIRCHS_BAG_SHEET_B64: &str = include_str!("../assets/npc_birchs_bag.png.b64");
 const BATTLE_TREECKO_BACK_B64: &str = include_str!("../assets/battle_treecko_back.png.b64");
 const BATTLE_TREECKO_FRONT_B64: &str = include_str!("../assets/battle_treecko_front.png.b64");
 const BATTLE_TORCHIC_BACK_B64: &str = include_str!("../assets/battle_torchic_back.png.b64");
@@ -6965,7 +6968,9 @@ fn dynamic_object_oam(
     } else {
         0
     };
+    let mut next_dynamic_tile = 64;
     for (entry, npc) in npcs.iter().filter(|npc| npc.map == map_id).take(127).enumerate() {
+        let dynamic_tile = next_dynamic_tile;
         let target_entry = entry + 1;
         // A controlled Little Root right-held source frame isolates Boy on
         // entry 1/tile 36 and Fat Man on entry 2/tile 28. Keep roles without
@@ -6983,6 +6988,15 @@ fn dynamic_object_oam(
             .unwrap_or(npc.facing);
         let mut screen_x = 112 + i32::from(npc.position.x - player.x) * 16 + camera_phase_x;
         let mut screen_y = 56 + i32::from(npc.position.y - player.y) * 16;
+        // `CreateObjectEventSprite` turns the map tile's bottom-center anchor
+        // into the concrete OAM corner using the graphic's dimensions. The
+        // generic object event is 16×32; Birch's Bag is sixteen pixels shorter
+        // and the scripted Enemy Zigzagoon is sixteen pixels wider.
+        if npc_is_birchs_bag(map_id, &npc.id) {
+            screen_y += 16;
+        } else if npc_is_enemy_zigzagoon(map_id, &npc.id) {
+            screen_x -= 8;
+        }
         // The deterministic ambient scheduler commits the logical tile at
         // the beginning of its 64-frame beat. Render the first 16 frames
         // from the prior tile toward that committed destination, matching
@@ -7006,15 +7020,17 @@ fn dynamic_object_oam(
         attr0 = (attr0 & !0x00ff) | (screen_y.rem_euclid(256) as u16);
         attr1 = (attr1 & !0x01ff) | (screen_x.rem_euclid(512) as u16);
         if npc_uses_source_sheet(map_id, player_gender, &npc.id) {
-            // Eight 4bpp tiles comprise one 16x32 object.  The source sheets
-            // live in independent tile/palette banks so several residents
-            // can coexist without the old captured-OAM tile aliasing.
-            let tile = 64 + entry * 8;
-            attr2 = (attr2 & !0x03ff) | tile as u16;
+            // The source sheets live in independent tile/palette banks so
+            // 16×16 Bag, 16×32 residents, and 32×32 rescue Zigzagoon can
+            // coexist without captured-OAM tile aliases.
+            attr2 = (attr2 & !0x03ff) | dynamic_tile as u16;
             attr2 = (attr2 & !(0x0f << 12)) | (((entry % 15 + 1) as u16) << 12);
-            if npc_is_small_mon(map_id, &npc.id) {
+            if npc_is_birchs_bag(map_id, &npc.id) {
                 attr0 &= !(0x3 << 14);
                 attr1 = (attr1 & !(0x3 << 14)) | (1 << 14);
+            } else if npc_is_enemy_zigzagoon(map_id, &npc.id) {
+                attr0 &= !(0x3 << 14);
+                attr1 = (attr1 & !(0x3 << 14)) | (2 << 14);
             }
         }
         // Object-event sheets provide left-facing pixels; Emerald performs
@@ -7027,6 +7043,7 @@ fn dynamic_object_oam(
         oam[target..target + 2].copy_from_slice(&attr0.to_le_bytes());
         oam[target + 2..target + 4].copy_from_slice(&attr1.to_le_bytes());
         oam[target + 4..target + 6].copy_from_slice(&attr2.to_le_bytes());
+        next_dynamic_tile += npc_dynamic_tile_count(map_id, &npc.id);
     }
     oam
 }
@@ -7036,29 +7053,45 @@ fn dynamic_object_oam(
 /// renderer owns its VRAM, so retain the source tile slots while making their
 /// contents independent of the particular captured idle frame.
 fn apply_dynamic_npc_tiles(vram: &mut [u8], palette: &mut [u8], map_id: MapId, player_gender: PlayerGender, npc_animation_tick: u64, npcs: &[NpcState], npc_walk_starts: &[NpcWalkStart]) -> Result<(), String> {
+    let mut next_dynamic_tile = 64;
     for (entry, npc) in npcs.iter().filter(|npc| npc.map == map_id).take(127).enumerate() {
-        let Some(encoded) = npc_source_sheet(map_id, player_gender, &npc.id) else { continue; };
-        let sheet = decode_npc_sprite_sheet(encoded).map_err(|error| {
-            format!("failed to decode object-event sheet for {}: {error}", npc.id)
-        })?;
-        let latest_walk = npc_walk_starts.iter().rev().find(|walk| walk.id == npc.id);
-        let sprite_facing = latest_walk
-            .and_then(|walk| walk.sprite_facing)
-            .unwrap_or(npc.facing);
-        let sprite_column = latest_walk
-            .and_then(|walk| {
-                let elapsed = npc_animation_tick.saturating_sub(walk.frame);
-                (elapsed < u64::from(walk.duration_frames.max(1))).then(|| {
-                    npc_walk_sprite_column(sprite_facing, elapsed, walk.duration_frames)
+        let dynamic_tile = next_dynamic_tile;
+        if let Some(encoded) = npc_source_sheet(map_id, player_gender, &npc.id) {
+            let sheet = decode_npc_sprite_sheet(encoded).map_err(|error| {
+                format!("failed to decode object-event sheet for {}: {error}", npc.id)
+            })?;
+            let latest_walk = npc_walk_starts.iter().rev().find(|walk| walk.id == npc.id);
+            let sprite_facing = latest_walk
+                .and_then(|walk| walk.sprite_facing)
+                .unwrap_or(npc.facing);
+            let sprite_column = latest_walk
+                .and_then(|walk| {
+                    let elapsed = npc_animation_tick.saturating_sub(walk.frame);
+                    (elapsed < u64::from(walk.duration_frames.max(1))).then(|| {
+                        npc_walk_sprite_column(sprite_facing, elapsed, walk.duration_frames)
+                    })
                 })
-            })
-            .unwrap_or_else(|| npc_idle_sprite_column(sprite_facing));
-        if npc_is_small_mon(map_id, &npc.id) {
-            stage_small_mon_frame(vram, 64 + entry * 8, &sheet, sprite_facing)?;
-        } else {
-            stage_npc_sprite_frame(vram, 64 + entry * 8, &sheet, sprite_column)?;
+                .unwrap_or_else(|| {
+                    if npc_is_enemy_zigzagoon(map_id, &npc.id) {
+                        // Route101's map object uses
+                        // MOVEMENT_TYPE_JOG_IN_PLACE_LEFT, which dispatches
+                        // the standard fast walk sequence without a tile
+                        // translation while the rescue script is idle.
+                        npc_walk_sprite_column(sprite_facing, npc_animation_tick, 8)
+                    } else {
+                        npc_idle_sprite_column(sprite_facing)
+                    }
+                });
+            if npc_is_birchs_bag(map_id, &npc.id) {
+                stage_birchs_bag_frame(vram, dynamic_tile, &sheet)?;
+            } else if npc_is_enemy_zigzagoon(map_id, &npc.id) {
+                stage_enemy_zigzagoon_frame(vram, dynamic_tile, &sheet, sprite_column)?;
+            } else {
+                stage_npc_sprite_frame(vram, dynamic_tile, &sheet, sprite_column)?;
+            }
+            stage_npc_palette(palette, entry % 15 + 1, &sheet.palette)?;
         }
-        stage_npc_palette(palette, entry % 15 + 1, &sheet.palette)?;
+        next_dynamic_tile += npc_dynamic_tile_count(map_id, &npc.id);
     }
     Ok(())
 }
@@ -7071,8 +7104,9 @@ fn npc_source_sheet(map_id: MapId, player_gender: PlayerGender, id: &str) -> Opt
         (MapId::LittlerootTown, "truck_arrival_mom" | "mom_outside") => Some(NPC_MOM_SHEET_B64),
         (MapId::Route101, "youngster") => Some(NPC_YOUNGSTER_SHEET_B64),
         (MapId::Route101, "birch") => Some(NPC_BIRCH_SHEET_B64),
+        (MapId::Route101, "birchs_bag") => Some(NPC_BIRCHS_BAG_SHEET_B64),
         (MapId::Route101, "route101_boy") => Some(LITTLEROOT_BOY_SHEET_B64),
-        (MapId::Route101, "zigzagoon") => Some(NPC_ZIGZAGOON_SHEET_B64),
+        (MapId::Route101, "zigzagoon") => Some(NPC_ENEMY_ZIGZAGOON_SHEET_B64),
         (MapId::OldaleTown, "oldale_girl") => Some(NPC_GIRL_3_SHEET_B64),
         (MapId::OldaleTown, "mart_employee") => Some(NPC_MART_EMPLOYEE_SHEET_B64),
         (MapId::OldaleTown, "footprints_man") => Some(NPC_MANIAC_SHEET_B64),
@@ -7095,7 +7129,22 @@ fn npc_uses_source_sheet(map_id: MapId, player_gender: PlayerGender, id: &str) -
     npc_source_sheet(map_id, player_gender, id).is_some()
 }
 
-fn npc_is_small_mon(map_id: MapId, id: &str) -> bool {
+fn npc_dynamic_tile_count(map_id: MapId, id: &str) -> usize {
+    match (map_id, id) {
+        // `gObjectEventGraphicsInfo_BirchsBag` is a 16×16, four-tile OBJ.
+        (MapId::Route101, "birchs_bag") => 4,
+        // `gObjectEventGraphicsInfo_EnemyZigzagoon` is a 32×32, sixteen-tile
+        // OBJ. Other dynamic residents retain their existing 16×32 slots.
+        (MapId::Route101, "zigzagoon") => 16,
+        _ => 8,
+    }
+}
+
+fn npc_is_birchs_bag(map_id: MapId, id: &str) -> bool {
+    matches!((map_id, id), (MapId::Route101, "birchs_bag"))
+}
+
+fn npc_is_enemy_zigzagoon(map_id: MapId, id: &str) -> bool {
     matches!((map_id, id), (MapId::Route101, "zigzagoon"))
 }
 
@@ -7182,19 +7231,51 @@ fn stage_npc_sprite_frame(
     Ok(())
 }
 
-fn stage_small_mon_frame(vram: &mut [u8], tile: usize, sheet: &NpcSpriteSheet, facing: Facing) -> Result<(), String> {
-    if vram.len() != 0x8000 || sheet.width != 48 || sheet.height != 16 || tile + 4 > 1024 {
-        return Err("invalid staged 16x16 Pokémon object frame".to_owned());
+/// Stages Route101's `gObjectEventGraphicsInfo_BirchsBag` in its native
+/// 16×16 four-tile OBJ allocation. The indexed PNG already carries the
+/// source NPC-2 palette, so palette staging remains shared with residents.
+fn stage_birchs_bag_frame(vram: &mut [u8], tile: usize, sheet: &NpcSpriteSheet) -> Result<(), String> {
+    if vram.len() != 0x8000 || sheet.width != 16 || sheet.height != 16 || tile + 4 > 1024 {
+        return Err("invalid staged Birch's Bag object frame".to_owned());
     }
-    let column = match facing {
-        Facing::Down => 0,
-        Facing::Up => 1,
-        Facing::Left | Facing::Right => 2,
-    };
-    let left = column * 16;
     for tile_y in 0..2 {
         for tile_x in 0..2 {
             let target = (tile + tile_y * 2 + tile_x) * 32;
+            for y in 0..8 {
+                for x_pair in 0..4 {
+                    let x = tile_x * 8 + x_pair * 2;
+                    let y = tile_y * 8 + y;
+                    let low = sheet.pixels[y * sheet.width + x];
+                    let high = sheet.pixels[y * sheet.width + x + 1];
+                    vram[target + y * 4 + x_pair] = low | (high << 4);
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Stages `OBJ_EVENT_GFX_ZIGZAGOON_1`: nine 32×32 frames, laid out from
+/// south/north/west standing cells through the corresponding standard walk
+/// cells. East-facing poses are source OAM h-flips of the west column.
+fn stage_enemy_zigzagoon_frame(
+    vram: &mut [u8],
+    tile: usize,
+    sheet: &NpcSpriteSheet,
+    sprite_column: usize,
+) -> Result<(), String> {
+    if vram.len() != 0x8000
+        || sheet.width != 288
+        || sheet.height != 32
+        || sprite_column > 8
+        || tile + 16 > 1024
+    {
+        return Err("invalid staged Enemy Zigzagoon object frame".to_owned());
+    }
+    let left = sprite_column * 32;
+    for tile_y in 0..4 {
+        for tile_x in 0..4 {
+            let target = (tile + tile_y * 4 + tile_x) * 32;
             for y in 0..8 {
                 for x_pair in 0..4 {
                     let x = left + tile_x * 8 + x_pair * 2;

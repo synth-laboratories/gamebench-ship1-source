@@ -7256,6 +7256,13 @@ fn route101_npcs(phase: StoryPhase) -> Vec<NpcState> {
         });
     }
     if phase == StoryPhase::BirchRescue {
+        // Route101's map event keeps Birch's Bag at (7,14) until
+        // `Route101_EventScript_BirchsBag` completes its post-battle flag
+        // sequence. It is a colliding field object, not starter-choice UI.
+        npcs.push(NpcState {
+            id: "birchs_bag".to_owned(), map: MapId::Route101,
+            position: TilePosition { x: 7, y: 14 }, facing: Facing::Down,
+        });
         npcs.push(NpcState {
             id: "zigzagoon".to_owned(), map: MapId::Route101,
             position: TilePosition { x: 10, y: 13 }, facing: Facing::Left,
