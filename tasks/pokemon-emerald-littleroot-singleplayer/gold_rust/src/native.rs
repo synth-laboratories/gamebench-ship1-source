@@ -4092,13 +4092,25 @@ fn draw_wallclock_period_indicator(
 /// `sin(angle) * 4096` table from `src/trig.c`; GBA's callback then performs
 /// `value * 30 / 0x1000` with signed truncation toward zero.
 fn wallclock_period_indicator_offset(angle: u16) -> (i32, i32) {
-    let angle = angle % 360;
-    let radians = f64::from(angle).to_radians();
-    let sin_q4_12 = (radians.sin() * 4096.0).round() as i32;
-    let cos_q4_12 = ((radians + std::f64::consts::FRAC_PI_2).sin() * 4096.0).round() as i32;
+    let sin_q4_12 = wallclock_sine_q4_12(angle);
+    let cos_q4_12 = wallclock_sine_q4_12(angle.saturating_add(90));
     (cos_q4_12 * 30 / 0x1000, sin_q4_12 * 30 / 0x1000)
 }
 
+fn wallclock_sine_q4_12(angle: u16) -> i32 {
+    let angle = angle % 360;
+    let magnitude_angle = angle % 180;
+    let radians = f64::from(magnitude_angle).to_radians();
+    // `Q_4_12` stores the source table's nearest integer.  Four entries in
+    // the decomp are one unit below the host rounding of their decimal
+    // literals; retain those authored values before applying the half-turn
+    // sign used by `Sin2`.
+    let mut magnitude = (radians.sin() * 4096.0).round() as i32;
+    if matches!(magnitude_angle, 84 | 88 | 92 | 96) {
+        magnitude -= 1;
+    }
+    if angle >= 180 { -magnitude } else { magnitude }
+}
 fn wallclock_tile_pixel(
     tiles: &[u8],
     tile_offset: usize,
