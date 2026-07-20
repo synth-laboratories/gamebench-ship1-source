@@ -4615,6 +4615,16 @@ impl WorldState {
         }
     }
 
+    /// The scoped post-shoes field route stays outdoors from Little Root
+    /// through Route 101. Emerald's input path keeps `PlayerRun` active on
+    /// either map whenever the B-dash flag is held and the metatile allows
+    /// it; retain that already-modeled run state across this one connection.
+    pub fn running_shoes_field_motion(&self) -> bool {
+        self.running
+            && self.phase == StoryPhase::RunningShoesReceived
+            && matches!(self.map, MapId::LittlerootTown | MapId::Route101)
+    }
+
     fn ensure_starter_party(&mut self) {
         let starter = self.starter.unwrap_or(StarterSpecies::Treecko);
         if !self.starter_party.as_ref().is_some_and(|party| party.species == starter) {
@@ -6294,11 +6304,11 @@ impl WorldState {
 
         let mut moved = 0;
         let (width, height) = self.map_dimensions();
-        let cadence = if self.running && self.map == MapId::LittlerootTown { 8 } else { 16 };
-        // The field coordinate commits at every source 16-frame boundary.
+        let cadence = if self.running_shoes_field_motion() { 8 } else { 16 };
+        // The field coordinate commits at each source movement boundary.
         // The display clock is one frame behind that committed coordinate,
-        // which is why a fresh 16-frame capture has one completed tile but a
-        // 15-pixel sprite/camera stride. Keep the clocks separate.
+        // which is why a fresh full-stride capture retains the prior tile's
+        // final pixel of sprite/camera interpolation. Keep the clocks separate.
         let prior_walk_elapsed = u32::from(self.walk_elapsed_frames);
         let accumulated = prior_walk_elapsed + held_frames;
         let tiles = accumulated / cadence;
@@ -6462,7 +6472,7 @@ impl WorldState {
                 .unwrap_or_else(|| prior_player.clone());
             self.walk_render_origin = Some(prior_render);
             self.player = TilePosition { x: next_x, y: next_y };
-            if self.running && self.map == MapId::LittlerootTown {
+            if self.running_shoes_field_motion() {
                 // `sAnim_Run*` alternates first/second foot pairs at each
                 // committed MOVE_SPEED_FAST_1 stride.
                 self.running_step_uses_second_foot = !self.running_step_uses_second_foot;
