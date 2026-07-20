@@ -1685,7 +1685,10 @@ pub fn composite_interface(frame: &mut [u8], world: &WorldState) {
         draw_gender_select(frame, world);
         return;
     }
-    if matches!(world.phase, StoryPhase::StarterSelect | StoryPhase::StarterConfirm) {
+    if matches!(
+        world.phase,
+        StoryPhase::StarterSelect | StoryPhase::StarterReveal | StoryPhase::StarterConfirm
+    ) {
         draw_starter_choose_scene(frame, world);
         return;
     }
@@ -2281,6 +2284,39 @@ fn draw_battle_sprite(frame: &mut [u8], sprite: &NpcSpriteSheet, x: usize, y: us
     }
 }
 
+/// Nearest-neighbor presentation of Emerald's affine 64×64 battle OBJ.
+/// The source affine matrices use 256 as 1× scale, so the initial 16-scale
+/// reveal starts at four source pixels wide and grows to the normal 64.
+fn draw_battle_sprite_scaled_centered(
+    frame: &mut [u8],
+    sprite: &NpcSpriteSheet,
+    center_x: i16,
+    center_y: i16,
+    scale: u16,
+) {
+    if sprite.width != 64 || sprite.height != 64 || sprite.palette.len() < 48 {
+        return;
+    }
+    let output_width = sprite.width * usize::from(scale) / 256;
+    let output_height = sprite.height * usize::from(scale) / 256;
+    if output_width == 0 || output_height == 0 { return; }
+    let origin_x = center_x - (output_width as i16 / 2);
+    let origin_y = center_y - (output_height as i16 / 2);
+    for row in 0..output_height {
+        let source_y = row * sprite.height / output_height;
+        for column in 0..output_width {
+            let source_x = column * sprite.width / output_width;
+            let index = usize::from(sprite.pixels[source_y * sprite.width + source_x]);
+            if index == 0 { continue; }
+            let palette = &sprite.palette[index * 3..index * 3 + 3];
+            let x = origin_x + column as i16;
+            let y = origin_y + row as i16;
+            if x < 0 || y < 0 { continue; }
+            put_pixel(frame, x as usize, y as usize, [palette[0], palette[1], palette[2]]);
+        }
+    }
+}
+
 fn starter_choose_sheet(slot: &'static OnceLock<SourceIndexedSheet>, encoded: &str) -> &'static SourceIndexedSheet {
     slot.get_or_init(|| {
         decode_source_indexed_sheet(encoded)
@@ -2337,38 +2373,74 @@ fn draw_starter_choose_scene(frame: &mut [u8], world: &WorldState) {
     }
 
     // `SpriteCB_SelectionHand` takes the final 32×32 cell from the same
-    // object sheet and floats it over the active ball. With no source frame
-    // counter in this logical task boundary, render the callback's zero-sine
-    // position rather than fabricate an offset.
-    let (hand_x, hand_y) = match selection {
+    // object sheet and applies `Sin(data[1], 8)` before adding four to its
+    // source sine index each GBA frame.
+    let (hand_x, hand_y): (i16, i16) = match selection {
         0 => (60, 32),
         1 => (120, 56),
         _ => (180, 32),
     };
-    draw_source_indexed_crop(frame, pokeball, 0, 96, 32, 32, hand_x - 16, hand_y - 16);
+    let hand_bob = starter_hand_bob(world.starter_hand_phase);
+    draw_source_indexed_crop(
+        frame,
+        pokeball,
+        0,
+        96,
+        32,
+        32,
+        (hand_x - 16).max(0) as usize,
+        (hand_y + hand_bob - 16).max(0) as usize,
+    );
 
     // Task_HandleStarterChooseInput clears this temporary label before it
     // creates the circle and Pokémon sprite for the confirmation task.
     if world.phase == StoryPhase::StarterSelect {
         draw_starter_choose_label(frame, starter);
     }
-    if world.phase == StoryPhase::StarterConfirm {
+    if matches!(world.phase, StoryPhase::StarterReveal | StoryPhase::StarterConfirm) {
+        let elapsed = if world.phase == StoryPhase::StarterReveal {
+            world.starter_reveal_frames.unwrap_or(0)
+        } else {
+            // The two source `AFFINEANIMCMD_FRAME` sequences have completed
+            // when `Task_WaitForStarterSprite` enables this menu.
+            15
+        };
+        let (center_x, center_y, pokemon_scale, circle_scale) =
+            starter_reveal_presentation(starter, elapsed);
         let circle = starter_choose_sheet(&STARTER_CHOOSE_CIRCLE, STARTER_CHOOSE_CIRCLE_B64);
-        draw_source_indexed_crop(frame, circle, 0, 0, 64, 64, 88, 32);
+        draw_source_indexed_crop_scaled_centered(
+            frame,
+            circle,
+            0,
+            0,
+            64,
+            64,
+            center_x,
+            center_y,
+            circle_scale,
+        );
         let species = match starter {
             StarterSpecies::Treecko => "TREECKO",
             StarterSpecies::Torchic => "TORCHIC",
             StarterSpecies::Mudkip => "MUDKIP",
         };
-        // The source's 15-frame affine movement settles the selected mon at
-        // `STARTER_PKMN_POS_X/Y` (120, 64). This state is the stable frame
-        // at which Task_AskConfirmStarter opens the YES/NO menu.
-        draw_battle_sprite(frame, battle_front_sprite(species), 88, 32);
+        draw_battle_sprite_scaled_centered(
+            frame,
+            battle_front_sprite(species),
+            center_x,
+            center_y,
+            pokemon_scale,
+        );
     }
 
     draw_starter_choose_message_box(frame);
     match world.phase {
         StoryPhase::StarterSelect => {
+            draw_text(frame, 24, 121, "PROF. BIRCH is in trouble!\nRelease a POKéMON and rescue him!", 72);
+        }
+        StoryPhase::StarterReveal => {
+            // `ClearStarterLabel` only removes the floating species label;
+            // the original help message remains until the reveal settles.
             draw_text(frame, 24, 121, "PROF. BIRCH is in trouble!\nRelease a POKéMON and rescue him!", 72);
         }
         StoryPhase::StarterConfirm => {
@@ -2377,6 +2449,39 @@ fn draw_starter_choose_scene(frame: &mut [u8], world: &WorldState) {
         }
         _ => unreachable!("starter-choice renderer must receive a starter phase"),
     }
+}
+
+/// Source `SpriteCB_StarterPokemon` movement plus the two affine commands:
+/// `16, 16, 0` then `16, 16, 15` for the Pokémon, and `20, 20, 0` then
+/// `20, 20, 15` for the selection circle. Coordinates remain sprite centers.
+fn starter_reveal_presentation(
+    starter: StarterSpecies,
+    elapsed_frames: u8,
+) -> (i16, i16, u16, u16) {
+    let elapsed = i16::from(elapsed_frames.min(15));
+    let (center_x, center_y) = match starter {
+        StarterSpecies::Treecko => (60 + elapsed * 4, 64),
+        // Torchic reaches y=64 in twelve two-pixel steps, then remains there
+        // while both affine sequences finish their final three frames.
+        StarterSpecies::Torchic => (120, (88 - elapsed * 2).max(64)),
+        StarterSpecies::Mudkip => (180 - elapsed * 4, 64),
+    };
+    let pokemon_scale = (16 + elapsed * 16) as u16;
+    let circle_scale = (20 + elapsed * 20) as u16;
+    (center_x, center_y, pokemon_scale, circle_scale)
+}
+
+/// `SpriteCB_SelectionHand` visits only every fourth index of Emerald's
+/// Q8.8 `gSineTable`, then computes `(8 * value) >> 8`. Keeping this compact
+/// source-derived result avoids introducing a host-math approximation.
+fn starter_hand_bob(phase: u8) -> i16 {
+    const SOURCE_SINE_EVERY_FOURTH: [i16; 64] = [
+        0, 0, 1, 2, 3, 3, 4, 5, 5, 6, 6, 7, 7, 7, 7, 7,
+        8, 7, 7, 7, 7, 7, 6, 6, 5, 5, 4, 3, 3, 2, 1, 0,
+        0, -1, -2, -3, -4, -4, -5, -6, -6, -7, -7, -8, -8, -8, -8, -8,
+        -8, -8, -8, -8, -8, -8, -7, -7, -6, -6, -5, -4, -4, -3, -2, -1,
+    ];
+    SOURCE_SINE_EVERY_FOURTH[usize::from(phase >> 2)]
 }
 
 fn draw_starter_choose_tilemap(
@@ -2430,6 +2535,40 @@ fn draw_source_indexed_crop(
             let color_index = usize::from(sprite.pixels[(source_y + row) * sprite.width + source_x + column]);
             if color_index == 0 || color_index >= sprite.palette.len() { continue; }
             put_pixel(frame, x + column, y + row, sprite.palette[color_index]);
+        }
+    }
+}
+
+/// Affine-scale one transparent source crop around its GBA sprite center.
+/// This is used only for Birch's reveal circle, whose source template is a
+/// 64×64 double-affine OBJ with the same 256-is-1× scale convention.
+fn draw_source_indexed_crop_scaled_centered(
+    frame: &mut [u8],
+    sprite: &SourceIndexedSheet,
+    source_x: usize,
+    source_y: usize,
+    width: usize,
+    height: usize,
+    center_x: i16,
+    center_y: i16,
+    scale: u16,
+) {
+    if source_x + width > sprite.width || source_y + height > sprite.height { return; }
+    let output_width = width * usize::from(scale) / 256;
+    let output_height = height * usize::from(scale) / 256;
+    if output_width == 0 || output_height == 0 { return; }
+    let origin_x = center_x - (output_width as i16 / 2);
+    let origin_y = center_y - (output_height as i16 / 2);
+    for row in 0..output_height {
+        let sample_y = source_y + row * height / output_height;
+        for column in 0..output_width {
+            let sample_x = source_x + column * width / output_width;
+            let color_index = usize::from(sprite.pixels[sample_y * sprite.width + sample_x]);
+            if color_index == 0 || color_index >= sprite.palette.len() { continue; }
+            let x = origin_x + column as i16;
+            let y = origin_y + row as i16;
+            if x < 0 || y < 0 { continue; }
+            put_pixel(frame, x as usize, y as usize, sprite.palette[color_index]);
         }
     }
 }

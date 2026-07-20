@@ -442,6 +442,14 @@ impl LittlerootSession {
             self.redraw();
             return;
         }
+        // `Task_WaitForStarterSprite` owns this short interval: its affine
+        // reveal keeps the source chooser input-locked until the selected
+        // mon and circle settle at their center positions.
+        if self.world.advance_starter_reveal(request.frames) {
+            self.input_log.push(request);
+            self.redraw();
+            return;
+        }
         self.world.advance_npc_wander(prior_frame_index);
         if self.world.clock_editing.is_some() {
             match request.action {
@@ -577,6 +585,7 @@ impl LittlerootSession {
             return;
         }
         if self.world.phase == world::StoryPhase::StarterSelect {
+            self.world.advance_starter_hand(request.frames);
             match request.action {
                 Input::Left => self.world.move_starter_selection(-1),
                 Input::Right => self.world.move_starter_selection(1),
@@ -588,6 +597,7 @@ impl LittlerootSession {
             return;
         }
         if self.world.phase == world::StoryPhase::StarterConfirm {
+            self.world.advance_starter_hand(request.frames);
             match request.action {
                 Input::Up | Input::Down => self.world.move_starter_confirmation(),
                 Input::A => {
