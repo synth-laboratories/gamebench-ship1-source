@@ -154,3 +154,20 @@ source-vs-Rust replay corpus, align equivalent state/timing, then fuzz valid
 input sequences and close dynamic NPC placement, walking/camera parity, battle
 animation, and interior/text-window RGB differences. Checkpoint rows should
 move from `partial` only when that pixel evidence exists.
+
+Latest rail audit:
+
+- Battle: settled textbox/window, healthbox/HP, party-menu, trainer/back,
+  starter, Poké Ball, affine-release, and particle assets are staged, but none
+  of the 73 manifest traces enter a battle. The remaining BattleIntro gap is
+  the source tall-grass BG1 `anim_tiles`/`anim_map` layer plus captured timing
+  frames for the rival and Route 101 battle before adding a serialized entry or
+  party transition clock.
+- Interiors: bedroom idle/menu/cardinal movement traces are already manifest
+  backed. Clock, generic door boundaries, and ordinary home/clock/TV/Running
+  Shoes printer pages have source components or timing notes but no complete
+  source RGB/hash oracle, so no speculative renderer changes are accepted.
+- Naming: uppercase/lowercase/symbol page state and character mapping are
+  functional; the source 32-frame page-swap tilemaps/overlay assets and utility
+  button timing are not staged, and Emerald has no preset-name UI in the scoped
+  source path.
