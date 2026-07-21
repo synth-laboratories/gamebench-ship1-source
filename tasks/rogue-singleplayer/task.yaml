@@ -1,0 +1,23 @@
+id: rogue-singleplayer
+name: Rogue Single-Player Lane
+kind: gamebench_gold_reference
+game: rogue
+visibility: private
+oracle:
+  type: canonical_nev_log
+  reference: gold/
+  gold_eventlogs: fixtures/gold/eventlogs/eventlogs.json
+upstream:
+  source: https://github.com/Davidslv/rogue/tree/modern-rogue
+  note: compact deterministic GameBench lane with source-witnessed Rogue 5.4.4 behavior for modeled command/state/event/checkpoint surfaces
+status:
+  reference_engine_python: tasks/rogue-singleplayer/gold_python/
+  reference_engine_rust: tasks/rogue-singleplayer/gold_rust/
+  implementation: source_witnessed_1to1
+  one_to_one_required: true
+  one_to_one_plan: use upstream modern-rogue C source as the behavior authority; Python and Rust lanes are pure ports with no C wrapper/binding, and translated boundaries are proven against source-derived C witnesses plus Python/Rust lane parity and serialized state/checkpoint projections
+  verification:
+    nev_scenarios: 4
+    lanes: [python, rust]
+    policy_sweep: tasks/rogue-singleplayer/containers/codepolicy/run_policy_sweep.py
+    react_policy: tasks/rogue-singleplayer/containers/react/rollout_policy.py

@@ -1,0 +1,683 @@
+{
+  "archive_summary": {
+    "bootstrap_search_evidence_count": 2,
+    "candidate_count": 1,
+    "checkpoint_count": 2,
+    "frontier_count": 2,
+    "hypothesis_count": 0,
+    "resume_rollout_count": 0,
+    "theme_count": 0
+  },
+  "bootstrap_rollout_evidence": {
+    "schema_version": "goex_rollout_evidence_compact.v1",
+    "search": [
+      {
+        "candidate_id": "goex_prompt_e65cc22f57db",
+        "checkpoint_id": null,
+        "dispatch_kind": "fresh_rollout",
+        "evidence_id": "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_lane": "standard_search",
+        "mid_rollout_checkpoint_count": 0,
+        "mid_rollout_highlights": [],
+        "observed_objective_labels": {
+          "labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "source_field": "observed_objective_labels"
+        },
+        "produced_checkpoint_id": "goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1_goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1",
+        "queue_item_id": "goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1",
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1",
+        "seed": 1,
+        "split": "train",
+        "status": "completed",
+        "theme_id": null
+      },
+      {
+        "candidate_id": "goex_prompt_e65cc22f57db",
+        "checkpoint_id": null,
+        "dispatch_kind": "fresh_rollout",
+        "evidence_id": "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_lane": "standard_search",
+        "mid_rollout_checkpoint_count": 0,
+        "mid_rollout_highlights": [],
+        "observed_objective_labels": {
+          "labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "source_field": "observed_objective_labels"
+        },
+        "produced_checkpoint_id": "goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+        "queue_item_id": "goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+        "seed": 2,
+        "split": "train",
+        "status": "completed",
+        "theme_id": null
+      }
+    ],
+    "search_included_count": 2,
+    "search_omitted_count": 0,
+    "search_total_count": 2
+  },
+  "candidate_authoring_guidance": {
+    "active_theme_lifecycle_rule": "Keep the active theme set small. If active unsaturated themes have remaining aux budget, assign verifier/terminator-backed theme_aux work and add checkpoints before opening new active themes. Consolidate saturated themes, then retire/abandon duplicates or source themes before activating replacements.",
+    "assignment_rule": "Use theme_aux_assignments, consolidation_assignments, and core_rollout_requests to dispatch work. The controller treats those as explicit assignments; unknown theme ids are hard errors. theme_candidate_ids is valid only inside consolidation_assignments; never put theme_candidate_ids on theme_aux_assignments.",
+    "bootstrap_search_evidence_count": 2,
+    "checkpoint_frontier_count": 2,
+    "consolidation_assignment_shape": {
+      "candidate_budget": "positive integer",
+      "evidence_refs": "evidence ids supporting the merge",
+      "job_id": "stable id for this consolidation job",
+      "metadata": {
+        "single_theme_frontier_transfer": "true only for an allowed one-theme frontier transfer"
+      },
+      "reason": "why these discoveries should be consolidated now",
+      "theme_candidate_ids": "optional concrete theme candidate ids to merge",
+      "theme_ids": "at least two theme ids by default; exactly one is allowed only when metadata.single_theme_frontier_transfer=true"
+    },
+    "consolidation_authority_rule": "The controller never auto-dispatches consolidation. When consolidation_readiness.ready_for_consolidation_assignment is true, you must emit at least one consolidation_assignments entry this round naming mature theme_ids from consolidation_readiness.mature_theme_ids, with positive candidate_budget and theme_candidate_ids when verified theme candidates exist. Use metadata.single_theme_frontier_transfer=true for a one-theme frontier transfer; otherwise name at least two mature themes. Do not defer while mature themes accumulate.",
+    "consolidation_maturity_rule": "A theme is consolidation_mature when themes[].consolidation_mature is true (saturated or objective_score >= auto_consolidate_min_score). Use consolidation_readiness.mature_theme_ids as the authoritative mature set for consolidation_assignments.",
+    "core_candidate_shape": {
+      "prompt": {
+        "candidate_kind": "prompt",
+        "plugin_id": "prompt",
+        "prompt": "full deployable react_system_prompt"
+      },
+      "rlvr": {
+        "candidate_kind": "rlvr_recipe",
+        "extra": {
+          "recipe": {
+            "checkpoint_refs": "checkpoint or policy artifacts to train from",
+            "mini_environment": "trainable sub-environment definition",
+            "rubric": "reward/rubric contract"
+          }
+        },
+        "plugin_id": "rlvr"
+      }
+    },
+    "core_rollout_request_shape": {
+      "reason": "why fresh best-base rollouts are useful now",
+      "seed_count": "positive integer when the current best base needs frontier refresh"
+    },
+    "default_bias": "author_candidate_when_completed_evidence_or_concrete_target_exists",
+    "empty_manifest_allowed_only_when": "a deployable prompt candidate would be fictional, uncited, or contradictory to the workspace",
+    "failed_consolidation_rule": "Do not retry a theme set listed in consolidation_failed_themesets unless the source theme_candidate_ids changed.",
+    "max_candidates_to_import": 2,
+    "min_new_candidate_count": null,
+    "proposal_shape_example": {
+      "consolidation_assignments": [
+        {
+          "candidate_budget": 1,
+          "evidence_refs": [
+            "verifier_or_rollout_evidence_id"
+          ],
+          "job_id": "consolidate_frontier_themes",
+          "reason": "merge concrete verified theme candidates",
+          "theme_candidate_ids": [
+            "candidate_that_scored_on_theme_next_progress"
+          ],
+          "theme_ids": [
+            "theme_next_progress",
+            "theme_followup_progress"
+          ]
+        }
+      ],
+      "core_rollout_requests": [
+        {
+          "reason": "refresh frontier from current best_base",
+          "seed_count": 1
+        }
+      ],
+      "theme_aux_assignments": [
+        {
+          "candidate_budget": 2,
+          "checkpoint_refs": [
+            "checkpoint_id_from_frontier"
+          ],
+          "evidence_refs": [
+            "evidence_id_from_workspace"
+          ],
+          "job_id": "aux_example_next_progress",
+          "reason": "concrete partial frontier needs hill-climb budget",
+          "theme_id": "theme_next_progress"
+        }
+      ],
+      "themes": [
+        {
+          "evidence_checkpoint_ids": [
+            "checkpoint_id_from_tentative_theme"
+          ],
+          "from_tentative_theme_id": "tentative_example_next_progress",
+          "manual_saturated": false,
+          "name": "Convert the frontier into the next objective",
+          "objective": {
+            "kind": "milestone",
+            "milestone": "example_next_progress"
+          },
+          "proposal_round_budget": 2,
+          "region": {
+            "requires_milestones": []
+          },
+          "saturation_override_reason": null,
+          "status": "active",
+          "theme_eval_checkpoints": 3,
+          "theme_id": "theme_next_progress",
+          "theme_partials_per_candidate": 3,
+          "theme_saturation_min_rollouts": 3,
+          "theme_saturation_threshold": 0.9,
+          "verifier_rubric": {
+            "failure_modes": [
+              "invalid_action_loop",
+              "leaves_relevant_region",
+              "no_objective_progress"
+            ],
+            "partial_credit": [
+              {
+                "condition": "Takes an admissible action sequence that advances from the checkpoint frontier toward the next milestone.",
+                "score": 0.5
+              }
+            ],
+            "rubric_version": "v1",
+            "success_condition": "Partial rollout reaches example_next_progress from the assigned checkpoint/region."
+          }
+        }
+      ]
+    },
+    "subgoal_prompt_candidate_rule": "for reward_mode=binary_subgoal or subgoal, candidate prompts should optimize the concrete target objective label while preserving valid action/tool-call discipline; binary_subgoal scores 1.0 only when the target label is in final_objective_labels",
+    "target_new_candidate_count": 2,
+    "terminator_contract": {
+      "default_mode": "agent",
+      "python_terminator_allowed": false,
+      "python_terminator_supported": false,
+      "theme_terminator_python_rule": "omit terminator_python unless python_terminator_allowed is true; otherwise the agent terminator evaluates the theme objective and verifier_rubric"
+    },
+    "theme_aux_assignment_shape": {
+      "candidate_budget": "positive integer",
+      "checkpoint_refs": "checkpoint ids that scope the partial rollout",
+      "evidence_refs": "evidence ids supporting the assignment",
+      "forbidden_fields": [
+        "theme_candidate_ids"
+      ],
+      "job_id": "optional stable id for this theme aux job",
+      "reason": "why this theme deserves aux budget now",
+      "theme_id": "existing or newly declared theme id"
+    },
+    "theme_finalization_rule": "When reviewing mined tentative themes, finalize runnable work only by emitting a theme entry with from_tentative_theme_id, objective, verifier_rubric, evidence_checkpoint_ids, status active, and per-theme scoring overrides when needed. Do not emit terminator_python unless terminator_contract.python_terminator_allowed is true. Keep unready themes not_ready; abandon weak or duplicate clusters by setting status=abandoned. Paused themes are non-runnable and must not receive theme_aux_assignments. A manual saturation override is allowed only as manual_saturated=true plus saturation_override_reason.",
+    "theme_finalization_shape": {
+      "evidence_checkpoint_ids": "must include at least theme_finalize_min_checkpoints checkpoint ids before active",
+      "from_tentative_theme_id": "existing not_ready/tentative theme id from tentative_themes",
+      "objective": "goal/default terminator target",
+      "proposal_round_budget": "optional per-theme aux proposal-round budget",
+      "status": "active | not_ready | abandoned | retired",
+      "terminator_python": "forbidden unless terminator_contract.python_terminator_allowed is true",
+      "theme_id": "final active theme id; may match the tentative id",
+      "verifier_rubric": "required before status active"
+    },
+    "theme_objective_rule": "every theme should include a structured objective using task-specific milestone ids from recipe_context.milestone_ladder when present. Examples for this run: {kind:'milestone', milestone:'example_first_progress'}, {kind:'milestone', milestone:'example_next_progress'}, {kind:'any_milestone'}. Use {kind:'milestone_set', milestones:[...]} for coupled milestones or {kind:'any_milestone'} only when the theme is explicitly exploratory.",
+    "theme_region_rule": "every theme region must be a JSON object: {} for root/spawn, {requires_milestone:'example_label'}, {requires_milestones:[...]}, {checkpoint_id:'...'}, {checkpoint_ids:[...]}, plus optional excludes_milestone(s), min_inventory, or max_inventory when the checkpoint frontier evidence supports it",
+    "theme_rule": "create frontier themes when evidence or checkpoints reveal a reusable partial state, plateau, or failure mode that aux hill-climb can improve",
+    "theme_saturation_rule": "set theme_saturation_threshold in (0,1] when creating/finalizing a theme to define its verifier score threshold; set manual_saturated=true with saturation_override_reason only when cited evidence shows the theme objective is already solved and should move to consolidation without more aux work",
+    "theme_verifier_rubric_rule": "every assigned theme must include verifier_rubric with success_condition, partial_credit, failure_modes, and optional rubric_version/saturation_threshold; verifier_rubric is what theme_verifier_agent uses for partial rollout scoring",
+    "training_plugin_lane_rule": "SFT/FBC recipe candidates are forbidden in the core/global candidate list. Core must organize evidence into active themes and emit theme_aux_assignments or consolidation_assignments; the assigned aux workspaces may then author theme-scoped or consolidation-scoped training recipes."
+  },
+  "candidates": {
+    "baseline_candidate_id": "goex_prompt_e65cc22f57db",
+    "best_base_candidate_id": "goex_prompt_e65cc22f57db",
+    "candidates": [
+      {
+        "candidate_id": "goex_prompt_e65cc22f57db",
+        "metadata": {
+          "candidate_kind": "prompt"
+        },
+        "parent_id": null,
+        "prompt": {
+          "char_count": 184,
+          "preview": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+        },
+        "roles": {
+          "is_baseline": true,
+          "is_best_base": true,
+          "is_consolidated": false,
+          "is_parent": true
+        },
+        "search_rollouts": {
+          "dispatch_kind_counts": {
+            "fresh_rollout": 2
+          },
+          "max_reward": 0.0,
+          "mean_reward": 0.0,
+          "min_reward": 0.0,
+          "scored_count": 2,
+          "status_counts": {
+            "completed": 2
+          },
+          "theme_ids": [],
+          "total_count": 2
+        },
+        "source": "seed",
+        "status": "proposed"
+      }
+    ],
+    "included_count": 1,
+    "omitted_count": 0,
+    "parent_candidate_id": "goex_prompt_e65cc22f57db",
+    "schema_version": "goex_candidate_history_compact.v1",
+    "selection_rule": "baseline/parent/best_base/consolidated always kept, remainder newest-first up to CORE_WORKSPACE_MAX_CANDIDATES; only parent_candidate carries the full react_system_prompt",
+    "total_count": 1
+  },
+  "checkpoint_frontier": {
+    "checkpoints": [
+      {
+        "candidate_id": "goex_prompt_e65cc22f57db",
+        "checkpoint_id": "goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1_goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1",
+        "dungeon_level": null,
+        "evidence_id": "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "observed_objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": null,
+        "position": null,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1",
+        "score": null,
+        "seed": 1,
+        "source": "search_rollout_evidence",
+        "status": "available_for_resume",
+        "step": null,
+        "theme_id": null
+      },
+      {
+        "candidate_id": "goex_prompt_e65cc22f57db",
+        "checkpoint_id": "goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+        "dungeon_level": null,
+        "evidence_id": "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "observed_objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": null,
+        "position": null,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+        "score": null,
+        "seed": 2,
+        "source": "search_rollout_evidence",
+        "status": "available_for_resume",
+        "step": null,
+        "theme_id": null
+      }
+    ],
+    "included_count": 2,
+    "omitted_count": 0,
+    "run_id": "rogue_smoke2_20260617_184300",
+    "schema_version": "goex_checkpoint_frontier_compact.v1",
+    "selection_rule": "highest reward/depth/score/objective-label checkpoint summaries first",
+    "total_count": 2
+  },
+  "consolidation_failed_themesets": [],
+  "consolidation_readiness": {
+    "auto_consolidate_min_score": 0.0,
+    "mature_theme_count": 0,
+    "mature_theme_ids": [],
+    "maturity_rule": "consolidation_mature when saturated=true or objective_score >= auto_consolidate_min_score",
+    "min_mature_themes": 2,
+    "ready_for_consolidation_assignment": false
+  },
+  "expected_output": {
+    "notes": "Your cwd is the workspace root. Write only this basename; never prefix with reports/, absolute paths, or parent directories.",
+    "path": "proposal_manifest.json",
+    "schema_version": "goex_core_proposal_manifest.v1",
+    "write_mode": "create_or_replace_file_in_workspace_cwd"
+  },
+  "hypotheses": [],
+  "parent_candidate": {
+    "candidate_id": "goex_prompt_e65cc22f57db",
+    "lever_bundle": {
+      "bundle_id": "goex_prompt_e65cc22f57db",
+      "metadata": {
+        "candidate_kind": "prompt",
+        "primary_lever_id": "react_system_prompt"
+      },
+      "mutated_lever_ids": [
+        "react_system_prompt"
+      ],
+      "parent_ids": [],
+      "schema_version": "lever_bundle.v1",
+      "values": {
+        "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+      }
+    },
+    "metadata": {
+      "candidate_kind": "prompt"
+    },
+    "parent_id": null,
+    "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+    "react_system_prompt_char_count": 184,
+    "source": "seed",
+    "status": "proposed"
+  },
+  "parent_candidate_id": "goex_prompt_e65cc22f57db",
+  "plugin": {
+    "candidate_kind": "prompt",
+    "plugin_id": "goex.prompt_plugin.v1",
+    "primary_field": "react_system_prompt"
+  },
+  "plugin_authoring_guidance": {
+    "enabled_plugins": [
+      "goex.prompt_plugin.v1"
+    ],
+    "fbc": {
+      "candidate_kind": "fbc_recipe",
+      "consolidation_guidance": "For consolidation, score trajectories against the multi-theme rubric and keep accepted trajectory coverage balanced across source theme_ids until the delegated SFT data mix reaches at least 50000 estimated input tokens.",
+      "guidance": "FBC is not enabled for this run; do not emit fbc_recipe candidates.",
+      "in_scope": false,
+      "recipe_shape": {
+        "candidate_kind": "fbc_recipe",
+        "extra": {
+          "recipe": {
+            "allow_proxy_scores": "false by default; true only for smoke/proof runs that intentionally use objective_score_proxy/score before verifier results exist",
+            "allow_reward_fallback": "false by default; true only for smoke/proof runs that intentionally threshold on raw environment reward",
+            "max_accepted_trajectories": "optional cap on accepted trajectories",
+            "min_accepted_trajectories": "backpressure gate before launching Tinker/SFT",
+            "round_index": "zero-based FBC round index",
+            "sample_budget": "max train trajectories to score this round",
+            "score_metadata_pointer": "optional explicit metadata JSON pointer; default scoring uses rubric_reward, theme_verifier_result_refs, or theme_score",
+            "score_threshold": "minimum rubric/objective score accepted into the SFT dataset",
+            "sft_recipe": "nested Tinker/SFT recipe fields such as student_model, renderer_name, training_config, data_mix_id, min_examples, and min_input_tokens >= 50000"
+          }
+        },
+        "plugin_id": "fbc"
+      },
+      "theme_hill_climb_guidance": "For a scoped theme, use the theme verifier/objective score as the FBC rubric and wait for enough accepted train trajectories to produce an SFT data mix with at least 50000 estimated input tokens before fine-tuning."
+    },
+    "general_rules": [
+      "Only emit plugin recipes for plugins listed in enabled_plugins.",
+      "Training plugin recipes should be structured under extra.recipe or extra.values; do not fake a prompt payload for a training plugin.",
+      "When data is insufficient for a training plugin, prefer waiting/backpressure over inventing synthetic traces."
+    ],
+    "graph": {
+      "edges": [],
+      "enabled": [
+        "goex.prompt_plugin.v1"
+      ],
+      "interpretation": "single runs one plugin lane; static permits a configured plugin DAG where edges declare allowed plugin transitions such as prompt->sft or sft->rlvr",
+      "metadata": {},
+      "mode": "single"
+    },
+    "prompt": {
+      "candidate_kind": "prompt",
+      "guidance": "Prompt candidates are cheap enough to test early; write full deployable react_system_prompt payloads, never appended hints.",
+      "in_scope": true
+    },
+    "rlvr": {
+      "candidate_kind": "rlvr_recipe",
+      "guidance": "RLVR is not enabled for this run; do not emit rlvr_recipe candidates.",
+      "in_scope": false
+    },
+    "sft": {
+      "candidate_kind": "sft_recipe",
+      "consolidation_guidance": "For consolidation, preserve lineage across all source theme_ids and request a balanced data mix with min_input_tokens >= 50000 instead of collapsing to one parent trace.",
+      "guidance": "SFT is not enabled for this run; do not emit sft_recipe candidates.",
+      "in_scope": false,
+      "recipe_shape": {
+        "candidate_kind": "sft_recipe",
+        "extra": {
+          "recipe": {
+            "allow_unlabelled_parent_evidence": "false by default; true only for bootstrap/smoke fixtures or explicit parent-trace distillation",
+            "data_mix_id": "stable id for the intended trace/data mix",
+            "max_examples": "theme SFT: prefer 64+ when data exists; consolidation SFT: prefer 128+ and balance across source themes",
+            "min_examples": "theme SFT: prefer >=16; consolidation SFT: prefer >=32; examples alone are not sufficient without min_input_tokens",
+            "min_input_tokens": "hard data floor for materialization; default/effective hill-climb floor is 50000 estimated input tokens",
+            "trace_selection_policy": "which split/status/theme/checkpoint traces to distill",
+            "training_config": "Tinker/FBC/SFT training knobs"
+          }
+        },
+        "plugin_id": "sft"
+      },
+      "theme_hill_climb_guidance": "For a scoped theme, use theme-labelled evidence/checkpoints when available. If the theme does not yet have at least 50000 estimated input tokens, leave candidates empty with rationale or propose a recipe whose data_mix_id/min_input_tokens backpressures training until data arrives."
+    }
+  },
+  "plugin_lanes": {
+    "enabled": [
+      "goex.prompt_plugin.v1"
+    ],
+    "fbc": {},
+    "graph": {
+      "edges": [],
+      "enabled": [
+        "goex.prompt_plugin.v1"
+      ],
+      "metadata": {},
+      "mode": "single"
+    },
+    "prompt": {},
+    "rlvr": {},
+    "sft": {}
+  },
+  "proposal_contract": {
+    "allowed_rollout_kinds": [
+      "fresh_from_start",
+      "resume_partial",
+      "regression_fresh"
+    ],
+    "bootstrap_candidate_id": "goex_prompt_e65cc22f57db",
+    "bootstrap_train_rollout_target": 2,
+    "bootstrap_train_rollouts_completed": 2,
+    "budget_remaining": 38,
+    "candidate_application_plugin": null,
+    "candidate_authoring_mode": "prompt_lever",
+    "candidate_patch_reference": "Use generated proposal labels or candidate ids from this manifest; the Rust controller materializes prompt candidates through the prompt plugin and schedules rollout jobs.",
+    "candidate_shape_requirements": [
+      "Candidate rationales cite the rollout, checkpoint, theme, or evidence ids that motivated the change.",
+      "Prompt candidates must change concrete behavior levers, not paraphrase the baseline.",
+      "Reject generic reward-only instructions unless tied to an observed failure mode.",
+      "Distinct candidates should represent different failure hypotheses, not synonyms of one patch."
+    ],
+    "checkpoint_resume_available": true,
+    "configured_fresh_rollouts_per_round": 3,
+    "configured_regression_rollouts_per_round": 0,
+    "configured_resume_rollouts_per_round": 2,
+    "current_archive_candidate_ids": [
+      "goex_prompt_e65cc22f57db"
+    ],
+    "current_non_baseline_candidate_count": 0,
+    "current_non_baseline_fresh_candidate_count": 0,
+    "current_non_baseline_fresh_rollout_count": 0,
+    "deterministic_planner_removed": false,
+    "initial_fresh_distribution_rule": "Before the target candidate slate is complete, author enough distinct candidates for the Rust controller to give each non-baseline candidate initial fresh/regression coverage before spending extra fresh jobs on one family.",
+    "max_initial_rollouts_per_candidate": 0,
+    "min_new_candidate_count": 2,
+    "min_non_baseline_candidate_fresh_rollouts": 0,
+    "min_rollout_enqueue_count": 5,
+    "must_keep_rollout_queue_open": true,
+    "must_schedule_resume_now": false,
+    "must_test_non_baseline_candidate_now": false,
+    "new_candidate_deficit_before_resume": 2,
+    "noop_allowed": false,
+    "planned_rollout_count": 2,
+    "prefer_candidate_diversity_before_resume": true,
+    "queue_contract_mode": "planner_projection",
+    "queue_fill_instruction": "The Rust controller keeps the search queue full while rollout budget remains; proposers should create candidates and themes that make those planned fresh/resume jobs meaningful.",
+    "queue_full_target_count": 5,
+    "required_action": "proposal_manifest",
+    "reserved_search_rollout_budget": 2,
+    "resume_advisory_checkpoint_ids": [
+      "goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1_goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1",
+      "goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2"
+    ],
+    "resume_partial_advised": false,
+    "resume_required_checkpoint_ids": [
+      "goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1_goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1",
+      "goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2"
+    ],
+    "rollout_hypothesis_required": true,
+    "rollout_queue_owner": "rust_controller_planner",
+    "schema_version": "goex_proposal_contract.v1",
+    "search_phase_active": true,
+    "target_fresh_rollout_enqueue_count": 3,
+    "target_new_candidate_count": 2,
+    "target_resume_rollout_enqueue_count": 2,
+    "target_rollout_enqueue_count": 5
+  },
+  "proposer_system_prompt_suffix": null,
+  "role": "core_proposer",
+  "role_config": {
+    "api_key_env": "DEEPSEEK_API_KEY",
+    "approval_policy": null,
+    "auth_mode": "api_key",
+    "backend": "deepseek_chat",
+    "base_url": "https://api.deepseek.com",
+    "budget_estimate": {
+      "max_completion_tokens": null,
+      "max_cost_usd": null,
+      "max_prompt_tokens": null,
+      "max_rollouts": null,
+      "max_total_tokens": null,
+      "max_wall_seconds": null
+    },
+    "copy_host_auth": false,
+    "model": "deepseek-v4-flash",
+    "output_schema": "goex.core_proposer.output.v1",
+    "reasoning_effort": "high",
+    "role": "core_proposer",
+    "runtime_substrate": "local",
+    "sandbox_mode": null,
+    "service_tier": null,
+    "timeout_seconds": 300
+  },
+  "rollout_policy": {
+    "allow_resume_fallback_to_fresh": false,
+    "auto_consolidate_min_mature_themes": 2,
+    "auto_consolidate_min_score": 0.0,
+    "auto_consolidate_theme_count": 2,
+    "execute_live_proposers": true,
+    "fresh_rollouts_per_round": 3,
+    "initial_candidate_fresh_rollouts_per_round": 3,
+    "max_initial_rollouts_per_candidate": 0,
+    "min_non_baseline_candidate_fresh_rollouts": 0,
+    "preserve_search_measurement_split": true,
+    "request_timeout_seconds": 180.0,
+    "resume_rollouts_per_round": 2,
+    "resume_segment_steps": 24,
+    "rollout_stall_timeout_seconds": 240.0,
+    "rollout_state_poll_seconds": 0.5,
+    "rollout_terminator_poll_seconds": 0.5,
+    "segment_steps": 40
+  },
+  "rollout_queue_summary": {
+    "fresh_items": 2,
+    "item_count": 2,
+    "resume_items": 0
+  },
+  "rules": [
+    "Write ONLY to proposal_manifest.json in the workspace root (your cwd). Never use absolute paths or prefixes like reports/goex_runs/ — the controller imports that single basename.",
+    "The fields in this input are BOUNDED summaries. Full sanitized detail (candidate prompts, checkpoints, search rollout evidence, and theme records) is in the workspace_detail_files listed in this input — read them with your file tools when you need more than the summary. Do not assume the inline data is exhaustive.",
+    "Write proposal_manifest.json only; do not mutate archive, registry, queue, or canonical run state.",
+    "Prompt candidates must be full deployable react_system_prompt payloads, not appended hints.",
+    "Core/global candidates are prompt-only. SFT/FBC recipes are valid only after core has organized evidence into theme_aux_assignments or consolidation_assignments; the scoped aux workspaces own those training plugin recipes.",
+    "When plugin_authoring_guidance.fbc.in_scope is true, do not emit FBC in core candidates. Assign theme/consolidation work so the aux lane can sample train trajectories, score them with the theme/consolidation rubric, and backpressure until the delegated SFT data mix reaches at least 50000 estimated input tokens.",
+    "When plugin_authoring_guidance.sft.in_scope is true, do not emit SFT in core candidates. Assign theme/consolidation work so the aux lane can name a data_mix_id and wait for at least 50000 estimated input tokens from diverse traces/checkpoints instead of one-example adapters.",
+    "Every theme must include a structured objective; use kind=any_milestone only for broad exploratory themes.",
+    "Review tentative_themes from miner output. Only the core proposer may finalize to active, keep not_ready, reactivate, retire, or abandon them.",
+    "Keep active themes few and serious: extend existing active/tentative themes, assign aux work, and wait for verifier saturation before opening more active themes.",
+    "When zero themes are active and a tentative/not_ready theme reports readiness.ready_for_active_or_paused=true (its only not_ready_reasons entry is awaiting_core_finalization), finalize that theme to status active this round and give it a theme_aux_assignments entry with a positive candidate_budget — do not stall waiting for additional tentative themes. A run with no active theme does no hill-climb work.",
+    "Retire, abandon, or keep not_ready duplicate themes before adding replacement active themes; theme count is a work queue, not a coverage metric.",
+    "A theme may be active only after it has enough evidence_checkpoint_ids, an objective/goal, and a verifier_rubric. Paused themes are non-runnable and closed to data-miner labels.",
+    "Every theme region must be an object, never prose; region controls which parent checkpoints are valid for theme resume rollouts.",
+    "Every theme referenced by theme_aux_assignments must include verifier_rubric.success_condition, verifier_rubric.partial_credit, and verifier_rubric.failure_modes.",
+    "When creating or finalizing a theme, set theme_saturation_threshold to the verifier score needed for saturation. Use manual_saturated=true with saturation_override_reason only when cited evidence already proves the objective is solved; do not use it as a guess or to bypass missing evidence.",
+    "Assign aux work explicitly with theme_aux_assignments and consolidation_assignments when enough evidence exists; candidate_budget must be positive. Every theme_aux_assignments entry must reference a theme whose effective status is active.",
+    "Never include theme_candidate_ids on theme_aux_assignments; that field is only valid on consolidation_assignments.",
+    "Use consolidation_assignments.theme_candidate_ids when consolidating concrete verified discoveries; do not ask consolidation to infer unnamed theme candidates.",
+    "Consolidation is your job, not the controller's: when consolidation_readiness.ready_for_consolidation_assignment is true, emit consolidation_assignments naming mature theme_ids from consolidation_readiness.mature_theme_ids. Use metadata.single_theme_frontier_transfer=true for a one-theme frontier transfer; otherwise name at least two mature themes. theme_aux_assignments and core_rollout_requests do not replace this obligation.",
+    "Each consolidation_assignments entry needs job_id, enough theme_ids for the selected consolidation mode, positive candidate_budget, and theme_candidate_ids when concrete verified theme candidates exist for those themes.",
+    "Request recurring best-base frontier refresh with core_rollout_requests instead of turning a single-theme candidate into a global parent.",
+    "Cite theme, hypothesis, rollout, checkpoint, or evidence refs when available.",
+    "Do not treat a small bootstrap sample as insufficient by itself; positive evidence plus a concrete target is enough to propose candidates for GoEx to test.",
+    "Leave candidates empty only when a deployable prompt would be fictional, uncited, or contradictory to the workspace."
+  ],
+  "run_id": "rogue_smoke2_20260617_184300",
+  "schema_version": "goex_core_proposer_input.v1",
+  "taskset": {
+    "backend": null,
+    "dataset_limit": null,
+    "dataset_path": null,
+    "dataset_split": null,
+    "env_config": {
+      "max_steps": 40,
+      "task_path": "tasks/policy_dev_template.json"
+    },
+    "profile": "rogue_singleplayer_agent",
+    "recipe_context": {
+      "allow_request_snapshot_resume": false,
+      "checkpoint_restore_semantics": "true_environment_snapshot",
+      "forbid_code_policy_candidates": true,
+      "prompt_only_candidate_authoring": true,
+      "prototype_only": true,
+      "require_real_rewards": true,
+      "required_candidate_kind": "prompt",
+      "submission_mode": "async",
+      "target_objective_label": "descend",
+      "task_family": "rogue-singleplayer"
+    },
+    "reward_mode": "goal_binary",
+    "target_objective_label": null,
+    "train_dataset_path": null,
+    "train_seeds": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "tentative_themes": [],
+  "theme_progress": [],
+  "themes": {
+    "included_count": 0,
+    "schema_version": "goex_theme_history_compact.v1",
+    "selection_rule": "all themes, compacted to lifecycle, objective, rubric, bounded evidence refs, and summarized metadata",
+    "themes": [],
+    "total_count": 0
+  },
+  "workspace_contract": {
+    "agent_write_contract": {
+      "allowed_output_files": [
+        "proposal_manifest.json"
+      ],
+      "canonical_state_owner": "goex_controller",
+      "notes": [
+        "The agent writes only the requested manifest file.",
+        "The manifest path is always proposal_manifest.json relative to the workspace cwd.",
+        "Never write using reports/goex_runs prefixes or absolute paths.",
+        "The controller validates and imports the manifest into canonical state.",
+        "Workspace files are sanitized read models, not repair authority."
+      ]
+    },
+    "input_path": "input.json",
+    "materializer_schema_version": "goex_workspace_materializer.v1",
+    "role": "core_proposer",
+    "schema_version": "goex_workspace_core_proposer.v1",
+    "template_path": "proposal_manifest_template.json"
+  },
+  "workspace_detail_files": {
+    "candidates": "detail_candidates.json",
+    "checkpoint_frontier": "detail_checkpoint_frontier.json",
+    "note": "Full detail is in these files in this workspace directory. Use your tools to read them when you need more than the inline summary.",
+    "rollout_evidence": "detail_rollout_evidence.json",
+    "themes": "detail_themes.json"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "distinguishing_experiment": "Present a state where door is salient and compare against a policy that handles it correctly.",
+  "evidence": "Trace actions show: {'action': 'h', 'invalid_parse': True, 'repaired': True, 'error': 'no_action_found'} (door blind scout); {'action': 'h', 'invalid_parse': True, 'repaired': True, 'error': 'no_action_found'} (door blind scout); {'action': 'h', 'invalid_parse': False, 'repaired': False, 'error': None} (door blind scout); {'action': 'h', 'invalid_parse': False, 'repaired': False, 'error': None} (door blind scout); {'action': 'l', 'invalid_parse': False, 'repaired': False, 'error': None} (door blind scout); {'action': 'l', 'invalid_parse': False, 'repaired': False, 'error': None} (door blind scout); {'action': 'j', 'invalid_parse': False, 'repaired': False, 'error': None} (door blind scout); {'action': 'j', 'invalid_parse': False, 'repaired': False, 'error': None} (door blind scout); door tiles skipped during wall-follow scout.",
+  "flaw_id": "door_blind_scout",
+  "summary": "The hidden policy misses visible doors and keeps wall-following instead of entering newly reachable rooms."
+}

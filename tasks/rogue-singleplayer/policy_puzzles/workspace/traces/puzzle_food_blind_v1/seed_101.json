@@ -1,0 +1,19 @@
+{
+  "action_summary": [
+    "{'action': 'h', 'invalid_parse': True, 'repaired': True, 'error': 'no_action_found'} (food blind scavenger ignores food while hp low and hunger rises)",
+    "{'action': 'h', 'invalid_parse': True, 'repaired': True, 'error': 'no_action_found'} (food blind scavenger ignores food while hp low and hunger rises)",
+    "{'action': 'h', 'invalid_parse': True, 'repaired': True, 'error': 'no_action_found'} (food blind scavenger ignores food while hp low and hunger rises)",
+    "{'action': 'h', 'invalid_parse': True, 'repaired': True, 'error': 'no_action_found'} (food blind scavenger ignores food while hp low and hunger rises)",
+    "{'action': 'h', 'invalid_parse': True, 'repaired': True, 'error': 'no_action_found'} (food blind scavenger ignores food while hp low and hunger rises)",
+    "{'action': 'h', 'invalid_parse': True, 'repaired': True, 'error': 'no_action_found'} (food blind scavenger ignores food while hp low and hunger rises)",
+    "{'action': 'h', 'invalid_parse': True, 'repaired': True, 'error': 'no_action_found'} (food blind scavenger ignores food while hp low and hunger rises)",
+    "{'action': 'h', 'invalid_parse': True, 'repaired': True, 'error': 'no_action_found'} (food blind scavenger ignores food while hp low and hunger rises)"
+  ],
+  "episode_outcome": "failure_reproduced",
+  "failure_signal": "food",
+  "gamebench_task": "rogue-singleplayer",
+  "observation_summary": "rogue-singleplayer seed 101 black-box rollout (policy hidden)",
+  "puzzle_id": "puzzle_food_blind_v1",
+  "schema_version": "gamebench.policy_puzzle.trace.v1",
+  "seed": 101
+}

@@ -1,0 +1,6 @@
+{
+  "gamebench_task": "rogue-singleplayer",
+  "prompt": "Diagnose the hidden Rogue policy flaw from the provided state-action traces.",
+  "puzzle_id": "puzzle_food_blind_v1",
+  "schema_version": "gamebench.policy_puzzle.task.v1"
+}

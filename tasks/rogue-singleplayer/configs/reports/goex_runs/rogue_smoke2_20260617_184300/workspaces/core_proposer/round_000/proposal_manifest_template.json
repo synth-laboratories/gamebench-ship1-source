@@ -1,0 +1,12 @@
+{
+  "aux_proposer_calls": [],
+  "candidates": [],
+  "consolidation_assignments": [],
+  "core_rollout_requests": [],
+  "hypotheses": [],
+  "metadata": {},
+  "rationale": "core proposer contract initialized; no proposer turn executed yet",
+  "schema_version": "goex_core_proposal_manifest.v1",
+  "theme_aux_assignments": [],
+  "themes": []
+}

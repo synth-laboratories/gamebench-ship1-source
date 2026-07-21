@@ -1,0 +1,176 @@
+{
+  "candidates": [
+    {
+      "annotations": {
+        "candidate_kind": "prompt",
+        "created_at": "2026-06-26T19:07:58.184283Z",
+        "kind": "seed",
+        "label": "goex_prompt_e65cc22f57db",
+        "source_detail": "seed"
+      },
+      "artifact_refs": [],
+      "bundle_hash": "410f4941eee173ffa45adf6c28d89c67bd3875498eb6aedfafed6fdcf7751c70",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "candidate_kind": "prompt",
+      "candidate_scope": "full",
+      "candidate_scope_theme_id": null,
+      "created_at": "2026-06-26T19:07:58.184283Z",
+      "evaluation_status": "evaluated",
+      "frontier_labels": [
+        "global"
+      ],
+      "frontier_score": 0.0,
+      "frontier_score_source": "search_mean",
+      "heldout_mean_reward": 0.0,
+      "label": "goex_prompt_e65cc22f57db",
+      "lever_bundle": {
+        "bundle_id": "goex_prompt_e65cc22f57db",
+        "metadata": {
+          "candidate_kind": "prompt",
+          "primary_lever_id": "react_system_prompt"
+        },
+        "mutated_lever_ids": [
+          "react_system_prompt"
+        ],
+        "parent_ids": [],
+        "schema_version": "lever_bundle.v1",
+        "values": {
+          "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+        }
+      },
+      "mean_reward": 0.0,
+      "merged_parent_candidate_ids": [],
+      "metadata": {
+        "candidate_kind": "prompt",
+        "goex_acceptance": {
+          "candidate_id": "goex_prompt_e65cc22f57db",
+          "decision": "accepted",
+          "eligible_for_promotion": true,
+          "final_status": "accepted",
+          "heldout_measurement": {
+            "best_reward": 0.0,
+            "evidence_count": 4,
+            "evidence_ids": [
+              "goex_evidence_goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_11_sensor_f5a1ee69a66f",
+              "goex_evidence_goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_12_sensor_3dfc3352db1c",
+              "goex_evidence_goex_queue_closeout_heldout_goex_prompt_e65cc22f57db_11_sensor_050f14718d04",
+              "goex_evidence_goex_queue_closeout_heldout_goex_prompt_e65cc22f57db_12_sensor_abc88a679da8"
+            ],
+            "mean_reward": 0.0,
+            "rollout_ids": [
+              "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_closeout_heldout_goex_prompt_e65cc22f57db_11",
+              "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_closeout_heldout_goex_prompt_e65cc22f57db_12",
+              "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_11",
+              "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_12"
+            ],
+            "scored_count": 4,
+            "status_counts": {
+              "completed": 4
+            },
+            "worst_reward": 0.0
+          },
+          "parent_id": null,
+          "previous_status": "accepted",
+          "rank": 1,
+          "reason": "selected by highest mean reward on search evidence",
+          "search": {
+            "best_reward": 0.0,
+            "evidence_count": 8,
+            "evidence_ids": [
+              "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+              "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+              "goex_evidence_goex_queue_core_candidate_full_resume_goex_prompt_e65cc22f57db_goex_ckpt_goex_q_c4daba4c919c3b97_sensor_74b5b2941030",
+              "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+              "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+              "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+              "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+              "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4"
+            ],
+            "mean_reward": 0.0,
+            "rollout_ids": [
+              "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+              "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+              "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+              "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+              "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+              "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_resume_goex_prompt_e65cc22f57db_goex_ckpt_goex_q_c4daba4c919c3b97",
+              "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1",
+              "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2"
+            ],
+            "scored_count": 8,
+            "status_counts": {
+              "completed": 8
+            },
+            "worst_reward": 0.0
+          },
+          "selected": true,
+          "source": "seed"
+        },
+        "goex_acceptance_decided_at": "2026-06-26T19:07:58.184283Z",
+        "goex_acceptance_report_schema_version": "goex_acceptance_report.v1",
+        "goex_acceptance_score": {
+          "criterion": "search_mean_reward",
+          "heldout_mean_reward": 0.0,
+          "heldout_scored_count": 4,
+          "rank": 1,
+          "search_best_reward": 0.0,
+          "search_mean_reward": 0.0,
+          "search_scored_count": 8,
+          "selected": true
+        },
+        "platform_acceptance_decision": "accepted",
+        "platform_acceptance_reason": "selected by highest mean reward on search evidence",
+        "platform_acceptance_stage": "goex_search",
+        "platform_acceptance_status": "final",
+        "plugin_id": "goex.prompt_plugin.v1",
+        "primary_artifact_id": "goex_artifact_prompt_85d16fd0f76817df",
+        "primary_treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      },
+      "mutated_lever_ids": [
+        "react_system_prompt"
+      ],
+      "on_frontier": true,
+      "parent_candidate_id": null,
+      "parent_id": null,
+      "plugin_id": "goex.prompt_plugin.v1",
+      "primary_artifact_id": "goex_artifact_prompt_85d16fd0f76817df",
+      "primary_treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+      "prompt_text": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+      "prompt_text_preview": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+      "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+      "rewards": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "roles": {
+        "is_baseline": true,
+        "is_best_base": true,
+        "is_champion": true
+      },
+      "rollout_ids": [
+        "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_core_candidate_full_resume_goex_prompt_e65cc22f57db_goex_ckpt_goex_q_c4daba4c919c3b97",
+        "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1",
+        "goex_rollout_rogue_gamebench_rust_gelo_20260626T1918Z_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2"
+      ],
+      "source": "seed",
+      "source_kind_counts": {
+        "seed": 8
+      },
+      "status": "accepted",
+      "success_rate": 0.0
+    }
+  ],
+  "run_id": "rogue_gamebench_rust_gelo_20260626T1918Z",
+  "schema_version": "goex_candidate_state.v1"
+}
