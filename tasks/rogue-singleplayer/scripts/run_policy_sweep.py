@@ -459,7 +459,14 @@ def run_policy_sweep(
     return report
 
 
-def _write_failure(output_path: Path, *, code: str, origin: str, exit_code: int) -> None:
+def _write_failure(
+    output_path: Path,
+    *,
+    code: str,
+    origin: str,
+    exit_code: int,
+    failure_class: str | None = None,
+) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
         json.dumps(
@@ -467,7 +474,11 @@ def _write_failure(output_path: Path, *, code: str, origin: str, exit_code: int)
                 "schema": "gamebench.rogue.policy_sweep_failure.v1",
                 "status": "failed",
                 "exit_code": exit_code,
-                "failure": {"code": code, "origin": origin},
+                "failure": {
+                    "code": code,
+                    "origin": origin,
+                    "failure_class": failure_class,
+                },
             },
             indent=2,
             sort_keys=True,
@@ -517,8 +528,14 @@ def main() -> int:
     except EpisodeWorkerFailure:
         _write_failure(output, code="episode_worker_failure", origin="evaluator", exit_code=EXIT_EPISODE_WORKER_FAILURE)
         return EXIT_EPISODE_WORKER_FAILURE
-    except BaseException:
-        _write_failure(output, code="evaluator_infrastructure_failure", origin="evaluator", exit_code=EXIT_EVALUATOR_INFRASTRUCTURE_FAILURE)
+    except BaseException as exc:
+        _write_failure(
+            output,
+            code="evaluator_infrastructure_failure",
+            origin="evaluator",
+            exit_code=EXIT_EVALUATOR_INFRASTRUCTURE_FAILURE,
+            failure_class=type(exc).__name__,
+        )
         return EXIT_EVALUATOR_INFRASTRUCTURE_FAILURE
     print(json.dumps({key: report[key] for key in ("suite_id", "lane", "score_metric", "score", "n_seeds", "elapsed_s")}, sort_keys=True))
     return 0
