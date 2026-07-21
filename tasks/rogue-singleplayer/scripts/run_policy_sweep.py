@@ -15,6 +15,7 @@ import socket
 import statistics
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.parse
 from collections import Counter
@@ -280,7 +281,11 @@ def _episode_worker() -> int:
             base_url=str(request["base_url"]),
             include_trace=bool(request.get("include_trace")),
         )
-        sys.stdout.write(json.dumps(result, separators=(",", ":")) + "\n")
+        result_path = Path(str(request["result_path"])).resolve()
+        result_path.write_text(
+            json.dumps(result, separators=(",", ":")) + "\n",
+            encoding="utf-8",
+        )
         return 0
     except CandidatePolicyFailure:
         return POLICY_PROCESS_CANDIDATE_FAILURE_EXIT_CODE
@@ -293,51 +298,56 @@ def _supervised_episode(
     started = time.monotonic()
     env = os.environ.copy()
     env["FACTORYBENCH_POLICY_RUNNER_PID"] = str(os.getpid())
-    process = subprocess.Popen(
-        [sys.executable, str(Path(__file__).resolve()), "--episode-worker"],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        close_fds=True,
-        cwd=TASK_DIR,
-        env=env,
-    )
-    _ACTIVE_CHILDREN[process.pid] = process
-    try:
-        request = {
-            "policy_path": str(policy_path),
-            "task": dict(task),
-            "base_url": base_url,
-            "include_trace": include_trace,
-        }
-        try:
-            stdout, _stderr = process.communicate(
-                json.dumps(request, separators=(",", ":")), timeout=timeout_seconds
-            )
-        except subprocess.TimeoutExpired as exc:
-            _terminate_child(process)
-            raise CandidateEpisodeTimeout() from exc
-        if process.returncode == POLICY_PROCESS_CANDIDATE_FAILURE_EXIT_CODE:
-            raise CandidatePolicyFailure()
-        if process.returncode != 0:
-            raise EpisodeWorkerFailure()
-        result = json.loads(stdout)
-        if not isinstance(result, dict):
-            raise EpisodeWorkerFailure()
-        result["benchmark_supervision"] = {
-            "contract": "process_group_episode_timeout.v1",
-            "timeout_seconds": float(timeout_seconds),
-            "elapsed_seconds": round(time.monotonic() - started, 6),
-            "worker_returncode": process.returncode,
-        }
-        return result
-    finally:
-        _ACTIVE_CHILDREN.pop(process.pid, None)
-        _terminate_child(process)
-        cleanup_isolated_policy_containers(
-            runner_pid=os.getpid(), worker_pid=process.pid
+    with tempfile.TemporaryDirectory(prefix="rogue-episode-result-") as tmp:
+        result_path = Path(tmp) / "result.json"
+        process = subprocess.Popen(
+            [sys.executable, str(Path(__file__).resolve()), "--episode-worker"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            text=True,
+            close_fds=True,
+            cwd=TASK_DIR,
+            env=env,
         )
+        _ACTIVE_CHILDREN[process.pid] = process
+        try:
+            request = {
+                "policy_path": str(policy_path),
+                "task": dict(task),
+                "base_url": base_url,
+                "include_trace": include_trace,
+                "result_path": str(result_path),
+            }
+            try:
+                _stdout, _stderr = process.communicate(
+                    json.dumps(request, separators=(",", ":")),
+                    timeout=timeout_seconds,
+                )
+            except subprocess.TimeoutExpired as exc:
+                _terminate_child(process)
+                raise CandidateEpisodeTimeout() from exc
+            if process.returncode == POLICY_PROCESS_CANDIDATE_FAILURE_EXIT_CODE:
+                raise CandidatePolicyFailure()
+            if process.returncode != 0 or not result_path.is_file():
+                raise EpisodeWorkerFailure()
+            result = json.loads(result_path.read_text(encoding="utf-8"))
+            if not isinstance(result, dict):
+                raise EpisodeWorkerFailure()
+            result["benchmark_supervision"] = {
+                "contract": "process_group_episode_timeout.v1",
+                "timeout_seconds": float(timeout_seconds),
+                "elapsed_seconds": round(time.monotonic() - started, 6),
+                "worker_returncode": process.returncode,
+                "result_channel": "host_only_file",
+            }
+            return result
+        finally:
+            _ACTIVE_CHILDREN.pop(process.pid, None)
+            _terminate_child(process)
+            cleanup_isolated_policy_containers(
+                runner_pid=os.getpid(), worker_pid=process.pid
+            )
 
 
 def _reserve_port() -> int:
