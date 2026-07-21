@@ -35,6 +35,7 @@ from containers.codepolicy.policy_subprocess import (
     POLICY_PROCESS_CANDIDATE_FAILURE_EXIT_CODE,
     cleanup_isolated_policy_containers,
 )
+from containers.codepolicy.rollout_code_policy import rollout_code_policy
 
 
 EXIT_CANDIDATE_EPISODE_TIMEOUT = 41
@@ -254,6 +255,25 @@ def _rust_rollout(
         candidate.close()
 
 
+def _python_rollout(
+    *, policy_path: Path, task: Mapping[str, Any], include_trace: bool
+) -> dict[str, Any]:
+    candidate = IsolatedPolicyProcess(policy_path)
+    try:
+        result = rollout_code_policy(
+            policy_path=policy_path,
+            seed=int(task["seed"]),
+            task_payload=task_payload_for(task),
+            max_steps=int(task.get("max_steps", 40)),
+            include_trace=include_trace,
+            candidate_fn=candidate,
+        )
+        result["benchmark_isolation"] = dict(candidate.isolation_receipt)
+        return result
+    finally:
+        candidate.close()
+
+
 def _terminate_child(process: subprocess.Popen[str]) -> None:
     if process.poll() is not None:
         return
@@ -275,12 +295,22 @@ def _episode_worker() -> int:
     if not isinstance(request, Mapping):
         raise ValueError("episode worker request must be an object")
     try:
-        result = _rust_rollout(
-            policy_path=Path(str(request["policy_path"])).resolve(),
-            task=dict(request["task"]),
-            base_url=str(request["base_url"]),
-            include_trace=bool(request.get("include_trace")),
-        )
+        lane = str(request["lane"])
+        if lane == "rust":
+            result = _rust_rollout(
+                policy_path=Path(str(request["policy_path"])).resolve(),
+                task=dict(request["task"]),
+                base_url=str(request["base_url"]),
+                include_trace=bool(request.get("include_trace")),
+            )
+        elif lane == "python":
+            result = _python_rollout(
+                policy_path=Path(str(request["policy_path"])).resolve(),
+                task=dict(request["task"]),
+                include_trace=bool(request.get("include_trace")),
+            )
+        else:
+            raise ValueError("episode worker lane must be python or rust")
         result_path = Path(str(request["result_path"])).resolve()
         result_path.write_text(
             json.dumps(result, separators=(",", ":")) + "\n",
@@ -292,7 +322,7 @@ def _episode_worker() -> int:
 
 
 def _supervised_episode(
-    *, policy_path: Path, task: Mapping[str, Any], base_url: str,
+    *, policy_path: Path, task: Mapping[str, Any], lane: str, base_url: str,
     include_trace: bool, timeout_seconds: float
 ) -> dict[str, Any]:
     started = time.monotonic()
@@ -315,6 +345,7 @@ def _supervised_episode(
             request = {
                 "policy_path": str(policy_path),
                 "task": dict(task),
+                "lane": lane,
                 "base_url": base_url,
                 "include_trace": include_trace,
                 "result_path": str(result_path),
@@ -393,7 +424,7 @@ def _policy_score(report: Mapping[str, Any], *, metric: str) -> float:
 
 def run_policy_sweep(
     *, policy_path: Path, suite: Mapping[str, Any], output_path: Path,
-    rust_binary: Path, include_trace: bool = False,
+    lane: str, rust_binary: Path | None, include_trace: bool = False,
     episode_timeout_seconds: float
 ) -> dict[str, Any]:
     started = time.time()
@@ -401,7 +432,14 @@ def run_policy_sweep(
         raise ValueError("episode timeout must be finite and positive")
     tasks = suite_tasks(suite)
     score_metric = str(suite.get("score_metric", "mean_synth_shaped_reward"))
-    scorer, base_url = _start_rust_scorer(rust_binary)
+    if lane not in {"python", "rust"}:
+        raise ValueError("Rogue sweep lane must be python or rust")
+    if lane == "rust":
+        if rust_binary is None:
+            raise ValueError("Rogue Rust sweep requires --rust-binary")
+        scorer, base_url = _start_rust_scorer(rust_binary)
+    else:
+        scorer, base_url = None, ""
     results: list[dict[str, Any]] = []
     try:
         for task in tasks:
@@ -409,14 +447,16 @@ def run_policy_sweep(
                 _supervised_episode(
                     policy_path=policy_path,
                     task=task,
+                    lane=lane,
                     base_url=base_url,
                     include_trace=include_trace,
                     timeout_seconds=episode_timeout_seconds,
                 )
             )
     finally:
-        _ACTIVE_CHILDREN.pop(scorer.pid, None)
-        _terminate_child(scorer)
+        if scorer is not None:
+            _ACTIVE_CHILDREN.pop(scorer.pid, None)
+            _terminate_child(scorer)
     rewards = [float(item["reward_info"]["outcome_reward"]) for item in results]
     scout = [float(item["reward_info"]["details"].get("scout_score", 0.0)) for item in results]
     shaped = [float(item["reward_info"]["details"].get("synth_shaped_reward", 0.0)) for item in results]
@@ -426,19 +466,23 @@ def run_policy_sweep(
         "schema": "gamebench.rogue.policy_sweep_summary.v2",
         "env_family": "rogue-singleplayer",
         "source_witnessed": True,
-        "claim_status": "rust_gold_http",
+        "claim_status": (
+            "rust_gold_http" if lane == "rust" else "source_witnessed_python_proxy"
+        ),
         "suite_id": str(suite["suite_id"]),
         "suite_path": None,
         "suite_source": "stdin",
         "score_metric": score_metric,
         "max_steps": int(suite.get("max_steps", 40)),
-        "lane": "rust",
-        "engine_mode": "rust_http",
+        "lane": lane,
+        "engine_mode": "rust_http" if lane == "rust" else "python",
         "policy_isolation": "os_sandbox_observation_action.v2",
         "episode_timeout_seconds": float(episode_timeout_seconds),
         "policy_path": str(policy_path),
         "policy_sha256": policy_sha256(policy_path),
-        "scorer_binary_sha256": binary_sha256(rust_binary),
+        "scorer_binary_sha256": (
+            binary_sha256(rust_binary) if rust_binary is not None else None
+        ),
         "seeds": [int(task["seed"]) for task in tasks],
         "n_seeds": len(tasks),
         "successes": successes,
@@ -503,13 +547,15 @@ def main() -> int:
     parser.add_argument("--policy", required=True)
     parser.add_argument("--suite-stdin", action="store_true")
     parser.add_argument("--output", required=True)
-    parser.add_argument("--rust-binary", required=True)
+    parser.add_argument("--suite")
+    parser.add_argument("--lane", choices=("python", "rust"), default="python")
+    parser.add_argument("--rust-binary")
     parser.add_argument("--episode-timeout-seconds", type=float, required=True)
     parser.add_argument("--include-trace", action="store_true")
     args = parser.parse_args()
     output = Path(args.output).expanduser().resolve()
-    if not args.suite_stdin:
-        raise ValueError("Rogue held-out grading requires --suite-stdin")
+    if args.suite_stdin == bool(args.suite):
+        raise ValueError("provide exactly one of --suite-stdin or --suite")
     atexit.register(_terminate_all_children)
     if os.name == "posix":
         def terminate(signum: int, _frame: Any) -> None:
@@ -518,14 +564,23 @@ def main() -> int:
         signal.signal(signal.SIGTERM, terminate)
         signal.signal(signal.SIGINT, terminate)
     try:
-        suite = json.load(sys.stdin)
+        suite = (
+            json.load(sys.stdin)
+            if args.suite_stdin
+            else load_suite(Path(args.suite).expanduser().resolve())
+        )
         if not isinstance(suite, Mapping):
             raise ValueError("sealed suite must be an object")
         report = run_policy_sweep(
             policy_path=Path(args.policy).expanduser().resolve(),
             suite=dict(suite),
             output_path=output,
-            rust_binary=Path(args.rust_binary).expanduser().resolve(),
+            lane=str(args.lane),
+            rust_binary=(
+                Path(args.rust_binary).expanduser().resolve()
+                if args.rust_binary
+                else None
+            ),
             include_trace=bool(args.include_trace),
             episode_timeout_seconds=float(args.episode_timeout_seconds),
         )
