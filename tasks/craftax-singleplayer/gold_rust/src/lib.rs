@@ -1,4 +1,5 @@
 mod native;
+pub mod multi;
 pub mod render;
 mod sprites;
 
