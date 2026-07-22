@@ -1,0 +1,18 @@
+{
+  "schema_version": "gamebench.task.v1",
+  "task_id": "craftax_coop_checkpoint_resume",
+  "env_family": "craftax-multiplayer",
+  "scenario_id": "checkpoint_resume",
+  "seed": 303,
+  "max_timesteps": 32,
+  "agents": ["agent_0", "agent_1", "agent_2"],
+  "roles": {"agent_0": "warrior", "agent_1": "forager", "agent_2": "miner"},
+  "checkpoint_after": 2,
+  "joint_actions": [
+    {"agent_0": "down", "agent_1": "down", "agent_2": "down"},
+    {"agent_0": "request_ruby", "agent_1": "request_sapphire", "agent_2": "request_coal"},
+    {"agent_0": "left", "agent_1": "noop", "agent_2": "right"},
+    {"agent_0": "noop", "agent_1": "noop", "agent_2": "noop"}
+  ],
+  "expect": {"timestep": 4, "terminated": false, "checkpoint_equivalent": true}
+}

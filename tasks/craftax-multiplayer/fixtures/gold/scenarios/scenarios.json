@@ -1,0 +1,275 @@
+{
+  "env_family": "craftax-multiplayer",
+  "scenarios": [
+    {
+      "agents": [
+        "agent_0",
+        "agent_1",
+        "agent_2"
+      ],
+      "checkpoint_after": 2,
+      "env_family": "craftax-multiplayer",
+      "expect": {
+        "checkpoint_equivalent": true,
+        "terminated": false,
+        "timestep": 4
+      },
+      "joint_actions": [
+        {
+          "agent_0": "down",
+          "agent_1": "down",
+          "agent_2": "down"
+        },
+        {
+          "agent_0": "request_ruby",
+          "agent_1": "request_sapphire",
+          "agent_2": "request_coal"
+        },
+        {
+          "agent_0": "left",
+          "agent_1": "noop",
+          "agent_2": "right"
+        },
+        {
+          "agent_0": "noop",
+          "agent_1": "noop",
+          "agent_2": "noop"
+        }
+      ],
+      "max_timesteps": 32,
+      "roles": {
+        "agent_0": "warrior",
+        "agent_1": "forager",
+        "agent_2": "miner"
+      },
+      "scenario_id": "checkpoint_resume",
+      "schema_version": "gamebench.task.v1",
+      "seed": 303,
+      "source_file": "checkpoint_resume.json",
+      "task_id": "craftax_coop_checkpoint_resume"
+    },
+    {
+      "agents": [
+        "agent_0",
+        "agent_1",
+        "agent_2"
+      ],
+      "env_family": "craftax-multiplayer",
+      "expect": {
+        "request_remaining": 9,
+        "terminated": false,
+        "timestep": 4,
+        "trade_count": 0
+      },
+      "joint_actions": [
+        {
+          "agent_0": "down",
+          "agent_1": "down",
+          "agent_2": "down"
+        },
+        {
+          "agent_0": "right",
+          "agent_1": "noop",
+          "agent_2": "left"
+        },
+        {
+          "agent_0": "request_stone",
+          "agent_1": "request_food",
+          "agent_2": "request_wood"
+        },
+        {
+          "agent_0": "noop",
+          "agent_1": "noop",
+          "agent_2": "noop"
+        }
+      ],
+      "max_timesteps": 32,
+      "roles": {
+        "agent_0": "warrior",
+        "agent_1": "forager",
+        "agent_2": "miner"
+      },
+      "scenario_id": "coordination_smoke",
+      "schema_version": "gamebench.task.v1",
+      "seed": 101,
+      "source_file": "coordination_smoke.json",
+      "task_id": "craftax_coop_coordination_smoke"
+    },
+    {
+      "agents": [
+        "agent_0",
+        "agent_1",
+        "agent_2"
+      ],
+      "env_family": "craftax-multiplayer",
+      "expect": {
+        "requests_expired": true,
+        "terminated": false,
+        "timestep": 11
+      },
+      "joint_actions": [
+        {
+          "agent_0": "request_diamond",
+          "agent_1": "request_drink",
+          "agent_2": "request_iron"
+        },
+        {
+          "agent_0": "noop",
+          "agent_1": "noop",
+          "agent_2": "noop"
+        },
+        {
+          "agent_0": "noop",
+          "agent_1": "noop",
+          "agent_2": "noop"
+        },
+        {
+          "agent_0": "noop",
+          "agent_1": "noop",
+          "agent_2": "noop"
+        },
+        {
+          "agent_0": "noop",
+          "agent_1": "noop",
+          "agent_2": "noop"
+        },
+        {
+          "agent_0": "noop",
+          "agent_1": "noop",
+          "agent_2": "noop"
+        },
+        {
+          "agent_0": "noop",
+          "agent_1": "noop",
+          "agent_2": "noop"
+        },
+        {
+          "agent_0": "noop",
+          "agent_1": "noop",
+          "agent_2": "noop"
+        },
+        {
+          "agent_0": "noop",
+          "agent_1": "noop",
+          "agent_2": "noop"
+        },
+        {
+          "agent_0": "noop",
+          "agent_1": "noop",
+          "agent_2": "noop"
+        },
+        {
+          "agent_0": "noop",
+          "agent_1": "noop",
+          "agent_2": "noop"
+        }
+      ],
+      "max_timesteps": 32,
+      "roles": {
+        "agent_0": "warrior",
+        "agent_1": "forager",
+        "agent_2": "miner"
+      },
+      "scenario_id": "request_expiry",
+      "schema_version": "gamebench.task.v1",
+      "seed": 202,
+      "source_file": "request_expiry.json",
+      "task_id": "craftax_coop_request_expiry"
+    },
+    {
+      "agents": [
+        "agent_0",
+        "agent_1",
+        "agent_2"
+      ],
+      "env_family": "craftax-multiplayer",
+      "expect": {
+        "agent_0_wood": 1,
+        "agent_2_wood": 0,
+        "terminated": false,
+        "timestep": 6,
+        "trade_count": 1
+      },
+      "joint_actions": [
+        {
+          "agent_0": "noop",
+          "agent_1": "noop",
+          "agent_2": "down"
+        },
+        {
+          "agent_0": "noop",
+          "agent_1": "noop",
+          "agent_2": "left"
+        },
+        {
+          "agent_0": "noop",
+          "agent_1": "noop",
+          "agent_2": "left"
+        },
+        {
+          "agent_0": "noop",
+          "agent_1": "noop",
+          "agent_2": "do"
+        },
+        {
+          "agent_0": "request_wood",
+          "agent_1": "noop",
+          "agent_2": "noop"
+        },
+        {
+          "agent_0": "noop",
+          "agent_1": "noop",
+          "agent_2": "give_wood_to_agent_0"
+        }
+      ],
+      "max_timesteps": 32,
+      "roles": {
+        "agent_0": "warrior",
+        "agent_1": "forager",
+        "agent_2": "miner"
+      },
+      "scenario_id": "resource_request_trade",
+      "schema_version": "gamebench.task.v1",
+      "seed": 101,
+      "source_file": "resource_request_trade.json",
+      "task_id": "craftax_coop_resource_request_trade"
+    },
+    {
+      "agents": [
+        "agent_0",
+        "agent_1",
+        "agent_2"
+      ],
+      "env_family": "craftax-multiplayer",
+      "expect": {
+        "terminated": true,
+        "termination_reason": "timestep",
+        "timestep": 2
+      },
+      "joint_actions": [
+        {
+          "agent_0": "noop",
+          "agent_1": "noop",
+          "agent_2": "noop"
+        },
+        {
+          "agent_0": "noop",
+          "agent_1": "noop",
+          "agent_2": "noop"
+        }
+      ],
+      "max_timesteps": 2,
+      "roles": {
+        "agent_0": "warrior",
+        "agent_1": "forager",
+        "agent_2": "miner"
+      },
+      "scenario_id": "timestep_termination",
+      "schema_version": "gamebench.task.v1",
+      "seed": 404,
+      "source_file": "timestep_termination.json",
+      "task_id": "craftax_coop_timestep_termination"
+    }
+  ],
+  "schema_version": "gamebench.scenarios.v1"
+}
