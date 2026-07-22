@@ -1,6 +1,0 @@
-id: craftax-multiplayer
-name: Craftax Shared-World Multi-Agent
-schema: gamebench.task.craftax-marl.v1
-gold_lane: rust
-step_api: active_agent_action
-description: Shared-world Craftax MARL lane with one deterministic world, separate survivor state, and round-robin model-controlled actions.
