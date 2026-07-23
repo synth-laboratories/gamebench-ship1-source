@@ -2,6 +2,10 @@
 //!
 //! One engine session per process; no HTTP or cross-rollout locking.
 
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
+use craftax_gamebench_gold::render::{
+    encode_png_rgb, render_rgb_frame_from_world, RenderMode, DEFAULT_RENDER_TILE_SIZE,
+};
 use craftax_gamebench_gold::CraftaxRustSession;
 use serde_json::{json, Value};
 use std::io::{self, BufRead, Write};
@@ -127,6 +131,23 @@ fn handle_request(state: &mut ReplState, request: &Value) -> Value {
                 Err(error) => return json!({"ok": false, "error": error}),
             };
             session_payload(session, readout_mode)
+        }
+        "render_png" => {
+            let Some(session) = state.session.as_ref() else {
+                return json!({"ok": false, "error": "no active session; call reset first"});
+            };
+            let frame = render_rgb_frame_from_world(
+                &session.world,
+                DEFAULT_RENDER_TILE_SIZE,
+                RenderMode::Auto,
+            );
+            let png = encode_png_rgb(frame.0, frame.1, &frame.2);
+            json!({
+                "ok": true,
+                "png_base64": BASE64.encode(png),
+                "width": frame.0,
+                "height": frame.1,
+            })
         }
         other => json!({"ok": false, "error": format!("unknown op: {other}")}),
     }
