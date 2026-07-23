@@ -521,6 +521,7 @@ impl CraftaxRustSession {
         if self.inventory_i64("boss_progress")? >= self.world.levels - 1 {
             self.unlock("defeat_necromancer")?;
         }
+        self.update_mob_projectiles(&action)?;
         self.update_mobs(&action)?;
         self.update_player_projectiles(&action)?;
         self.spawn_mobs(&action)?;
@@ -1890,10 +1891,72 @@ impl CraftaxRustSession {
         }
         for index in 0..len {
             if self.entity_active_class(index, "ranged") {
-                self.update_ranged_mob(index, action);
+                self.update_ranged_mob(index, action)?;
             }
         }
         Ok(())
+    }
+
+    fn spawn_mob_projectile(
+        &mut self,
+        index: usize,
+        direction: (i64, i64),
+        action: &str,
+    ) -> Result<bool> {
+        let capacity = self
+            .resolved
+            .world
+            .get("max_mob_projectiles")
+            .and_then(Value::as_i64)
+            .unwrap_or(3);
+        let level = self.world.entities[index].level;
+        let active_count = self
+            .world
+            .mob_projectiles
+            .iter()
+            .filter(|projectile| projectile.mask && projectile.level == level)
+            .count() as i64;
+        if active_count >= capacity {
+            return Ok(false);
+        }
+
+        let entity = self.world.entities[index].clone();
+        let projectile = Projectile {
+            id: format!(
+                "mob_projectile_{}_{}_{}",
+                level,
+                self.world.timestep,
+                self.world.mob_projectiles.len()
+            ),
+            kind: mob_projectile_kind(&entity.kind).to_string(),
+            owner: entity.id.clone(),
+            level,
+            pos: entity.pos,
+            direction,
+            mask: true,
+        };
+        if let Some(projectile_index) = self
+            .world
+            .mob_projectiles
+            .iter()
+            .position(|existing| !existing.mask && existing.level == level)
+        {
+            self.world.mob_projectiles[projectile_index] = projectile.clone();
+        } else {
+            self.world.mob_projectiles.push(projectile.clone());
+        }
+        self.append_entity(action, &entity, "attack_player");
+        self.append_projectile(
+            action,
+            &projectile,
+            "spawn",
+            json!({
+                "entity": entity.to_value(),
+                "pos": [projectile.pos.0, projectile.pos.1],
+                "direction": [projectile.direction.0, projectile.direction.1],
+            }),
+        );
+        Ok(true)
     }
 
     fn spawn_player_projectile(&mut self, kind: &str, action: &str) -> Result<bool> {
@@ -2031,6 +2094,73 @@ impl CraftaxRustSession {
         Ok(())
     }
 
+    fn update_mob_projectiles(&mut self, action: &str) -> Result<()> {
+        let len = self.world.mob_projectiles.len();
+        for index in 0..len {
+            if !self.world.mob_projectiles[index].mask
+                || self.world.mob_projectiles[index].level != self.world.player_level
+            {
+                continue;
+            }
+            let old_pos = self.world.mob_projectiles[index].pos;
+            let direction = self.world.mob_projectiles[index].direction;
+            let proposed = (old_pos.0 + direction.0, old_pos.1 + direction.1);
+            if old_pos == self.world.player_pos || proposed == self.world.player_pos {
+                let kind = self.world.mob_projectiles[index].kind.clone();
+                let damage = self.damage_player(mob_projectile_damage_vector(&kind))?;
+                self.world.mob_projectiles[index].pos = proposed;
+                self.world.mob_projectiles[index].mask = false;
+                let projectile = self.world.mob_projectiles[index].clone();
+                self.append_projectile(
+                    action,
+                    &projectile,
+                    "hit_player",
+                    json!({
+                        "from": [old_pos.0, old_pos.1],
+                        "hit_pos": [self.world.player_pos.0, self.world.player_pos.1],
+                        "to": [proposed.0, proposed.1],
+                        "damage": damage,
+                    }),
+                );
+                continue;
+            }
+            if !self.in_bounds(proposed) {
+                self.world.mob_projectiles[index].pos = proposed;
+                self.world.mob_projectiles[index].mask = false;
+                let projectile = self.world.mob_projectiles[index].clone();
+                self.append_projectile(
+                    action,
+                    &projectile,
+                    "despawn",
+                    json!({"from": [old_pos.0, old_pos.1], "to": [proposed.0, proposed.1], "reason": "out_of_bounds"}),
+                );
+                continue;
+            }
+            let block = self.block_at(proposed);
+            if static_solid(&block) {
+                self.world.mob_projectiles[index].pos = proposed;
+                self.world.mob_projectiles[index].mask = false;
+                let projectile = self.world.mob_projectiles[index].clone();
+                self.append_projectile(
+                    action,
+                    &projectile,
+                    "despawn",
+                    json!({"from": [old_pos.0, old_pos.1], "to": [proposed.0, proposed.1], "reason": format!("blocked:{block}")}),
+                );
+                continue;
+            }
+            self.world.mob_projectiles[index].pos = proposed;
+            let projectile = self.world.mob_projectiles[index].clone();
+            self.append_projectile(
+                action,
+                &projectile,
+                "move",
+                json!({"from": [old_pos.0, old_pos.1], "to": [proposed.0, proposed.1]}),
+            );
+        }
+        Ok(())
+    }
+
     fn damage_entity(&mut self, index: usize, damage: f64, action: &str) -> Result<Entity> {
         self.world.entities[index].health -= damage;
         if self.world.entities[index].health <= 0.0 {
@@ -2120,7 +2250,7 @@ impl CraftaxRustSession {
         }
     }
 
-    fn update_ranged_mob(&mut self, index: usize, _action: &str) {
+    fn update_ranged_mob(&mut self, index: usize, action: &str) -> Result<()> {
         let old_pos = self.world.entities[index].pos;
         let random_direction =
             self.random_in_bounds_direction(old_pos, &[(0, -1), (0, 1), (-1, 0), (1, 0)]);
@@ -2149,9 +2279,10 @@ impl CraftaxRustSession {
         if self.rng.random() <= 0.85 {
             proposed = random_position;
         }
-        let attacking = !far_from_player
+        let can_attack = !far_from_player
             && self.world.entities[index].attack_cooldown <= 0
             && self.world.entities[index].mask;
+        let attacking = can_attack && self.spawn_mob_projectile(index, player_direction, action)?;
         if attacking {
             self.world.entities[index].attack_cooldown = 4;
         } else {
@@ -2163,8 +2294,9 @@ impl CraftaxRustSession {
         if manhattan(old_pos, self.world.player_pos) >= self.mob_despawn_distance() {
             self.world.entities[index].mask = false;
             let entity = self.world.entities[index].clone();
-            self.append_entity(_action, &entity, "despawn");
+            self.append_entity(action, &entity, "despawn");
         }
+        Ok(())
     }
 
     fn spawn_mobs(&mut self, action: &str) -> Result<()> {
@@ -4164,6 +4296,33 @@ fn projectile_damage(kind: &str) -> f64 {
         "fireball" | "iceball" => 3.0,
         "arrow" | "arrow2" => 2.0,
         _ => 1.0,
+    }
+}
+
+fn mob_projectile_kind(kind: &str) -> &'static str {
+    match kind {
+        "skeleton" | "gnome_archer" => "arrow",
+        "orc_mage" => "fireball",
+        "kobold" => "dagger",
+        "archer" => "arrow2",
+        "deep_thing" => "slimeball",
+        "fire_elemental" => "fireball2",
+        "ice_elemental" => "iceball2",
+        _ => "arrow",
+    }
+}
+
+fn mob_projectile_damage_vector(kind: &str) -> [f64; 3] {
+    match kind {
+        "arrow" => [2.0, 0.0, 0.0],
+        "dagger" => [4.0, 0.0, 0.0],
+        "fireball" => [0.0, 3.0, 0.0],
+        "iceball" => [0.0, 0.0, 3.0],
+        "arrow2" => [5.0, 0.0, 0.0],
+        "slimeball" => [4.0, 3.0, 3.0],
+        "fireball2" => [3.0, 5.0, 0.0],
+        "iceball2" => [4.0, 0.0, 5.0],
+        _ => [1.0, 0.0, 0.0],
     }
 }
 
