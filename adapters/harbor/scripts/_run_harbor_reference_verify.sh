@@ -42,6 +42,9 @@ CONTAINER="$(
     -e HARBOR_LOG_DIR=/logs/verifier \
     -e GAMEBENCH_WORKSPACE_ROOT=/workspace \
     -e GAMEBENCH_TASK="$TASK_ID" \
+    -e GAMEBENCH_POLICY_SUITE="/workspace/gamebench/tasks/$TASK_ID/${GAMEBENCH_REGISTRY_policy_suite}" \
+    -e GAMEBENCH_POLICY_BASELINE="/workspace/gamebench/tasks/$TASK_ID/${GAMEBENCH_REGISTRY_policy_baseline}" \
+    -e GAMEBENCH_HILLCLIMB_EXTRA_ARGS="${GAMEBENCH_HILLCLIMB_EXTRA_ARGS:-}" \
     -e CANDIDATE_SUBDIR="${CANDIDATE_SUBDIR:-}" \
     -e GAMEBENCH_CYBERNETICS_MOCK="${GAMEBENCH_CYBERNETICS_MOCK:-1}" \
     "$IMAGE" \

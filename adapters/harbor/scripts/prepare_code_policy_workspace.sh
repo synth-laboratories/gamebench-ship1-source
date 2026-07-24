@@ -6,6 +6,7 @@ WORKSPACE="$1"
 TASK_ID="$2"
 CANDIDATE_SUBDIR="${3:-}"
 BUNDLE_ROOT="$4"
+BASELINE_REL="${5:-containers/codepolicy/heuristic_policy.py}"
 
 if [[ -z "$CANDIDATE_SUBDIR" ]]; then
   # craftax-singleplayer -> craftax; never silently fall back to tictactoe.
@@ -21,7 +22,7 @@ mkdir -p "$WORKSPACE/candidates/$CANDIDATE_SUBDIR/starter" "$WORKSPACE/workspace
 
 cp "$BUNDLE_ROOT/files/run_gamebench_hillclimb_task.py" "$WORKSPACE/workspace/"
 
-BASELINE="$WORKSPACE/gamebench/tasks/$TASK_ID/containers/codepolicy/heuristic_policy.py"
+BASELINE="$WORKSPACE/gamebench/tasks/$TASK_ID/$BASELINE_REL"
 if [[ -f "$BASELINE" ]]; then
   cp "$BASELINE" "$WORKSPACE/candidates/$CANDIDATE_SUBDIR/starter/heuristic_policy.py"
 fi
@@ -31,7 +32,7 @@ cat > "$WORKSPACE/AGENTS.md" <<EOF
 
 - Task: \`$TASK_ID\`
 - Candidate dir: \`candidates/$CANDIDATE_SUBDIR/<candidate_id>/heuristic_policy.py\`
-- Baseline: \`gamebench/tasks/$TASK_ID/containers/codepolicy/heuristic_policy.py\`
+- Baseline: \`gamebench/tasks/$TASK_ID/$BASELINE_REL\`
 
 Run before finishing:
 
@@ -57,7 +58,7 @@ The verifier passes only when best non-baseline uplift is **≥ +0.01**.
 
 ## Do this
 
-1. Study \`gamebench/tasks/$TASK_ID/containers/codepolicy/heuristic_policy.py\`.
+1. Study \`gamebench/tasks/$TASK_ID/$BASELINE_REL\`.
 2. Add new candidate(s) under \`candidates/$CANDIDATE_SUBDIR/\` only.
    Do not create \`candidates/rogue/\`, \`candidates/tictactoe/\`, or any other
    family unless that is the subdir above.

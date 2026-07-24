@@ -73,7 +73,8 @@ bash "$SCRIPT_DIR/prepare_code_policy_workspace.sh" \
   "$WORKSPACE" \
   "$TASK_ID" \
   "${CANDIDATE_SUBDIR:-}" \
-  "$TASK_ROOT"
+  "$TASK_ROOT" \
+  "${GAMEBENCH_REGISTRY_policy_baseline}"
 
 # Prefer workspace-staged instruction (task-specific). Bundle instruction.md is
 # only a fallback and must not override a craftax/rogue AGENTS.md mismatch.
@@ -187,6 +188,8 @@ export GAMEBENCH_WORKSPACE_ROOT="$WORKSPACE"
 export GAMEBENCH_ROOT="$WORKSPACE/gamebench"
 export GAMEBENCH_TASK="$TASK_ID"
 export GAMEBENCH_TASK_DIR="$WORKSPACE/gamebench/tasks/$TASK_ID"
+export GAMEBENCH_POLICY_SUITE="$GAMEBENCH_TASK_DIR/${GAMEBENCH_REGISTRY_policy_suite}"
+export GAMEBENCH_POLICY_BASELINE="$GAMEBENCH_TASK_DIR/${GAMEBENCH_REGISTRY_policy_baseline}"
 export CANDIDATE_SUBDIR="${CANDIDATE_SUBDIR:-}"
 # Also point verifier at OUT_DIR logs (score_hillclimb writes via HARBOR_LOG_DIR).
 mkdir -p "$HARBOR_LOG_DIR"
