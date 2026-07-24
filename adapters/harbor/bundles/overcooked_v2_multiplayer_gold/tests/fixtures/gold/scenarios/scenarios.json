@@ -1,0 +1,2192 @@
+{
+  "scenarios": [
+    {
+      "joint_actions": [],
+      "layout_id": "demo_tiny",
+      "rules": {
+        "base": "cooperative_full_obs",
+        "overrides": {
+          "cook_time": 2,
+          "max_steps": 64
+        }
+      },
+      "scenario_id": "smoke_reset",
+      "seed": 1
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "demo_tiny",
+      "rules": {
+        "base": "cooperative_full_obs",
+        "overrides": {
+          "cook_time": 2,
+          "max_steps": 64
+        }
+      },
+      "scenario_id": "face_onion_north",
+      "seed": 2
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "demo_tiny",
+      "rules": {
+        "base": "cooperative_full_obs",
+        "overrides": {
+          "cook_time": 2,
+          "max_steps": 64
+        }
+      },
+      "scenario_id": "pick_onion_agent0",
+      "seed": 3
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "demo_tiny",
+      "rules": {
+        "base": "cooperative_full_obs",
+        "overrides": {
+          "cook_time": 2,
+          "max_steps": 64
+        }
+      },
+      "scenario_id": "agent0_move_east",
+      "seed": 4
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "demo_tiny",
+      "rules": {
+        "base": "cooperative_full_obs",
+        "overrides": {
+          "cook_time": 2,
+          "max_steps": 64
+        }
+      },
+      "scenario_id": "add_onion_start_cook",
+      "seed": 5
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "demo_tiny",
+      "rules": {
+        "base": "cooperative_full_obs",
+        "overrides": {
+          "cook_time": 2,
+          "max_steps": 64
+        }
+      },
+      "scenario_id": "cook_complete_wait",
+      "seed": 6
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "demo_tiny",
+      "rules": {
+        "base": "cooperative_full_obs",
+        "overrides": {
+          "cook_time": 2,
+          "max_steps": 64
+        }
+      },
+      "scenario_id": "pick_soup_after_cook",
+      "seed": 7
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "demo_tiny",
+      "rules": {
+        "base": "cooperative_full_obs",
+        "overrides": {
+          "cook_time": 2,
+          "max_steps": 64
+        }
+      },
+      "scenario_id": "full_delivery_simple_soup",
+      "seed": 8
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "direction": "west",
+            "kind": "move"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "direction": "west",
+            "kind": "move"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "direction": "west",
+            "kind": "move"
+          }
+        }
+      ],
+      "layout_id": "demo_tiny",
+      "rules": {
+        "base": "cooperative_full_obs",
+        "overrides": {
+          "cook_time": 2,
+          "max_steps": 64
+        }
+      },
+      "scenario_id": "agent1_move_west",
+      "seed": 9
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "demo_tiny",
+      "rules": {
+        "base": "cooperative_full_obs",
+        "overrides": {
+          "cook_time": 2,
+          "max_steps": 4
+        }
+      },
+      "scenario_id": "truncation_timeout",
+      "seed": 10
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "counter_row",
+      "rules": {
+        "base": "cooperative_full_obs",
+        "overrides": {
+          "cook_time": 2,
+          "max_steps": 64
+        }
+      },
+      "scenario_id": "counter_row_delivery",
+      "seed": 11
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "direction": "west",
+            "kind": "move"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "direction": "west",
+            "kind": "move"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "direction": "west",
+            "kind": "move"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "direction": "west",
+            "kind": "move"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "direction": "west",
+            "kind": "move"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "direction": "west",
+            "kind": "move"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "direction": "west",
+            "kind": "move"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "direction": "west",
+            "kind": "move"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "demo_tiny",
+      "rules": {
+        "base": "cooperative_full_obs",
+        "overrides": {
+          "cook_time": 3,
+          "max_steps": 96,
+          "required_onions": 3
+        },
+        "recipe_id": "trio_soup"
+      },
+      "scenario_id": "trio_soup_delivery",
+      "seed": 12
+    },
+    {
+      "checkpoint_after": 11,
+      "joint_actions": [
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "demo_tiny",
+      "restore_then_actions": [
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "rules": {
+        "base": "cooperative_full_obs",
+        "overrides": {
+          "cook_time": 2,
+          "max_steps": 64
+        }
+      },
+      "scenario_id": "checkpoint_restore_delivery",
+      "seed": 13
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "demo_tiny",
+      "rules": {
+        "base": "partial_obs_v1"
+      },
+      "scenario_id": "partial_obs_move_smoke",
+      "seed": 14
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "indicator_split",
+      "rules": {
+        "base": "hidden_recipe_indicator"
+      },
+      "scenario_id": "hidden_recipe_indicator_smoke",
+      "seed": 15
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "demo_tiny",
+      "rules": {
+        "base": "stochastic_spawn"
+      },
+      "scenario_id": "stochastic_spawn_smoke",
+      "seed": 16
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "direction": "east",
+            "kind": "move"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "direction": "east",
+            "kind": "move"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "south",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "south",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "plated_kitchen",
+      "rules": {
+        "base": "cooperative_full_obs",
+        "overrides": {
+          "cook_time": 2,
+          "max_steps": 64
+        }
+      },
+      "scenario_id": "counter_place_pick",
+      "seed": 17
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "direction": "east",
+            "kind": "move"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "direction": "east",
+            "kind": "move"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "west",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "west",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "plated_kitchen",
+      "rules": {
+        "base": "cooperative_full_obs",
+        "overrides": {
+          "cook_time": 2,
+          "max_steps": 64
+        }
+      },
+      "scenario_id": "plated_soup_delivery",
+      "seed": 18
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          },
+          "agent_2": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          },
+          "agent_2": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "three_chefs",
+      "rules": {
+        "base": "cooperative_full_obs",
+        "overrides": {
+          "cook_time": 2,
+          "max_steps": 64
+        }
+      },
+      "scenario_id": "three_agent_move_smoke",
+      "seed": 19
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "indicator_split",
+      "rules": {
+        "base": "zsc_coop"
+      },
+      "scenario_id": "zsc_coop_smoke",
+      "seed": 20
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "west",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "west",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "west",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "south",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "west",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "west",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "dual_ingredient",
+      "rules": {
+        "overrides": {
+          "cook_time": 2,
+          "max_steps": 96
+        },
+        "recipe_id": "mixed_soup"
+      },
+      "scenario_id": "mixed_soup_delivery",
+      "seed": 21
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "direction": "south",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "west",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "overcookedv2_demo",
+      "rules": {
+        "base": "grounded_communication"
+      },
+      "scenario_id": "button_activation_smoke",
+      "seed": 22
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "demo_tiny",
+      "readouts": {
+        "profile": "featurized"
+      },
+      "rules": {
+        "base": "featurized_obs"
+      },
+      "scenario_id": "featurized_obs_smoke",
+      "seed": 23
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "demo_tiny",
+      "rules": {
+        "base": "random_reset"
+      },
+      "scenario_id": "random_reset_smoke",
+      "seed": 26
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "demo_tiny",
+      "readouts": {
+        "profile": "spatial_tensor"
+      },
+      "rules": {
+        "base": "cooperative_full_obs",
+        "overrides": {
+          "max_steps": 50,
+          "urgency_cutoff": 40
+        }
+      },
+      "scenario_id": "urgency_layer_smoke",
+      "seed": 27
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "direction": "east",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "demo_tiny",
+      "readouts": {
+        "profile": "pixel_rgb"
+      },
+      "rules": {
+        "base": "pixel_obs"
+      },
+      "scenario_id": "pixel_obs_smoke",
+      "seed": 24
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "direction": "north",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "direction": "west",
+            "kind": "move"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        },
+        {
+          "agent_0": {
+            "kind": "interact"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "grounded_coord_simple",
+      "rules": {
+        "base": "grounded_communication",
+        "recipe_id": "tomato_trio"
+      },
+      "scenario_id": "grounded_coord_button_smoke",
+      "seed": 25
+    },
+    {
+      "joint_actions": [],
+      "layout_id": "demo_tiny",
+      "rules": {
+        "base": "featurized_obs"
+      },
+      "scenario_id": "featurized_vector_exact_smoke",
+      "seed": 28
+    },
+    {
+      "joint_actions": [
+        {
+          "agent_0": {
+            "kind": "wait"
+          },
+          "agent_1": {
+            "kind": "wait"
+          }
+        }
+      ],
+      "layout_id": "cramped_room",
+      "rules": {
+        "overrides": {
+          "max_steps": 32
+        },
+        "recipe_id": "trio_soup"
+      },
+      "scenario_id": "layout_catalog_cramped_room",
+      "seed": 29
+    }
+  ],
+  "schema": "gamebench.overcooked_v2.gold_scenarios.v1"
+}

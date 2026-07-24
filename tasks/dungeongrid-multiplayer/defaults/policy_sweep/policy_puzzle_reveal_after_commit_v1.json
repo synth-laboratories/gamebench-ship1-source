@@ -1,0 +1,26 @@
+{
+  "schema": "gamebench.dungeongrid.policy_sweep.v1",
+  "suite_id": "dungeongrid_policy_puzzle_reveal_after_commit_v1",
+  "score_metric": "mean_objective_score",
+  "max_actions": 80,
+  "scenarios": [
+    {
+      "scenario_id": "cinder_mage_threshold",
+      "source": "defaults/scenarios/cinder_mage_threshold.json",
+      "min_reward": 7,
+      "require_code_protocol": true,
+      "protocol_prefix": "DG|",
+      "target_achievements": [
+        "coordination.message_sent",
+        "movement.first_step",
+        "coordination.guard_used",
+        "support.counterplay_revealed",
+        "routing.opened_door",
+        "combat.first_hit",
+        "caster.spell_cast",
+        "combat.monster_defeated",
+        "objective.secured"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,194 @@
+{
+  "schema": "gamebench.dungeongrid.policy_sweep.v1",
+  "suite_id": "dungeongrid_policy_dev_v1",
+  "score_metric": "mean_objective_score",
+  "max_actions": 80,
+  "scenarios": [
+    {
+      "scenario_id": "chokepoint_passage",
+      "source": "defaults/scenarios/chokepoint_passage.json",
+      "min_reward": 4.4,
+      "require_code_protocol": true,
+      "protocol_prefix": "DG|",
+      "target_achievements": [
+        "coordination.message_sent",
+        "movement.first_step",
+        "coordination.guard_used",
+        "support.counterplay_revealed",
+        "routing.opened_door",
+        "objective.secured"
+      ]
+    },
+    {
+      "scenario_id": "nemesis_breach_gate",
+      "source": "defaults/scenarios/nemesis_breach_gate.json",
+      "min_reward": 6.8,
+      "require_code_protocol": true,
+      "protocol_prefix": "DG|",
+      "target_achievements": [
+        "coordination.message_sent",
+        "movement.first_step",
+        "coordination.guard_used",
+        "support.counterplay_revealed",
+        "routing.opened_door",
+        "combat.first_hit",
+        "caster.spell_cast",
+        "combat.monster_defeated",
+        "objective.secured"
+      ]
+    },
+    {
+      "scenario_id": "double_breach_nemesis",
+      "source": "defaults/scenarios/double_breach_nemesis.json",
+      "min_reward": 7.0,
+      "require_code_protocol": true,
+      "protocol_prefix": "DG|",
+      "target_achievements": [
+        "coordination.message_sent",
+        "movement.first_step",
+        "coordination.guard_used",
+        "support.counterplay_revealed",
+        "routing.opened_door",
+        "combat.first_hit",
+        "caster.spell_cast",
+        "combat.monster_defeated",
+        "objective.secured"
+      ]
+    },
+    {
+      "scenario_id": "trap_breach_rescue",
+      "source": "defaults/scenarios/trap_breach_rescue.json",
+      "min_reward": 7.2,
+      "require_code_protocol": true,
+      "protocol_prefix": "DG|",
+      "target_achievements": [
+        "coordination.message_sent",
+        "movement.first_step",
+        "coordination.guard_used",
+        "support.revealed_trap",
+        "support.counterplay_revealed",
+        "routing.opened_door",
+        "combat.first_hit",
+        "caster.spell_cast",
+        "combat.monster_defeated",
+        "objective.secured"
+      ]
+    },
+    {
+      "scenario_id": "moonblade_vault_breach",
+      "source": "defaults/scenarios/moonblade_vault_breach.json",
+      "min_reward": 7.6,
+      "require_code_protocol": true,
+      "protocol_prefix": "DG|",
+      "target_achievements": [
+        "coordination.message_sent",
+        "movement.first_step",
+        "coordination.guard_used",
+        "support.counterplay_revealed",
+        "routing.opened_door",
+        "optional.opened_chest",
+        "combat.first_hit",
+        "caster.spell_cast",
+        "combat.monster_defeated",
+        "objective.secured"
+      ]
+    },
+    {
+      "scenario_id": "blackwater_bell_breach",
+      "source": "defaults/scenarios/blackwater_bell_breach.json",
+      "min_reward": 7.2,
+      "require_code_protocol": true,
+      "protocol_prefix": "DG|",
+      "target_achievements": [
+        "coordination.message_sent",
+        "movement.first_step",
+        "coordination.guard_used",
+        "support.revealed_trap",
+        "support.counterplay_revealed",
+        "routing.opened_door",
+        "combat.first_hit",
+        "caster.spell_cast",
+        "combat.monster_defeated",
+        "objective.secured"
+      ]
+    },
+    {
+      "scenario_id": "cinder_mage_threshold",
+      "source": "defaults/scenarios/cinder_mage_threshold.json",
+      "min_reward": 7.0,
+      "require_code_protocol": true,
+      "protocol_prefix": "DG|",
+      "target_achievements": [
+        "coordination.message_sent",
+        "movement.first_step",
+        "coordination.guard_used",
+        "support.counterplay_revealed",
+        "routing.opened_door",
+        "combat.first_hit",
+        "caster.spell_cast",
+        "combat.monster_defeated",
+        "objective.secured"
+      ]
+    },
+    {
+      "scenario_id": "frost_mirror_crossfire",
+      "source": "defaults/scenarios/frost_mirror_crossfire.json",
+      "min_reward": 7.1,
+      "require_code_protocol": true,
+      "protocol_prefix": "DG|",
+      "target_achievements": [
+        "coordination.message_sent",
+        "movement.first_step",
+        "coordination.guard_used",
+        "support.counterplay_revealed",
+        "routing.opened_door",
+        "combat.first_hit",
+        "caster.spell_cast",
+        "combat.monster_defeated",
+        "objective.secured"
+      ]
+    },
+    {
+      "scenario_id": "hourglass_escape_breach",
+      "source": "defaults/scenarios/hourglass_escape_breach.json",
+      "min_reward": 7.0,
+      "require_code_protocol": true,
+      "protocol_prefix": "DG|",
+      "target_achievements": [
+        "coordination.message_sent",
+        "movement.first_step",
+        "coordination.guard_used",
+        "support.counterplay_revealed",
+        "routing.opened_door",
+        "coordination.item_handoff",
+        "inventory.item_used",
+        "combat.first_hit",
+        "caster.spell_cast",
+        "combat.monster_defeated",
+        "objective.secured"
+      ]
+    },
+    {
+      "scenario_id": "mechanics_probe",
+      "source": "mechanics_probe_common",
+      "min_reward": 8.0,
+      "require_code_protocol": true,
+      "protocol_prefix": "DG|",
+      "target_achievements": [
+        "coordination.message_sent",
+        "movement.first_step",
+        "coordination.guard_used",
+        "support.revealed_trap",
+        "support.counterplay_revealed",
+        "routing.opened_door",
+        "coordination.item_handoff",
+        "inventory.item_used",
+        "optional.opened_chest",
+        "combat.first_hit",
+        "caster.spell_cast",
+        "combat.monster_defeated",
+        "objective.secured"
+      ]
+    }
+  ]
+}

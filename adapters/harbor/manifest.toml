@@ -1,0 +1,81 @@
+# Harbor bundle registry — task_id ↔ bundle ↔ scripts
+
+schema_version = "1.0"
+
+[[bundles]]
+task_id = "tictactoe-singleplayer"
+bundle = "tictactoe_singleplayer_gold"
+verify_script = "run_reference_verify.sh"
+codex_script = "run_local_codex.sh"
+gamebench_task = "tasks/tictactoe-singleplayer"
+smr_engine_rebuild_lane = "tictactoe_gamebench_engine_rebuild_1cand"
+
+[[bundles]]
+task_id = "sokoban-singleplayer"
+bundle = "sokoban_singleplayer_gold"
+verify_script = "run_sokoban_reference_verify.sh"
+sync_script = "sync_sokoban_reference.sh"
+gamebench_task = "tasks/sokoban-singleplayer"
+smr_engine_rebuild_lane = "sokoban_gamebench_engine_rebuild_1cand"
+
+[[bundles]]
+task_id = "crafter-singleplayer"
+bundle = "crafter_singleplayer_gold"
+verify_script = "run_crafter_reference_verify.sh"
+codex_script = "run_local_codex_crafter.sh"
+smoke_script = "run_crafter_harbor_smoke.sh"
+sync_script = "sync_crafter_reference.sh"
+gamebench_task = "tasks/crafter-singleplayer"
+smr_engine_rebuild_lane = "crafter_gamebench_engine_rebuild_1cand"
+
+[[bundles]]
+task_id = "craftax-singleplayer"
+bundle = "craftax_singleplayer_gold"
+verify_script = "run_craftax_reference_verify.sh"
+sync_script = "sync_craftax_reference.sh"
+gamebench_task = "tasks/craftax-singleplayer"
+smr_engine_rebuild_lane = "craftax_gamebench_engine_rebuild_1cand"
+
+[[bundles]]
+task_id = "minihack-singleplayer"
+bundle = "minihack_singleplayer_gold"
+verify_script = "run_minihack_reference_verify.sh"
+sync_script = "sync_minihack_reference.sh"
+gamebench_task = "tasks/minihack-singleplayer"
+smr_engine_rebuild_lane = "minihack_gamebench_engine_rebuild_1cand"
+
+[[bundles]]
+task_id = "frogs-singleplayer"
+bundle = "frogs_singleplayer_gold"
+verify_script = "run_frogs_reference_verify.sh"
+sync_script = "sync_frogs_reference.sh"
+gamebench_task = "tasks/frogs-singleplayer"
+
+[[bundles]]
+task_id = "rogue-singleplayer"
+bundle = "rogue_singleplayer_gold"
+verify_script = "run_rogue_reference_verify.sh"
+sync_script = "sync_rogue_reference.sh"
+gamebench_task = "tasks/rogue-singleplayer"
+
+[[bundles]]
+task_id = "overcooked-v2-multiplayer"
+bundle = "overcooked_v2_multiplayer_gold"
+verify_script = "run_overcooked_v2_reference_verify.sh"
+sync_script = "sync_overcooked_v2_reference.sh"
+gamebench_task = "tasks/overcooked-v2-multiplayer"
+smr_engine_rebuild_lane = "overcooked_v2_gamebench_engine_rebuild_1cand"
+
+[[bundles]]
+task_id = "dungeongrid-multiplayer"
+bundle = "dungeongrid_multiplayer_gold"
+verify_script = "run_dungeongrid_reference_verify.sh"
+gamebench_task = "tasks/dungeongrid-multiplayer"
+notes = "Contract bundle — reset/checkpoint/mechanics parity, not full cleanroom rebuild"
+
+[[bundles]]
+task_id = "policy-puzzle-diagnosis"
+bundle = "policy_puzzle_diagnosis"
+verify_script = "run_policy_puzzle_reference_verify.sh"
+codex_script = "run_local_codex_policy_puzzle.sh"
+notes = "Cross-env template; set GAMEBENCH_TASK + PUZZLE_ID"

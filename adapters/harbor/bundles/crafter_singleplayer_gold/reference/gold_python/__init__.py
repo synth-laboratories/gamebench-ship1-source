@@ -1,0 +1,2 @@
+"""Python Crafter gold lane."""
+

@@ -1,0 +1,768 @@
+{
+  "schema": "gamebench.crafter.scenarios.v1",
+  "scenarios": [
+    {
+      "scenario_id": "smoke_reset",
+      "seed": 101,
+      "world": {"use_default": "policy_dev_small", "seed": 101},
+      "rules": {"base": "no_homeostasis"},
+      "actions": []
+    },
+    {
+      "scenario_id": "short_walk_101",
+      "seed": 101,
+      "world": {"use_default": "policy_dev_small", "seed": 101},
+      "rules": {"base": "no_homeostasis"},
+      "actions": ["move_right", "move_down", "move_left", "move_up"]
+    },
+    {
+      "scenario_id": "rule_violation_unknown_action",
+      "seed": 102,
+      "world": {"use_default": "policy_dev_small", "seed": 102},
+      "rules": {"base": "no_homeostasis"},
+      "actions": ["not_an_action"]
+    },
+    {
+      "scenario_id": "checkpoint_mid_episode",
+      "seed": 103,
+      "world": {"use_default": "policy_dev_small", "seed": 103},
+      "rules": {"base": "no_homeostasis"},
+      "actions": ["move_right", "do", "move_down", "do", "move_left", "do"],
+      "checkpoint_after": 3,
+      "restore_then_actions": ["move_up", "do"]
+    },
+    {
+      "scenario_id": "truncated_tiny_horizon",
+      "seed": 104,
+      "world": {"use_default": "policy_dev_small", "seed": 104, "max_steps": 3},
+      "rules": {"base": "no_homeostasis"},
+      "actions": ["noop", "noop", "noop", "noop"]
+    },
+    {
+      "scenario_id": "initial_state_collect_tree",
+      "seed": 105,
+      "world": {
+        "use_default": "policy_dev_small",
+        "seed": 105,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "inventory": {"stone": 2},
+          "tiles": [
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "tree"}
+          ]
+        }
+      },
+      "rules": {"base": "no_homeostasis"},
+      "actions": ["do"]
+    },
+    {
+      "scenario_id": "initial_state_place_table",
+      "seed": 106,
+      "world": {
+        "use_default": "policy_dev_small",
+        "seed": 106,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "inventory": {"wood": 2},
+          "tiles": [
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "grass"}
+          ]
+        }
+      },
+      "rules": {"base": "no_homeostasis"},
+      "actions": ["place_table"]
+    },
+    {
+      "scenario_id": "initial_state_make_wood_pickaxe",
+      "seed": 107,
+      "world": {
+        "use_default": "policy_dev_small",
+        "seed": 107,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "inventory": {"wood": 1},
+          "tiles": [
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "table"}
+          ]
+        }
+      },
+      "rules": {"base": "no_homeostasis"},
+      "actions": ["make_wood_pickaxe"]
+    },
+    {
+      "scenario_id": "initial_state_collect_stone",
+      "seed": 108,
+      "world": {
+        "use_default": "policy_dev_small",
+        "seed": 108,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "inventory": {"wood_pickaxe": 1},
+          "tiles": [
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "stone"}
+          ]
+        }
+      },
+      "rules": {"base": "no_homeostasis"},
+      "actions": ["do"]
+    },
+    {
+      "scenario_id": "initial_state_collect_drink",
+      "seed": 109,
+      "world": {
+        "use_default": "policy_dev_small",
+        "seed": 109,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "tiles": [
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "water"}
+          ]
+        }
+      },
+      "rules": {"base": "no_homeostasis"},
+      "actions": ["do"]
+    },
+    {
+      "scenario_id": "initial_state_eat_cow",
+      "seed": 110,
+      "world": {
+        "use_default": "policy_dev_small",
+        "seed": 110,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "inventory": {"stone_sword": 1},
+          "tiles": [
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "grass"}
+          ],
+          "entities": [
+            {"kind": "cow", "pos": [17, 16]}
+          ]
+        }
+      },
+      "rules": {"base": "no_homeostasis"},
+      "actions": ["do"]
+    },
+    {
+      "scenario_id": "initial_state_defeat_zombie",
+      "seed": 111,
+      "world": {
+        "use_default": "policy_dev_small",
+        "seed": 111,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "inventory": {"iron_sword": 1},
+          "tiles": [
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "grass"}
+          ],
+          "entities": [
+            {"kind": "zombie", "pos": [17, 16]}
+          ]
+        }
+      },
+      "rules": {"base": "no_homeostasis"},
+      "actions": ["do"]
+    },
+    {
+      "scenario_id": "initial_state_defeat_skeleton",
+      "seed": 112,
+      "world": {
+        "use_default": "policy_dev_small",
+        "seed": 112,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "inventory": {"stone_sword": 1},
+          "tiles": [
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "grass"}
+          ],
+          "entities": [
+            {"kind": "skeleton", "pos": [17, 16]}
+          ]
+        }
+      },
+      "rules": {"base": "no_homeostasis"},
+      "actions": ["do"]
+    },
+    {
+      "scenario_id": "initial_state_seeded_achievement",
+      "seed": 113,
+      "world": {
+        "use_default": "policy_dev_small",
+        "seed": 113,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "tiles": [
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "grass"}
+          ],
+          "achievements": {"collect_wood": 1}
+        }
+      },
+      "rules": {"base": "no_homeostasis"},
+      "actions": ["noop"]
+    },
+    {
+      "scenario_id": "craftax_collect_sapphire",
+      "seed": 114,
+      "world": {
+        "use_default": "craftax_partial_64",
+        "seed": 114,
+        "view_radius": 1,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "inventory": {"diamond_pickaxe": 1},
+          "tiles": [
+            {"pos": [15, 15], "kind": "grass"},
+            {"pos": [16, 15], "kind": "grass"},
+            {"pos": [17, 15], "kind": "grass"},
+            {"pos": [15, 16], "kind": "grass"},
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "sapphire"},
+            {"pos": [15, 17], "kind": "grass"},
+            {"pos": [16, 17], "kind": "grass"},
+            {"pos": [17, 17], "kind": "grass"}
+          ]
+        }
+      },
+      "rules": {
+        "base": "craftax_partial",
+        "survival": {"hunger_enabled": false, "thirst_enabled": false, "fatigue_enabled": false, "health_enabled": true},
+        "day_night": {"enabled": false},
+        "mobs": {"enabled": false}
+      },
+      "actions": ["do"]
+    },
+    {
+      "scenario_id": "craftax_collect_ruby",
+      "seed": 115,
+      "world": {
+        "use_default": "craftax_partial_64",
+        "seed": 115,
+        "view_radius": 1,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "inventory": {"diamond_pickaxe": 1},
+          "tiles": [
+            {"pos": [15, 15], "kind": "grass"},
+            {"pos": [16, 15], "kind": "grass"},
+            {"pos": [17, 15], "kind": "grass"},
+            {"pos": [15, 16], "kind": "grass"},
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "ruby"},
+            {"pos": [15, 17], "kind": "grass"},
+            {"pos": [16, 17], "kind": "grass"},
+            {"pos": [17, 17], "kind": "grass"}
+          ]
+        }
+      },
+      "rules": {
+        "base": "craftax_partial",
+        "survival": {"hunger_enabled": false, "thirst_enabled": false, "fatigue_enabled": false, "health_enabled": true},
+        "day_night": {"enabled": false},
+        "mobs": {"enabled": false}
+      },
+      "actions": ["do"]
+    },
+    {
+      "scenario_id": "craftax_make_diamond_pickaxe",
+      "seed": 116,
+      "world": {
+        "use_default": "craftax_partial_64",
+        "seed": 116,
+        "view_radius": 1,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "inventory": {"wood": 1, "diamond": 1},
+          "tiles": [
+            {"pos": [15, 15], "kind": "grass"},
+            {"pos": [16, 15], "kind": "grass"},
+            {"pos": [17, 15], "kind": "grass"},
+            {"pos": [15, 16], "kind": "grass"},
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "table"},
+            {"pos": [15, 17], "kind": "grass"},
+            {"pos": [16, 17], "kind": "grass"},
+            {"pos": [17, 17], "kind": "grass"}
+          ]
+        }
+      },
+      "rules": {
+        "base": "craftax_partial",
+        "survival": {"hunger_enabled": false, "thirst_enabled": false, "fatigue_enabled": false, "health_enabled": true},
+        "day_night": {"enabled": false},
+        "mobs": {"enabled": false}
+      },
+      "actions": ["make_diamond_pickaxe"]
+    },
+    {
+      "scenario_id": "craftax_make_bow",
+      "seed": 117,
+      "world": {
+        "use_default": "craftax_partial_64",
+        "seed": 117,
+        "view_radius": 1,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "inventory": {"wood": 2},
+          "tiles": [
+            {"pos": [15, 15], "kind": "grass"},
+            {"pos": [16, 15], "kind": "grass"},
+            {"pos": [17, 15], "kind": "grass"},
+            {"pos": [15, 16], "kind": "grass"},
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "table"},
+            {"pos": [15, 17], "kind": "grass"},
+            {"pos": [16, 17], "kind": "grass"},
+            {"pos": [17, 17], "kind": "grass"}
+          ]
+        }
+      },
+      "rules": {
+        "base": "craftax_partial",
+        "survival": {"hunger_enabled": false, "thirst_enabled": false, "fatigue_enabled": false, "health_enabled": true},
+        "day_night": {"enabled": false},
+        "mobs": {"enabled": false}
+      },
+      "actions": ["make_bow"]
+    },
+    {
+      "scenario_id": "craftax_make_arrow",
+      "seed": 118,
+      "world": {
+        "use_default": "craftax_partial_64",
+        "seed": 118,
+        "view_radius": 1,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "inventory": {"wood": 1, "stone": 1},
+          "tiles": [
+            {"pos": [15, 15], "kind": "grass"},
+            {"pos": [16, 15], "kind": "grass"},
+            {"pos": [17, 15], "kind": "grass"},
+            {"pos": [15, 16], "kind": "grass"},
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "table"},
+            {"pos": [15, 17], "kind": "grass"},
+            {"pos": [16, 17], "kind": "grass"},
+            {"pos": [17, 17], "kind": "grass"}
+          ]
+        }
+      },
+      "rules": {
+        "base": "craftax_partial",
+        "survival": {"hunger_enabled": false, "thirst_enabled": false, "fatigue_enabled": false, "health_enabled": true},
+        "day_night": {"enabled": false},
+        "mobs": {"enabled": false}
+      },
+      "actions": ["make_arrow"]
+    },
+    {
+      "scenario_id": "craftax_drink_potion_red",
+      "seed": 119,
+      "world": {
+        "use_default": "craftax_partial_64",
+        "seed": 119,
+        "view_radius": 1,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "inventory": {"health": 7, "potion_red": 1},
+          "tiles": [
+            {"pos": [15, 15], "kind": "grass"},
+            {"pos": [16, 15], "kind": "grass"},
+            {"pos": [17, 15], "kind": "grass"},
+            {"pos": [15, 16], "kind": "grass"},
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "grass"},
+            {"pos": [15, 17], "kind": "grass"},
+            {"pos": [16, 17], "kind": "grass"},
+            {"pos": [17, 17], "kind": "grass"}
+          ]
+        }
+      },
+      "rules": {
+        "base": "craftax_partial",
+        "survival": {"hunger_enabled": false, "thirst_enabled": false, "fatigue_enabled": false, "health_enabled": true},
+        "day_night": {"enabled": false},
+        "mobs": {"enabled": false}
+      },
+      "actions": ["drink_potion_red"]
+    },
+    {
+      "scenario_id": "craftax_defeat_orc_soldier",
+      "seed": 120,
+      "world": {
+        "use_default": "craftax_partial_64",
+        "seed": 120,
+        "view_radius": 1,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "inventory": {"diamond_sword": 1},
+          "tiles": [
+            {"pos": [15, 15], "kind": "grass"},
+            {"pos": [16, 15], "kind": "grass"},
+            {"pos": [17, 15], "kind": "grass"},
+            {"pos": [15, 16], "kind": "grass"},
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "grass"},
+            {"pos": [15, 17], "kind": "grass"},
+            {"pos": [16, 17], "kind": "grass"},
+            {"pos": [17, 17], "kind": "grass"}
+          ],
+          "entities": [
+            {"kind": "orc_soldier", "pos": [17, 16], "health": 1}
+          ]
+        }
+      },
+      "rules": {
+        "base": "craftax_partial",
+        "survival": {"hunger_enabled": false, "thirst_enabled": false, "fatigue_enabled": false, "health_enabled": true},
+        "day_night": {"enabled": false},
+        "mobs": {"enabled": false}
+      },
+      "actions": ["do"]
+    },
+    {
+      "scenario_id": "craftax_defeat_orc_mage",
+      "seed": 121,
+      "world": {
+        "use_default": "craftax_partial_64",
+        "seed": 121,
+        "view_radius": 1,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "inventory": {"diamond_sword": 1},
+          "tiles": [
+            {"pos": [15, 15], "kind": "grass"},
+            {"pos": [16, 15], "kind": "grass"},
+            {"pos": [17, 15], "kind": "grass"},
+            {"pos": [15, 16], "kind": "grass"},
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "grass"},
+            {"pos": [15, 17], "kind": "grass"},
+            {"pos": [16, 17], "kind": "grass"},
+            {"pos": [17, 17], "kind": "grass"}
+          ],
+          "entities": [
+            {"kind": "orc_mage", "pos": [17, 16], "health": 1}
+          ]
+        }
+      },
+      "rules": {
+        "base": "craftax_partial",
+        "survival": {"hunger_enabled": false, "thirst_enabled": false, "fatigue_enabled": false, "health_enabled": true},
+        "day_night": {"enabled": false},
+        "mobs": {"enabled": false}
+      },
+      "actions": ["do"]
+    },
+    {
+      "scenario_id": "craftax_defeat_knight",
+      "seed": 122,
+      "world": {
+        "use_default": "craftax_partial_64",
+        "seed": 122,
+        "view_radius": 1,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "inventory": {"diamond_sword": 1},
+          "tiles": [
+            {"pos": [15, 15], "kind": "grass"},
+            {"pos": [16, 15], "kind": "grass"},
+            {"pos": [17, 15], "kind": "grass"},
+            {"pos": [15, 16], "kind": "grass"},
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "grass"},
+            {"pos": [15, 17], "kind": "grass"},
+            {"pos": [16, 17], "kind": "grass"},
+            {"pos": [17, 17], "kind": "grass"}
+          ],
+          "entities": [
+            {"kind": "knight", "pos": [17, 16], "health": 1}
+          ]
+        }
+      },
+      "rules": {
+        "base": "craftax_partial",
+        "survival": {"hunger_enabled": false, "thirst_enabled": false, "fatigue_enabled": false, "health_enabled": true},
+        "day_night": {"enabled": false},
+        "mobs": {"enabled": false}
+      },
+      "actions": ["do"]
+    },
+    {
+      "scenario_id": "craftax_defeat_knight_archer",
+      "seed": 123,
+      "world": {
+        "use_default": "craftax_partial_64",
+        "seed": 123,
+        "view_radius": 1,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "inventory": {"diamond_sword": 1},
+          "tiles": [
+            {"pos": [15, 15], "kind": "grass"},
+            {"pos": [16, 15], "kind": "grass"},
+            {"pos": [17, 15], "kind": "grass"},
+            {"pos": [15, 16], "kind": "grass"},
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "grass"},
+            {"pos": [15, 17], "kind": "grass"},
+            {"pos": [16, 17], "kind": "grass"},
+            {"pos": [17, 17], "kind": "grass"}
+          ],
+          "entities": [
+            {"kind": "knight_archer", "pos": [17, 16], "health": 1}
+          ]
+        }
+      },
+      "rules": {
+        "base": "craftax_partial",
+        "survival": {"hunger_enabled": false, "thirst_enabled": false, "fatigue_enabled": false, "health_enabled": true},
+        "day_night": {"enabled": false},
+        "mobs": {"enabled": false}
+      },
+      "actions": ["do"]
+    },
+    {
+      "scenario_id": "craftax_defeat_troll",
+      "seed": 124,
+      "world": {
+        "use_default": "craftax_partial_64",
+        "seed": 124,
+        "view_radius": 1,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "inventory": {"diamond_sword": 1},
+          "tiles": [
+            {"pos": [15, 15], "kind": "grass"},
+            {"pos": [16, 15], "kind": "grass"},
+            {"pos": [17, 15], "kind": "grass"},
+            {"pos": [15, 16], "kind": "grass"},
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "grass"},
+            {"pos": [15, 17], "kind": "grass"},
+            {"pos": [16, 17], "kind": "grass"},
+            {"pos": [17, 17], "kind": "grass"}
+          ],
+          "entities": [
+            {"kind": "troll", "pos": [17, 16], "health": 1}
+          ]
+        }
+      },
+      "rules": {
+        "base": "craftax_partial",
+        "survival": {"hunger_enabled": false, "thirst_enabled": false, "fatigue_enabled": false, "health_enabled": true},
+        "day_night": {"enabled": false},
+        "mobs": {"enabled": false}
+      },
+      "actions": ["do"]
+    },
+    {
+      "scenario_id": "craftax_open_chest_125",
+      "seed": 125,
+      "world": {
+        "use_default": "craftax_partial_64",
+        "seed": 125,
+        "view_radius": 1,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "tiles": [
+            {"pos": [15, 15], "kind": "grass"},
+            {"pos": [16, 15], "kind": "grass"},
+            {"pos": [17, 15], "kind": "grass"},
+            {"pos": [15, 16], "kind": "grass"},
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "chest"},
+            {"pos": [15, 17], "kind": "grass"},
+            {"pos": [16, 17], "kind": "grass"},
+            {"pos": [17, 17], "kind": "grass"}
+          ]
+        }
+      },
+      "rules": {
+        "base": "craftax_partial",
+        "survival": {"hunger_enabled": false, "thirst_enabled": false, "fatigue_enabled": false, "health_enabled": true},
+        "day_night": {"enabled": false},
+        "mobs": {"enabled": false}
+      },
+      "actions": ["do"]
+    },
+    {
+      "scenario_id": "craftax_open_chest_126",
+      "seed": 126,
+      "world": {
+        "use_default": "craftax_partial_64",
+        "seed": 126,
+        "view_radius": 1,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "tiles": [
+            {"pos": [15, 15], "kind": "grass"},
+            {"pos": [16, 15], "kind": "grass"},
+            {"pos": [17, 15], "kind": "grass"},
+            {"pos": [15, 16], "kind": "grass"},
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "chest"},
+            {"pos": [15, 17], "kind": "grass"},
+            {"pos": [16, 17], "kind": "grass"},
+            {"pos": [17, 17], "kind": "grass"}
+          ]
+        }
+      },
+      "rules": {
+        "base": "craftax_partial",
+        "survival": {"hunger_enabled": false, "thirst_enabled": false, "fatigue_enabled": false, "health_enabled": true},
+        "day_night": {"enabled": false},
+        "mobs": {"enabled": false}
+      },
+      "actions": ["do"]
+    },
+    {
+      "scenario_id": "craftax_open_chest_127",
+      "seed": 127,
+      "world": {
+        "use_default": "craftax_partial_64",
+        "seed": 127,
+        "view_radius": 1,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "tiles": [
+            {"pos": [15, 15], "kind": "grass"},
+            {"pos": [16, 15], "kind": "grass"},
+            {"pos": [17, 15], "kind": "grass"},
+            {"pos": [15, 16], "kind": "grass"},
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "chest"},
+            {"pos": [15, 17], "kind": "grass"},
+            {"pos": [16, 17], "kind": "grass"},
+            {"pos": [17, 17], "kind": "grass"}
+          ]
+        }
+      },
+      "rules": {
+        "base": "craftax_partial",
+        "survival": {"hunger_enabled": false, "thirst_enabled": false, "fatigue_enabled": false, "health_enabled": true},
+        "day_night": {"enabled": false},
+        "mobs": {"enabled": false}
+      },
+      "actions": ["do"]
+    },
+    {
+      "scenario_id": "monty_collect_wood_shaped",
+      "seed": 128,
+      "task": {
+        "schema": "gamebench.task.crafter.v1",
+        "task_id": "monty_collect_wood_shaped",
+        "scenario_id": "monty_collect_wood_shaped",
+        "world": {
+          "use_default": "policy_dev_small",
+          "seed": 128,
+          "initial_state": {
+            "player": {"pos": [16, 16], "facing": [1, 0]},
+            "tiles": [
+              {"pos": [16, 16], "kind": "grass"},
+              {"pos": [17, 16], "kind": "tree"}
+            ]
+          }
+        },
+        "rules": {"base": "no_homeostasis"},
+        "readouts": {"symbolic": "symbolic_compact", "visual": false},
+        "monty_reward": {
+          "kind": "monty_python",
+          "module": "collect_wood_shaped_v1",
+          "entry": "score_transition"
+        },
+        "checkpoint_every_n_steps": 10
+      },
+      "actions": ["do"]
+    },
+    {
+      "scenario_id": "monty_unknown_action_penalty",
+      "seed": 129,
+      "task": {
+        "schema": "gamebench.task.crafter.v1",
+        "task_id": "monty_unknown_action_penalty",
+        "scenario_id": "monty_unknown_action_penalty",
+        "world": {"use_default": "policy_dev_small", "seed": 129},
+        "rules": {"base": "no_homeostasis"},
+        "readouts": {"symbolic": "symbolic_compact", "visual": false},
+        "monty_reward": {
+          "kind": "monty_python",
+          "module": "collect_wood_shaped_v1",
+          "entry": "score_transition",
+          "action_penalties": {"unknown_action": -0.5}
+        },
+        "checkpoint_every_n_steps": 10
+      },
+      "actions": ["not_an_action"]
+    },
+    {
+      "scenario_id": "rule_reward_step_shaping",
+      "seed": 130,
+      "world": {"use_default": "policy_dev_small", "seed": 130},
+      "rules": {
+        "base": "no_homeostasis",
+        "rewards": {"step": 0.1}
+      },
+      "actions": ["noop", "noop"]
+    },
+    {
+      "scenario_id": "rule_reward_scaled_achievement",
+      "seed": 131,
+      "world": {
+        "use_default": "policy_dev_small",
+        "seed": 131,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "tiles": [
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "tree"}
+          ]
+        }
+      },
+      "rules": {
+        "base": "no_homeostasis",
+        "rewards": {"achievement": 2.5}
+      },
+      "actions": ["do"]
+    },
+    {
+      "scenario_id": "rule_reward_invalid_action_penalty",
+      "seed": 132,
+      "world": {"use_default": "policy_dev_small", "seed": 132},
+      "rules": {
+        "base": "no_homeostasis",
+        "rewards": {"invalid_action": -0.25}
+      },
+      "actions": ["not_an_action"]
+    },
+    {
+      "scenario_id": "rule_reward_death_penalty",
+      "seed": 133,
+      "world": {
+        "use_default": "policy_dev_small",
+        "seed": 133,
+        "initial_state": {
+          "player": {"pos": [16, 16], "facing": [1, 0]},
+          "inventory": {"health": 0},
+          "tiles": [
+            {"pos": [16, 16], "kind": "grass"},
+            {"pos": [17, 16], "kind": "grass"}
+          ]
+        }
+      },
+      "rules": {
+        "base": "no_homeostasis",
+        "rewards": {"death": -3.0}
+      },
+      "actions": ["noop"]
+    }
+  ]
+}
