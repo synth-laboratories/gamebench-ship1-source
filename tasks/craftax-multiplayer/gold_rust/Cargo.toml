@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+base64 = "0.22"
 font8x8 = "0.3"
 image = { version = "0.25", default-features = false, features = ["gif", "png"] }
 serde = { version = "1", features = ["derive"] }

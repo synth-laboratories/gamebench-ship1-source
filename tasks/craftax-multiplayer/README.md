@@ -28,12 +28,6 @@ Python and Rust emit the same canonical structured and legacy NEV records for pa
 
 `cargo run --manifest-path gold_rust/Cargo.toml --example smoke`
 
-Checkpoint-based MAPO coordination dataset and Rust reference evaluation:
-
-`cargo run --release --manifest-path gold_rust/Cargo.toml --example mapo_coordination_eval`
-
-The evaluator uses disjoint train/selection/heldout seed ranges and frozen iron handoff, food rescue, miner crafting, and expiring-request probes. Candidate prompts live in `defaults/mapo_coordination/candidates_v1.json`; every continuation records grounded request/give actions and state evidence under `reports/mapo_coordination_rust_eval.json`. The bundled executor profiles are reference behaviors, not a replacement for model-backed execution of arbitrary natural-language candidates.
-
 `cargo run --manifest-path gold_rust/Cargo.toml --bin service -- 127.0.0.1:8081`
 
 `python scripts/verify_python_rust_parity.py`
