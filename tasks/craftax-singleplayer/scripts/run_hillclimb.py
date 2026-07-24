@@ -33,6 +33,8 @@ def main() -> None:
     parser.add_argument("--candidate-root", default=str(TASK_DIR / "candidates"))
     parser.add_argument("--output", required=True)
     parser.add_argument("--include-trace", action="store_true")
+    parser.add_argument("--parallel", type=int, default=1)
+    parser.add_argument("--summary-only", action="store_true")
     args = parser.parse_args()
 
     output = Path(args.output).expanduser().resolve()
@@ -53,6 +55,8 @@ def main() -> None:
             suite_path=suite_path,
             output_path=candidate_dir / "summary.json",
             include_trace=bool(args.include_trace),
+            parallel=max(1, int(args.parallel)),
+            summary_only=bool(args.summary_only),
         )
         reports[candidate_id] = report
         rankings.append(
