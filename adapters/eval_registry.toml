@@ -14,7 +14,7 @@ hillclimb_extra_args = ["--engine-lane", "python"]
 [[task]]
 id = "crafter-singleplayer"
 policy_suite = "defaults/policy_sweep/policy_dev_v1.json"
-policy_baseline = "containers/codepolicy/heuristic_policy.py"
+policy_baseline = "policies/heuristic_baseline.py"
 candidate_subdir = "crafter"
 hillclimb_extra_args = ["--engine-lane", "python"]
 
@@ -33,7 +33,7 @@ candidate_subdir = "craftax_coop"
 [[task]]
 id = "minihack-singleplayer"
 policy_suite = "defaults/policy_sweep/policy_dev_v1.json"
-policy_baseline = "containers/codepolicy/heuristic_policy.py"
+policy_baseline = "policies/heuristic_baseline.py"
 candidate_subdir = "minihack"
 hillclimb_extra_args = ["--engine-lane", "python"]
 
@@ -52,11 +52,11 @@ candidate_subdir = "dungeongrid_singleplayer"
 [[task]]
 id = "dungeongrid-multiplayer"
 policy_suite = "defaults/policy_sweep/policy_dev_v1.json"
-policy_baseline = "containers/codepolicy/heuristic_policy.py"
+policy_baseline = "policies/heuristic_baseline.py"
 candidate_subdir = "dungeongrid"
 
 [[task]]
 id = "overcooked-v2-multiplayer"
 policy_suite = "defaults/policy_sweep/policy_dev_v1.json"
-policy_baseline = "containers/codepolicy/heuristic_policy.py"
+policy_baseline = "policies/heuristic_baseline.py"
 candidate_subdir = "overcooked_v2"
