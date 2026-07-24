@@ -1,0 +1,15 @@
+{
+  "schema": "gamebench.task.sokoban.v1",
+  "task_id": "demo_mcts_easy",
+  "map": {"source": "inline", "puzzle_id": "demo_mcts_easy", "grid": ["#####", "#@$.#", "#####"]},
+  "rules": {
+    "base": "sparse_sokoban",
+    "overrides": {
+      "max_steps": 120,
+      "errors": {"mode": "silent"}
+    }
+  },
+  "readouts": {"symbolic": "ascii_annotated", "visual": false},
+  "stream": {"enabled": true, "every_n_steps": 1, "mcts_events": true},
+  "checkpoint_every_n_steps": 1
+}

@@ -1,0 +1,9 @@
+{
+  "schema": "gamebench.task.sokoban.v1",
+  "task_id": "difficulty_band_02_easy_turn_push",
+  "difficulty_band": "easy",
+  "map": {"source": "inline", "puzzle_id": "band-02-easy-turn-push", "grid": ["#####", "#@  #", "# $ #", "# . #", "#####"]},
+  "rules": {"base": "sparse_sokoban", "overrides": {"max_steps": 20, "errors": {"mode": "silent"}}},
+  "readouts": {"symbolic": "ascii_annotated", "visual": true},
+  "checkpoint_every_n_steps": 1
+}

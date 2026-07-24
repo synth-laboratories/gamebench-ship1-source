@@ -1,0 +1,8 @@
+{
+  "schema": "gamebench.task.sokoban.v1",
+  "task_id": "blocked_wall_silent",
+  "map": {"source": "inline", "puzzle_id": "blocked-wall", "grid": ["#####", "#@$.#", "#####"]},
+  "rules": {"base": "sparse_sokoban", "overrides": {"max_steps": 12, "errors": {"mode": "silent"}}},
+  "readouts": {"symbolic": "ascii_annotated", "visual": true},
+  "checkpoint_every_n_steps": 1
+}

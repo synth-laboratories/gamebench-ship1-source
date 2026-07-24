@@ -1,0 +1,10 @@
+{
+  "schema": "gamebench.task.sokoban.v1",
+  "task_id": "gold_05_walk_around",
+  "difficulty_band": "gold_5_calls",
+  "gold_actions": ["up", "right", "right", "right", "right"],
+  "map": {"source": "inline", "puzzle_id": "gold-05-walk-around", "grid": ["#########", "#    $. #", "#@      #", "#########"]},
+  "rules": {"base": "sparse_sokoban", "overrides": {"max_steps": 25, "errors": {"mode": "silent"}}},
+  "readouts": {"symbolic": "ascii_annotated", "visual": true},
+  "checkpoint_every_n_steps": 1
+}

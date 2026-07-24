@@ -1,0 +1,18 @@
+{
+  "schema": "gamebench.nev_kinds.v1",
+  "env_family": "minihack-singleplayer",
+  "kinds": [
+    "task_resolved",
+    "action_applied",
+    "move_blocked",
+    "push_blocked",
+    "push_applied",
+    "boulder_on_target",
+    "goal_reached",
+    "level_complete",
+    "resource_delta",
+    "state_transition",
+    "rule_violation",
+    "terminal"
+  ]
+}

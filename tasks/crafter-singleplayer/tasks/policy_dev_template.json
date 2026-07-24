@@ -1,0 +1,22 @@
+{
+  "schema": "gamebench.task.crafter.v1",
+  "task_id": "crafter_policy_dev",
+  "env_family": "crafter-singleplayer",
+  "scenario_id": "crafter_policy_dev",
+  "world": {
+    "use_default": "policy_dev_small"
+  },
+  "rules": {
+    "base": "no_homeostasis"
+  },
+  "readouts": {
+    "symbolic": "symbolic_compact",
+    "visual": false
+  },
+  "stream": {
+    "enabled": false,
+    "every_n_steps": 1,
+    "persist_frames": false
+  },
+  "checkpoint_every_n_steps": 10
+}

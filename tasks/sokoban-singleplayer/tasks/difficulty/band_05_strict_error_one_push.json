@@ -1,0 +1,9 @@
+{
+  "schema": "gamebench.task.sokoban.v1",
+  "task_id": "difficulty_band_05_strict_error_one_push",
+  "difficulty_band": "strict_error",
+  "map": {"source": "inline", "puzzle_id": "band-05-strict-error-one-push", "grid": ["#####", "#@$.#", "#####"]},
+  "rules": {"base": "sparse_sokoban", "overrides": {"max_steps": 12, "errors": {"mode": "strict"}}},
+  "readouts": {"symbolic": "ascii_annotated", "visual": true},
+  "checkpoint_every_n_steps": 1
+}
