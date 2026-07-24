@@ -1,0 +1,41 @@
+{
+  "schema": "gamebench.task.crafter.v1",
+  "task_id": "crafter_policy_puzzle_stone",
+  "env_family": "crafter-singleplayer",
+  "scenario_id": "crafter_policy_puzzle_stone",
+  "world": {
+    "use_default": "policy_dev_small",
+    "initial_state": {
+      "player": {
+        "pos": [16, 16],
+        "facing": [1, 0]
+      },
+      "inventory": {
+        "wood": 2,
+        "wood_pickaxe": 1
+      },
+      "achievements": {
+        "collect_wood": 1,
+        "place_table": 1,
+        "make_wood_pickaxe": 1
+      },
+      "tiles": [
+        {"pos": [16, 16], "kind": "grass"},
+        {"pos": [17, 16], "kind": "stone"}
+      ]
+    }
+  },
+  "rules": {
+    "base": "no_homeostasis"
+  },
+  "readouts": {
+    "symbolic": "symbolic_compact",
+    "visual": false
+  },
+  "stream": {
+    "enabled": false,
+    "every_n_steps": 1,
+    "persist_frames": false
+  },
+  "checkpoint_every_n_steps": 10
+}

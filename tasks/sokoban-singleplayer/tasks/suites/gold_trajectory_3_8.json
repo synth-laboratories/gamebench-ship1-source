@@ -1,0 +1,12 @@
+{
+  "schema": "gamebench.sokoban.task_suite.v1",
+  "suite_id": "gold_trajectory_3_8",
+  "description": "Tasks whose checked gold action sequence is 3-8 committed moves; use for LLM-call-comparable sweeps.",
+  "tasks": [
+    {"band": "gold_3_calls", "path": "tasks/difficulty/gold_03_easy_down_push.json"},
+    {"band": "gold_4_calls", "path": "tasks/difficulty/gold_04_corridor_push.json"},
+    {"band": "gold_5_calls", "path": "tasks/difficulty/gold_05_walk_around.json"},
+    {"band": "gold_6_calls", "path": "tasks/difficulty/gold_06_two_box_room.json"},
+    {"band": "gold_8_calls", "path": "tasks/difficulty/gold_08_double_push.json"}
+  ]
+}

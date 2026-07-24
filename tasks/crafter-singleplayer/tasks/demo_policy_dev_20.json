@@ -1,0 +1,33 @@
+{
+  "schema": "gamebench.task.crafter.v1",
+  "task_id": "demo_policy_dev_20",
+  "env_family": "crafter-singleplayer",
+  "scenario_id": "demo_policy_dev_20",
+  "world": {
+    "use_default": "policy_dev_small",
+    "max_steps": 80
+  },
+  "rules": {
+    "base": "no_homeostasis",
+    "overrides": {
+      "mobs": {
+        "zombie_spawn_rate": 0.0
+      }
+    }
+  },
+  "readouts": {
+    "symbolic": "symbolic_compact",
+    "visual": "rgb_tiles"
+  },
+  "stream": {
+    "enabled": true,
+    "every_n_steps": 1,
+    "persist_frames": true
+  },
+  "agent_policy": {
+    "kind": "monty_python",
+    "module": "heuristic_baseline",
+    "entry": "choose_actions"
+  },
+  "checkpoint_every_n_steps": 10
+}
