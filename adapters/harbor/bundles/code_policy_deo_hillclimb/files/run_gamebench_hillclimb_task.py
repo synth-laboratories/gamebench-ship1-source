@@ -36,9 +36,12 @@ def resolve_candidate_root(output_root: Path, candidate_root: Path, lane: Path) 
     resolved = candidate_root.expanduser()
     if not resolved.is_absolute():
         resolved = (output_root / resolved).resolve()
+    task_candidates = resolved / candidate_subdir()
+    if task_candidates.is_dir():
+        return task_candidates.resolve()
     if resolved.exists():
         return resolved
-    fallback = lane / "candidates"
+    fallback = lane / "candidates" / candidate_subdir()
     if fallback.exists():
         return fallback.resolve()
     return resolved

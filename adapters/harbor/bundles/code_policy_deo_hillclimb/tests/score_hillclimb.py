@@ -36,7 +36,11 @@ def main() -> int:
         "GAMEBENCH_POLICY_BASELINE",
         str(task_dir / "containers" / "codepolicy" / "heuristic_policy.py"),
     )
-    candidate_root = workspace / "candidates"
+    task_id = os.environ.get("GAMEBENCH_TASK", "")
+    candidate_root = workspace / "candidates" / os.environ.get(
+        "CANDIDATE_SUBDIR",
+        task_id.removesuffix("-singleplayer").removesuffix("-multiplayer"),
+    )
     work_dir = workspace / ".harbor_hillclimb"
 
     if not hillclimb.exists():
