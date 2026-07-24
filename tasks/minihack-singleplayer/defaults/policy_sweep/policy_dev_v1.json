@@ -1,0 +1,32 @@
+{
+  "schema": "gamebench.minihack.policy_sweep.v1",
+  "suite_id": "minihack_policy_dev_v1",
+  "scenarios": [
+    {
+      "profile": "corridor_straight",
+      "seed": 1,
+      "rules": {"base": "navigation", "overrides": {"max_steps": 30}}
+    },
+    {
+      "profile": "corridor_battle",
+      "seed": 12,
+      "rules": {"base": "navigation", "overrides": {"max_steps": 40}}
+    },
+    {
+      "profile": "quest_easy",
+      "seed": 20,
+      "rules": {"base": "navigation", "overrides": {"max_steps": 50}}
+    },
+    {
+      "profile": "maze_9x9",
+      "seed": 101,
+      "rules": {"base": "navigation", "overrides": {"max_steps": 120}}
+    },
+    {
+      "profile": "boxoban_hard",
+      "seed": 15,
+      "rules": {"base": "boxoban", "overrides": {"max_steps": 80}}
+    }
+  ],
+  "max_steps": 120
+}

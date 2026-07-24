@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+# Shared Harbor adapter helpers.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+GAMEBENCH_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+HARBOR_ADAPTER_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+HARBOR_BUNDLE_ROOT="$HARBOR_ADAPTER_ROOT/bundles"
+HARBOR_SCRIPTS="$HARBOR_ADAPTER_ROOT/scripts"
+EVALS_ROOT="${GAMEBENCH_EVALS_ROOT:-$HOME/Documents/GitHub/evals}"
+CODEX_RUNNER="$EVALS_ROOT/containers/harbor/codex_harbor_runner.py"
+EVAL_REGISTRY="$GAMEBENCH_ROOT/adapters/scripts/eval_registry.py"
+
+bundle_root() {
+  echo "$HARBOR_BUNDLE_ROOT/$1"
+}
+
+task_root() {
+  echo "$GAMEBENCH_ROOT/tasks/$1"
+}
+
+eval_registry() {
+  python3 "$EVAL_REGISTRY" "$@"
+}
+
+normalize_family() {
+  case "$1" in
+    dev|engine|engine_rebuild) echo dev ;;
+    code-policy|code_policy|code_policy_opt) echo code_policy_opt ;;
+    puzzle|puzzles|code_policy_puzzles) echo code_policy_puzzles ;;
+    cybernetic|cybernetic_opt|exotic) echo cybernetic_opt ;;
+    *) echo "$1" ;;
+  esac
+}
+
+registry_family() {
+  local cli="$1"
+  case "$cli" in
+    dev) echo dev ;;
+    code_policy_opt) echo code_policy_opt ;;
+    code_policy_puzzles) echo code_policy_puzzles ;;
+    cybernetic_opt) echo cybernetic_opt ;;
+    *) return 1 ;;
+  esac
+}
+
+load_task_env() {
+  local task_id="$1"
+  while IFS='=' read -r key value; do
+    [[ -n "$key" ]] || continue
+    export "GAMEBENCH_REGISTRY_${key}=${value}"
+    case "$key" in
+      policy_suite) export GAMEBENCH_POLICY_SUITE="$GAMEBENCH_ROOT/tasks/$task_id/$value" ;;
+      policy_baseline) export GAMEBENCH_POLICY_BASELINE="$GAMEBENCH_ROOT/tasks/$task_id/$value" ;;
+      cybernetic_suite) export GAMEBENCH_CYBERNETIC_SUITE="$GAMEBENCH_ROOT/tasks/$task_id/$value" ;;
+      candidate_subdir) export CANDIDATE_SUBDIR="$value" ;;
+      default_puzzle) export PUZZLE_ID="${PUZZLE_ID:-$value}" ;;
+      hillclimb_extra_args)
+        export GAMEBENCH_HILLCLIMB_EXTRA_ARGS="$(
+          python3 -c "import ast; print(' '.join(ast.literal_eval('''$value''')))"
+        )"
+        ;;
+    esac
+  done < <(eval_registry task-config "$task_id")
+  export GAMEBENCH_TASK="$task_id"
+}
+
+venv_python() {
+  local py="$GAMEBENCH_ROOT/.venv/bin/python"
+  if [[ ! -x "$py" ]]; then
+    python3 -m venv "$GAMEBENCH_ROOT/.venv"
+    "$GAMEBENCH_ROOT/.venv/bin/pip" install -q fastapi uvicorn httpx pydantic
+  fi
+  echo "$py"
+}
+
+append_codex_auth_to_rollout() {
+  local rollout_json="$1"
+  python3 - "$rollout_json" <<'PY'
+import base64
+import json
+import os
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+rollout = json.loads(path.read_text(encoding="utf-8"))
+auth_path = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex")) / "auth.json"
+api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+if api_key:
+    rollout["openai_api_key"] = api_key
+    rollout["codex_auth_source"] = "openai_api_key"
+elif auth_path.is_file():
+    rollout["codex_auth_json_b64"] = base64.b64encode(auth_path.read_bytes()).decode("ascii")
+    rollout["codex_auth_source"] = "host_codex_auth_json"
+else:
+    print("Codex auth unavailable: set OPENAI_API_KEY or run `codex login`", file=sys.stderr)
+    sys.exit(1)
+path.write_text(json.dumps(rollout, indent=2) + "\n", encoding="utf-8")
+PY
+}

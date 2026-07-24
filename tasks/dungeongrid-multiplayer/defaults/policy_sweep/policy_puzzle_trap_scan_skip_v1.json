@@ -1,0 +1,27 @@
+{
+  "schema": "gamebench.dungeongrid.policy_sweep.v1",
+  "suite_id": "dungeongrid_policy_puzzle_trap_scan_skip_v1",
+  "score_metric": "mean_objective_score",
+  "max_actions": 80,
+  "scenarios": [
+    {
+      "scenario_id": "blackwater_bell_breach",
+      "source": "defaults/scenarios/blackwater_bell_breach.json",
+      "min_reward": 7.2,
+      "require_code_protocol": true,
+      "protocol_prefix": "DG|",
+      "target_achievements": [
+        "coordination.message_sent",
+        "movement.first_step",
+        "coordination.guard_used",
+        "support.revealed_trap",
+        "support.counterplay_revealed",
+        "routing.opened_door",
+        "combat.first_hit",
+        "caster.spell_cast",
+        "combat.monster_defeated",
+        "objective.secured"
+      ]
+    }
+  ]
+}

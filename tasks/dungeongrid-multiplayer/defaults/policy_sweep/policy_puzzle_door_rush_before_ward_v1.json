@@ -1,0 +1,26 @@
+{
+  "schema": "gamebench.dungeongrid.policy_sweep.v1",
+  "suite_id": "dungeongrid_policy_puzzle_door_rush_before_ward_v1",
+  "score_metric": "mean_objective_score",
+  "max_actions": 80,
+  "scenarios": [
+    {
+      "scenario_id": "nemesis_breach_gate",
+      "source": "defaults/scenarios/nemesis_breach_gate.json",
+      "min_reward": 6.8,
+      "require_code_protocol": true,
+      "protocol_prefix": "DG|",
+      "target_achievements": [
+        "coordination.message_sent",
+        "movement.first_step",
+        "coordination.guard_used",
+        "support.counterplay_revealed",
+        "routing.opened_door",
+        "combat.first_hit",
+        "caster.spell_cast",
+        "combat.monster_defeated",
+        "objective.secured"
+      ]
+    }
+  ]
+}

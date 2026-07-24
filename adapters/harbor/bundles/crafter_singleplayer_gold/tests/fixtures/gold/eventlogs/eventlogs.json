@@ -1,0 +1,393 @@
+{
+  "schema": "gamebench.crafter.nev_gold.v1",
+  "lane": "python",
+  "games": [
+    {
+      "scenario_id": "smoke_reset",
+      "events": [
+        "TaskResolved(smoke_reset,sha256:b745e09b705cc4d668e0f133495b82689551c8baf128ade7368b1b11a0729cf2)"
+      ]
+    },
+    {
+      "scenario_id": "short_walk_101",
+      "events": [
+        "TaskResolved(short_walk_101,sha256:5beb064ce96c89f805cd5231f5ce9f2a134f72458aa2b27c1c2f6c126e7279d2)",
+        "ActionApplied(MoveRight,step=1)",
+        "StateTransition(pos=[17, 16],facing=[1, 0])",
+        "Debug(ACTION: MoveRight)",
+        "ActionApplied(MoveDown,step=2)",
+        "StateTransition(pos=[17, 17],facing=[0, 1])",
+        "Debug(ACTION: MoveDown)",
+        "ActionApplied(MoveLeft,step=3)",
+        "StateTransition(pos=[16, 17],facing=[-1, 0])",
+        "Debug(ACTION: MoveLeft)",
+        "ActionApplied(MoveUp,step=4)",
+        "StateTransition(pos=[16, 16],facing=[0, -1])",
+        "Debug(ACTION: MoveUp)"
+      ]
+    },
+    {
+      "scenario_id": "rule_violation_unknown_action",
+      "events": [
+        "TaskResolved(rule_violation_unknown_action,sha256:11f036b48619001024b5409c6d1777ff2e8e39d1e542ac0768b66a4096f6f138)",
+        "ActionRejected(not_an_action,unknown_action,step=0)",
+        "RuleViolation(unknown_action)"
+      ]
+    },
+    {
+      "scenario_id": "checkpoint_mid_episode",
+      "events": [
+        "TaskResolved(checkpoint_mid_episode,sha256:7f3a22802291ef331f35d419d15546b287b66e53d9f860ed2cc7a073a2019fd4)",
+        "ActionApplied(MoveRight,step=1)",
+        "StateTransition(pos=[17, 16],facing=[1, 0])",
+        "Debug(ACTION: MoveRight)",
+        "ActionApplied(Do,step=2)",
+        "Debug(ACTION: Do on grass at (18, 16))",
+        "ActionApplied(MoveDown,step=3)",
+        "StateTransition(pos=[17, 17],facing=[0, 1])",
+        "Debug(ACTION: MoveDown)",
+        "ActionApplied(MoveUp,step=4)",
+        "StateTransition(pos=[17, 16],facing=[0, -1])",
+        "Debug(ACTION: MoveUp)",
+        "ActionApplied(Do,step=5)",
+        "Debug(ACTION: Do on grass at (17, 15))"
+      ]
+    },
+    {
+      "scenario_id": "truncated_tiny_horizon",
+      "events": [
+        "TaskResolved(truncated_tiny_horizon,sha256:4bd12ed5587446726a52db535467940296443b5959b88d9e1ea555ecd6d1baa5)",
+        "ActionApplied(Noop,step=1)",
+        "ActionApplied(Noop,step=2)",
+        "ActionApplied(Noop,step=3)",
+        "EpisodeTruncated(max_steps)",
+        "Terminal(max_steps)"
+      ]
+    },
+    {
+      "scenario_id": "initial_state_collect_tree",
+      "events": [
+        "TaskResolved(initial_state_collect_tree,sha256:f060d68e9696bbd1148e9820e64767967c89308b956f4a8296c651af00e7d704)",
+        "ActionApplied(Do,step=1)",
+        "ResourceDelta(wood,0->1)",
+        "AchievementUnlocked(collect_wood)",
+        "Debug(ACTION: Do on tree at (17, 16))",
+        "RewardDelta(1.00,total=1.00)"
+      ]
+    },
+    {
+      "scenario_id": "initial_state_place_table",
+      "events": [
+        "TaskResolved(initial_state_place_table,sha256:8bcbdba4e5678f9eabaf0fafd556db245654576796dc607d08db861abc6018fb)",
+        "ActionApplied(PlaceTable,step=1)",
+        "ResourceDelta(wood,2->0)",
+        "AchievementUnlocked(place_table)",
+        "Debug(ACTION: PlaceTable)",
+        "RewardDelta(1.00,total=1.00)"
+      ]
+    },
+    {
+      "scenario_id": "initial_state_make_wood_pickaxe",
+      "events": [
+        "TaskResolved(initial_state_make_wood_pickaxe,sha256:22bf4c34fd90a859240ed94e39b7fc4a33d0757470da33f2eea2ca7430093778)",
+        "ActionApplied(MakeWoodPickaxe,step=1)",
+        "ResourceDelta(wood,1->0)",
+        "ResourceDelta(wood_pickaxe,0->1)",
+        "AchievementUnlocked(make_wood_pickaxe)",
+        "Debug(ACTION: MakeWoodPickaxe)",
+        "RewardDelta(1.00,total=1.00)"
+      ]
+    },
+    {
+      "scenario_id": "initial_state_collect_stone",
+      "events": [
+        "TaskResolved(initial_state_collect_stone,sha256:45e58944ae5a97b9dc6590ed4caf7116bb35fed954a2c92085cac0944800faeb)",
+        "ActionApplied(Do,step=1)",
+        "ResourceDelta(stone,0->1)",
+        "AchievementUnlocked(collect_stone)",
+        "Debug(ACTION: Do on stone at (17, 16))",
+        "RewardDelta(1.00,total=1.00)"
+      ]
+    },
+    {
+      "scenario_id": "initial_state_collect_drink",
+      "events": [
+        "TaskResolved(initial_state_collect_drink,sha256:fb754c0af0ccb82f980f560981f85458d753c449d0df5064e447d3acfbb44661)",
+        "ActionApplied(Do,step=1)",
+        "AchievementUnlocked(collect_drink)",
+        "Debug(ACTION: Do on water at (17, 16))",
+        "RewardDelta(1.00,total=1.00)"
+      ]
+    },
+    {
+      "scenario_id": "initial_state_eat_cow",
+      "events": [
+        "TaskResolved(initial_state_eat_cow,sha256:e05b8a815b4216a9c8bc5ed8304e89eb3bf1ca2be46abb904fab26840f5f6871)",
+        "ActionApplied(Do,step=1)",
+        "AchievementUnlocked(eat_cow)",
+        "Debug(ACTION: Do on cow at (17, 16))",
+        "RewardDelta(1.00,total=1.00)"
+      ]
+    },
+    {
+      "scenario_id": "initial_state_defeat_zombie",
+      "events": [
+        "TaskResolved(initial_state_defeat_zombie,sha256:0ec0f6362b7197b8131272dfe46378af04e4393c1eb2809f6092c1834ba05d8f)",
+        "ActionApplied(Do,step=1)",
+        "AchievementUnlocked(defeat_zombie)",
+        "Debug(ACTION: Do on zombie at (17, 16))",
+        "RewardDelta(1.00,total=1.00)"
+      ]
+    },
+    {
+      "scenario_id": "initial_state_defeat_skeleton",
+      "events": [
+        "TaskResolved(initial_state_defeat_skeleton,sha256:248394b36e14be3c5478cae1cef90eba10460a58e006cbe19a805911e1bbc44e)",
+        "ActionApplied(Do,step=1)",
+        "AchievementUnlocked(defeat_skeleton)",
+        "Debug(ACTION: Do on skeleton at (17, 16))",
+        "RewardDelta(1.00,total=1.00)"
+      ]
+    },
+    {
+      "scenario_id": "initial_state_seeded_achievement",
+      "events": [
+        "TaskResolved(initial_state_seeded_achievement,sha256:033e2126be33ec5469158553075f375a769359dbb8e594b032b9e6eba8ba64df)",
+        "ActionApplied(Noop,step=1)"
+      ]
+    },
+    {
+      "scenario_id": "craftax_collect_sapphire",
+      "events": [
+        "TaskResolved(craftax_collect_sapphire,sha256:4a339ca2e4f6a1230bdf94672149c7635e3728fbcaf550688780c58ab2de7b8f)",
+        "ActionApplied(Do,step=1)",
+        "ResourceDelta(sapphire,0->1)",
+        "AchievementUnlocked(collect_sapphire)",
+        "Debug(ACTION: Do on sapphire at (17, 16))",
+        "RewardDelta(1.00,total=1.00)"
+      ]
+    },
+    {
+      "scenario_id": "craftax_collect_ruby",
+      "events": [
+        "TaskResolved(craftax_collect_ruby,sha256:6ad59c62da78a56fa8262dabcf39b33528b264b433d74393706559851d7a094e)",
+        "ActionApplied(Do,step=1)",
+        "ResourceDelta(ruby,0->1)",
+        "AchievementUnlocked(collect_ruby)",
+        "Debug(ACTION: Do on ruby at (17, 16))",
+        "RewardDelta(1.00,total=1.00)"
+      ]
+    },
+    {
+      "scenario_id": "craftax_make_diamond_pickaxe",
+      "events": [
+        "TaskResolved(craftax_make_diamond_pickaxe,sha256:f71c894af2d6fb68f402c1c25070073ce48925d00487290d43e4dd887b0c1b0b)",
+        "ActionApplied(MakeDiamondPickaxe,step=1)",
+        "ResourceDelta(diamond,1->0)",
+        "ResourceDelta(diamond_pickaxe,0->1)",
+        "ResourceDelta(wood,1->0)",
+        "AchievementUnlocked(make_diamond_pickaxe)",
+        "Debug(ACTION: MakeDiamondPickaxe)",
+        "RewardDelta(1.00,total=1.00)"
+      ]
+    },
+    {
+      "scenario_id": "craftax_make_bow",
+      "events": [
+        "TaskResolved(craftax_make_bow,sha256:8a56a934adcde32d61e0a1fe453fcb523f8c79af2bc4f1e67d88541c309bb865)",
+        "ActionApplied(MakeBow,step=1)",
+        "ResourceDelta(bow,0->1)",
+        "ResourceDelta(wood,2->0)",
+        "AchievementUnlocked(make_bow)",
+        "Debug(ACTION: MakeBow)",
+        "RewardDelta(1.00,total=1.00)"
+      ]
+    },
+    {
+      "scenario_id": "craftax_make_arrow",
+      "events": [
+        "TaskResolved(craftax_make_arrow,sha256:43c366b9fba243f39853b7a256e50d76876a6720120262754b934eaf5113a2cf)",
+        "ActionApplied(MakeArrow,step=1)",
+        "ResourceDelta(arrows,0->3)",
+        "ResourceDelta(stone,1->0)",
+        "ResourceDelta(wood,1->0)",
+        "AchievementUnlocked(make_arrow)",
+        "Debug(ACTION: MakeArrow)",
+        "RewardDelta(1.00,total=1.00)"
+      ]
+    },
+    {
+      "scenario_id": "craftax_drink_potion_red",
+      "events": [
+        "TaskResolved(craftax_drink_potion_red,sha256:ea9146827e3ede88d976c47f2328a187de086a0f00493ae346bccd6a1d4f2497)",
+        "ActionApplied(DrinkPotionRed,step=1)",
+        "ResourceDelta(potion_red,1->0)",
+        "AchievementUnlocked(drink_potion)",
+        "Debug(ACTION: DrinkPotionRed)",
+        "RewardDelta(1.00,total=1.00)"
+      ]
+    },
+    {
+      "scenario_id": "craftax_defeat_orc_soldier",
+      "events": [
+        "TaskResolved(craftax_defeat_orc_soldier,sha256:c07045acbd747c3c1d20cb882e9a69c871e25706ef991fb822af1c8de5c442b7)",
+        "ActionApplied(Do,step=1)",
+        "ResourceDelta(xp,0->3)",
+        "AchievementUnlocked(defeat_orc_soldier)",
+        "AchievementUnlocked(gain_xp)",
+        "Debug(ACTION: Do on orc_soldier at (17, 16))",
+        "RewardDelta(2.00,total=2.00)"
+      ]
+    },
+    {
+      "scenario_id": "craftax_defeat_orc_mage",
+      "events": [
+        "TaskResolved(craftax_defeat_orc_mage,sha256:a558dd149139337c09d471d18c9d0ab1cf1aa405f9938277c3147f72fae91b7c)",
+        "ActionApplied(Do,step=1)",
+        "ResourceDelta(xp,0->3)",
+        "AchievementUnlocked(defeat_orc_mage)",
+        "AchievementUnlocked(gain_xp)",
+        "Debug(ACTION: Do on orc_mage at (17, 16))",
+        "RewardDelta(2.00,total=2.00)"
+      ]
+    },
+    {
+      "scenario_id": "craftax_defeat_knight",
+      "events": [
+        "TaskResolved(craftax_defeat_knight,sha256:b0670399a5363c3c8bc3098e68164603bc8d468823d6772f4107de580f9cb116)",
+        "ActionApplied(Do,step=1)",
+        "ResourceDelta(xp,0->3)",
+        "AchievementUnlocked(defeat_knight)",
+        "AchievementUnlocked(gain_xp)",
+        "Debug(ACTION: Do on knight at (17, 16))",
+        "RewardDelta(2.00,total=2.00)"
+      ]
+    },
+    {
+      "scenario_id": "craftax_defeat_knight_archer",
+      "events": [
+        "TaskResolved(craftax_defeat_knight_archer,sha256:2da3d4b19d6dd78b237b7af9db87e20084f8cced7fd5713c49ab746cc99ef8f7)",
+        "ActionApplied(Do,step=1)",
+        "ResourceDelta(xp,0->3)",
+        "AchievementUnlocked(defeat_knight_archer)",
+        "AchievementUnlocked(gain_xp)",
+        "Debug(ACTION: Do on knight_archer at (17, 16))",
+        "RewardDelta(2.00,total=2.00)"
+      ]
+    },
+    {
+      "scenario_id": "craftax_defeat_troll",
+      "events": [
+        "TaskResolved(craftax_defeat_troll,sha256:43e213f8f76cc5ffefcfcd791c4e7b06c4a27995430227eed3d8afbd0c35129e)",
+        "ActionApplied(Do,step=1)",
+        "ResourceDelta(xp,0->3)",
+        "AchievementUnlocked(defeat_troll)",
+        "AchievementUnlocked(gain_xp)",
+        "Debug(ACTION: Do on troll at (17, 16))",
+        "RewardDelta(2.00,total=2.00)"
+      ]
+    },
+    {
+      "scenario_id": "craftax_open_chest_125",
+      "events": [
+        "TaskResolved(craftax_open_chest_125,sha256:d81c292b0aa3643eb00eaa3d9ca5c59b7c0bf58ffe093049a7a1a9249317ef2b)",
+        "ActionApplied(Do,step=1)",
+        "ResourceDelta(coal,0->1)",
+        "AchievementUnlocked(collect_coal)",
+        "AchievementUnlocked(open_chest)",
+        "Debug(ACTION: Do on chest at (17, 16))",
+        "RewardDelta(2.00,total=2.00)"
+      ]
+    },
+    {
+      "scenario_id": "craftax_open_chest_126",
+      "events": [
+        "TaskResolved(craftax_open_chest_126,sha256:d9e92d6509ea471eeb6024ee9de3105a9347ca79bbb73c6606f8554d6a00d7c4)",
+        "ActionApplied(Do,step=1)",
+        "ResourceDelta(coal,0->1)",
+        "ResourceDelta(iron,0->2)",
+        "AchievementUnlocked(collect_coal)",
+        "AchievementUnlocked(collect_iron)",
+        "AchievementUnlocked(open_chest)",
+        "Debug(ACTION: Do on chest at (17, 16))",
+        "RewardDelta(3.00,total=3.00)"
+      ]
+    },
+    {
+      "scenario_id": "craftax_open_chest_127",
+      "events": [
+        "TaskResolved(craftax_open_chest_127,sha256:302ead437ed0d713dcb6422fb8242106369bdbfcc6568846026bcf5abb2804c2)",
+        "ActionApplied(Do,step=1)",
+        "ResourceDelta(diamond,0->1)",
+        "ResourceDelta(sapphire,0->1)",
+        "AchievementUnlocked(collect_diamond)",
+        "AchievementUnlocked(collect_sapphire)",
+        "AchievementUnlocked(open_chest)",
+        "Debug(ACTION: Do on chest at (17, 16))",
+        "RewardDelta(3.00,total=3.00)"
+      ]
+    },
+    {
+      "scenario_id": "monty_collect_wood_shaped",
+      "events": [
+        "TaskResolved(monty_collect_wood_shaped,sha256:ca63b9bf89d25e95e16d32aa3e71eafe89ee7011f6e2d43cefcbfcdee81a21d4)",
+        "ActionApplied(Do,step=1)",
+        "ResourceDelta(wood,0->1)",
+        "AchievementUnlocked(collect_wood)",
+        "Debug(ACTION: Do on tree at (17, 16))",
+        "RewardDelta(1.00,total=1.00)",
+        "RewardDelta(0.27,total=1.27,source=monty)"
+      ]
+    },
+    {
+      "scenario_id": "monty_unknown_action_penalty",
+      "events": [
+        "TaskResolved(monty_unknown_action_penalty,sha256:42e2a1abdd1f57e72d41768696a284ab16f752829bc07011baabb6e661b78848)",
+        "ActionRejected(not_an_action,unknown_action,step=0)",
+        "RuleViolation(unknown_action)",
+        "RewardDelta(-0.50,total=-0.50,source=monty)"
+      ]
+    },
+    {
+      "scenario_id": "rule_reward_step_shaping",
+      "events": [
+        "TaskResolved(rule_reward_step_shaping,sha256:bf149073e2f837efee4ac3db90db6e85e95c619eaee616d5b2dd0a194a5891c1)",
+        "ActionApplied(Noop,step=1)",
+        "RewardDelta(0.10,total=0.10,source=env,component=step)",
+        "ActionApplied(Noop,step=2)",
+        "RewardDelta(0.10,total=0.20,source=env,component=step)"
+      ]
+    },
+    {
+      "scenario_id": "rule_reward_scaled_achievement",
+      "events": [
+        "TaskResolved(rule_reward_scaled_achievement,sha256:9c131bd061f04c75beedf1273265e8c0ebf74cfd18566f755fffb7d3f8884918)",
+        "ActionApplied(Do,step=1)",
+        "ResourceDelta(wood,0->1)",
+        "AchievementUnlocked(collect_wood)",
+        "Debug(ACTION: Do on tree at (17, 16))",
+        "RewardDelta(2.50,total=2.50)"
+      ]
+    },
+    {
+      "scenario_id": "rule_reward_invalid_action_penalty",
+      "events": [
+        "TaskResolved(rule_reward_invalid_action_penalty,sha256:d198472690353b789190b07c65158fc18ceede9072f2094f428aa02e36e85c9f)",
+        "ActionRejected(not_an_action,unknown_action,step=0)",
+        "RuleViolation(unknown_action)",
+        "RewardDelta(-0.25,total=-0.25,source=env,component=invalid_action)"
+      ]
+    },
+    {
+      "scenario_id": "rule_reward_death_penalty",
+      "events": [
+        "TaskResolved(rule_reward_death_penalty,sha256:2ec0df0fc340784930a0842765b70e83ea62e037b00d33306fa253cc16e2c754)",
+        "ActionApplied(Noop,step=1)",
+        "Debug(Death cause: unknown)",
+        "RewardDelta(-3.00,total=-3.00,source=env,component=death)",
+        "Death(death)",
+        "Terminal(death)"
+      ]
+    }
+  ]
+}

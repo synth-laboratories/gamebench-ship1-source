@@ -1,0 +1,28 @@
+{
+  "schema": "gamebench.dungeongrid.policy_sweep.v1",
+  "suite_id": "dungeongrid_policy_puzzle_handoff_omitted_v1",
+  "score_metric": "mean_objective_score",
+  "max_actions": 80,
+  "scenarios": [
+    {
+      "scenario_id": "hourglass_escape_breach",
+      "source": "defaults/scenarios/hourglass_escape_breach.json",
+      "min_reward": 7,
+      "require_code_protocol": true,
+      "protocol_prefix": "DG|",
+      "target_achievements": [
+        "coordination.message_sent",
+        "movement.first_step",
+        "coordination.guard_used",
+        "support.counterplay_revealed",
+        "routing.opened_door",
+        "coordination.item_handoff",
+        "inventory.item_used",
+        "combat.first_hit",
+        "caster.spell_cast",
+        "combat.monster_defeated",
+        "objective.secured"
+      ]
+    }
+  ]
+}

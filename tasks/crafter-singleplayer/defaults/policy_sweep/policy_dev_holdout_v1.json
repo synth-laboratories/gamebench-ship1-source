@@ -1,0 +1,10 @@
+{
+  "schema": "gamebench.crafter.policy_sweep.v1",
+  "suite_id": "policy_dev_holdout_v1",
+  "task_template": "tasks/policy_dev_template.json",
+  "seeds": [201, 202, 203, 204, 205, 206, 207, 208, 209, 210],
+  "world_default": "policy_dev_small",
+  "rules_default": "no_homeostasis",
+  "max_steps": 120,
+  "engine_lane": "rust"
+}

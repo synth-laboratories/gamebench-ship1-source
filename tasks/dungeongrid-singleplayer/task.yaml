@@ -1,0 +1,16 @@
+schema_version: gamebench.task_family.v1
+env_family: dungeongrid-singleplayer
+status: python_reference_code_policy
+agent_count: 1
+agents: [hero_0]
+roles:
+  hero_0: barbarian
+step_api: active_agent_action
+scenario_dir: defaults/scenarios
+python_entrypoint: gold_python:DungeonGridSession
+policy_entrypoint: policies/heuristic_baseline.py:plan_actions
+policy_runner: scripts/run_policy_sweep.py
+hillclimb_runner: scripts/run_hillclimb.py
+notes:
+  - The single-player contract owns an independent Python engine copy.
+  - The policy exclusively controls hero_0; no party-message requirement is scored.

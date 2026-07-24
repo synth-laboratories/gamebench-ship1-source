@@ -1,0 +1,1419 @@
+{
+  "scenarios": {
+    "core_01_descend": {
+      "events": [
+        "TaskResolved(core_01_descend,f31223c7e251f12c)",
+        "CommandDispatch(l)",
+        "Move(l,2,4)",
+        "SourceDaemons(after)",
+        "CommandDispatch(l)",
+        "Move(l,2,5)",
+        "SourceDaemons(after)",
+        "CommandDispatch(l)",
+        "Move(l,2,6)",
+        "SourceDaemons(after)",
+        "CommandDispatch(l)",
+        "Move(l,2,7)",
+        "GoldPicked(2,total=2)",
+        "SourceDaemons(after)",
+        "CommandDispatch(l)",
+        "Move(l,2,8)",
+        "SourceDaemons(after)",
+        "CommandDispatch(l)",
+        "Move(l,2,9)",
+        "SourceDaemons(after)",
+        "CommandDispatch(l)",
+        "Move(l,2,10)",
+        "SourceDaemons(after)",
+        "CommandDispatch(l)",
+        "Move(l,2,11)",
+        "SourceDaemons(after)",
+        "CommandDispatch(l)",
+        "Move(l,2,12)",
+        "SourceDaemons(after)",
+        "CommandDispatch(>)",
+        "SourceNewLevel(descend,level=2)",
+        "Descend(level=2)",
+        "RewardDelta(1.00,total=1.00)",
+        "Terminal(success)"
+      ],
+      "state": {
+        "private": {
+          "command_after": false,
+          "command_count": 0,
+          "command_direction": "",
+          "command_last": ">",
+          "command_markers": [
+            "do_daemons_before",
+            "do_fuses_before",
+            "down_level",
+            "refund_ntimes",
+            "do_daemons_after",
+            "do_fuses_after"
+          ],
+          "command_runch": "",
+          "command_running": false,
+          "command_to_death": false,
+          "config_hash": "f31223c7e251f12c",
+          "current_armor_id": "",
+          "current_weapon_id": "",
+          "daemon_between": 0,
+          "dungeon_level": 2,
+          "episode_id": "a1b2df5505a235e20038dd6acaa8cc44",
+          "food": 1,
+          "food_left": 1291,
+          "has_amulet": false,
+          "hp": 12,
+          "hungry_state": 0,
+          "item_values": {
+            "12,7": 58,
+            "21,61": 56,
+            "3,39": 6
+          },
+          "kamikaze": false,
+          "left_ring_id": "",
+          "max_hit": 0,
+          "max_hp": 12,
+          "max_level": 2,
+          "max_strength": 16,
+          "no_command": 0,
+          "no_move": 0,
+          "player_armor": 6,
+          "player_damage": "1x4",
+          "player_exp": 0,
+          "player_flags": 0,
+          "player_level": 1,
+          "pot_known": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "purse": 2,
+          "quiet": 9,
+          "right_ring_id": "",
+          "rng_seed": -1176762405,
+          "scr_known": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "source_attack_markers": [],
+          "source_chase_markers": [],
+          "source_combat_markers": [],
+          "source_daemon_actions": [
+            {
+              "action": "doctor",
+              "arg": 0,
+              "time": -1,
+              "type": 2
+            },
+            {
+              "action": "stomach",
+              "arg": 0,
+              "time": -1,
+              "type": 2
+            }
+          ],
+          "source_daemon_markers": [],
+          "source_effect_markers": [],
+          "source_inventory": [],
+          "source_level_markers": [
+            "new_level:2",
+            "objects:5",
+            "monsters:3",
+            "traps:0",
+            "map_cells:0"
+          ],
+          "source_level_objects": [
+            {
+              "arm": 11,
+              "count": 1,
+              "dplus": 0,
+              "flags": 0,
+              "goldval": 0,
+              "group": 0,
+              "hplus": 0,
+              "id": "level2_object0",
+              "pos": {
+                "x": 40,
+                "y": 3
+              },
+              "type": "?",
+              "which": 5
+            },
+            {
+              "arm": 11,
+              "count": 1,
+              "dplus": 0,
+              "flags": 0,
+              "goldval": 0,
+              "group": 0,
+              "hplus": 0,
+              "id": "level2_object1",
+              "pos": {
+                "x": 61,
+                "y": 20
+              },
+              "type": "!",
+              "which": 0
+            },
+            {
+              "arm": 0,
+              "count": 0,
+              "dplus": 0,
+              "flags": 8,
+              "goldval": 56,
+              "group": 1,
+              "hplus": 0,
+              "id": "level2_object2",
+              "pos": {
+                "x": 61,
+                "y": 21
+              },
+              "type": "*",
+              "which": 0
+            },
+            {
+              "arm": 0,
+              "count": 0,
+              "dplus": 0,
+              "flags": 8,
+              "goldval": 58,
+              "group": 1,
+              "hplus": 0,
+              "id": "level2_object3",
+              "pos": {
+                "x": 7,
+                "y": 12
+              },
+              "type": "*",
+              "which": 0
+            },
+            {
+              "arm": 0,
+              "count": 0,
+              "dplus": 0,
+              "flags": 8,
+              "goldval": 6,
+              "group": 1,
+              "hplus": 0,
+              "id": "level2_object4",
+              "pos": {
+                "x": 39,
+                "y": 3
+              },
+              "type": "*",
+              "which": 0
+            }
+          ],
+          "source_map_cells": [],
+          "source_monsters": [
+            {
+              "col": 61,
+              "disguise": "B",
+              "flags": 16384,
+              "hp": 6,
+              "id": "level2_monster0",
+              "level": 1,
+              "max_hp": 6,
+              "pack": [],
+              "row": 20,
+              "type": "B"
+            },
+            {
+              "col": 66,
+              "disguise": "S",
+              "flags": 2048,
+              "hp": 2,
+              "id": "level2_monster1",
+              "level": 1,
+              "max_hp": 2,
+              "pack": [],
+              "row": 3,
+              "type": "S"
+            },
+            {
+              "col": 44,
+              "disguise": "B",
+              "flags": 16384,
+              "hp": 1,
+              "id": "level2_monster2",
+              "level": 1,
+              "max_hp": 1,
+              "pack": [],
+              "row": 4,
+              "type": "B"
+            }
+          ],
+          "source_passages": [
+            {
+              "exits": [],
+              "flags": 0,
+              "gold": {
+                "x": 0,
+                "y": 0
+              },
+              "goldval": 0,
+              "max": {
+                "x": 0,
+                "y": 0
+              },
+              "nexits": 0,
+              "pos": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "exits": [
+                {
+                  "x": 28,
+                  "y": 5
+                },
+                {
+                  "x": 47,
+                  "y": 9
+                }
+              ],
+              "flags": 0,
+              "gold": {
+                "x": 0,
+                "y": 0
+              },
+              "goldval": 0,
+              "max": {
+                "x": 0,
+                "y": 0
+              },
+              "nexits": 2,
+              "pos": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "exits": [
+                {
+                  "x": 27,
+                  "y": 2
+                },
+                {
+                  "x": 7,
+                  "y": 10
+                }
+              ],
+              "flags": 0,
+              "gold": {
+                "x": 0,
+                "y": 0
+              },
+              "goldval": 0,
+              "max": {
+                "x": 0,
+                "y": 0
+              },
+              "nexits": 2,
+              "pos": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "exits": [
+                {
+                  "x": 61,
+                  "y": 5
+                },
+                {
+                  "x": 72,
+                  "y": 9
+                }
+              ],
+              "flags": 0,
+              "gold": {
+                "x": 0,
+                "y": 0
+              },
+              "goldval": 0,
+              "max": {
+                "x": 0,
+                "y": 0
+              },
+              "nexits": 2,
+              "pos": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "exits": [
+                {
+                  "x": 10,
+                  "y": 12
+                },
+                {
+                  "x": 27,
+                  "y": 13
+                }
+              ],
+              "flags": 0,
+              "gold": {
+                "x": 0,
+                "y": 0
+              },
+              "goldval": 0,
+              "max": {
+                "x": 0,
+                "y": 0
+              },
+              "nexits": 2,
+              "pos": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "exits": [
+                {
+                  "x": 9,
+                  "y": 14
+                },
+                {
+                  "x": 21,
+                  "y": 17
+                }
+              ],
+              "flags": 0,
+              "gold": {
+                "x": 0,
+                "y": 0
+              },
+              "goldval": 0,
+              "max": {
+                "x": 0,
+                "y": 0
+              },
+              "nexits": 2,
+              "pos": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "exits": [
+                {
+                  "x": 49,
+                  "y": 13
+                },
+                {
+                  "x": 68,
+                  "y": 11
+                }
+              ],
+              "flags": 0,
+              "gold": {
+                "x": 0,
+                "y": 0
+              },
+              "goldval": 0,
+              "max": {
+                "x": 0,
+                "y": 0
+              },
+              "nexits": 2,
+              "pos": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "exits": [
+                {
+                  "x": 35,
+                  "y": 14
+                },
+                {
+                  "x": 60,
+                  "y": 20
+                },
+                {
+                  "x": 25,
+                  "y": 20
+                }
+              ],
+              "flags": 0,
+              "gold": {
+                "x": 0,
+                "y": 0
+              },
+              "goldval": 0,
+              "max": {
+                "x": 0,
+                "y": 0
+              },
+              "nexits": 3,
+              "pos": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "exits": [
+                {
+                  "x": 73,
+                  "y": 12
+                },
+                {
+                  "x": 75,
+                  "y": 17
+                }
+              ],
+              "flags": 0,
+              "gold": {
+                "x": 0,
+                "y": 0
+              },
+              "goldval": 0,
+              "max": {
+                "x": 0,
+                "y": 0
+              },
+              "nexits": 2,
+              "pos": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "exits": [],
+              "flags": 0,
+              "gold": {
+                "x": 0,
+                "y": 0
+              },
+              "goldval": 0,
+              "max": {
+                "x": 0,
+                "y": 0
+              },
+              "nexits": 0,
+              "pos": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "exits": [],
+              "flags": 0,
+              "gold": {
+                "x": 0,
+                "y": 0
+              },
+              "goldval": 0,
+              "max": {
+                "x": 0,
+                "y": 0
+              },
+              "nexits": 0,
+              "pos": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "exits": [],
+              "flags": 0,
+              "gold": {
+                "x": 0,
+                "y": 0
+              },
+              "goldval": 0,
+              "max": {
+                "x": 0,
+                "y": 0
+              },
+              "nexits": 0,
+              "pos": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "exits": [],
+              "flags": 0,
+              "gold": {
+                "x": 0,
+                "y": 0
+              },
+              "goldval": 0,
+              "max": {
+                "x": 0,
+                "y": 0
+              },
+              "nexits": 0,
+              "pos": {
+                "x": 0,
+                "y": 0
+              }
+            }
+          ],
+          "source_rooms": [
+            {
+              "exits": [],
+              "flags": 2,
+              "gold": {
+                "x": 0,
+                "y": 0
+              },
+              "goldval": 0,
+              "max": {
+                "x": -80,
+                "y": -24
+              },
+              "nexits": 0,
+              "pos": {
+                "x": 9,
+                "y": 4
+              }
+            },
+            {
+              "exits": [
+                {
+                  "x": 28,
+                  "y": 5
+                },
+                {
+                  "x": 27,
+                  "y": 2
+                }
+              ],
+              "flags": 0,
+              "gold": {
+                "x": 39,
+                "y": 3
+              },
+              "goldval": 6,
+              "max": {
+                "x": 25,
+                "y": 5
+              },
+              "nexits": 2,
+              "pos": {
+                "x": 27,
+                "y": 1
+              }
+            },
+            {
+              "exits": [
+                {
+                  "x": 61,
+                  "y": 5
+                }
+              ],
+              "flags": 0,
+              "gold": {
+                "x": 0,
+                "y": 0
+              },
+              "goldval": 0,
+              "max": {
+                "x": 12,
+                "y": 4
+              },
+              "nexits": 1,
+              "pos": {
+                "x": 59,
+                "y": 2
+              }
+            },
+            {
+              "exits": [
+                {
+                  "x": 10,
+                  "y": 12
+                },
+                {
+                  "x": 7,
+                  "y": 10
+                },
+                {
+                  "x": 9,
+                  "y": 14
+                }
+              ],
+              "flags": 0,
+              "gold": {
+                "x": 7,
+                "y": 12
+              },
+              "goldval": 58,
+              "max": {
+                "x": 5,
+                "y": 5
+              },
+              "nexits": 3,
+              "pos": {
+                "x": 6,
+                "y": 10
+              }
+            },
+            {
+              "exits": [
+                {
+                  "x": 49,
+                  "y": 13
+                },
+                {
+                  "x": 27,
+                  "y": 13
+                },
+                {
+                  "x": 47,
+                  "y": 9
+                },
+                {
+                  "x": 35,
+                  "y": 14
+                }
+              ],
+              "flags": 1,
+              "gold": {
+                "x": 0,
+                "y": 0
+              },
+              "goldval": 0,
+              "max": {
+                "x": 23,
+                "y": 6
+              },
+              "nexits": 4,
+              "pos": {
+                "x": 27,
+                "y": 9
+              }
+            },
+            {
+              "exits": [
+                {
+                  "x": 72,
+                  "y": 9
+                },
+                {
+                  "x": 73,
+                  "y": 12
+                },
+                {
+                  "x": 68,
+                  "y": 11
+                }
+              ],
+              "flags": 0,
+              "gold": {
+                "x": 0,
+                "y": 0
+              },
+              "goldval": 0,
+              "max": {
+                "x": 9,
+                "y": 4
+              },
+              "nexits": 3,
+              "pos": {
+                "x": 68,
+                "y": 9
+              }
+            },
+            {
+              "exits": [
+                {
+                  "x": 25,
+                  "y": 20
+                },
+                {
+                  "x": 21,
+                  "y": 17
+                }
+              ],
+              "flags": 0,
+              "gold": {
+                "x": 0,
+                "y": 0
+              },
+              "goldval": 0,
+              "max": {
+                "x": 16,
+                "y": 6
+              },
+              "nexits": 2,
+              "pos": {
+                "x": 10,
+                "y": 17
+              }
+            },
+            {
+              "exits": [],
+              "flags": 2,
+              "gold": {
+                "x": 0,
+                "y": 0
+              },
+              "goldval": 0,
+              "max": {
+                "x": -80,
+                "y": -24
+              },
+              "nexits": 0,
+              "pos": {
+                "x": 40,
+                "y": 22
+              }
+            },
+            {
+              "exits": [
+                {
+                  "x": 75,
+                  "y": 17
+                },
+                {
+                  "x": 60,
+                  "y": 20
+                }
+              ],
+              "flags": 0,
+              "gold": {
+                "x": 61,
+                "y": 21
+              },
+              "goldval": 56,
+              "max": {
+                "x": 17,
+                "y": 6
+              },
+              "nexits": 2,
+              "pos": {
+                "x": 60,
+                "y": 17
+              }
+            }
+          ],
+          "source_trap_markers": [],
+          "source_traps": [],
+          "step_index": 10,
+          "strength": 16,
+          "terminal_reason": "success",
+          "terminated": true,
+          "total_reward": 1.0,
+          "truncated": false,
+          "vf_hit": 0,
+          "ws_known": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ]
+        },
+        "public": {
+          "hero": [
+            3,
+            68
+          ],
+          "terrain": [
+            "                                                                                ",
+            "                           -------------------------                            ",
+            "           ################+.......................|       ------------         ",
+            "           #               |.......................|       |..........|         ",
+            "         ###               |.......................|       |..........|         ",
+            "         #                 -+-----------------------       --+---------         ",
+            "         #                  #                                #                  ",
+            "         #                  #                                ############       ",
+            "       ###                  ####################                        #       ",
+            "       #                   --------------------+--                  ----+----   ",
+            "      -+---                |.....................|                  |.......|   ",
+            "      |...|                |.....................|                ##+.......|   ",
+            "      |...+#########       |.....................|                # -----+---   ",
+            "      |...|        ########+..............%......+#################      #      ",
+            "      ---+-                --------+--------------                       #      ",
+            "         #                         #                                     ###    ",
+            "         #############             #                                       #    ",
+            "          -----------+----         #                        ---------------+-   ",
+            "          |..............|         #                        |...............|   ",
+            "          |..............|         ######                   |...............|   ",
+            "          |..............+############# #            #######+...............|   ",
+            "          |..............|            # #            #      |...............|   ",
+            "          ----------------            ################      -----------------   ",
+            "                                                                                "
+          ],
+          "visible_items": {
+            "12,7": "*",
+            "20,61": "!",
+            "21,61": "*",
+            "3,39": "*",
+            "3,40": "?"
+          },
+          "visible_monsters": {
+            "20,61": "B",
+            "3,66": "S",
+            "4,44": "B"
+          }
+        }
+      }
+    },
+    "core_02_wall_bump": {
+      "events": [
+        "TaskResolved(core_02_wall_bump,b26e5b1f79002ce5)",
+        "CommandDispatch(h)",
+        "Bump(wall)",
+        "SourceDaemons(after)",
+        "CommandDispatch(k)",
+        "Bump(wall)",
+        "SourceDaemons(after)",
+        "CommandDispatch(l)",
+        "Move(l,2,4)",
+        "SourceDaemons(after)",
+        "CommandDispatch(,)",
+        "NothingHere()",
+        "SourceDaemons(after)"
+      ],
+      "state": {
+        "private": {
+          "command_after": true,
+          "command_count": 0,
+          "command_direction": "",
+          "command_last": ",",
+          "command_markers": [
+            "do_daemons_before",
+            "do_fuses_before",
+            "nothing_here",
+            "consume_turn",
+            "do_daemons_after",
+            "do_fuses_after"
+          ],
+          "command_runch": "",
+          "command_running": false,
+          "command_to_death": false,
+          "config_hash": "b26e5b1f79002ce5",
+          "current_armor_id": "",
+          "current_weapon_id": "",
+          "daemon_between": 0,
+          "dungeon_level": 1,
+          "episode_id": "d95de822b79aff3fe08c9cf19576cb0a",
+          "food": 1,
+          "food_left": 1296,
+          "has_amulet": false,
+          "hp": 12,
+          "hungry_state": 0,
+          "item_values": {
+            "2,7": 2
+          },
+          "kamikaze": false,
+          "left_ring_id": "",
+          "max_hit": 0,
+          "max_hp": 12,
+          "max_level": 1,
+          "max_strength": 16,
+          "no_command": 0,
+          "no_move": 0,
+          "player_armor": 6,
+          "player_damage": "1x4",
+          "player_exp": 0,
+          "player_flags": 0,
+          "player_level": 1,
+          "pot_known": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "purse": 0,
+          "quiet": 4,
+          "right_ring_id": "",
+          "rng_seed": 36067,
+          "scr_known": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "source_attack_markers": [],
+          "source_chase_markers": [],
+          "source_combat_markers": [],
+          "source_daemon_actions": [
+            {
+              "action": "doctor",
+              "arg": 0,
+              "time": -1,
+              "type": 2
+            },
+            {
+              "action": "stomach",
+              "arg": 0,
+              "time": -1,
+              "type": 2
+            }
+          ],
+          "source_daemon_markers": [],
+          "source_effect_markers": [],
+          "source_inventory": [],
+          "source_level_markers": [],
+          "source_level_objects": [],
+          "source_map_cells": [],
+          "source_monsters": [],
+          "source_passages": [],
+          "source_rooms": [],
+          "source_trap_markers": [],
+          "source_traps": [],
+          "step_index": 4,
+          "strength": 16,
+          "terminal_reason": "",
+          "terminated": false,
+          "total_reward": 0.0,
+          "truncated": false,
+          "vf_hit": 0,
+          "ws_known": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ]
+        },
+        "public": {
+          "hero": [
+            2,
+            4
+          ],
+          "terrain": [
+            "                    ",
+            "  ------------      ",
+            "  |.........%|      ",
+            "  |..........|      ",
+            "  ------------      ",
+            "                    "
+          ],
+          "visible_items": {
+            "2,7": "*",
+            "3,7": ":"
+          },
+          "visible_monsters": {}
+        }
+      }
+    },
+    "core_03_food_pickup": {
+      "events": [
+        "TaskResolved(core_03_food_pickup,301289e8bb3410d0)",
+        "CommandDispatch(l)",
+        "Move(l,2,4)",
+        "SourceDaemons(after)",
+        "CommandDispatch(l)",
+        "Move(l,2,5)",
+        "SourceDaemons(after)",
+        "CommandDispatch(l)",
+        "Move(l,2,6)",
+        "SourceDaemons(after)",
+        "CommandDispatch(l)",
+        "Move(l,2,7)",
+        "GoldPicked(2,total=2)",
+        "SourceDaemons(after)",
+        "CommandDispatch(l)",
+        "Move(l,2,8)",
+        "SourceDaemons(after)"
+      ],
+      "state": {
+        "private": {
+          "command_after": true,
+          "command_count": 0,
+          "command_direction": "",
+          "command_last": "l",
+          "command_markers": [
+            "do_daemons_before",
+            "do_fuses_before",
+            "do_move:l:0:1",
+            "consume_turn",
+            "do_daemons_after",
+            "do_fuses_after"
+          ],
+          "command_runch": "",
+          "command_running": false,
+          "command_to_death": false,
+          "config_hash": "301289e8bb3410d0",
+          "current_armor_id": "",
+          "current_weapon_id": "",
+          "daemon_between": 0,
+          "dungeon_level": 1,
+          "episode_id": "df26d832747bdd01aa30cf00dc598679",
+          "food": 1,
+          "food_left": 1295,
+          "has_amulet": false,
+          "hp": 12,
+          "hungry_state": 0,
+          "item_values": {},
+          "kamikaze": false,
+          "left_ring_id": "",
+          "max_hit": 0,
+          "max_hp": 12,
+          "max_level": 1,
+          "max_strength": 16,
+          "no_command": 0,
+          "no_move": 0,
+          "player_armor": 6,
+          "player_damage": "1x4",
+          "player_exp": 0,
+          "player_flags": 0,
+          "player_level": 1,
+          "pot_known": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "purse": 2,
+          "quiet": 5,
+          "right_ring_id": "",
+          "rng_seed": 47176,
+          "scr_known": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "source_attack_markers": [],
+          "source_chase_markers": [],
+          "source_combat_markers": [],
+          "source_daemon_actions": [
+            {
+              "action": "doctor",
+              "arg": 0,
+              "time": -1,
+              "type": 2
+            },
+            {
+              "action": "stomach",
+              "arg": 0,
+              "time": -1,
+              "type": 2
+            }
+          ],
+          "source_daemon_markers": [],
+          "source_effect_markers": [],
+          "source_inventory": [],
+          "source_level_markers": [],
+          "source_level_objects": [],
+          "source_map_cells": [],
+          "source_monsters": [],
+          "source_passages": [],
+          "source_rooms": [],
+          "source_trap_markers": [],
+          "source_traps": [],
+          "step_index": 5,
+          "strength": 16,
+          "terminal_reason": "",
+          "terminated": false,
+          "total_reward": 0.0,
+          "truncated": false,
+          "vf_hit": 0,
+          "ws_known": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ]
+        },
+        "public": {
+          "hero": [
+            2,
+            8
+          ],
+          "terrain": [
+            "                    ",
+            "  ------------      ",
+            "  |.........%|      ",
+            "  |..........|      ",
+            "  ------------      ",
+            "                    "
+          ],
+          "visible_items": {
+            "3,7": ":"
+          },
+          "visible_monsters": {}
+        }
+      }
+    },
+    "core_04_rest_search": {
+      "events": [
+        "TaskResolved(core_04_rest_search,31dae34915971b04)",
+        "CommandDispatch(.)",
+        "Rest()",
+        "SourceDaemons(after)",
+        "CommandDispatch(s)",
+        "SourceSearch()",
+        "SourceDaemons(after)",
+        "CommandDispatch(l)",
+        "Move(l,2,4)",
+        "SourceDaemons(after)",
+        "CommandDispatch(l)",
+        "Move(l,2,5)",
+        "SourceDaemons(after)"
+      ],
+      "state": {
+        "private": {
+          "command_after": true,
+          "command_count": 0,
+          "command_direction": "",
+          "command_last": "l",
+          "command_markers": [
+            "do_daemons_before",
+            "do_fuses_before",
+            "do_move:l:0:1",
+            "consume_turn",
+            "do_daemons_after",
+            "do_fuses_after"
+          ],
+          "command_runch": "",
+          "command_running": false,
+          "command_to_death": false,
+          "config_hash": "31dae34915971b04",
+          "current_armor_id": "",
+          "current_weapon_id": "",
+          "daemon_between": 0,
+          "dungeon_level": 1,
+          "episode_id": "f946d7352bff69b0e529b7bb01f272dc",
+          "food": 1,
+          "food_left": 1296,
+          "has_amulet": false,
+          "hp": 12,
+          "hungry_state": 0,
+          "item_values": {
+            "2,7": 2
+          },
+          "kamikaze": false,
+          "left_ring_id": "",
+          "max_hit": 0,
+          "max_hp": 12,
+          "max_level": 1,
+          "max_strength": 16,
+          "no_command": 0,
+          "no_move": 0,
+          "player_armor": 6,
+          "player_damage": "1x4",
+          "player_exp": 0,
+          "player_flags": 0,
+          "player_level": 1,
+          "pot_known": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "purse": 0,
+          "quiet": 4,
+          "right_ring_id": "",
+          "rng_seed": 58285,
+          "scr_known": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "source_attack_markers": [],
+          "source_chase_markers": [],
+          "source_combat_markers": [],
+          "source_daemon_actions": [
+            {
+              "action": "doctor",
+              "arg": 0,
+              "time": -1,
+              "type": 2
+            },
+            {
+              "action": "stomach",
+              "arg": 0,
+              "time": -1,
+              "type": 2
+            }
+          ],
+          "source_daemon_markers": [],
+          "source_effect_markers": [],
+          "source_inventory": [],
+          "source_level_markers": [],
+          "source_level_objects": [],
+          "source_map_cells": [],
+          "source_monsters": [],
+          "source_passages": [],
+          "source_rooms": [],
+          "source_trap_markers": [],
+          "source_traps": [],
+          "step_index": 4,
+          "strength": 16,
+          "terminal_reason": "",
+          "terminated": false,
+          "total_reward": 0.0,
+          "truncated": false,
+          "vf_hit": 0,
+          "ws_known": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ]
+        },
+        "public": {
+          "hero": [
+            2,
+            5
+          ],
+          "terrain": [
+            "                    ",
+            "  ------------      ",
+            "  |.........%|      ",
+            "  |..........|      ",
+            "  ------------      ",
+            "                    "
+          ],
+          "visible_items": {
+            "2,7": "*",
+            "3,7": ":"
+          },
+          "visible_monsters": {}
+        }
+      }
+    }
+  },
+  "schema": "gamebench.rogue.gold_eventlogs.v1"
+}

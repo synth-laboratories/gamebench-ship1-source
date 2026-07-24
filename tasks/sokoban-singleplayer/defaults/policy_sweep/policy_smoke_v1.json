@@ -1,0 +1,10 @@
+{
+  "schema": "gamebench.sokoban.policy_sweep.v1",
+  "suite_id": "policy_smoke_v1",
+  "task_template": "tasks/policy_dev_template.json",
+  "seeds": [101],
+  "map_default": "curriculum_easy",
+  "rules_default": "sparse_sokoban",
+  "max_steps": 120,
+  "engine_lanes": ["python", "rust"]
+}
