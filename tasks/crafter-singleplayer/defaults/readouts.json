@@ -1,0 +1,26 @@
+{
+  "schema": "gamebench.crafter.readouts.v1",
+  "profiles": {
+    "symbolic_compact": {
+      "symbolic": true,
+      "observation_text": true,
+      "local_map": true,
+      "full_world_state": false,
+      "visual": false
+    },
+    "symbolic_full": {
+      "symbolic": true,
+      "observation_text": true,
+      "local_map": true,
+      "full_world_state": true,
+      "visual": false
+    },
+    "rgb_tiles": {
+      "symbolic": true,
+      "observation_text": true,
+      "local_map": true,
+      "full_world_state": false,
+      "visual": true
+    }
+  }
+}
