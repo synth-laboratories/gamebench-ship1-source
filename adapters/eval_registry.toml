@@ -35,7 +35,6 @@ id = "minihack-singleplayer"
 policy_suite = "defaults/policy_sweep/policy_dev_v1.json"
 policy_baseline = "policies/heuristic_baseline.py"
 candidate_subdir = "minihack"
-hillclimb_extra_args = ["--engine-lane", "python"]
 
 [[task]]
 id = "rogue-singleplayer"
