@@ -1,0 +1,4323 @@
+{
+  "schema_version": "goex_checkpoint_frontier.v1",
+  "run_id": "rogue_smoke2_20260617_184300",
+  "checkpoints": [
+    {
+      "checkpoint_id": "goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1_goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "search_rollout_evidence",
+      "status": "available_for_resume",
+      "metadata": {
+        "created_at": "2026-06-17T22:43:25.650968Z",
+        "evidence_id": "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "observed_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "observed_objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "search_rollout_evidence",
+      "status": "available_for_resume",
+      "metadata": {
+        "created_at": "2026-06-17T22:43:25.650975Z",
+        "evidence_id": "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "observed_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "observed_objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_ckpt_goex_queue_core_candidate_full_resume_goex_prompt_e65cc22f57db_goex_ckpt_goex_q_4a6337b2acc8533b_goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_resume_623dcd156e3ea598",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "search_rollout_evidence",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_source_candidate_id": "goex_prompt_e65cc22f57db",
+        "checkpoint_trace": {
+          "checkpoint_id": "goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+          "checkpoint_metadata": {
+            "created_at": "2026-06-17T22:43:25.650975Z",
+            "evidence_id": "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+            "observed_labels": [
+              "dungeon_level:1",
+              "objective:descend",
+              "scout_score:9.0",
+              "synth_shaped_reward:9.0"
+            ],
+            "observed_objective_labels": [
+              "dungeon_level:1",
+              "objective:descend",
+              "scout_score:9.0",
+              "synth_shaped_reward:9.0"
+            ],
+            "reward": 0.0,
+            "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+            "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+          },
+          "observed_objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": null,
+          "reward": 0.0,
+          "schema_version": "goex_checkpoint_trace.v1",
+          "seed": 2,
+          "source": "search_rollout_evidence",
+          "source_candidate_id": "goex_prompt_e65cc22f57db",
+          "source_evidence_id": "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+          "source_rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+          "source_sensor_frame_id": null,
+          "source_trace_ref": null,
+          "status": "available_for_resume",
+          "step": null,
+          "theme_id": null
+        },
+        "created_at": "2026-06-17T22:44:11.416149Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_resume_goex_prompt_e65cc22f57db_goex_ckpt_goex_q_4a6337b2acc8533b_sensor_74b5b2941030",
+        "goex_lane": "core_candidate_full",
+        "observed_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0",
+          "truncated"
+        ],
+        "observed_objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0",
+          "truncated"
+        ],
+        "parent_kind": "baseline",
+        "partial_comparison": {
+          "candidate_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0",
+            "truncated"
+          ],
+          "checkpoint_id": "goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+          "checkpoint_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "comparable": true,
+          "comparison_kind": "checkpoint_resume_delta",
+          "comparison_warning": null,
+          "new_labels": [
+            "truncated"
+          ]
+        },
+        "progress_delta": {
+          "candidate_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0",
+            "truncated"
+          ],
+          "checkpoint_id": "goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+          "checkpoint_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "comparable": true,
+          "comparison_kind": "checkpoint_resume_delta",
+          "comparison_warning": null,
+          "new_labels": [
+            "truncated"
+          ]
+        },
+        "resume_candidate_id": "goex_prompt_e65cc22f57db",
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_resume_goex_prompt_e65cc22f57db_goex_ckpt_goex_q_4a6337b2acc8533b",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_ckpt_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh__1cd1410e933b83fa",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "search_rollout_evidence",
+      "status": "available_for_resume",
+      "metadata": {
+        "created_at": "2026-06-17T22:44:11.416154Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_lane": "core_candidate_full",
+        "observed_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "observed_objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "parent_kind": "baseline",
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0001",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0001",
+        "created_at": "2026-06-17T22:44:11.416159Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 1,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 1,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0002",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0002",
+        "created_at": "2026-06-17T22:44:11.416166Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 2,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 2,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0003",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0003",
+        "created_at": "2026-06-17T22:44:11.41617Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 3,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 3,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0004",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0004",
+        "created_at": "2026-06-17T22:44:11.416174Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 4,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 4,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0005",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0005",
+        "created_at": "2026-06-17T22:44:11.416178Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 5,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 5,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0006",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0006",
+        "created_at": "2026-06-17T22:44:11.416183Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 6,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 6,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0007",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0007",
+        "created_at": "2026-06-17T22:44:11.416186Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 7,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 7,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0008",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0008",
+        "created_at": "2026-06-17T22:44:11.41619Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 8,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 8,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0009",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0009",
+        "created_at": "2026-06-17T22:44:11.416194Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 9,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 9,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0010",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0010",
+        "created_at": "2026-06-17T22:44:11.416198Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 10,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 10,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0011",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0011",
+        "created_at": "2026-06-17T22:44:11.416202Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 11,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 11,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0012",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0012",
+        "created_at": "2026-06-17T22:44:11.416206Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 12,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 12,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0013",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0013",
+        "created_at": "2026-06-17T22:44:11.41621Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 13,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 13,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0014",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0014",
+        "created_at": "2026-06-17T22:44:11.416215Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 14,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 14,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0015",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0015",
+        "created_at": "2026-06-17T22:44:11.416219Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 15,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 15,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0016",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0016",
+        "created_at": "2026-06-17T22:44:11.416222Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 16,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 16,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0017",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0017",
+        "created_at": "2026-06-17T22:44:11.416227Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 17,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 17,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0018",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0018",
+        "created_at": "2026-06-17T22:44:11.416231Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 18,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 18,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0019",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0019",
+        "created_at": "2026-06-17T22:44:11.416235Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 19,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 19,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0020",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_0020",
+        "created_at": "2026-06-17T22:44:11.416239Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 20,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 20,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_ckpt_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh__6f9d94d6e80d6dad",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "search_rollout_evidence",
+      "status": "available_for_resume",
+      "metadata": {
+        "created_at": "2026-06-17T22:44:11.416243Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_lane": "core_candidate_full",
+        "observed_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "observed_objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "parent_kind": "baseline",
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0001",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0001",
+        "created_at": "2026-06-17T22:44:11.416247Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 1,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 1,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0002",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0002",
+        "created_at": "2026-06-17T22:44:11.416252Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 2,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 2,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0003",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0003",
+        "created_at": "2026-06-17T22:44:11.416256Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 3,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 3,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0004",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0004",
+        "created_at": "2026-06-17T22:44:11.41626Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 4,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 4,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0005",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0005",
+        "created_at": "2026-06-17T22:44:11.416264Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 5,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 5,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0006",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0006",
+        "created_at": "2026-06-17T22:44:11.416268Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 6,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 6,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0007",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0007",
+        "created_at": "2026-06-17T22:44:11.416272Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 7,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 7,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0008",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0008",
+        "created_at": "2026-06-17T22:44:11.416276Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 8,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 8,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0009",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0009",
+        "created_at": "2026-06-17T22:44:11.416281Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 9,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 9,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0010",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0010",
+        "created_at": "2026-06-17T22:44:11.416285Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 10,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 10,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0011",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0011",
+        "created_at": "2026-06-17T22:44:11.416289Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 11,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 11,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0012",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0012",
+        "created_at": "2026-06-17T22:44:11.416294Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 12,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 12,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0013",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0013",
+        "created_at": "2026-06-17T22:44:11.416298Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 13,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 13,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0014",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0014",
+        "created_at": "2026-06-17T22:44:11.416302Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 14,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 14,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0015",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0015",
+        "created_at": "2026-06-17T22:44:11.416306Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 15,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 15,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0016",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0016",
+        "created_at": "2026-06-17T22:44:11.41631Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 16,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 16,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0017",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0017",
+        "created_at": "2026-06-17T22:44:11.416315Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 17,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 17,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0018",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0018",
+        "created_at": "2026-06-17T22:44:11.416319Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 18,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 18,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0019",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0019",
+        "created_at": "2026-06-17T22:44:11.416323Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 19,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 19,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0020",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 2,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_0020",
+        "created_at": "2026-06-17T22:44:11.416327Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 20,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 20,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_ckpt_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh__ab877be836db76ca",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 3,
+      "source": "search_rollout_evidence",
+      "status": "available_for_resume",
+      "metadata": {
+        "created_at": "2026-06-17T22:44:11.416331Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+        "goex_lane": "core_candidate_full",
+        "observed_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "observed_objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "parent_kind": "baseline",
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0001",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 3,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0001",
+        "created_at": "2026-06-17T22:44:11.416336Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 1,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 1,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0002",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 3,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0002",
+        "created_at": "2026-06-17T22:44:11.41634Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 2,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 2,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0003",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 3,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0003",
+        "created_at": "2026-06-17T22:44:11.416344Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 3,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 3,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0004",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 3,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0004",
+        "created_at": "2026-06-17T22:44:11.416349Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 4,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 4,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0005",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 3,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0005",
+        "created_at": "2026-06-17T22:44:11.416353Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 5,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 5,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0006",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 3,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0006",
+        "created_at": "2026-06-17T22:44:11.416358Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 6,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 6,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0007",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 3,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0007",
+        "created_at": "2026-06-17T22:44:11.416362Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 7,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 7,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0008",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 3,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0008",
+        "created_at": "2026-06-17T22:44:11.416367Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 8,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 8,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0009",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 3,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0009",
+        "created_at": "2026-06-17T22:44:11.416371Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 9,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 9,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0010",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 3,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0010",
+        "created_at": "2026-06-17T22:44:11.416375Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 10,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 10,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0011",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 3,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0011",
+        "created_at": "2026-06-17T22:44:11.41638Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 11,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 11,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0012",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 3,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0012",
+        "created_at": "2026-06-17T22:44:11.416384Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 12,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 12,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0013",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 3,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0013",
+        "created_at": "2026-06-17T22:44:11.416389Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 13,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 13,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0014",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 3,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0014",
+        "created_at": "2026-06-17T22:44:11.416393Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 14,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 14,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0015",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 3,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0015",
+        "created_at": "2026-06-17T22:44:11.416397Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 15,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 15,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0016",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 3,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0016",
+        "created_at": "2026-06-17T22:44:11.416402Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 16,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 16,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0017",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 3,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0017",
+        "created_at": "2026-06-17T22:44:11.416406Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 17,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 17,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0018",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 3,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0018",
+        "created_at": "2026-06-17T22:44:11.416411Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 18,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 18,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0019",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 3,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0019",
+        "created_at": "2026-06-17T22:44:11.416415Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 19,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 19,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0020",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 3,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_0020",
+        "created_at": "2026-06-17T22:44:11.41642Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 20,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 20,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_ckpt_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh__a1bf2922350b73c4",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 4,
+      "source": "search_rollout_evidence",
+      "status": "available_for_resume",
+      "metadata": {
+        "created_at": "2026-06-17T22:44:11.416425Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+        "goex_lane": "core_candidate_full",
+        "observed_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "observed_objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "parent_kind": "baseline",
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0001",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 4,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0001",
+        "created_at": "2026-06-17T22:44:11.416429Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 1,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 1,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0002",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 4,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0002",
+        "created_at": "2026-06-17T22:44:11.416434Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 2,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 2,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0003",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 4,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0003",
+        "created_at": "2026-06-17T22:44:11.416438Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 3,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 3,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0004",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 4,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0004",
+        "created_at": "2026-06-17T22:44:11.416443Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 4,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 4,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0005",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 4,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0005",
+        "created_at": "2026-06-17T22:44:11.416447Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 5,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 5,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0006",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 4,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0006",
+        "created_at": "2026-06-17T22:44:11.416452Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 6,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 6,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0007",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 4,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0007",
+        "created_at": "2026-06-17T22:44:11.416456Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 7,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 7,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0008",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 4,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0008",
+        "created_at": "2026-06-17T22:44:11.416461Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 8,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 8,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0009",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 4,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0009",
+        "created_at": "2026-06-17T22:44:11.416465Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 9,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 9,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0010",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 4,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0010",
+        "created_at": "2026-06-17T22:44:11.41647Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 10,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 10,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0011",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 4,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0011",
+        "created_at": "2026-06-17T22:44:11.416474Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 11,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 11,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0012",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 4,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0012",
+        "created_at": "2026-06-17T22:44:11.416479Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 12,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 12,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0013",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 4,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0013",
+        "created_at": "2026-06-17T22:44:11.416484Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 13,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 13,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0014",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 4,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0014",
+        "created_at": "2026-06-17T22:44:11.416488Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 14,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 14,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0015",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 4,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0015",
+        "created_at": "2026-06-17T22:44:11.416493Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 15,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 15,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0016",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 4,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0016",
+        "created_at": "2026-06-17T22:44:11.416497Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 16,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 16,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0017",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 4,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0017",
+        "created_at": "2026-06-17T22:44:11.416502Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 17,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 17,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0018",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 4,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0018",
+        "created_at": "2026-06-17T22:44:11.416507Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 18,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 18,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0019",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 4,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0019",
+        "created_at": "2026-06-17T22:44:11.416512Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 19,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 19,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0020",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 4,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_0020",
+        "created_at": "2026-06-17T22:44:11.416517Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 20,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 20,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_ckpt_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh__e6ae6aed280aec9f",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "search_rollout_evidence",
+      "status": "available_for_resume",
+      "metadata": {
+        "created_at": "2026-06-17T22:44:11.416522Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_lane": "core_candidate_full",
+        "observed_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "observed_objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "parent_kind": "baseline",
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0001",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0001",
+        "created_at": "2026-06-17T22:44:11.416528Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 1,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 1,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0002",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0002",
+        "created_at": "2026-06-17T22:44:11.416533Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 2,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 2,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0003",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0003",
+        "created_at": "2026-06-17T22:44:11.416537Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 3,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 3,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0004",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0004",
+        "created_at": "2026-06-17T22:44:11.416542Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 4,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 4,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0005",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0005",
+        "created_at": "2026-06-17T22:44:11.416547Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 5,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 5,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0006",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0006",
+        "created_at": "2026-06-17T22:44:11.416552Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 6,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 6,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0007",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0007",
+        "created_at": "2026-06-17T22:44:11.416557Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 7,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 7,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0008",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0008",
+        "created_at": "2026-06-17T22:44:11.416562Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 8,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 8,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0009",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0009",
+        "created_at": "2026-06-17T22:44:11.416566Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 9,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 9,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0010",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0010",
+        "created_at": "2026-06-17T22:44:11.416572Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 10,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 10,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0011",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0011",
+        "created_at": "2026-06-17T22:44:11.416577Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 11,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 11,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0012",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0012",
+        "created_at": "2026-06-17T22:44:11.416581Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 12,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 12,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0013",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0013",
+        "created_at": "2026-06-17T22:44:11.416586Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 13,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 13,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0014",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0014",
+        "created_at": "2026-06-17T22:44:11.416592Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 14,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 14,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0015",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0015",
+        "created_at": "2026-06-17T22:44:11.416598Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 15,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 15,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0016",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0016",
+        "created_at": "2026-06-17T22:44:11.416604Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 16,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 16,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0017",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0017",
+        "created_at": "2026-06-17T22:44:11.416609Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 17,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 17,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0018",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0018",
+        "created_at": "2026-06-17T22:44:11.416614Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 18,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 18,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0019",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0019",
+        "created_at": "2026-06-17T22:44:11.41662Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 19,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 19,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0020",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "theme_id": null,
+      "seed": 1,
+      "source": "mid_rollout_checkpoint",
+      "status": "available_for_resume",
+      "metadata": {
+        "checkpoint_id": "goex_midcp_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_0020",
+        "created_at": "2026-06-17T22:44:11.416625Z",
+        "evidence_id": "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "goex_checkpoint_kind": "mid_rollout",
+        "metadata": {
+          "objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": 20,
+          "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1"
+        },
+        "milestones": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "policy_llm_call_index": 20,
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    }
+  ]
+}

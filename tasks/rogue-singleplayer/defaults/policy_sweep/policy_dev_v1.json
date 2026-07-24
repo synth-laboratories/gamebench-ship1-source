@@ -1,0 +1,7 @@
+{
+  "schema": "gamebench.rogue.policy_sweep.v1",
+  "suite_id": "rogue_policy_dev_v1",
+  "task_template": "tasks/policy_dev_template.json",
+  "seeds": [1, 2, 3, 4],
+  "max_steps": 40
+}

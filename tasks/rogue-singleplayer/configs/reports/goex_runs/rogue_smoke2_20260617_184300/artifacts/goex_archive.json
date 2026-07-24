@@ -1,0 +1,285 @@
+{
+  "schema_version": "goex_archive.v1",
+  "run_id": "rogue_smoke2_20260617_184300",
+  "plugin_id": "goex.prompt_plugin.v1",
+  "candidates": [
+    {
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "parent_id": null,
+      "source": "seed",
+      "status": "accepted",
+      "plugin_id": "goex.prompt_plugin.v1",
+      "candidate_kind": "prompt",
+      "primary_artifact_id": "goex_artifact_prompt_85d16fd0f76817df",
+      "primary_treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+      "lever_bundle": {
+        "schema_version": "lever_bundle.v1",
+        "bundle_id": "goex_prompt_e65cc22f57db",
+        "parent_ids": [],
+        "values": {
+          "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+        },
+        "mutated_lever_ids": [
+          "react_system_prompt"
+        ],
+        "metadata": {
+          "candidate_kind": "prompt",
+          "primary_lever_id": "react_system_prompt"
+        }
+      },
+      "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+      "metadata": {
+        "candidate_kind": "prompt",
+        "goex_acceptance": {
+          "candidate_id": "goex_prompt_e65cc22f57db",
+          "decision": "accepted",
+          "eligible_for_promotion": true,
+          "final_status": "accepted",
+          "heldout_measurement": {
+            "best_reward": 0.0,
+            "evidence_count": 4,
+            "evidence_ids": [
+              "goex_evidence_goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_11_sensor_f5a1ee69a66f",
+              "goex_evidence_goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_12_sensor_3dfc3352db1c",
+              "goex_evidence_goex_queue_closeout_heldout_goex_prompt_e65cc22f57db_11_sensor_050f14718d04",
+              "goex_evidence_goex_queue_closeout_heldout_goex_prompt_e65cc22f57db_12_sensor_abc88a679da8"
+            ],
+            "mean_reward": 0.0,
+            "rollout_ids": [
+              "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_closeout_heldout_goex_prompt_e65cc22f57db_11",
+              "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_closeout_heldout_goex_prompt_e65cc22f57db_12",
+              "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_11",
+              "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_12"
+            ],
+            "scored_count": 4,
+            "status_counts": {
+              "completed": 4
+            },
+            "worst_reward": 0.0
+          },
+          "parent_id": null,
+          "previous_status": "accepted",
+          "rank": 1,
+          "reason": "selected by highest mean reward on search evidence",
+          "search": {
+            "best_reward": 0.0,
+            "evidence_count": 8,
+            "evidence_ids": [
+              "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+              "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+              "goex_evidence_goex_queue_core_candidate_full_resume_goex_prompt_e65cc22f57db_goex_ckpt_goex_q_4a6337b2acc8533b_sensor_74b5b2941030",
+              "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+              "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+              "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+              "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+              "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4"
+            ],
+            "mean_reward": 0.0,
+            "rollout_ids": [
+              "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+              "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+              "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+              "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+              "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+              "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_resume_goex_prompt_e65cc22f57db_goex_ckpt_goex_q_4a6337b2acc8533b",
+              "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1",
+              "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2"
+            ],
+            "scored_count": 8,
+            "status_counts": {
+              "completed": 8
+            },
+            "worst_reward": 0.0
+          },
+          "selected": true,
+          "source": "seed"
+        },
+        "goex_acceptance_decided_at": "2026-06-17T22:44:57.348202Z",
+        "goex_acceptance_report_schema_version": "goex_acceptance_report.v1",
+        "goex_acceptance_score": {
+          "criterion": "search_mean_reward",
+          "heldout_mean_reward": 0.0,
+          "heldout_scored_count": 4,
+          "rank": 1,
+          "search_best_reward": 0.0,
+          "search_mean_reward": 0.0,
+          "search_scored_count": 8,
+          "selected": true
+        },
+        "platform_acceptance_decision": "accepted",
+        "platform_acceptance_reason": "selected by highest mean reward on search evidence",
+        "platform_acceptance_stage": "goex_search",
+        "platform_acceptance_status": "final",
+        "plugin_id": "goex.prompt_plugin.v1",
+        "primary_artifact_id": "goex_artifact_prompt_85d16fd0f76817df",
+        "primary_treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    }
+  ],
+  "plugin_work_items": [
+    {
+      "schema_version": "goex_plugin_work_item.v1",
+      "work_id": "goex_work_prompt_98348e419caab5da",
+      "run_id": "rogue_smoke2_20260617_184300",
+      "plugin_id": "goex.prompt_plugin.v1",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "candidate_kind": "prompt",
+      "stage": "core",
+      "scope": "global",
+      "theme_ids": [],
+      "parent_candidate_id": null,
+      "parent_artifact_ids": [],
+      "recipe_payload": {
+        "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+      },
+      "budget": null,
+      "status": "materialized",
+      "failure": null,
+      "provenance_refs": [],
+      "created_at": "2026-06-17T22:43:01.763208Z",
+      "updated_at": "2026-06-17T22:43:01.763208Z",
+      "metadata": {}
+    }
+  ],
+  "plugin_artifacts": [
+    {
+      "schema_version": "goex_plugin_artifact.v1",
+      "artifact_id": "goex_artifact_prompt_85d16fd0f76817df",
+      "run_id": "rogue_smoke2_20260617_184300",
+      "plugin_id": "goex.prompt_plugin.v1",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "work_id": "goex_work_prompt_98348e419caab5da",
+      "kind": "prompt_payload",
+      "scope": "global",
+      "theme_ids": [],
+      "parent_artifact_ids": [],
+      "status": "materialized",
+      "storage_uri": null,
+      "payload": {
+        "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+      },
+      "metadata": {
+        "candidate_kind": "prompt",
+        "plugin_id": "goex.prompt_plugin.v1",
+        "primary_artifact_id": "goex_artifact_prompt_85d16fd0f76817df",
+        "primary_treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      },
+      "created_at": "2026-06-17T22:43:01.764177Z",
+      "updated_at": "2026-06-17T22:43:01.764177Z"
+    },
+    {
+      "schema_version": "goex_plugin_artifact.v1",
+      "artifact_id": "goex_artifact_policy_2fcfad471f682812",
+      "run_id": "rogue_smoke2_20260617_184300",
+      "plugin_id": "goex.prompt_plugin.v1",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "work_id": "goex_work_prompt_98348e419caab5da",
+      "kind": "policy_bundle",
+      "scope": "global",
+      "theme_ids": [],
+      "parent_artifact_ids": [
+        "goex_artifact_prompt_85d16fd0f76817df"
+      ],
+      "status": "materialized",
+      "storage_uri": null,
+      "payload": {
+        "policy_config": {
+          "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+          "system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+        },
+        "policy_kind": "react_prompt",
+        "prompt_artifact_id": "goex_artifact_prompt_85d16fd0f76817df"
+      },
+      "metadata": {},
+      "created_at": "2026-06-17T22:43:01.764194Z",
+      "updated_at": "2026-06-17T22:43:01.764194Z"
+    }
+  ],
+  "rolloutable_treatments": [
+    {
+      "schema_version": "goex_rolloutable_treatment.v1",
+      "treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+      "run_id": "rogue_smoke2_20260617_184300",
+      "plugin_id": "goex.prompt_plugin.v1",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "artifact_id": "goex_artifact_policy_2fcfad471f682812",
+      "policy_kind": "react_prompt",
+      "policy_config": {
+        "react_system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}.",
+        "system_prompt": "You are a Rogue ReAct policy on GameBench rust gold. Explore the dungeon, collect useful items, reach stairs (%), then descend with >. Reply with JSON only, for example {\"action\":\"l\"}."
+      },
+      "rollout_contract": {
+        "tool_call_contract": "openai_tool_call"
+      },
+      "scope": "global",
+      "theme_ids": [],
+      "status": "ready",
+      "created_at": "2026-06-17T22:43:01.764207Z",
+      "updated_at": "2026-06-17T22:43:01.764207Z",
+      "metadata": {}
+    }
+  ],
+  "themes": [],
+  "hypotheses": [],
+  "lineage": [
+    {
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "parent_candidate_id": null,
+      "source": "seed",
+      "relation": "seed_candidate",
+      "theme_id": null,
+      "hypothesis_id": null,
+      "metadata": {}
+    }
+  ],
+  "imports": [
+    {
+      "import_id": "goex_import_rollout_evidence_0",
+      "role": "rollout_executor",
+      "workspace_dir": "",
+      "manifest_path": "",
+      "manifest_schema_version": "goex_rollout_evidence.v1",
+      "status": "imported_empty",
+      "accepted_candidate_ids": [],
+      "rejected_candidate_ids": [],
+      "accepted_work_ids": [],
+      "rejected_work_ids": [],
+      "imported_theme_ids": [],
+      "imported_hypothesis_ids": [],
+      "warnings": [],
+      "imported_at": "2026-06-17T22:43:25.650819Z"
+    },
+    {
+      "import_id": "goex_import_core_proposer_000",
+      "role": "core_proposer",
+      "workspace_dir": "reports/goex_runs/rogue_smoke2_20260617_184300/workspaces/core_proposer/round_000",
+      "manifest_path": "reports/goex_runs/rogue_smoke2_20260617_184300/workspaces/core_proposer/round_000/proposal_manifest.json",
+      "manifest_schema_version": "goex_core_proposal_manifest.v1",
+      "status": "imported_empty",
+      "accepted_candidate_ids": [],
+      "rejected_candidate_ids": [],
+      "accepted_work_ids": [],
+      "rejected_work_ids": [],
+      "imported_theme_ids": [],
+      "imported_hypothesis_ids": [],
+      "warnings": [],
+      "imported_at": "2026-06-17T22:43:25.662082Z"
+    },
+    {
+      "import_id": "goex_import_rollout_evidence_2",
+      "role": "rollout_executor",
+      "workspace_dir": "",
+      "manifest_path": "",
+      "manifest_schema_version": "goex_rollout_evidence.v1",
+      "status": "imported_empty",
+      "accepted_candidate_ids": [],
+      "rejected_candidate_ids": [],
+      "accepted_work_ids": [],
+      "rejected_work_ids": [],
+      "imported_theme_ids": [],
+      "imported_hypothesis_ids": [],
+      "warnings": [],
+      "imported_at": "2026-06-17T22:44:11.416129Z"
+    }
+  ]
+}

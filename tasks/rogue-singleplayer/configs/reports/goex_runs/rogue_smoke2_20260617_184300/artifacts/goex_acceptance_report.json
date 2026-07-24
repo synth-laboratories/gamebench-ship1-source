@@ -1,0 +1,155 @@
+{
+  "schema_version": "goex_acceptance_report.v1",
+  "run_id": "rogue_smoke2_20260617_184300",
+  "criterion": "search_mean_reward",
+  "baseline_candidate_id": "goex_prompt_e65cc22f57db",
+  "champion_candidate_id": "goex_prompt_e65cc22f57db",
+  "promoted": false,
+  "selection_has_search_evidence": true,
+  "candidates": [
+    {
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "parent_id": null,
+      "source": "seed",
+      "previous_status": "accepted",
+      "final_status": "accepted",
+      "decision": "accepted",
+      "reason": "selected by highest mean reward on search evidence",
+      "selected": true,
+      "eligible_for_promotion": true,
+      "rank": 1,
+      "search": {
+        "evidence_count": 8,
+        "scored_count": 8,
+        "mean_reward": 0.0,
+        "best_reward": 0.0,
+        "worst_reward": 0.0,
+        "evidence_ids": [
+          "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+          "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+          "goex_evidence_goex_queue_core_candidate_full_resume_goex_prompt_e65cc22f57db_goex_ckpt_goex_q_4a6337b2acc8533b_sensor_74b5b2941030",
+          "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+          "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+          "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+          "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+          "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4"
+        ],
+        "rollout_ids": [
+          "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+          "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+          "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+          "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+          "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+          "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_resume_goex_prompt_e65cc22f57db_goex_ckpt_goex_q_4a6337b2acc8533b",
+          "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1",
+          "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2"
+        ],
+        "status_counts": {
+          "completed": 8
+        }
+      },
+      "heldout_measurement": {
+        "evidence_count": 4,
+        "scored_count": 4,
+        "mean_reward": 0.0,
+        "best_reward": 0.0,
+        "worst_reward": 0.0,
+        "evidence_ids": [
+          "goex_evidence_goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_11_sensor_f5a1ee69a66f",
+          "goex_evidence_goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_12_sensor_3dfc3352db1c",
+          "goex_evidence_goex_queue_closeout_heldout_goex_prompt_e65cc22f57db_11_sensor_050f14718d04",
+          "goex_evidence_goex_queue_closeout_heldout_goex_prompt_e65cc22f57db_12_sensor_abc88a679da8"
+        ],
+        "rollout_ids": [
+          "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_closeout_heldout_goex_prompt_e65cc22f57db_11",
+          "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_closeout_heldout_goex_prompt_e65cc22f57db_12",
+          "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_11",
+          "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_12"
+        ],
+        "status_counts": {
+          "completed": 4
+        }
+      }
+    }
+  ],
+  "warnings": [],
+  "search_measurement_split": {
+    "heldout_influences_champion_selection": false,
+    "heldout_measurement_uses": "measurement_only",
+    "promotion_uses": "search"
+  },
+  "theme_acceptance": {
+    "entries": [],
+    "promotion_eligible": false,
+    "schema_version": "goex_theme_acceptance.v1",
+    "score_source": "theme_verifier_agent"
+  },
+  "base_acceptance": {
+    "baseline_candidate_id": "goex_prompt_e65cc22f57db",
+    "candidates": [
+      {
+        "candidate_id": "goex_prompt_e65cc22f57db",
+        "eligible_for_promotion": true,
+        "heldout_measurement": {
+          "best_reward": 0.0,
+          "evidence_count": 4,
+          "evidence_ids": [
+            "goex_evidence_goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_11_sensor_f5a1ee69a66f",
+            "goex_evidence_goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_12_sensor_3dfc3352db1c",
+            "goex_evidence_goex_queue_closeout_heldout_goex_prompt_e65cc22f57db_11_sensor_050f14718d04",
+            "goex_evidence_goex_queue_closeout_heldout_goex_prompt_e65cc22f57db_12_sensor_abc88a679da8"
+          ],
+          "mean_reward": 0.0,
+          "rollout_ids": [
+            "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_closeout_heldout_goex_prompt_e65cc22f57db_11",
+            "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_closeout_heldout_goex_prompt_e65cc22f57db_12",
+            "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_11",
+            "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_heldout_measurement_goex_prompt_e65cc22f57db_12"
+          ],
+          "scored_count": 4,
+          "status_counts": {
+            "completed": 4
+          },
+          "worst_reward": 0.0
+        },
+        "rank": 1,
+        "search": {
+          "best_reward": 0.0,
+          "evidence_count": 8,
+          "evidence_ids": [
+            "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+            "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+            "goex_evidence_goex_queue_core_candidate_full_resume_goex_prompt_e65cc22f57db_goex_ckpt_goex_q_4a6337b2acc8533b_sensor_74b5b2941030",
+            "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+            "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+            "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+            "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+            "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4"
+          ],
+          "mean_reward": 0.0,
+          "rollout_ids": [
+            "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+            "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+            "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+            "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+            "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+            "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_core_candidate_full_resume_goex_prompt_e65cc22f57db_goex_ckpt_goex_q_4a6337b2acc8533b",
+            "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1",
+            "goex_rollout_rogue_smoke2_20260617_184300_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2"
+          ],
+          "scored_count": 8,
+          "status_counts": {
+            "completed": 8
+          },
+          "worst_reward": 0.0
+        },
+        "selected": true
+      }
+    ],
+    "champion_candidate_id": "goex_prompt_e65cc22f57db",
+    "champion_note": "champion is selected by fresh search reward and may diverge from best_base promotion state",
+    "schema_version": "goex_base_acceptance.v1",
+    "score_source": "search_mean_reward"
+  },
+  "decided_at": "2026-06-17T22:44:57.348202Z"
+}

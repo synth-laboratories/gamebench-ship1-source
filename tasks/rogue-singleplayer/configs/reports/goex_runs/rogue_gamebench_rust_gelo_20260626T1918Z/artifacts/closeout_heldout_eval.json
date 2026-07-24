@@ -1,0 +1,52 @@
+{
+  "schema_version": "goex_closeout_heldout_eval.v1",
+  "run_id": "rogue_gamebench_rust_gelo_20260626T1918Z",
+  "seed_count": 2,
+  "seeds": [
+    11,
+    12
+  ],
+  "candidates": [
+    {
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "scope": "base",
+      "roles": [
+        "baseline",
+        "champion",
+        "best_base",
+        "frontier"
+      ],
+      "seed_count": 2,
+      "reward_mean": 0.0,
+      "reward_sd": 0.0,
+      "reward_min": 0.0,
+      "reward_max": 0.0,
+      "objective_labels": [
+        {
+          "label": "dungeon_level:1",
+          "hit_count": 2,
+          "seed_count": 2,
+          "rate": 1.0
+        },
+        {
+          "label": "objective:descend",
+          "hit_count": 2,
+          "seed_count": 2,
+          "rate": 1.0
+        },
+        {
+          "label": "scout_score:9.0",
+          "hit_count": 2,
+          "seed_count": 2,
+          "rate": 1.0
+        },
+        {
+          "label": "synth_shaped_reward:9.0",
+          "hit_count": 2,
+          "seed_count": 2,
+          "rate": 1.0
+        }
+      ]
+    }
+  ]
+}

@@ -115,7 +115,7 @@ class ScorerAuthority(StrictModel):
     request_bearer_token_sha256: str
     backend_claim_read_timeout_seconds: float
     expected_platform_system: Literal["Linux"]
-    expected_platform_machine: Literal["aarch64"]
+    expected_platform_machine: Literal["x86_64"]
     state_directory: str
     workspace_directory: str
     max_candidate_bytes: int
@@ -310,11 +310,12 @@ class ScorerAuthority(StrictModel):
         if sandbox_probe.returncode != 0:
             raise RuntimeError("scorer runtime bubblewrap isolation preflight failed")
         manifest_bytes = PREBUILT_MANIFEST.read_bytes()
-        fixture_bytes = PREBUILT_BINARY.read_bytes()
         if hashlib.sha256(manifest_bytes).hexdigest() != self.scorer_fixture_manifest_sha256:
             raise RuntimeError("scorer fixture manifest SHA mismatch")
-        if hashlib.sha256(fixture_bytes).hexdigest() != self.scorer_binary_sha256:
-            raise RuntimeError("scorer fixture binary SHA mismatch")
+        # Fixture provenance: the recorded aarch64 fixture must match its own
+        # manifest. Execution authority is bound separately below against the
+        # binary this host actually runs (x86_64 image build on cloud hosts),
+        # so the fixture bytes are not compared to scorer_binary_sha256.
         manifest = PrebuiltRustReplManifest.load(PREBUILT_MANIFEST)
         manifest.verify_source_closure()
         manifest.verify_fixture_binary(PREBUILT_BINARY)

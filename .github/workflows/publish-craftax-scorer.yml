@@ -37,15 +37,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and publish ARM64 scorer
+      - name: Build and publish amd64 scorer
         id: scorer
         uses: docker/build-push-action@v6
         with:
           context: tasks/craftax-singleplayer
           file: tasks/craftax-singleplayer/containers/scorer_service/Dockerfile
-          platforms: linux/arm64
+          platforms: linux/amd64
           build-args: |
-            SCORER_BASE_IMAGE=python@sha256:baf89808ec37adeaab83cec287adb4a2afa4a11c1d51e961c7ec737877e61af6
+            SCORER_BASE_IMAGE=python@sha256:28255a3ace7eb4c48bc1b57b90af29e1bc82b4fd6c60614a8e3dce61b87ff941
+            SCORER_BUILDER_IMAGE=rust@sha256:b07b1bc9cb80ea8f48f304fe469feb759f54cfd30c6ec545a1b0ec3af822daf0
           tags: ghcr.io/joshuapurtell/gamebench-craftax-scorer:${{ github.sha }}
           push: true
 

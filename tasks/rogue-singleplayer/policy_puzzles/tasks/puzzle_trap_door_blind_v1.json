@@ -1,0 +1,26 @@
+{
+  "expected_flaw_id": "trap_door_blind",
+  "gamebench_task": "rogue-singleplayer",
+  "gold_summary": "The hidden policy walks onto known trap doors without searching or avoiding them.",
+  "hidden_policy_id": "trap_door_blind",
+  "keywords": [
+    "trap",
+    "door",
+    "avoid",
+    "search"
+  ],
+  "prompt": "Diagnose the hidden Rogue policy flaw from the provided state-action traces.",
+  "puzzle_id": "puzzle_trap_door_blind_v1",
+  "rollout": {
+    "expected_outcome": "failure",
+    "max_steps": 300,
+    "min_failure_seeds": 2,
+    "seeds": [
+      101,
+      102,
+      103
+    ],
+    "task_path": "tasks/policy_dev_template.json"
+  },
+  "schema_version": "gamebench.policy_puzzle.task.v1"
+}

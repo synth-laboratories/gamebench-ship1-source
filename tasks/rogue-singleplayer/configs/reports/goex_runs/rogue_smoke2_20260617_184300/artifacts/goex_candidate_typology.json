@@ -1,0 +1,40 @@
+{
+  "schema_version": "goex_candidate_typology.v1",
+  "run_id": "rogue_smoke2_20260617_184300",
+  "partial": false,
+  "global_frontier_candidate_ids": [
+    "goex_prompt_e65cc22f57db"
+  ],
+  "theme_frontiers": {},
+  "candidate_count": 1,
+  "scored_count": 1,
+  "candidates": [
+    {
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "parent_id": null,
+      "status": "accepted",
+      "source": "seed",
+      "scope": {
+        "scope": "full",
+        "theme_id": null,
+        "consolidated_theme_ids": [],
+        "lineage_relation": "seed_candidate"
+      },
+      "frontier": {
+        "on_frontier": true,
+        "frontiers": [
+          "global"
+        ],
+        "score": 0.0,
+        "score_source": "search_mean",
+        "dominated_by": []
+      },
+      "roles": {
+        "is_baseline": true,
+        "is_champion": true,
+        "is_best_base": true
+      }
+    }
+  ],
+  "decided_at": "2026-06-17T22:44:57.348292Z"
+}

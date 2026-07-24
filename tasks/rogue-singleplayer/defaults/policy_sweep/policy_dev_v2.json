@@ -1,0 +1,129 @@
+{
+  "schema": "gamebench.rogue.policy_sweep.v2",
+  "suite_id": "rogue_policy_dev_v2",
+  "score_metric": "mean_synth_shaped_reward",
+  "tasks": [
+    {
+      "task_id": "rogue_v2_descend_core",
+      "seed": 101,
+      "max_steps": 40,
+      "objective": "descend",
+      "grid": [
+        "                    ",
+        "  ------------      ",
+        "  |@...*....%|      ",
+        "  |....:.....|      ",
+        "  ------------      ",
+        "                    "
+      ]
+    },
+    {
+      "task_id": "rogue_v2_gold_detour",
+      "seed": 102,
+      "max_steps": 55,
+      "objective": "descend",
+      "grid": [
+        "                    ",
+        "  ------------      ",
+        "  |@....%....|      ",
+        "  |....*.....|      ",
+        "  ------------      ",
+        "                    "
+      ]
+    },
+    {
+      "task_id": "rogue_v2_food_and_gold",
+      "seed": 103,
+      "max_steps": 60,
+      "objective": "descend",
+      "grid": [
+        "                    ",
+        "  ------------      ",
+        "  |@.......% |      ",
+        "  |..*..:....|      ",
+        "  ------------      ",
+        "                    "
+      ]
+    },
+    {
+      "task_id": "rogue_v2_wide_scout",
+      "seed": 104,
+      "max_steps": 80,
+      "objective": "descend",
+      "grid": [
+        "                        ",
+        "  ------------------    ",
+        "  |@..............%|    ",
+        "  |................|    ",
+        "  |..*.........:...|    ",
+        "  ------------------    ",
+        "                        "
+      ]
+    },
+    {
+      "task_id": "rogue_v2_monster_path",
+      "seed": 105,
+      "max_steps": 70,
+      "objective": "descend",
+      "grid": [
+        "                    ",
+        "  ------------      ",
+        "  |@........%|      ",
+        "  |..........|      ",
+        "  ------------      ",
+        "                    "
+      ],
+      "monsters": [
+        {"id": "kestrel", "type": "K", "row": 2, "col": 5, "hp": 1, "max_hp": 1, "level": 1, "exp": 4, "damage": "1x1"}
+      ]
+    },
+    {
+      "task_id": "rogue_v2_room_with_trap",
+      "seed": 106,
+      "max_steps": 70,
+      "objective": "descend",
+      "grid": [
+        "                    ",
+        "  ------------      ",
+        "  |@...^....%|      ",
+        "  |....*.....|      ",
+        "  ------------      ",
+        "                    "
+      ],
+      "traps": [
+        {"id": "known_arrow", "row": 2, "col": 6, "kind": 1, "flags": 17, "ch": "^"}
+      ]
+    },
+    {
+      "task_id": "rogue_v2_collect_gold",
+      "seed": 107,
+      "max_steps": 70,
+      "objective": "collect_gold",
+      "grid": [
+        "                    ",
+        "  ------------      ",
+        "  |@........%|      ",
+        "  |..*.......|      ",
+        "  ------------      ",
+        "                    "
+      ]
+    },
+    {
+      "task_id": "rogue_v2_level_object_gold",
+      "seed": 108,
+      "max_steps": 70,
+      "objective": "descend",
+      "grid": [
+        "                    ",
+        "  ------------      ",
+        "  |@........%|      ",
+        "  |..........|      ",
+        "  ------------      ",
+        "                    "
+      ],
+      "level_objects": [
+        {"id": "stash_gold", "type": "*", "row": 3, "col": 4, "goldval": 75}
+      ]
+    }
+  ]
+}
