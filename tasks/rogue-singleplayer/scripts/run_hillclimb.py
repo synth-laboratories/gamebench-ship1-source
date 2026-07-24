@@ -15,7 +15,7 @@ TASK_DIR = Path(__file__).resolve().parents[1]
 if str(TASK_DIR / "scripts") not in sys.path:
     sys.path.insert(0, str(TASK_DIR / "scripts"))
 
-from run_policy_sweep import run_policy_sweep
+from run_policy_sweep import load_suite, run_policy_sweep
 
 
 def candidate_paths(candidate_root: Path) -> list[tuple[str, Path]]:
@@ -50,9 +50,12 @@ def main() -> None:
         candidate_dir = output / "candidates" / candidate_id
         report = run_policy_sweep(
             policy_path=policy_path,
-            suite_path=suite_path,
+            suite=load_suite(suite_path),
             output_path=candidate_dir / "summary.json",
+            lane="python",
+            rust_binary=None,
             include_trace=bool(args.include_trace),
+            episode_timeout_seconds=30.0,
         )
         reports[candidate_id] = report
         rankings.append(
