@@ -361,7 +361,10 @@ def _supervised_episode(
             if process.returncode == POLICY_PROCESS_CANDIDATE_FAILURE_EXIT_CODE:
                 raise CandidatePolicyFailure()
             if process.returncode != 0 or not result_path.is_file():
-                raise EpisodeWorkerFailure()
+                detail = (_stderr or "").strip()
+                raise EpisodeWorkerFailure(
+                    f"episode worker returncode={process.returncode}; stderr={detail}"
+                )
             result = json.loads(result_path.read_text(encoding="utf-8"))
             if not isinstance(result, dict):
                 raise EpisodeWorkerFailure()
