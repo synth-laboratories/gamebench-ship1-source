@@ -41,8 +41,18 @@ def main() -> None:
     output.mkdir(parents=True, exist_ok=True)
     suite_path = Path(args.suite).expanduser().resolve()
     baseline_path = Path(args.baseline).expanduser().resolve()
+    submitted_candidates = candidate_paths(
+        Path(args.candidate_root).expanduser().resolve()
+    )
+    for candidate_id, policy_path in submitted_candidates:
+        if candidate_id == "baseline":
+            raise SystemExit("candidate id 'baseline' is reserved")
+        if policy_path.read_bytes() == baseline_path.read_bytes():
+            raise SystemExit(
+                f"candidate {candidate_id!r} is an exact baseline copy"
+            )
     policies: list[tuple[str, Path]] = [("baseline", baseline_path)]
-    policies.extend(candidate_paths(Path(args.candidate_root).expanduser().resolve()))
+    policies.extend(submitted_candidates)
     if not policies:
         raise SystemExit("no policies found")
 
