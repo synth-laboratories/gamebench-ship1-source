@@ -1,0 +1,11 @@
+{
+  "schema": "gamebench.sokoban.level_bank.v1",
+  "tier": "ultra_easy",
+  "levels": [
+    {"id": "ue-01-corner", "name": "Corner pocket", "grid": ["#####", "#@$.#", "#####"], "optimal_steps": 2, "num_boxes": 1},
+    {"id": "ue-02-left", "name": "Left pocket", "grid": ["######", "# .  #", "# $@ #", "######"], "optimal_steps": 2, "num_boxes": 1},
+    {"id": "ue-03-down", "name": "Down shove", "grid": ["#####", "#@  #", "# $ #", "# . #", "#####"], "optimal_steps": 3, "num_boxes": 1},
+    {"id": "ue-04-hall", "name": "Short hall", "grid": ["########", "#@ $  .#", "########"], "optimal_steps": 4, "num_boxes": 1},
+    {"id": "ue-05-corridor", "name": "Corridor push", "grid": ["#######", "#@$.. #", "#######"], "optimal_steps": 4, "num_boxes": 1}
+  ]
+}

@@ -1,0 +1,488 @@
+{
+  "schema": "gamebench.sokoban.verified_puzzles.v1",
+  "count": 35,
+  "puzzles": {
+    "ue-01-corner": {
+      "id": "ue-01-corner",
+      "tier": "ultra_easy",
+      "name": "Corner pocket",
+      "grid": [
+        "#####",
+        "#@$.#",
+        "#####"
+      ],
+      "optimal_steps": 2,
+      "num_boxes": 1
+    },
+    "ue-02-left": {
+      "id": "ue-02-left",
+      "tier": "ultra_easy",
+      "name": "Left pocket",
+      "grid": [
+        "######",
+        "# .  #",
+        "# $@ #",
+        "######"
+      ],
+      "optimal_steps": 2,
+      "num_boxes": 1
+    },
+    "ue-03-down": {
+      "id": "ue-03-down",
+      "tier": "ultra_easy",
+      "name": "Down shove",
+      "grid": [
+        "#####",
+        "#@  #",
+        "# $ #",
+        "# . #",
+        "#####"
+      ],
+      "optimal_steps": 3,
+      "num_boxes": 1
+    },
+    "ue-04-hall": {
+      "id": "ue-04-hall",
+      "tier": "ultra_easy",
+      "name": "Short hall",
+      "grid": [
+        "########",
+        "#@ $  .#",
+        "########"
+      ],
+      "optimal_steps": 4,
+      "num_boxes": 1
+    },
+    "ue-05-corridor": {
+      "id": "ue-05-corridor",
+      "tier": "ultra_easy",
+      "name": "Corridor push",
+      "grid": [
+        "#######",
+        "#@$.. #",
+        "#######"
+      ],
+      "optimal_steps": 4,
+      "num_boxes": 1
+    },
+    "lvl-01-corner": {
+      "id": "lvl-01-corner",
+      "tier": "easy",
+      "name": "Corner pocket",
+      "grid": [
+        "#####",
+        "#@$.#",
+        "#####"
+      ],
+      "optimal_steps": 2,
+      "num_boxes": null
+    },
+    "lvl-02-corridor": {
+      "id": "lvl-02-corridor",
+      "tier": "easy",
+      "name": "Corridor push",
+      "grid": [
+        "#######",
+        "#@$.. #",
+        "#######"
+      ],
+      "optimal_steps": 4,
+      "num_boxes": null
+    },
+    "lvl-03-t": {
+      "id": "lvl-03-t",
+      "tier": "easy",
+      "name": "T junction",
+      "grid": [
+        "#####",
+        "#@  #",
+        "# $ #",
+        "#  .#",
+        "#####"
+      ],
+      "optimal_steps": 5,
+      "num_boxes": null
+    },
+    "lvl-04-walls": {
+      "id": "lvl-04-walls",
+      "tier": "easy",
+      "name": "Walled garden",
+      "grid": [
+        "######",
+        "#@  .#",
+        "# ## #",
+        "# $  #",
+        "######"
+      ],
+      "optimal_steps": 6,
+      "num_boxes": null
+    },
+    "lvl-05-double": {
+      "id": "lvl-05-double",
+      "tier": "easy",
+      "name": "Two box room",
+      "grid": [
+        "#######",
+        "#@$.  #",
+        "#     #",
+        "# $.  #",
+        "#######"
+      ],
+      "optimal_steps": 8,
+      "num_boxes": null
+    },
+    "seed-101": {
+      "id": "seed-101",
+      "tier": "easy",
+      "name": "Right shove",
+      "grid": [
+        "######",
+        "#@ $ #",
+        "#   .#",
+        "######"
+      ],
+      "optimal_steps": 5,
+      "num_boxes": null
+    },
+    "seed-102": {
+      "id": "seed-102",
+      "tier": "easy",
+      "name": "Down shove",
+      "grid": [
+        "#####",
+        "#@  #",
+        "# $ #",
+        "# . #",
+        "#####"
+      ],
+      "optimal_steps": 3,
+      "num_boxes": null
+    },
+    "seed-103": {
+      "id": "seed-103",
+      "tier": "easy",
+      "name": "Around box",
+      "grid": [
+        "######",
+        "#@   #",
+        "# $$ #",
+        "# .. #",
+        "######"
+      ],
+      "optimal_steps": 7,
+      "num_boxes": null
+    },
+    "seed-104": {
+      "id": "seed-104",
+      "tier": "easy",
+      "name": "Short hall",
+      "grid": [
+        "########",
+        "#@ $  .#",
+        "########"
+      ],
+      "optimal_steps": 4,
+      "num_boxes": null
+    },
+    "seed-105": {
+      "id": "seed-105",
+      "tier": "easy",
+      "name": "Two targets",
+      "grid": [
+        "#######",
+        "#@ $  #",
+        "#  $ .#",
+        "#    .#",
+        "#######"
+      ],
+      "optimal_steps": 9,
+      "num_boxes": null
+    },
+    "seed-106": {
+      "id": "seed-106",
+      "tier": "easy",
+      "name": "Hook",
+      "grid": [
+        "######",
+        "#@   #",
+        "###$ #",
+        "#  . #",
+        "######"
+      ],
+      "optimal_steps": 7,
+      "num_boxes": null
+    },
+    "seed-107": {
+      "id": "seed-107",
+      "tier": "easy",
+      "name": "Open square",
+      "grid": [
+        "#######",
+        "#@    #",
+        "# $$  #",
+        "# ..  #",
+        "#######"
+      ],
+      "optimal_steps": 8,
+      "num_boxes": null
+    },
+    "seed-108": {
+      "id": "seed-108",
+      "tier": "easy",
+      "name": "Left pocket",
+      "grid": [
+        "######",
+        "# .  #",
+        "# $@ #",
+        "######"
+      ],
+      "optimal_steps": 2,
+      "num_boxes": null
+    },
+    "seed-109": {
+      "id": "seed-109",
+      "tier": "easy",
+      "name": "Vertical pair",
+      "grid": [
+        "#####",
+        "#@  #",
+        "# $ #",
+        "# $ #",
+        "# . #",
+        "# . #",
+        "#####"
+      ],
+      "optimal_steps": 6,
+      "num_boxes": null
+    },
+    "seed-110": {
+      "id": "seed-110",
+      "tier": "easy",
+      "name": "Tiny choice",
+      "grid": [
+        "######",
+        "#@ $ #",
+        "# .  #",
+        "######"
+      ],
+      "optimal_steps": 4,
+      "num_boxes": null
+    },
+    "med-01-t": {
+      "id": "med-01-t",
+      "tier": "medium",
+      "name": "T junction",
+      "grid": [
+        "#####",
+        "#@  #",
+        "# $ #",
+        "#  .#",
+        "#####"
+      ],
+      "optimal_steps": 5,
+      "num_boxes": 1
+    },
+    "med-02-walls": {
+      "id": "med-02-walls",
+      "tier": "medium",
+      "name": "Walled garden",
+      "grid": [
+        "######",
+        "#@  .#",
+        "# ## #",
+        "# $  #",
+        "######"
+      ],
+      "optimal_steps": 6,
+      "num_boxes": 1
+    },
+    "med-03-around": {
+      "id": "med-03-around",
+      "tier": "medium",
+      "name": "Around box",
+      "grid": [
+        "######",
+        "#@   #",
+        "# $$ #",
+        "# .. #",
+        "######"
+      ],
+      "optimal_steps": 7,
+      "num_boxes": 2
+    },
+    "med-04-hook": {
+      "id": "med-04-hook",
+      "tier": "medium",
+      "name": "Hook",
+      "grid": [
+        "######",
+        "#@   #",
+        "###$ #",
+        "#  . #",
+        "######"
+      ],
+      "optimal_steps": 7,
+      "num_boxes": 1
+    },
+    "med-05-open": {
+      "id": "med-05-open",
+      "tier": "medium",
+      "name": "Open square",
+      "grid": [
+        "#######",
+        "#@    #",
+        "# $$  #",
+        "# ..  #",
+        "#######"
+      ],
+      "optimal_steps": 8,
+      "num_boxes": 2
+    },
+    "med-06-double": {
+      "id": "med-06-double",
+      "tier": "medium",
+      "name": "Two box room",
+      "grid": [
+        "#######",
+        "#@$.  #",
+        "#     #",
+        "# $.  #",
+        "#######"
+      ],
+      "optimal_steps": 8,
+      "num_boxes": 2
+    },
+    "med-07-two-targets": {
+      "id": "med-07-two-targets",
+      "tier": "medium",
+      "name": "Two targets",
+      "grid": [
+        "#######",
+        "#@ $  #",
+        "#  $ .#",
+        "#    .#",
+        "#######"
+      ],
+      "optimal_steps": 9,
+      "num_boxes": 2
+    },
+    "med-08-vertical": {
+      "id": "med-08-vertical",
+      "tier": "medium",
+      "name": "Vertical pair",
+      "grid": [
+        "#####",
+        "#@  #",
+        "# $ #",
+        "# $ #",
+        "# . #",
+        "# . #",
+        "#####"
+      ],
+      "optimal_steps": 6,
+      "num_boxes": 2
+    },
+    "med-09-snake": {
+      "id": "med-09-snake",
+      "tier": "medium",
+      "name": "Snake corridor",
+      "grid": [
+        "########",
+        "#@     #",
+        "# ###$ #",
+        "# #  . #",
+        "# #    #",
+        "########"
+      ],
+      "optimal_steps": 10,
+      "num_boxes": 1
+    },
+    "med-10-split": {
+      "id": "med-10-split",
+      "tier": "medium",
+      "name": "Split targets",
+      "grid": [
+        "########",
+        "# @    #",
+        "# $ $  #",
+        "# . .  #",
+        "########"
+      ],
+      "optimal_steps": 11,
+      "num_boxes": 2
+    },
+    "hard-01-room": {
+      "id": "hard-01-room",
+      "tier": "hard",
+      "name": "Three box room",
+      "grid": [
+        "#########",
+        "#@      #",
+        "# $ $ $ #",
+        "#   . . #",
+        "#########"
+      ],
+      "optimal_steps": 14,
+      "num_boxes": 3
+    },
+    "hard-02-corridor2": {
+      "id": "hard-02-corridor2",
+      "tier": "hard",
+      "name": "Long corridor",
+      "grid": [
+        "##########",
+        "#@ $     #",
+        "# #### $ #",
+        "# #    . #",
+        "# #  .   #",
+        "##########"
+      ],
+      "optimal_steps": 16,
+      "num_boxes": 2
+    },
+    "hard-03-islands": {
+      "id": "hard-03-islands",
+      "tier": "hard",
+      "name": "Islands",
+      "grid": [
+        "#########",
+        "# @  .  #",
+        "# ### # #",
+        "# $   $ #",
+        "#   .   #",
+        "#########"
+      ],
+      "optimal_steps": 18,
+      "num_boxes": 2
+    },
+    "hard-04-pinwheel": {
+      "id": "hard-04-pinwheel",
+      "tier": "hard",
+      "name": "Pinwheel",
+      "grid": [
+        "#######",
+        "#  .  #",
+        "# $ @ #",
+        "#  $  #",
+        "# .   #",
+        "#######"
+      ],
+      "optimal_steps": 15,
+      "num_boxes": 2
+    },
+    "hard-05-deadlock": {
+      "id": "hard-05-deadlock",
+      "tier": "hard",
+      "name": "Tight corners",
+      "grid": [
+        "########",
+        "#@  .  #",
+        "## $$  #",
+        "#  ..  #",
+        "########"
+      ],
+      "optimal_steps": 17,
+      "num_boxes": 2
+    }
+  }
+}
