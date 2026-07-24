@@ -1,0 +1,74 @@
+{
+  "schema": "gamebench.crafter.world_defaults.v1",
+  "worlds": {
+    "classic_64": {
+      "seed": 0,
+      "width": 64,
+      "height": 64,
+      "view_radius": 4,
+      "max_steps": 10000,
+      "worldgen": {
+        "profile": "classic",
+        "tree_density": 1.0,
+        "coal_density": 1.0,
+        "iron_density": 1.0,
+        "diamond_density": 1.0,
+        "cow_density": 1.0,
+        "zombie_density": 1.0,
+        "skeleton_density": 1.0
+      }
+    },
+    "policy_dev_small": {
+      "seed": 101,
+      "width": 32,
+      "height": 32,
+      "view_radius": 5,
+      "max_steps": 120,
+      "worldgen": {
+        "profile": "classic",
+        "tree_density": 1.0,
+        "coal_density": 1.0,
+        "iron_density": 1.0,
+        "diamond_density": 1.0,
+        "cow_density": 0.2,
+        "zombie_density": 0.0,
+        "skeleton_density": 0.0
+      }
+    },
+    "policy_puzzle_mob_small": {
+      "seed": 301,
+      "width": 32,
+      "height": 32,
+      "view_radius": 5,
+      "max_steps": 120,
+      "worldgen": {
+        "profile": "classic",
+        "tree_density": 1.0,
+        "coal_density": 1.0,
+        "iron_density": 1.0,
+        "diamond_density": 1.0,
+        "cow_density": 0.0,
+        "zombie_density": 1.5,
+        "skeleton_density": 1.0
+      }
+    },
+    "craftax_partial_64": {
+      "seed": 0,
+      "width": 64,
+      "height": 64,
+      "view_radius": 5,
+      "max_steps": 10000,
+      "worldgen": {
+        "profile": "craftax_partial",
+        "tree_density": 1.0,
+        "coal_density": 1.0,
+        "iron_density": 1.0,
+        "diamond_density": 1.0,
+        "cow_density": 1.0,
+        "zombie_density": 1.0,
+        "skeleton_density": 1.0
+      }
+    }
+  }
+}
+
