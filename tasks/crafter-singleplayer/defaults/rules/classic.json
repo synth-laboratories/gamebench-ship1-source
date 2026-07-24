@@ -1,0 +1,37 @@
+{
+  "schema": "gamebench.crafter.rules.v1",
+  "substrate_profile": "classic",
+  "survival": {
+    "hunger_enabled": true,
+    "thirst_enabled": true,
+    "fatigue_enabled": true,
+    "health_enabled": true
+  },
+  "day_night": {
+    "enabled": true,
+    "period": 300
+  },
+  "mobs": {
+    "enabled": true,
+    "zombie_spawn_rate": 0.3,
+    "cow_spawn_rate": 0.01
+  },
+  "crafting": {
+    "classic_recipes": true,
+    "craftax_recipes": false
+  },
+  "craftax": {
+    "enabled": false
+  },
+  "rewards": {
+    "achievement": 1.0,
+    "invalid_action": 0.0,
+    "death": 0.0,
+    "step": 0.0
+  },
+  "achievements": {
+    "enabled": "classic"
+  },
+  "strict_rule_support": false
+}
+
