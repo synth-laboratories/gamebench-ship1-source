@@ -38,6 +38,46 @@ fi
 
 docker build -t "$IMAGE" -f "$TASK_ROOT/environment/Dockerfile" "${BUILD_ARGS[@]}" "$GAMEBENCH_ROOT"
 
+if [[ "$REG_FAMILY" == code_policy_opt ]]; then
+  WORKSPACE="$OUT_DIR/workspace"
+  rm -rf "$WORKSPACE"
+  mkdir -p "$WORKSPACE" "$OUT_DIR/logs/verifier"
+  docker run --rm "$IMAGE" bash -lc 'tar -C /workspace -cf - .' | tar -C "$WORKSPACE" -xf -
+  bash "$SCRIPT_DIR/prepare_code_policy_workspace.sh" \
+    "$WORKSPACE" \
+    "$TASK_ID" \
+    "${CANDIDATE_SUBDIR:-}" \
+    "$TASK_ROOT" \
+    "${GAMEBENCH_REGISTRY_policy_baseline}"
+
+  REFERENCE="$TASK_ROOT/solution/references/$TASK_ID/heuristic_policy.py"
+  if [[ ! -f "$REFERENCE" && "$TASK_ID" == "tictactoe-singleplayer" ]]; then
+    REFERENCE="$TASK_ROOT/solution/reference_heuristic_policy.py"
+  fi
+  if [[ ! -f "$REFERENCE" ]]; then
+    echo "missing bundled reference policy for task $TASK_ID: $REFERENCE" >&2
+    exit 1
+  fi
+  DEST="$WORKSPACE/candidates/${CANDIDATE_SUBDIR:-}/candidate_reference"
+  mkdir -p "$DEST"
+  cp "$REFERENCE" "$DEST/heuristic_policy.py"
+
+  export HARBOR_LOG_DIR="$OUT_DIR/logs/verifier"
+  export GAMEBENCH_WORKSPACE_ROOT="$WORKSPACE"
+  export GAMEBENCH_ROOT="$WORKSPACE/gamebench"
+  export GAMEBENCH_TASK="$TASK_ID"
+  export GAMEBENCH_TASK_DIR="$WORKSPACE/gamebench/tasks/$TASK_ID"
+  export GAMEBENCH_POLICY_SUITE="$GAMEBENCH_TASK_DIR/${GAMEBENCH_REGISTRY_policy_suite}"
+  export GAMEBENCH_POLICY_BASELINE="$GAMEBENCH_TASK_DIR/${GAMEBENCH_REGISTRY_policy_baseline}"
+  export CANDIDATE_SUBDIR="${CANDIDATE_SUBDIR:-}"
+  bash "$TASK_ROOT/tests/test.sh"
+
+  echo ""
+  echo "reward: $(cat "$OUT_DIR/logs/verifier/reward.txt")"
+  echo "result: $OUT_DIR/logs/verifier/result.json"
+  exit 0
+fi
+
 CONTAINER="$(
   docker run -d --rm \
     -e HARBOR_LOG_DIR=/logs/verifier \
