@@ -23,6 +23,7 @@ COPY adapters/harbor/bundles/code_policy_deo_hillclimb/tests/score_hillclimb.py 
 
 COPY adapters/harbor/bundles/code_policy_deo_hillclimb/files/run_gamebench_hillclimb_task.py /workspace/workspace/run_gamebench_hillclimb_task.py
 
+COPY tasks/shared /workspace/gamebench/tasks/shared
 COPY tasks/${GAMEBENCH_TASK} /workspace/gamebench/tasks/${GAMEBENCH_TASK}
 
 RUN chmod +x /task/environment/setup_workspace.sh /task/solution/solve.sh /task/tests/test.sh

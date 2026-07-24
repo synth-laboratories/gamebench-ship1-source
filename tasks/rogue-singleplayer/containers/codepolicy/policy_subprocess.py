@@ -8,8 +8,7 @@ from pathlib import Path
 
 _SANDBOX_OWNER = (
     Path(__file__).resolve().parents[3]
-    / "craftax-singleplayer"
-    / "containers"
+    / "shared"
     / "codepolicy"
     / "policy_subprocess.py"
 )
