@@ -15,7 +15,7 @@ TASK_DIR = Path(__file__).resolve().parents[1]
 if str(TASK_DIR / "scripts") not in sys.path:
     sys.path.insert(0, str(TASK_DIR / "scripts"))
 
-from run_policy_sweep import load_suite, run_policy_sweep
+from run_policy_sweep import CandidatePolicyFailure, load_suite, run_policy_sweep
 
 
 def candidate_paths(candidate_root: Path) -> list[tuple[str, Path]]:
@@ -48,15 +48,37 @@ def main() -> None:
     reports: dict[str, dict[str, Any]] = {}
     for candidate_id, policy_path in policies:
         candidate_dir = output / "candidates" / candidate_id
-        report = run_policy_sweep(
-            policy_path=policy_path,
-            suite=load_suite(suite_path),
-            output_path=candidate_dir / "summary.json",
-            lane="python",
-            rust_binary=None,
-            include_trace=bool(args.include_trace),
-            episode_timeout_seconds=30.0,
-        )
+        try:
+            report = run_policy_sweep(
+                policy_path=policy_path,
+                suite=load_suite(suite_path),
+                output_path=candidate_dir / "summary.json",
+                lane="python",
+                rust_binary=None,
+                include_trace=bool(args.include_trace),
+                episode_timeout_seconds=30.0,
+            )
+        except CandidatePolicyFailure:
+            rankings.append(
+                {
+                    "candidate_id": candidate_id,
+                    "policy_path": str(policy_path),
+                    "policy_sha256": "",
+                    "score": 0.0,
+                    "success_rate": 0.0,
+                    "mean_reward": 0.0,
+                    "mean_scout_score": 0.0,
+                    "mean_synth_shaped_reward": 0.0,
+                    "achievement_name_counts": {},
+                    "achievement_name_frequency": {},
+                    "mean_dungeon_level": 0.0,
+                    "mean_purse": 0.0,
+                    "survival_rate": 0.0,
+                    "invalid_action_count": 1,
+                    "failure_mode_counts": {"candidate_policy_failure": 1},
+                }
+            )
+            continue
         reports[candidate_id] = report
         rankings.append(
             {

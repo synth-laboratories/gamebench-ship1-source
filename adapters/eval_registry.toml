@@ -39,7 +39,7 @@ candidate_subdir = "minihack"
 [[task]]
 id = "rogue-singleplayer"
 policy_suite = "defaults/policy_sweep/policy_dev_v1.json"
-policy_baseline = "containers/codepolicy/heuristic_policy.py"
+policy_baseline = "policies/heuristic_baseline.py"
 candidate_subdir = "rogue"
 
 [[task]]
