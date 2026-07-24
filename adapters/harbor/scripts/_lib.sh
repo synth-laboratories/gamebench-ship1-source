@@ -21,6 +21,13 @@ eval_registry() {
   python3 "$EVAL_REGISTRY" "$@"
 }
 
+ensure_policy_sandbox_image() {
+  local image="python:3.13-slim-bookworm@sha256:129f9f5d5729767916d79f0021ba4fe56ff113332b08ef1213ecf529a9da7ebb"
+  if ! docker image inspect "$image" >/dev/null 2>&1; then
+    docker pull --platform linux/amd64 "$image"
+  fi
+}
+
 normalize_family() {
   case "$1" in
     dev|engine|engine_rebuild) echo dev ;;

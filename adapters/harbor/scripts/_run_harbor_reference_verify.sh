@@ -20,6 +20,7 @@ done
 
 REG_FAMILY="$(registry_family "$FAMILY")"
 load_task_env "$TASK_ID"
+ensure_policy_sandbox_image
 BUNDLE="$(eval_registry harbor-bundle "$REG_FAMILY" "$TASK_ID")"
 TASK_ROOT="$(bundle_root "$BUNDLE")"
 IMAGE="${GAMEBENCH_HARBOR_IMAGE:-gamebench-harbor-${BUNDLE}:latest}"
