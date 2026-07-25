@@ -22,6 +22,39 @@ Run the baseline on a profile map:
 
 `python scripts/run_policy.py --rules-profile alem_coord_v0 --alem-scenario handover --seed 7 --steps 4`
 
+## ALEM code-policy DEO
+
+The task-local Harbor-compatible DEO lane evaluates policies only on the fixed
+`alem_coord_v0` suite in `defaults/policy_sweep/policy_dev_v1.json`. It covers
+`sync_2`, `sync_all`, and `handover` at each pinned alpha (`0.3`, `0.6`, and
+`0.9`). The composite score is deliberately explicit: 60% normalized
+`coord_reward`, 30% coordination success rate, and 10% illegal-action
+reliability. Base Coop reward is reported but is not part of DEO ranking, so a
+candidate cannot win by ignoring the coordination objective.
+
+The baseline at `containers/codepolicy/heuristic_policy.py` is importable and
+safe: it sends a legal structured message but does not execute the joint site
+action. A checked-in candidate that uses only the documented coordination
+observation/action fields lives at
+`examples/code_policy_deo/candidates/craftax_coop/coordination_all_do_v1/heuristic_policy.py`.
+Candidate discovery is intentionally restricted to the Harbor namespace
+`craftax_coop`; pass either the parent `candidates` directory or that namespace
+directory itself.
+
+Run the complete local example, which executes baseline and candidate, asserts
+that a candidate improves the fixed score by at least `0.01`, and writes reports
+only to a new temporary directory:
+
+`python scripts/run_code_policy_deo_example.py`
+
+To retain the canonical `leaderboard.json`, supply an external output directory:
+
+`python scripts/run_code_policy_deo_example.py --output /tmp/gamebench-alem-deo`
+
+The generic Harbor command shape is also supported directly:
+
+`python scripts/run_hillclimb.py --suite defaults/policy_sweep/policy_dev_v1.json --baseline containers/codepolicy/heuristic_policy.py --candidate-root examples/code_policy_deo/candidates --output /tmp/gamebench-alem-deo`
+
 ## Parity and author-reference boundaries
 
 Python and Rust are independent runtime authorities with the same deterministic map generator, world/player state, simultaneous conflict rules, role abilities, requests/trades, collection and crafting, mobs and projectiles, plants/chests/potions/books/enchantments, attributes, traversal, boss progression, rewards, checkpoints, observations, NEV, and terminal conditions. `scripts/verify_python_rust_parity.py` compares canonical cooperative, combat, collection, expiry, plant/time, boss, death, timestep, and checkpoint scenarios.

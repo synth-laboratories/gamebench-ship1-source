@@ -1,13 +1,86 @@
 {
-  "schema_version": "gamebench.policy_sweep.v1",
-  "suite_id": "craftax_coop_policy_dev_v1",
-  "seeds": [101, 202, 303],
-  "max_steps": 100,
+  "schema_version": "gamebench.policy_sweep.v2",
+  "suite_id": "craftax_coop_alem_coord_deo_v1",
+  "env_family": "craftax-multiplayer",
+  "rules_profile": "alem_coord_v0",
+  "reward_semantics": "shared",
   "agents": ["agent_0", "agent_1", "agent_2"],
   "roles": {
     "agent_0": "warrior",
     "agent_1": "forager",
     "agent_2": "miner"
   },
-  "reward_semantics": "shared"
+  "score": {
+    "metric": "alem_coord_deo_composite_v1",
+    "weights": {
+      "coord_reward_ratio": 0.6,
+      "coord_success_rate": 0.3,
+      "illegal_action_reliability": 0.1
+    }
+  },
+  "episodes": [
+    {
+      "scenario_id": "sync_2_alpha_03",
+      "seed": 101,
+      "scenario": "sync_2",
+      "alpha": 0.3,
+      "max_steps": 3
+    },
+    {
+      "scenario_id": "sync_2_alpha_06",
+      "seed": 202,
+      "scenario": "sync_2",
+      "alpha": 0.6,
+      "max_steps": 3
+    },
+    {
+      "scenario_id": "sync_2_alpha_09",
+      "seed": 303,
+      "scenario": "sync_2",
+      "alpha": 0.9,
+      "max_steps": 3
+    },
+    {
+      "scenario_id": "sync_all_alpha_03",
+      "seed": 404,
+      "scenario": "sync_all",
+      "alpha": 0.3,
+      "max_steps": 3
+    },
+    {
+      "scenario_id": "sync_all_alpha_06",
+      "seed": 505,
+      "scenario": "sync_all",
+      "alpha": 0.6,
+      "max_steps": 3
+    },
+    {
+      "scenario_id": "sync_all_alpha_09",
+      "seed": 606,
+      "scenario": "sync_all",
+      "alpha": 0.9,
+      "max_steps": 3
+    },
+    {
+      "scenario_id": "handover_alpha_03",
+      "seed": 707,
+      "scenario": "handover",
+      "alpha": 0.3,
+      "max_steps": 4
+    },
+    {
+      "scenario_id": "handover_alpha_06",
+      "seed": 808,
+      "scenario": "handover",
+      "alpha": 0.6,
+      "max_steps": 4
+    },
+    {
+      "scenario_id": "handover_alpha_09",
+      "seed": 909,
+      "scenario": "handover",
+      "alpha": 0.9,
+      "max_steps": 4
+    }
+  ]
 }
