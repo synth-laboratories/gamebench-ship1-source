@@ -121,7 +121,7 @@ pub struct TowerMindEnv {
 }
 
 impl TowerMindEnv {
-    pub fn reset(level_id: &str, seed: i64, initial_gold: i64) -> Result<Self, String> {
+    pub fn reset(level_id: &str, seed: i64) -> Result<Self, String> {
         let level = load_level(level_id)?;
         let is_stub = level.availability == "stub";
         let state = State {
@@ -130,7 +130,7 @@ impl TowerMindEnv {
             availability: level.availability.clone(),
             tick: 0,
             base_hp: if is_stub { None } else { Some(level.base_hp) },
-            gold: initial_gold,
+            gold: 0,
             hero: if is_stub { None } else { Some(Friendly { id: "hero".into(), source: None, pos: level.hero_start.clone(), hp: 5 }) },
             knights: Vec::new(),
             towers: Vec::new(),
@@ -553,8 +553,7 @@ pub fn run_scenario(document: Value) -> Result<Value, String> {
     let id = document.get("id").and_then(Value::as_str).ok_or("scenario id missing")?.to_string();
     let level = document.get("level").and_then(Value::as_str).ok_or("scenario level missing")?;
     let seed = document.get("seed").and_then(Value::as_i64).unwrap_or(0);
-    let initial_gold = document.get("initial_gold").and_then(Value::as_i64).unwrap_or(0);
-    let mut env = TowerMindEnv::reset(level, seed, initial_gold)?;
+    let mut env = TowerMindEnv::reset(level, seed)?;
     for action in document.get("actions").and_then(Value::as_array).cloned().unwrap_or_default() {
         if env.state.terminated {
             break;

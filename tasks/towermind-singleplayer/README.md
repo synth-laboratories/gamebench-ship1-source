@@ -42,8 +42,9 @@ Actions are JSON objects such as:
 
 - `gold_python/` and `gold_rust/` are independent authorities.
 - `defaults/levels/` contains L1/L2 gameplay maps and L3–L5 progression stubs.
-- `defaults/scenarios/` contains four deterministic action tapes: gold/build,
-  fog + knight micro, illegal-action reliability, and L3 stub discovery.
+- `defaults/scenarios/` contains five deterministic action tapes: gold/build,
+  fog + knight micro, illegal-action reliability, base destruction by leaks,
+  and L3 stub discovery.
 - `fixtures/gold/` pins scenario inputs, structured NEV, final state/observation,
   and checkpoint artifacts.
 - `policies/heuristic_baseline.py` is a small deterministic placement/pickup

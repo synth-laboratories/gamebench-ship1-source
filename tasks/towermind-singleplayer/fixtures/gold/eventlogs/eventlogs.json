@@ -117,6 +117,336 @@
       "events": [
         {
           "kind": "state_transition",
+          "message": "Reset(level=L1,seed=505)",
+          "payload": {
+            "level": "L1",
+            "seed": 505
+          },
+          "severity": "info",
+          "step_index": 0,
+          "tick": 0,
+          "transition": "reset"
+        },
+        {
+          "kind": "coin_spawned",
+          "message": "CoinSpawned(l1_coin_a)",
+          "payload": {
+            "at": [
+              1,
+              2
+            ],
+            "coin": "l1_coin_a",
+            "value": 3
+          },
+          "severity": "info",
+          "step_index": 0,
+          "tick": 0,
+          "transition": "spawn"
+        },
+        {
+          "kind": "action_applied",
+          "message": "Wait()",
+          "payload": {
+            "action": {
+              "kind": "wait"
+            }
+          },
+          "severity": "info",
+          "step_index": 0,
+          "tick": 0,
+          "transition": "wait"
+        },
+        {
+          "kind": "enemy_spawned",
+          "message": "EnemySpawned(enemy_0)",
+          "payload": {
+            "enemy": "enemy_0",
+            "kind": "scout"
+          },
+          "severity": "info",
+          "step_index": 1,
+          "tick": 1,
+          "transition": "spawn"
+        },
+        {
+          "kind": "action_applied",
+          "message": "Wait()",
+          "payload": {
+            "action": {
+              "kind": "wait"
+            }
+          },
+          "severity": "info",
+          "step_index": 1,
+          "tick": 1,
+          "transition": "wait"
+        },
+        {
+          "kind": "coin_spawned",
+          "message": "CoinSpawned(l1_coin_b)",
+          "payload": {
+            "at": [
+              2,
+              2
+            ],
+            "coin": "l1_coin_b",
+            "value": 2
+          },
+          "severity": "info",
+          "step_index": 2,
+          "tick": 2,
+          "transition": "spawn"
+        },
+        {
+          "kind": "action_applied",
+          "message": "Wait()",
+          "payload": {
+            "action": {
+              "kind": "wait"
+            }
+          },
+          "severity": "info",
+          "step_index": 2,
+          "tick": 2,
+          "transition": "wait"
+        },
+        {
+          "kind": "action_applied",
+          "message": "Wait()",
+          "payload": {
+            "action": {
+              "kind": "wait"
+            }
+          },
+          "severity": "info",
+          "step_index": 3,
+          "tick": 3,
+          "transition": "wait"
+        },
+        {
+          "kind": "enemy_spawned",
+          "message": "EnemySpawned(enemy_1)",
+          "payload": {
+            "enemy": "enemy_1",
+            "kind": "scout"
+          },
+          "severity": "info",
+          "step_index": 4,
+          "tick": 4,
+          "transition": "spawn"
+        },
+        {
+          "kind": "action_applied",
+          "message": "Wait()",
+          "payload": {
+            "action": {
+              "kind": "wait"
+            }
+          },
+          "severity": "info",
+          "step_index": 4,
+          "tick": 4,
+          "transition": "wait"
+        },
+        {
+          "kind": "action_applied",
+          "message": "Wait()",
+          "payload": {
+            "action": {
+              "kind": "wait"
+            }
+          },
+          "severity": "info",
+          "step_index": 5,
+          "tick": 5,
+          "transition": "wait"
+        },
+        {
+          "kind": "action_applied",
+          "message": "Wait()",
+          "payload": {
+            "action": {
+              "kind": "wait"
+            }
+          },
+          "severity": "info",
+          "step_index": 6,
+          "tick": 6,
+          "transition": "wait"
+        },
+        {
+          "kind": "enemy_spawned",
+          "message": "EnemySpawned(enemy_2)",
+          "payload": {
+            "enemy": "enemy_2",
+            "kind": "brute"
+          },
+          "severity": "info",
+          "step_index": 7,
+          "tick": 7,
+          "transition": "spawn"
+        },
+        {
+          "kind": "action_applied",
+          "message": "Wait()",
+          "payload": {
+            "action": {
+              "kind": "wait"
+            }
+          },
+          "severity": "info",
+          "step_index": 7,
+          "tick": 7,
+          "transition": "wait"
+        },
+        {
+          "kind": "action_applied",
+          "message": "Wait()",
+          "payload": {
+            "action": {
+              "kind": "wait"
+            }
+          },
+          "severity": "info",
+          "step_index": 8,
+          "tick": 8,
+          "transition": "wait"
+        },
+        {
+          "kind": "enemy_leaked",
+          "message": "EnemyLeaked(enemy_0)",
+          "payload": {
+            "base_hp": 2,
+            "enemy": "enemy_0",
+            "reward_delta": -1.0
+          },
+          "severity": "info",
+          "step_index": 9,
+          "tick": 9,
+          "transition": "leak"
+        },
+        {
+          "kind": "action_applied",
+          "message": "Wait()",
+          "payload": {
+            "action": {
+              "kind": "wait"
+            }
+          },
+          "severity": "info",
+          "step_index": 9,
+          "tick": 9,
+          "transition": "wait"
+        },
+        {
+          "kind": "action_applied",
+          "message": "Wait()",
+          "payload": {
+            "action": {
+              "kind": "wait"
+            }
+          },
+          "severity": "info",
+          "step_index": 10,
+          "tick": 10,
+          "transition": "wait"
+        },
+        {
+          "kind": "action_applied",
+          "message": "Wait()",
+          "payload": {
+            "action": {
+              "kind": "wait"
+            }
+          },
+          "severity": "info",
+          "step_index": 11,
+          "tick": 11,
+          "transition": "wait"
+        },
+        {
+          "kind": "enemy_leaked",
+          "message": "EnemyLeaked(enemy_1)",
+          "payload": {
+            "base_hp": 1,
+            "enemy": "enemy_1",
+            "reward_delta": -1.0
+          },
+          "severity": "info",
+          "step_index": 12,
+          "tick": 12,
+          "transition": "leak"
+        },
+        {
+          "kind": "action_applied",
+          "message": "Wait()",
+          "payload": {
+            "action": {
+              "kind": "wait"
+            }
+          },
+          "severity": "info",
+          "step_index": 12,
+          "tick": 12,
+          "transition": "wait"
+        },
+        {
+          "kind": "action_applied",
+          "message": "Wait()",
+          "payload": {
+            "action": {
+              "kind": "wait"
+            }
+          },
+          "severity": "info",
+          "step_index": 13,
+          "tick": 13,
+          "transition": "wait"
+        },
+        {
+          "kind": "action_applied",
+          "message": "Wait()",
+          "payload": {
+            "action": {
+              "kind": "wait"
+            }
+          },
+          "severity": "info",
+          "step_index": 14,
+          "tick": 14,
+          "transition": "wait"
+        },
+        {
+          "kind": "enemy_leaked",
+          "message": "EnemyLeaked(enemy_2)",
+          "payload": {
+            "base_hp": 0,
+            "enemy": "enemy_2",
+            "reward_delta": -1.0
+          },
+          "severity": "info",
+          "step_index": 15,
+          "tick": 15,
+          "transition": "leak"
+        },
+        {
+          "kind": "terminal",
+          "message": "Terminal(base_destroyed)",
+          "payload": {
+            "base_hp": 0
+          },
+          "severity": "info",
+          "step_index": 15,
+          "tick": 15,
+          "transition": "base_destroyed"
+        }
+      ],
+      "id": "l1_base_destruction"
+    },
+    {
+      "events": [
+        {
+          "kind": "state_transition",
           "message": "Reset(level=L1,seed=101)",
           "payload": {
             "level": "L1",

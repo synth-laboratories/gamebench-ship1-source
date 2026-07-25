@@ -27,6 +27,59 @@
     {
       "actions": [
         {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        }
+      ],
+      "id": "l1_base_destruction",
+      "level": "L1",
+      "schema": "gamebench.towermind.scenario.v1",
+      "seed": 505
+    },
+    {
+      "actions": [
+        {
           "actor": "hero",
           "kind": "collect",
           "target": [

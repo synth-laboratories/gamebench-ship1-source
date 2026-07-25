@@ -1,0 +1,11 @@
+{
+  "schema": "gamebench.towermind.scenario.v1",
+  "id": "l1_base_destruction",
+  "level": "L1",
+  "seed": 505,
+  "actions": [
+    {"kind": "wait"}, {"kind": "wait"}, {"kind": "wait"}, {"kind": "wait"}, {"kind": "wait"},
+    {"kind": "wait"}, {"kind": "wait"}, {"kind": "wait"}, {"kind": "wait"}, {"kind": "wait"},
+    {"kind": "wait"}, {"kind": "wait"}, {"kind": "wait"}, {"kind": "wait"}, {"kind": "wait"}
+  ]
+}

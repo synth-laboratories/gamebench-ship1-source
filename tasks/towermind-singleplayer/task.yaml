@@ -30,7 +30,7 @@ status:
   reference_engine_python: tasks/towermind-singleplayer/gold_python/
   reference_engine_rust: tasks/towermind-singleplayer/gold_rust/
   implementation: dual_lane_author_semantics
-  deterministic_scenarios: 4
+  deterministic_scenarios: 5
   checkpoint_format: json-v1
 eval_families: [engine_rebuild, code_policy_deo, policy_puzzle]
 paper:

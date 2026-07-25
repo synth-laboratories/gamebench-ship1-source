@@ -15,8 +15,10 @@ class TowerMindService:
         self.sessions: dict[str, TowerMindEnv] = {}
 
     def reset(self, body: dict[str, Any]) -> dict[str, Any]:
+        if "initial_gold" in body:
+            raise ValueError("initial_gold is not a public reset option; collect spawned coins instead")
         env = TowerMindEnv()
-        observation = env.reset(str(body.get("level", "L1")), seed=int(body.get("seed", 0)), initial_gold=int(body.get("initial_gold", 0)))
+        observation = env.reset(str(body.get("level", "L1")), seed=int(body.get("seed", 0)))
         rollout_id = str(uuid.uuid4())
         self.sessions[rollout_id] = env
         return {"rollout_id": rollout_id, "observation": observation, "nev_cursor": len(env.events)}

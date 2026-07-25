@@ -246,6 +246,445 @@
       }
     },
     {
+      "checkpoint": "{\"events\":[{\"kind\":\"state_transition\",\"message\":\"Reset(level=L1,seed=505)\",\"payload\":{\"level\":\"L1\",\"seed\":505},\"severity\":\"info\",\"step_index\":0,\"tick\":0,\"transition\":\"reset\"},{\"kind\":\"coin_spawned\",\"message\":\"CoinSpawned(l1_coin_a)\",\"payload\":{\"at\":[1,2],\"coin\":\"l1_coin_a\",\"value\":3},\"severity\":\"info\",\"step_index\":0,\"tick\":0,\"transition\":\"spawn\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":0,\"tick\":0,\"transition\":\"wait\"},{\"kind\":\"enemy_spawned\",\"message\":\"EnemySpawned(enemy_0)\",\"payload\":{\"enemy\":\"enemy_0\",\"kind\":\"scout\"},\"severity\":\"info\",\"step_index\":1,\"tick\":1,\"transition\":\"spawn\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":1,\"tick\":1,\"transition\":\"wait\"},{\"kind\":\"coin_spawned\",\"message\":\"CoinSpawned(l1_coin_b)\",\"payload\":{\"at\":[2,2],\"coin\":\"l1_coin_b\",\"value\":2},\"severity\":\"info\",\"step_index\":2,\"tick\":2,\"transition\":\"spawn\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":2,\"tick\":2,\"transition\":\"wait\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":3,\"tick\":3,\"transition\":\"wait\"},{\"kind\":\"enemy_spawned\",\"message\":\"EnemySpawned(enemy_1)\",\"payload\":{\"enemy\":\"enemy_1\",\"kind\":\"scout\"},\"severity\":\"info\",\"step_index\":4,\"tick\":4,\"transition\":\"spawn\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":4,\"tick\":4,\"transition\":\"wait\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":5,\"tick\":5,\"transition\":\"wait\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":6,\"tick\":6,\"transition\":\"wait\"},{\"kind\":\"enemy_spawned\",\"message\":\"EnemySpawned(enemy_2)\",\"payload\":{\"enemy\":\"enemy_2\",\"kind\":\"brute\"},\"severity\":\"info\",\"step_index\":7,\"tick\":7,\"transition\":\"spawn\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":7,\"tick\":7,\"transition\":\"wait\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":8,\"tick\":8,\"transition\":\"wait\"},{\"kind\":\"enemy_leaked\",\"message\":\"EnemyLeaked(enemy_0)\",\"payload\":{\"base_hp\":2,\"enemy\":\"enemy_0\",\"reward_delta\":-1.0},\"severity\":\"info\",\"step_index\":9,\"tick\":9,\"transition\":\"leak\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":9,\"tick\":9,\"transition\":\"wait\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":10,\"tick\":10,\"transition\":\"wait\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":11,\"tick\":11,\"transition\":\"wait\"},{\"kind\":\"enemy_leaked\",\"message\":\"EnemyLeaked(enemy_1)\",\"payload\":{\"base_hp\":1,\"enemy\":\"enemy_1\",\"reward_delta\":-1.0},\"severity\":\"info\",\"step_index\":12,\"tick\":12,\"transition\":\"leak\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":12,\"tick\":12,\"transition\":\"wait\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":13,\"tick\":13,\"transition\":\"wait\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":14,\"tick\":14,\"transition\":\"wait\"},{\"kind\":\"enemy_leaked\",\"message\":\"EnemyLeaked(enemy_2)\",\"payload\":{\"base_hp\":0,\"enemy\":\"enemy_2\",\"reward_delta\":-1.0},\"severity\":\"info\",\"step_index\":15,\"tick\":15,\"transition\":\"leak\"},{\"kind\":\"terminal\",\"message\":\"Terminal(base_destroyed)\",\"payload\":{\"base_hp\":0},\"severity\":\"info\",\"step_index\":15,\"tick\":15,\"transition\":\"base_destroyed\"}],\"state\":{\"availability\":\"implemented\",\"base_hp\":0,\"coins\":[{\"at\":[1,2],\"id\":\"l1_coin_a\",\"value\":3},{\"at\":[2,2],\"id\":\"l1_coin_b\",\"value\":2}],\"enemies\":[],\"gold\":0,\"hero\":{\"hp\":5,\"id\":\"hero\",\"pos\":[1,2]},\"illegal_actions\":0,\"knights\":[],\"level\":\"L1\",\"seed\":505,\"terminated\":true,\"termination_reason\":\"base_destroyed\",\"tick\":15,\"total_reward\":-3.0,\"towers\":[]},\"version\":1}",
+      "id": "l1_base_destruction",
+      "projection": {
+        "events": [
+          {
+            "kind": "state_transition",
+            "message": "Reset(level=L1,seed=505)",
+            "payload": {
+              "level": "L1",
+              "seed": 505
+            },
+            "severity": "info",
+            "step_index": 0,
+            "tick": 0,
+            "transition": "reset"
+          },
+          {
+            "kind": "coin_spawned",
+            "message": "CoinSpawned(l1_coin_a)",
+            "payload": {
+              "at": [
+                1,
+                2
+              ],
+              "coin": "l1_coin_a",
+              "value": 3
+            },
+            "severity": "info",
+            "step_index": 0,
+            "tick": 0,
+            "transition": "spawn"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 0,
+            "tick": 0,
+            "transition": "wait"
+          },
+          {
+            "kind": "enemy_spawned",
+            "message": "EnemySpawned(enemy_0)",
+            "payload": {
+              "enemy": "enemy_0",
+              "kind": "scout"
+            },
+            "severity": "info",
+            "step_index": 1,
+            "tick": 1,
+            "transition": "spawn"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 1,
+            "tick": 1,
+            "transition": "wait"
+          },
+          {
+            "kind": "coin_spawned",
+            "message": "CoinSpawned(l1_coin_b)",
+            "payload": {
+              "at": [
+                2,
+                2
+              ],
+              "coin": "l1_coin_b",
+              "value": 2
+            },
+            "severity": "info",
+            "step_index": 2,
+            "tick": 2,
+            "transition": "spawn"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 2,
+            "tick": 2,
+            "transition": "wait"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 3,
+            "tick": 3,
+            "transition": "wait"
+          },
+          {
+            "kind": "enemy_spawned",
+            "message": "EnemySpawned(enemy_1)",
+            "payload": {
+              "enemy": "enemy_1",
+              "kind": "scout"
+            },
+            "severity": "info",
+            "step_index": 4,
+            "tick": 4,
+            "transition": "spawn"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 4,
+            "tick": 4,
+            "transition": "wait"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 5,
+            "tick": 5,
+            "transition": "wait"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 6,
+            "tick": 6,
+            "transition": "wait"
+          },
+          {
+            "kind": "enemy_spawned",
+            "message": "EnemySpawned(enemy_2)",
+            "payload": {
+              "enemy": "enemy_2",
+              "kind": "brute"
+            },
+            "severity": "info",
+            "step_index": 7,
+            "tick": 7,
+            "transition": "spawn"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 7,
+            "tick": 7,
+            "transition": "wait"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 8,
+            "tick": 8,
+            "transition": "wait"
+          },
+          {
+            "kind": "enemy_leaked",
+            "message": "EnemyLeaked(enemy_0)",
+            "payload": {
+              "base_hp": 2,
+              "enemy": "enemy_0",
+              "reward_delta": -1.0
+            },
+            "severity": "info",
+            "step_index": 9,
+            "tick": 9,
+            "transition": "leak"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 9,
+            "tick": 9,
+            "transition": "wait"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 10,
+            "tick": 10,
+            "transition": "wait"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 11,
+            "tick": 11,
+            "transition": "wait"
+          },
+          {
+            "kind": "enemy_leaked",
+            "message": "EnemyLeaked(enemy_1)",
+            "payload": {
+              "base_hp": 1,
+              "enemy": "enemy_1",
+              "reward_delta": -1.0
+            },
+            "severity": "info",
+            "step_index": 12,
+            "tick": 12,
+            "transition": "leak"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 12,
+            "tick": 12,
+            "transition": "wait"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 13,
+            "tick": 13,
+            "transition": "wait"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 14,
+            "tick": 14,
+            "transition": "wait"
+          },
+          {
+            "kind": "enemy_leaked",
+            "message": "EnemyLeaked(enemy_2)",
+            "payload": {
+              "base_hp": 0,
+              "enemy": "enemy_2",
+              "reward_delta": -1.0
+            },
+            "severity": "info",
+            "step_index": 15,
+            "tick": 15,
+            "transition": "leak"
+          },
+          {
+            "kind": "terminal",
+            "message": "Terminal(base_destroyed)",
+            "payload": {
+              "base_hp": 0
+            },
+            "severity": "info",
+            "step_index": 15,
+            "tick": 15,
+            "transition": "base_destroyed"
+          }
+        ],
+        "observation": {
+          "structured": {
+            "availability": "implemented",
+            "base_hp": 0,
+            "build_slots": {
+              "crossroad": [
+                5,
+                2
+              ],
+              "far_bait": [
+                8,
+                6
+              ],
+              "gate_archer": [
+                3,
+                2
+              ]
+            },
+            "coins": [
+              {
+                "at": [
+                  1,
+                  2
+                ],
+                "id": "l1_coin_a",
+                "value": 3
+              },
+              {
+                "at": [
+                  2,
+                  2
+                ],
+                "id": "l1_coin_b",
+                "value": 2
+              }
+            ],
+            "enemies": [],
+            "fog_cells": [
+              [
+                7,
+                5
+              ]
+            ],
+            "friendlies": [
+              {
+                "disabled": false,
+                "hp": 5,
+                "id": "hero",
+                "occluded": false,
+                "pos": [
+                  1,
+                  2
+                ]
+              }
+            ],
+            "gold": 0,
+            "illegal_actions": 0,
+            "level": "L1",
+            "terminated": true,
+            "termination_reason": "base_destroyed",
+            "tick": 15,
+            "towers": []
+          },
+          "text": "{\"availability\":\"implemented\",\"base_hp\":0,\"build_slots\":{\"crossroad\":[5,2],\"far_bait\":[8,6],\"gate_archer\":[3,2]},\"coins\":[{\"at\":[1,2],\"id\":\"l1_coin_a\",\"value\":3},{\"at\":[2,2],\"id\":\"l1_coin_b\",\"value\":2}],\"enemies\":[],\"fog_cells\":[[7,5]],\"friendlies\":[{\"disabled\":false,\"hp\":5,\"id\":\"hero\",\"occluded\":false,\"pos\":[1,2]}],\"gold\":0,\"illegal_actions\":0,\"level\":\"L1\",\"terminated\":true,\"termination_reason\":\"base_destroyed\",\"tick\":15,\"towers\":[]}"
+        },
+        "state": {
+          "availability": "implemented",
+          "base_hp": 0,
+          "coins": [
+            {
+              "at": [
+                1,
+                2
+              ],
+              "id": "l1_coin_a",
+              "value": 3
+            },
+            {
+              "at": [
+                2,
+                2
+              ],
+              "id": "l1_coin_b",
+              "value": 2
+            }
+          ],
+          "enemies": [],
+          "gold": 0,
+          "hero": {
+            "hp": 5,
+            "id": "hero",
+            "pos": [
+              1,
+              2
+            ]
+          },
+          "illegal_actions": 0,
+          "knights": [],
+          "level": "L1",
+          "seed": 505,
+          "terminated": true,
+          "termination_reason": "base_destroyed",
+          "tick": 15,
+          "total_reward": -3.0,
+          "towers": []
+        }
+      }
+    },
+    {
       "checkpoint": "{\"events\":[{\"kind\":\"state_transition\",\"message\":\"Reset(level=L1,seed=101)\",\"payload\":{\"level\":\"L1\",\"seed\":101},\"severity\":\"info\",\"step_index\":0,\"tick\":0,\"transition\":\"reset\"},{\"kind\":\"coin_spawned\",\"message\":\"CoinSpawned(l1_coin_a)\",\"payload\":{\"at\":[1,2],\"coin\":\"l1_coin_a\",\"value\":3},\"severity\":\"info\",\"step_index\":0,\"tick\":0,\"transition\":\"spawn\"},{\"kind\":\"coin_collected\",\"message\":\"CoinCollected(l1_coin_a)\",\"payload\":{\"actor\":\"hero\",\"coin\":\"l1_coin_a\",\"gold\":3,\"value\":3},\"severity\":\"info\",\"step_index\":0,\"tick\":0,\"transition\":\"collect\"},{\"kind\":\"enemy_spawned\",\"message\":\"EnemySpawned(enemy_0)\",\"payload\":{\"enemy\":\"enemy_0\",\"kind\":\"scout\"},\"severity\":\"info\",\"step_index\":1,\"tick\":1,\"transition\":\"spawn\"},{\"kind\":\"tower_built\",\"message\":\"TowerBuilt(archer,gate_archer)\",\"payload\":{\"gold\":0,\"slot\":\"gate_archer\",\"tower\":\"archer\"},\"severity\":\"info\",\"step_index\":1,\"tick\":1,\"transition\":\"build\"},{\"kind\":\"coin_spawned\",\"message\":\"CoinSpawned(l1_coin_b)\",\"payload\":{\"at\":[2,2],\"coin\":\"l1_coin_b\",\"value\":2},\"severity\":\"info\",\"step_index\":2,\"tick\":2,\"transition\":\"spawn\"},{\"kind\":\"enemy_damaged\",\"message\":\"EnemyDamaged(enemy_0,2)\",\"payload\":{\"damage\":2,\"enemy\":\"enemy_0\",\"hp\":0,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":2,\"tick\":2,\"transition\":\"archer_attack\"},{\"kind\":\"enemy_defeated\",\"message\":\"EnemyDefeated(enemy_0)\",\"payload\":{\"enemy\":\"enemy_0\",\"gold_awarded\":0,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":2,\"tick\":2,\"transition\":\"defeat\"},{\"kind\":\"friendly_moved\",\"message\":\"FriendlyMoved(hero)\",\"payload\":{\"actor\":\"hero\",\"to\":[2,2]},\"severity\":\"info\",\"step_index\":2,\"tick\":2,\"transition\":\"move\"},{\"kind\":\"coin_collected\",\"message\":\"CoinCollected(l1_coin_b)\",\"payload\":{\"actor\":\"hero\",\"coin\":\"l1_coin_b\",\"gold\":2,\"value\":2},\"severity\":\"info\",\"step_index\":3,\"tick\":3,\"transition\":\"collect\"},{\"kind\":\"enemy_spawned\",\"message\":\"EnemySpawned(enemy_1)\",\"payload\":{\"enemy\":\"enemy_1\",\"kind\":\"scout\"},\"severity\":\"info\",\"step_index\":4,\"tick\":4,\"transition\":\"spawn\"},{\"kind\":\"enemy_damaged\",\"message\":\"EnemyDamaged(enemy_1,2)\",\"payload\":{\"damage\":2,\"enemy\":\"enemy_1\",\"hp\":0,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":4,\"tick\":4,\"transition\":\"archer_attack\"},{\"kind\":\"enemy_defeated\",\"message\":\"EnemyDefeated(enemy_1)\",\"payload\":{\"enemy\":\"enemy_1\",\"gold_awarded\":0,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":4,\"tick\":4,\"transition\":\"defeat\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":4,\"tick\":4,\"transition\":\"wait\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":5,\"tick\":5,\"transition\":\"wait\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":6,\"tick\":6,\"transition\":\"wait\"},{\"kind\":\"enemy_spawned\",\"message\":\"EnemySpawned(enemy_2)\",\"payload\":{\"enemy\":\"enemy_2\",\"kind\":\"brute\"},\"severity\":\"info\",\"step_index\":7,\"tick\":7,\"transition\":\"spawn\"},{\"kind\":\"enemy_damaged\",\"message\":\"EnemyDamaged(enemy_2,2)\",\"payload\":{\"damage\":2,\"enemy\":\"enemy_2\",\"hp\":2,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":7,\"tick\":7,\"transition\":\"archer_attack\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":7,\"tick\":7,\"transition\":\"wait\"},{\"kind\":\"enemy_damaged\",\"message\":\"EnemyDamaged(enemy_2,2)\",\"payload\":{\"damage\":2,\"enemy\":\"enemy_2\",\"hp\":0,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":8,\"tick\":8,\"transition\":\"archer_attack\"},{\"kind\":\"enemy_defeated\",\"message\":\"EnemyDefeated(enemy_2)\",\"payload\":{\"enemy\":\"enemy_2\",\"gold_awarded\":0,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":8,\"tick\":8,\"transition\":\"defeat\"},{\"kind\":\"terminal\",\"message\":\"Terminal(waves_cleared)\",\"payload\":{\"base_hp\":3},\"severity\":\"info\",\"step_index\":8,\"tick\":8,\"transition\":\"waves_cleared\"}],\"state\":{\"availability\":\"implemented\",\"base_hp\":3,\"coins\":[],\"enemies\":[],\"gold\":2,\"hero\":{\"hp\":5,\"id\":\"hero\",\"pos\":[2,2]},\"illegal_actions\":0,\"knights\":[],\"level\":\"L1\",\"seed\":101,\"terminated\":true,\"termination_reason\":\"waves_cleared\",\"tick\":8,\"total_reward\":0.0,\"towers\":[{\"id\":\"tower_0\",\"kind\":\"archer\",\"pos\":[3,2],\"slot\":\"gate_archer\"}]},\"version\":1}",
       "id": "l1_build_collect",
       "projection": {

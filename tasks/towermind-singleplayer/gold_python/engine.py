@@ -33,7 +33,7 @@ class TowerMindEnv:
         self.events: list[dict[str, Any]] = []
         self._level: dict[str, Any] = {}
 
-    def reset(self, level_id: str = "L1", *, seed: int = 0, initial_gold: int = 0) -> dict[str, Any]:
+    def reset(self, level_id: str = "L1", *, seed: int = 0) -> dict[str, Any]:
         level = self._load_level(level_id)
         self._level = level
         self.events = []
@@ -44,7 +44,7 @@ class TowerMindEnv:
                 "availability": "stub",
                 "tick": 0,
                 "base_hp": None,
-                "gold": initial_gold,
+                "gold": 0,
                 "hero": None,
                 "knights": [],
                 "towers": [],
@@ -63,7 +63,7 @@ class TowerMindEnv:
             "availability": "implemented",
             "tick": 0,
             "base_hp": int(level["base_hp"]),
-            "gold": initial_gold,
+            "gold": 0,
             "hero": {"id": "hero", "pos": list(level["hero_start"]), "hp": 5},
             "knights": [],
             "towers": [],
@@ -392,7 +392,7 @@ def run_scenario(document: dict[str, Any]) -> dict[str, Any]:
     """Run a pinned action tape and return the canonical fixture projection."""
 
     env = TowerMindEnv()
-    env.reset(str(document["level"]), seed=int(document.get("seed", 0)), initial_gold=int(document.get("initial_gold", 0)))
+    env.reset(str(document["level"]), seed=int(document.get("seed", 0)))
     for action in document.get("actions", []):
         if env._require_state()["terminated"]:
             break
