@@ -30,6 +30,7 @@ from evaluate_tinker_state_puzzles import (
     http_json,
     spawn_rust_service,
     task_with_view_radius,
+    validate_view_sizes,
     visible_achievement_hint_counts,
     visible_term_counts,
 )
@@ -339,6 +340,7 @@ def summarize_model(model: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
 async def main_async(args: argparse.Namespace) -> dict[str, Any]:
     if not os.environ.get("TINKER_API_KEY", "").strip():
         raise SystemExit("TINKER_API_KEY is required")
+    validate_view_sizes([args.view_size])
     tinker_module = _load_tinker()
     service_client = tinker_module.ServiceClient(user_metadata={"task": "craftax_tinker_policy_rollouts"})
     models = [part.strip() for part in args.models.split(",") if part.strip()]

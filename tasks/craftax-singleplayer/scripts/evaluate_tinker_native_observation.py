@@ -26,6 +26,7 @@ from evaluate_tinker_state_puzzles import (
     sample_states,
     score_answer,
     spawn_rust_service,
+    validate_view_sizes,
     visible_achievement_hint_counts,
     visible_achievement_hints,
     visible_term_counts,
@@ -147,7 +148,9 @@ async def main_async(args: argparse.Namespace) -> dict[str, Any]:
     tokenizer = tokenizer_client.get_tokenizer()
     models = [part.strip() for part in args.models.split(",") if part.strip()]
     seeds = [int(part.strip()) for part in args.seeds.split(",") if part.strip()]
-    view_sizes = [int(part.strip()) for part in args.view_sizes.split(",") if part.strip()]
+    view_sizes = validate_view_sizes(
+        [int(part.strip()) for part in args.view_sizes.split(",") if part.strip()]
+    )
     suite = json.loads(Path(args.suite).read_text())
     proc: subprocess.Popen[Any] | None = None
     base_url = args.base_url

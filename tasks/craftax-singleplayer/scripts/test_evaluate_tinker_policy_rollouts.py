@@ -30,7 +30,11 @@ if "transformers" not in sys.modules:
 
 from evaluate_tinker_policy_rollouts import sample_policy_text, summarize_model
 import evaluate_tinker_action_puzzles as action_puzzles
-from evaluate_tinker_state_puzzles import sample_step_count, score_answer
+from evaluate_tinker_state_puzzles import (
+    sample_step_count,
+    score_answer,
+    validate_view_sizes,
+)
 
 
 class _Tokenizer:
@@ -216,6 +220,13 @@ class PolicyRolloutMetricsTest(unittest.TestCase):
 
     def test_state_sampler_allows_zero_steps_between_samples(self) -> None:
         self.assertEqual(sample_step_count(random.Random(7), 0), 0)
+
+    def test_view_sizes_must_all_be_positive_and_odd(self) -> None:
+        self.assertEqual(validate_view_sizes([5, 9, 13]), [5, 9, 13])
+        for invalid in ([], [5, 8, 13], [0], [-3]):
+            with self.subTest(invalid=invalid):
+                with self.assertRaises(SystemExit):
+                    validate_view_sizes(invalid)
 
 
 if __name__ == "__main__":

@@ -855,26 +855,26 @@ async def _execute_goex_rollout(
                         metadata=request_metadata,
                     )
                 step += 1
-                if schedule_per_turn:
-                    cp_blob = await GOLD.checkpoint_with_blob(gold_rollout_id)
-                    cp_id = f"{checkpoint_prefix}_{llm_calls:04d}"
-                    checkpoint = _checkpoint_from_gold(
-                        cp_id, rollout_id, cp_blob, task, llm_calls, readout
-                    )
-                    CHECKPOINTS[cp_id] = checkpoint
-                    scheduled_checkpoints.append(_public_checkpoint(checkpoint))
-                    checkpoint_event = trace.event(
-                        "environment.checkpoint_created",
-                        _public_checkpoint(checkpoint),
-                        caused_by=tuple(item for item in (observation_event,) if item),
-                        structural={"checkpoint_id": cp_id, "llm_call": llm_calls},
-                        actor="environment",
-                    )
-                    if checkpoint_event:
-                        trace_refs["checkpoints"].append(checkpoint_event)
                 private = _private(readout)
                 if bool(private.get("terminated")) or bool(private.get("truncated")):
                     break
+            if schedule_per_turn:
+                cp_blob = await GOLD.checkpoint_with_blob(gold_rollout_id)
+                cp_id = f"{checkpoint_prefix}_{llm_calls:04d}"
+                checkpoint = _checkpoint_from_gold(
+                    cp_id, rollout_id, cp_blob, task, llm_calls, readout
+                )
+                CHECKPOINTS[cp_id] = checkpoint
+                scheduled_checkpoints.append(_public_checkpoint(checkpoint))
+                checkpoint_event = trace.event(
+                    "environment.checkpoint_created",
+                    _public_checkpoint(checkpoint),
+                    caused_by=tuple(item for item in (observation_event,) if item),
+                    structural={"checkpoint_id": cp_id, "llm_call": llm_calls},
+                    actor="environment",
+                )
+                if checkpoint_event:
+                    trace_refs["checkpoints"].append(checkpoint_event)
             if bool(_private(readout).get("terminated")) or bool(
                 _private(readout).get("truncated")
             ):

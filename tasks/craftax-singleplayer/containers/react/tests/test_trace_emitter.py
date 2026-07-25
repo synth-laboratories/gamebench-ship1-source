@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import types
 
 import pytest
 
@@ -215,3 +216,107 @@ def test_achievement_rewards_are_sparse_and_preserve_identity() -> None:
     assert all(
         event[2]["caused_by"] == ("action-4", "observation-5") for event in events
     )
+
+
+def test_per_llm_call_checkpoint_is_created_once_for_action_batch(monkeypatch) -> None:
+    events = []
+
+    class FakeTrace:
+        @classmethod
+        def from_request(cls, _request):
+            return cls()
+
+        def event(self, event_type, payload, **kwargs):
+            events.append((event_type, payload, kwargs))
+            return f"event-{len(events)}"
+
+        def close(self):
+            pass
+
+    class FakeAgent:
+        def __init__(self, _config, *, trace):
+            del trace
+            self.config = types.SimpleNamespace(model="fake-model")
+
+        async def choose_action(self, **_kwargs):
+            return types.SimpleNamespace(
+                actions=["left", "right", "noop"],
+                action="left",
+                proposal_event_id="proposal-1",
+                invalid_parse=False,
+                repaired=False,
+                truncated=False,
+                assistant_text='{"actions":["left","right","noop"]}',
+                finish_reason="stop",
+                usage={"prompt_tokens": 4, "completion_tokens": 3},
+                request_id="request-1",
+                model="fake-model",
+            )
+
+    class FakeGold:
+        def __init__(self):
+            self.steps = 0
+            self.checkpoint_calls = 0
+
+        def _readout(self):
+            return {
+                "observation_text": f"step {self.steps}",
+                "valid_actions": ["left", "right", "noop"],
+                "public": {},
+                "private": {
+                    "terminated": False,
+                    "truncated": False,
+                    "total_reward": 0.0,
+                    "achievements": [],
+                },
+            }
+
+        async def create_rollout(self, **_kwargs):
+            return {"rollout_id": "gold-1"}
+
+        async def readout(self, _rollout_id):
+            return self._readout()
+
+        async def step(self, _rollout_id, _action):
+            self.steps += 1
+            return {"readout": self._readout()}
+
+        async def checkpoint_with_blob(self, _rollout_id):
+            self.checkpoint_calls += 1
+            return {"blob": f"checkpoint-{self.checkpoint_calls}"}
+
+    fake_gold = FakeGold()
+    monkeypatch.setattr(service, "CraftaxTrace", FakeTrace)
+    monkeypatch.setattr(service, "AgentPolicy", FakeAgent)
+    monkeypatch.setattr(service, "GOLD", fake_gold)
+    service.CHECKPOINTS.clear()
+
+    result = asyncio.run(
+        service._execute_goex_rollout(
+            {
+                "rollout_id": "rollout-1",
+                "env": {
+                    "seed": 1,
+                    "config": {
+                        "task": {"task_id": "checkpoint-test", "max_steps": 3},
+                        "max_steps": 3,
+                    },
+                },
+                "policy": {"config": {"max_llm_turns": 1}},
+                "checkpoint_schedule": {
+                    "mode": "per_llm_call",
+                    "checkpoint_id_prefix": "scheduled",
+                },
+            }
+        )
+    )
+
+    assert [item["checkpoint_id"] for item in result["scheduled_checkpoints"]] == [
+        "scheduled_0001"
+    ]
+    assert fake_gold.checkpoint_calls == 2
+    assert [
+        event[1]["checkpoint_id"]
+        for event in events
+        if event[0] == "environment.checkpoint_created"
+    ] == ["scheduled_0001", "rollout-1_terminal"]

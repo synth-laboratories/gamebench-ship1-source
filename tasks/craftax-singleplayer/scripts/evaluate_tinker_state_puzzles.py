@@ -67,6 +67,22 @@ ACTION_NAMES = [
     "level_up_intelligence",
     "enchant_bow",
 ]
+
+
+def validate_view_sizes(view_sizes: list[int]) -> list[int]:
+    if not view_sizes:
+        raise SystemExit("view sizes must include at least one positive odd integer")
+    invalid = [
+        view_size
+        for view_size in view_sizes
+        if view_size <= 0 or view_size % 2 != 1
+    ]
+    if invalid:
+        rendered = ", ".join(str(view_size) for view_size in invalid)
+        raise SystemExit(f"view sizes must be positive odd integers; invalid: {rendered}")
+    return view_sizes
+
+
 CHAR_LABELS = {
     "P": "player",
     ".": "grass",
@@ -805,10 +821,10 @@ async def main_async(args: argparse.Namespace) -> dict[str, Any]:
         raise SystemExit("TINKER_API_KEY is required")
     models = [part.strip() for part in args.models.split(",") if part.strip()] or DEFAULT_MODELS
     seeds = [int(part.strip()) for part in args.seeds.split(",") if part.strip()]
-    view_sizes = [int(part.strip()) for part in args.view_sizes.split(",") if part.strip()]
+    view_sizes = validate_view_sizes(
+        [int(part.strip()) for part in args.view_sizes.split(",") if part.strip()]
+    )
     max_view = max(view_sizes)
-    if max_view % 2 != 1:
-        raise SystemExit("view sizes must be odd")
     suite = json.loads(Path(args.suite).read_text())
     proc: subprocess.Popen[Any] | None = None
     base_url = args.base_url

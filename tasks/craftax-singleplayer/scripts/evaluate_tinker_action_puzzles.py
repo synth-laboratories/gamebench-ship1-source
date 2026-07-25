@@ -29,6 +29,7 @@ from evaluate_tinker_state_puzzles import (
     http_json,
     spawn_rust_service,
     task_with_view_radius,
+    validate_view_sizes,
     visible_achievement_hint_counts,
     visible_term_counts,
 )
@@ -369,7 +370,9 @@ async def main_async(args: argparse.Namespace) -> dict[str, Any]:
         raise SystemExit("TINKER_API_KEY is required")
     models = [part.strip() for part in args.models.split(",") if part.strip()] or DEFAULT_MODELS
     seeds = [int(part.strip()) for part in args.seeds.split(",") if part.strip()]
-    view_sizes = [int(part.strip()) for part in args.view_sizes.split(",") if part.strip()]
+    view_sizes = validate_view_sizes(
+        [int(part.strip()) for part in args.view_sizes.split(",") if part.strip()]
+    )
     max_view = max(view_sizes)
     suite = json.loads(Path(args.suite).read_text())
     proc: subprocess.Popen[Any] | None = None
