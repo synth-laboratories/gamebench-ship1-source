@@ -38,4 +38,4 @@ status:
     property_test_requirements: requirements-property-tests.txt
     live_nle_twin_step: optional_dev_extra
     required_oracle_tapes_v0: 33
-    current_oracle_tapes: 0
+    current_oracle_tapes: 1

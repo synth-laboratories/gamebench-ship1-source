@@ -13,6 +13,7 @@ import sys
 import unittest
 from copy import deepcopy
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any
 
 from hypothesis import given, settings, strategies as st
@@ -24,7 +25,10 @@ sys.path.insert(0, str(TASK_DIR))
 
 from gold_python.engine import NethackDlvl1Engine
 from gold_python.action_map import coerce_action
+from scripts.capture_nle_fixture import level_dump
+from scripts.compare_nle_discrepancies import compare_fixture
 from scripts.fuzz_nle_differential import coverage_report
+from scripts.promote_nle_fixture import validate_descend_boundary
 from shared.task_resolve import BLSTATS_FIELDS, VIEW_HEIGHT, VIEW_WIDTH, resolve_task
 
 
@@ -192,6 +196,105 @@ def adapter_task() -> dict[str, Any]:
     }
 
 
+def capture_buffer(text: str, *, width: int) -> list[int]:
+    """Build an NLE-style fixed-width NUL-padded byte buffer."""
+
+    return (list(text.encode("utf-8")) + [0] * width)[:width]
+
+
+def seen_mask(*points: tuple[int, int]) -> list[list[bool]]:
+    mask = [[False] * VIEW_WIDTH for _ in range(VIEW_HEIGHT)]
+    for x, y in points:
+        mask[y][x] = True
+    return mask
+
+
+def capture_state_task() -> tuple[dict[str, Any], dict[str, Any]]:
+    """A two-snapshot fixture exercising captured observation state directly."""
+
+    hero = (5, 4)
+    revealed_on_move = (8, 4)
+    terrain = [list(row) for row in room_terrain()]
+    terrain[revealed_on_move[1]][revealed_on_move[0]] = "."
+    glyphs = [[0] * VIEW_WIDTH for _ in range(VIEW_HEIGHT)]
+    colors = [[0] * VIEW_WIDTH for _ in range(VIEW_HEIGHT)]
+    glyphs[revealed_on_move[1]][revealed_on_move[0]] = 411
+    colors[revealed_on_move[1]][revealed_on_move[0]] = 44
+    unseen_chars = [[" "] * VIEW_WIDTH for _ in range(VIEW_HEIGHT)]
+    unseen_glyphs = [[0] * VIEW_WIDTH for _ in range(VIEW_HEIGHT)]
+    unseen_colors = [[0] * VIEW_WIDTH for _ in range(VIEW_HEIGHT)]
+    unseen_chars[revealed_on_move[1]][revealed_on_move[0]] = "?"
+    unseen_glyphs[revealed_on_move[1]][revealed_on_move[0]] = 901
+    unseen_colors[revealed_on_move[1]][revealed_on_move[0]] = 31
+
+    initial_message = "Captured baseline"
+    message_width = 48
+    baseline_blstats = [
+        hero[0], hero[1], 18, 50, 11, 12, 13, 14, 15, 1234,
+        17, 19, 1, 77, 3, 9, -2, 1, 2, 55,
+        400, 9, 88, 3, 1, 7, 1,
+    ]
+    inventory_width = 28
+    inventory_strings = [
+        capture_buffer("a - captured ration", width=inventory_width),
+        capture_buffer("b - captured dagger", width=inventory_width),
+        *([[0] * inventory_width for _ in range(53)]),
+    ]
+    captured_inventory = {
+        "inv_letters": [97, 98, *([0] * 53)],
+        "inv_glyphs": [801, 802, *([0] * 53)],
+        "inv_oclasses": [37, 41, *([0] * 53)],
+        "inv_strs": inventory_strings,
+    }
+    task = {
+        "task_id": "capture-state-regression",
+        "seed": 101,
+        "rules": {"max_steps": 0, "autopickup": False, "auto_more": "raw_explicit", "vision_radius": 2},
+        "level_dump": {
+            "terrain": ["".join(row) for row in terrain],
+            "hero": {"x": hero[0], "y": hero[1], "glyph": 333, "color": 14},
+            "glyphs": glyphs,
+            "colors": colors,
+            "seen": seen_mask(hero),
+            "unseen": {"chars": unseen_chars, "glyphs": unseen_glyphs, "colors": unseen_colors},
+            "inventory": [
+                {"id": "ration", "letter": "a", "kind": "%", "name": "a runtime ration", "glyph": 501, "color": 2, "oclass_code": 37},
+                {"id": "dagger", "letter": "b", "kind": ")", "name": "a runtime dagger", "glyph": 502, "color": 3, "oclass_code": 41},
+            ],
+            "metadata": {
+                "hp": 17,
+                "hp_max": 19,
+                "gold": 77,
+                "energy": 3,
+                "energy_max": 9,
+                "ac": -2,
+                "experience_level": 2,
+                "experience": 55,
+                "hunger": 900,
+                "nle_blstats": baseline_blstats,
+                "nle_message_raw": capture_buffer(initial_message, width=message_width),
+                "nle_inventory": captured_inventory,
+            },
+        },
+    }
+    expected = {
+        "hero": hero,
+        "revealed_on_move": revealed_on_move,
+        "baseline_blstats": baseline_blstats,
+        "initial_message": initial_message,
+        "initial_message_raw": capture_buffer(initial_message, width=message_width),
+        "wait_message_raw": capture_buffer("You wait.", width=message_width),
+        "eat_message_raw": capture_buffer("What do you want to eat? [a or ?*] ", width=message_width),
+        "inventory": {
+            "inv_letters": captured_inventory["inv_letters"],
+            "inv_glyphs": captured_inventory["inv_glyphs"],
+            "inv_oclasses": captured_inventory["inv_oclasses"],
+            "inv_strs": ["a - captured ration", "b - captured dagger", *([""] * 53)],
+        },
+    }
+    return task, expected
+
+
 def reset_engine(task: dict[str, Any]) -> NethackDlvl1Engine:
     engine = NethackDlvl1Engine()
     engine.reset(resolve_task(task))
@@ -249,6 +352,62 @@ def rust_restore(checkpoint: bytes, actions: list[int | str]) -> dict[str, Any]:
     )
 
 
+def frozen_nle_projection(public: dict[str, Any]) -> dict[str, Any]:
+    """Keep only the fields persisted by an NLE frozen snapshot."""
+
+    inventory = public["inventory"]
+    return {
+        "chars": list(public["chars"]),
+        "colors": public["colors"],
+        "glyphs": public["glyphs"],
+        "blstats": public["blstats"],
+        "message": public["message"],
+        "message_raw": public["message_raw"],
+        "inventory": {
+            "inv_letters": inventory["inv_letters"],
+            "inv_glyphs": inventory["inv_glyphs"],
+            "inv_oclasses": inventory["inv_oclasses"],
+            "inv_strs": inventory["inv_strs"],
+        },
+    }
+
+
+def write_descend_boundary_fixture(root: Path, task: dict[str, Any], *, fixture_id: str) -> Path:
+    """Build a no-NLE frozen fixture whose step one is pre-dlvl2 by contract."""
+
+    down_id = next(int(action_id) for action_id, canonical, _ in PINNED_ACTIONS if canonical == "MiscDirection.DOWN")
+    pre_action = frozen_nle_projection(reset_engine(task).public_projection())
+    fixture_dir = root / fixture_id
+    fixture_dir.mkdir()
+    (fixture_dir / "meta.json").write_text(
+        json.dumps({"fixture_id": fixture_id, "seed": task["seed"], "character": {}, "auto_more": "raw_explicit"})
+    )
+    (fixture_dir / "level_dump.json").write_text(json.dumps(task["level_dump"]))
+    (fixture_dir / "actions.jsonl").write_text(
+        json.dumps(
+            {
+                "step": 1,
+                "action_id": down_id,
+                "action_name": "MiscDirection.DOWN",
+                "boundary": "dlvl1_descend",
+            }
+        )
+        + "\n"
+    )
+    snapshots = (
+        {"step": 0, "projection": pre_action, "done": False, "terminal_reason": ""},
+        {
+            "step": 1,
+            "projection": pre_action,
+            "done": True,
+            "terminal_reason": "descended",
+            "oracle_boundary": "pre_dlvl2",
+        },
+    )
+    (fixture_dir / "snapshots.jsonl").write_text("".join(json.dumps(snapshot) + "\n" for snapshot in snapshots))
+    return fixture_dir
+
+
 def assert_public_contract(public: dict[str, Any], private: dict[str, Any]) -> None:
     """Assert the public API shape plus core cross-projection invariants."""
 
@@ -291,6 +450,192 @@ RUST_PROPERTY_SETTINGS = settings(max_examples=6, deadline=None, derandomize=Tru
 
 
 class TestNetHackProperties(unittest.TestCase):
+    def test_promotion_descend_boundary_requires_prior_raw_stair(self) -> None:
+        actions = [
+            {
+                "step": 1,
+                "action_id": 17,
+                "action_name": "MiscDirection.DOWN",
+                "boundary": "dlvl1_descend",
+                "observed_down_stair": {"x": 1, "y": 0},
+            }
+        ]
+        snapshots = [
+            {"step": 0, "projection": {"chars": [[ord("@"), ord(">")]], "blstats": [0, 0]}},
+            {
+                "step": 1,
+                "projection": {"chars": [[ord("@"), ord(">")]], "blstats": [1, 0]},
+                "done": True,
+                "terminal_reason": "descended",
+                "oracle_boundary": "pre_dlvl2",
+            },
+        ]
+        validate_descend_boundary(actions, snapshots)
+
+        without_stair_evidence = deepcopy(snapshots)
+        without_stair_evidence[0]["projection"]["chars"][0][1] = ord(".")
+        with self.assertRaisesRegex(SystemExit, "lacks an auditable raw NLE down-stair observation"):
+            validate_descend_boundary(actions, without_stair_evidence)
+
+    def test_capture_hydrates_later_static_cell_and_preserves_initial_screen(self) -> None:
+        """A dynamic reset glyph must not erase static terrain learned later."""
+
+        initial = {
+            "chars": [[ord("@"), ord("j"), ord(".")]],
+            "glyphs": [[333, 501, 601]],
+            "colors": [[15, 6, 7]],
+            "blstats": [0, 0],
+            "message": [],
+            "inv_letters": [],
+            "inv_glyphs": [],
+            "inv_oclasses": [],
+            "inv_strs": [],
+        }
+        later = deepcopy(initial)
+        later["chars"][0][1] = ord(".")
+        later["glyphs"][0][1] = 701
+        later["colors"][0][1] = 12
+
+        hydrated = level_dump(initial, {}, observations=[initial, later])
+        self.assertEqual(".", hydrated["terrain"][0][1])
+        self.assertEqual(701, hydrated["glyphs"][0][1])
+        self.assertEqual(12, hydrated["colors"][0][1])
+        self.assertTrue(hydrated["seen"][0][1])
+        self.assertEqual(ord("j"), hydrated["unseen"]["chars"][0][1])
+        self.assertEqual(501, hydrated["unseen"]["glyphs"][0][1])
+        self.assertEqual(6, hydrated["unseen"]["colors"][0][1])
+
+        underlaid = level_dump(
+            initial,
+            {"terrain_underlay": [{"x": 1, "y": 0, "char": ".", "glyph": 702, "color": 13}]},
+        )
+        self.assertEqual(".", underlaid["terrain"][0][1])
+        self.assertEqual(702, underlaid["glyphs"][0][1])
+        self.assertEqual(13, underlaid["colors"][0][1])
+        with self.assertRaisesRegex(ValueError, "visible reset monster or item cell"):
+            level_dump(
+                initial,
+                {"terrain_underlay": [{"x": 2, "y": 0, "char": "#", "glyph": 703, "color": 14}]},
+            )
+        with self.assertRaisesRegex(ValueError, "unsupported annotation keys: metadata"):
+            level_dump(initial, {"metadata": {"hp": 999}})
+
+        inventory_observation = deepcopy(initial)
+        inventory_observation.update(
+            {
+                "inv_letters": [ord("d")],
+                "inv_glyphs": [2174],
+                "inv_oclasses": [7],
+                "inv_strs": [capture_buffer("an uncursed food ration", width=32)],
+            }
+        )
+        captured_inventory = level_dump(inventory_observation, {})["inventory"]
+        self.assertEqual(
+            [{"letter": "d", "kind": "%", "name": "an uncursed food ration", "oclass_code": 7}],
+            [{key: item[key] for key in ("letter", "kind", "name", "oclass_code")} for item in captured_inventory],
+        )
+
+    def test_capture_state_baselines_and_gold_owned_fov_match_across_lanes(self) -> None:
+        task, expected = capture_state_task()
+        python_trace = python_public_trace(task, ["MiscDirection.WAIT"])
+        rust_trace = rust_public_trace(task, ["MiscDirection.WAIT"])
+        self.assertEqual(python_trace, rust_trace)
+        self.assertEqual(2, len(python_trace))
+        reset, one_step = python_trace
+        reveal_x, reveal_y = expected["revealed_on_move"]
+
+        self.assertEqual(expected["baseline_blstats"], reset["blstats"])
+        self.assertEqual(expected["initial_message"], reset["message"])
+        self.assertEqual(expected["initial_message_raw"], reset["message_raw"])
+        self.assertEqual(expected["inventory"], {key: reset["inventory"][key] for key in expected["inventory"]})
+        self.assertEqual("?", reset["chars"][reveal_y][reveal_x])
+        self.assertEqual(901, reset["glyphs"][reveal_y][reveal_x])
+        self.assertEqual(31, reset["colors"][reveal_y][reveal_x])
+
+        expected_one_step_blstats = list(expected["baseline_blstats"])
+        expected_one_step_blstats[20] += 1
+        expected_one_step_blstats[21] = 1
+        self.assertEqual(expected_one_step_blstats, one_step["blstats"])
+        self.assertEqual("You wait.", one_step["message"])
+        self.assertEqual(expected["wait_message_raw"], one_step["message_raw"])
+        self.assertEqual(expected["inventory"], {key: one_step["inventory"][key] for key in expected["inventory"]})
+        self.assertEqual("?", one_step["chars"][reveal_y][reveal_x])
+        self.assertEqual(901, one_step["glyphs"][reveal_y][reveal_x])
+        self.assertEqual(31, one_step["colors"][reveal_y][reveal_x])
+
+        python_move_trace = python_public_trace(task, ["CompassDirection.E"])
+        rust_move_trace = rust_public_trace(task, ["CompassDirection.E"])
+        self.assertEqual(python_move_trace, rust_move_trace)
+        self.assertEqual(2, len(python_move_trace))
+        move_step = python_move_trace[1]
+        self.assertEqual([expected["hero"][0] + 1, expected["hero"][1]], move_step["blstats"][:2])
+        self.assertEqual(".", move_step["chars"][reveal_y][reveal_x])
+        self.assertEqual(411, move_step["glyphs"][reveal_y][reveal_x])
+        self.assertEqual(44, move_step["colors"][reveal_y][reveal_x])
+
+        python_open_trace = python_public_trace(task, ["Command.OPEN"])
+        rust_open_trace = rust_public_trace(task, ["Command.OPEN"])
+        self.assertEqual(python_open_trace, rust_open_trace)
+        self.assertEqual(2, len(python_open_trace))
+        open_prompt = python_open_trace[1]
+        self.assertEqual("In what direction?", open_prompt["message"])
+        self.assertEqual(
+            {"kind": "direction", "command": "Command.OPEN", "prompt": "In what direction?", "operation": "open"},
+            open_prompt["input_mode"],
+        )
+        self.assertEqual(
+            capture_buffer("In what direction? ", width=len(expected["initial_message_raw"])),
+            open_prompt["message_raw"],
+        )
+
+        python_eat_trace = python_public_trace(task, ["Command.EAT"])
+        rust_eat_trace = rust_public_trace(task, ["Command.EAT"])
+        self.assertEqual(python_eat_trace, rust_eat_trace)
+        self.assertEqual(2, len(python_eat_trace))
+        eat_prompt = python_eat_trace[1]
+        self.assertEqual("What do you want to eat? [a or ?*]", eat_prompt["message"])
+        self.assertEqual(
+            {
+                "kind": "inventory_letter",
+                "command": "Command.EAT",
+                "prompt": "What do you want to eat? [a or ?*]",
+                "operation": "eat",
+                "after": "normal",
+            },
+            eat_prompt["input_mode"],
+        )
+        self.assertEqual(expected["eat_message_raw"], eat_prompt["message_raw"])
+
+    def test_frozen_descend_boundary_compares_pre_action_then_checks_terminal_contract(self) -> None:
+        """Frozen dlvl-1 captures never compare a gold dlvl-2-adjacent message."""
+
+        with TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            descend_fixture = write_descend_boundary_fixture(root, explicit_stair_task(), fixture_id="descend")
+            for lane in ("python", "rust"):
+                self.assertEqual([], compare_fixture(descend_fixture, lane))
+
+            no_stairs = explicit_stair_task()
+            no_stairs["level_dump"]["terrain"] = room_terrain(hero_on_stairs=False)
+            nonterminal_fixture = write_descend_boundary_fixture(root, no_stairs, fixture_id="not-descend")
+            for lane in ("python", "rust"):
+                failures = compare_fixture(nonterminal_fixture, lane)
+                self.assertEqual(1, len(failures))
+                self.assertIn("descent terminal contract", failures[0])
+
+    def test_pickup_on_empty_down_stair_is_message_only_in_both_lanes(self) -> None:
+        task = explicit_stair_task()
+        self.assertEqual(">", task["level_dump"]["terrain"][4][5])
+        self.assertNotIn("objects", task["level_dump"])
+
+        python_trace = python_public_trace(task, ["Command.PICKUP"])
+        rust_trace = rust_public_trace(task, ["Command.PICKUP"])
+        self.assertEqual(python_trace, rust_trace)
+        self.assertEqual(2, len(python_trace))
+        before, after = python_trace
+        self.assertEqual("The stairs are solidly fixed to the floor.", after["message"])
+        self.assertEqual(before["blstats"], after["blstats"])
+
     def test_all_pinned_ids_and_canonical_names_use_the_same_adapter(self) -> None:
         self.assertEqual(list(range(121)), [int(action_id) for action_id, _, _ in PINNED_ACTIONS])
         for action_id, canonical, value in PINNED_ACTIONS:

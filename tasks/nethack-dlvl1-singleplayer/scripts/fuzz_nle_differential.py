@@ -63,6 +63,7 @@ PROMPT_PROBE_ACTIONS = (
     "Command.APPLY",
     "Command.EAT",
 )
+STATIC_SCREEN_CHARS = frozenset(".#|-+<>_{}~ @")
 
 
 def compact(value: Any, *, limit: int = 240) -> Any:
@@ -276,6 +277,64 @@ def choose_campaign_action(campaign: str, observation: dict[str, Any], table: li
     if campaign == "prompt-probe-v0":
         return choose_prompt_probe_action(observation, table, rng)
     raise ValueError(f"unsupported live NLE campaign {campaign!r}")
+
+
+def observed_entity_annotations(observation: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
+    """Materialize visible reset glyphs as inert owned diagnostic entities.
+
+    NLE exposes glyph presentation but not full entity stats.  The live fuzzer
+    preserves those visible glyphs with deterministic placeholder entities so
+    reset discrepancies reflect gold behavior rather than dynamic symbols
+    accidentally becoming terrain.  Follow-up transitions remain diagnostic
+    until a hand-reviewed capture supplies real entity annotations.
+    """
+
+    projection = project(observation)
+    chars = projection["chars"]
+    glyphs = projection["glyphs"]
+    colors = projection["colors"]
+    glyph_rows = glyphs if isinstance(glyphs, list) else []
+    color_rows = colors if isinstance(colors, list) else []
+    monsters: list[dict[str, Any]] = []
+    objects: list[dict[str, Any]] = []
+    for y, row in enumerate(chars if isinstance(chars, list) else []):
+        if not isinstance(row, list):
+            continue
+        for x, raw_char in enumerate(row):
+            char = chr(int(raw_char))
+            if char in STATIC_SCREEN_CHARS:
+                continue
+            glyph = int(glyph_rows[y][x]) if y < len(glyph_rows) and isinstance(glyph_rows[y], list) and x < len(glyph_rows[y]) else ord(char)
+            color = int(color_rows[y][x]) if y < len(color_rows) and isinstance(color_rows[y], list) and x < len(color_rows[y]) else 7
+            if char.isalpha():
+                monsters.append(
+                    {
+                        "id": f"observed-monster-{x}-{y}",
+                        "name": f"observed {char}",
+                        "char": char,
+                        "glyph": glyph,
+                        "color": color,
+                        "hp": 1,
+                        "hp_max": 1,
+                        "attack": 0,
+                        "experience": 0,
+                        "peaceful": True,
+                        "pet": True,
+                        "position": {"x": x, "y": y},
+                    }
+                )
+            else:
+                objects.append(
+                    {
+                        "id": f"observed-object-{x}-{y}",
+                        "kind": char,
+                        "name": f"observed {char}",
+                        "glyph": glyph,
+                        "color": color,
+                        "position": {"x": x, "y": y},
+                    }
+                )
+    return {"objects": objects, "monsters": monsters}
 
 
 def normalise_step(result: Any) -> tuple[dict[str, Any], bool]:
@@ -496,7 +555,11 @@ def capture_case(*, case_index: int, seed: int, character: str, steps: int, camp
         else:
             nle_seeds = (core_seed, display_seed, False)
         observation = normalise_reset(env.reset())
+        if dungeon_identity(observation) != (0, 1):
+            raise RuntimeError(f"live fuzz must start on Main Dungeon dlvl 1, got {dungeon_identity(observation)!r}")
         initial_observation = deepcopy(observation)
+        observations = [deepcopy(observation)]
+        unseen_glyph = int(getattr(nethack, "GLYPH_CMAP_OFF", -1))
         known_down_stairs = visible_down_stairs(observation)
         snapshots = [{"step": 0, "projection": project(observation), "done": False, "terminal_reason": ""}]
         action_records: list[dict[str, Any]] = []
@@ -515,23 +578,20 @@ def capture_case(*, case_index: int, seed: int, character: str, steps: int, camp
             known_down_stairs.update(visible_down_stairs(observation))
             pre_action_projection = project(observation)
             if action_name == "MiscDirection.DOWN":
-                if hero_position(observation) not in known_down_stairs:
-                    pre_action_dungeon = dungeon_identity(observation)
-                else:
-                    action_records.append({"step": step, "action_id": action_id, "action_name": action_name, "input_mode": input_mode, "selection": selection, "candidates": candidates, "boundary": "dlvl1_descend", "nle_stepped": False})
-                    snapshots.append({"step": step, "projection": pre_action_projection, "done": True, "terminal_reason": "descended", "oracle_boundary": "pre_dlvl2"})
-                    stop_reason = "dlvl1_descend"
-                    break
-            else:
-                pre_action_dungeon = dungeon_identity(observation)
-            result = env.step(action_id)
-            next_observation, done = normalise_step(result)
-            if action_name == "MiscDirection.DOWN" and dungeon_identity(next_observation) != pre_action_dungeon:
-                action_records.append({"step": step, "action_id": action_id, "action_name": action_name, "input_mode": input_mode, "selection": selection, "candidates": candidates, "boundary": "dlvl1_descend", "nle_stepped": True})
+                position = hero_position(observation)
+                if position not in known_down_stairs:
+                    raise RuntimeError("live fuzz refuses DOWN without an earlier raw visible Main Dungeon dlvl-1 stair")
+                action_records.append({"step": step, "action_id": action_id, "action_name": action_name, "input_mode": input_mode, "selection": selection, "candidates": candidates, "boundary": "dlvl1_descend", "observed_down_stair": {"x": position[0], "y": position[1]}, "nle_stepped": False})
                 snapshots.append({"step": step, "projection": pre_action_projection, "done": True, "terminal_reason": "descended", "oracle_boundary": "pre_dlvl2"})
+                observations.append(deepcopy(observation))
                 stop_reason = "dlvl1_descend"
                 break
+            result = env.step(action_id)
+            next_observation, done = normalise_step(result)
+            if dungeon_identity(next_observation) != (0, 1):
+                raise RuntimeError(f"live fuzz left Main Dungeon dlvl 1 after {action_name}; refuse out-of-scope artifact")
             observation = next_observation
+            observations.append(deepcopy(observation))
             known_down_stairs.update(visible_down_stairs(observation))
             action_records.append({"step": step, "action_id": action_id, "action_name": action_name, "input_mode": input_mode, "selection": selection, "candidates": candidates, "nle_stepped": True})
             snapshots.append({"step": step, "projection": project(observation), "done": done, "terminal_reason": "nle_done_unknown" if done else ""})
@@ -558,7 +618,12 @@ def capture_case(*, case_index: int, seed: int, character: str, steps: int, camp
             "seed": case_seed,
             "character": {"nle_character": character},
             "rules": {"max_steps": 0, "autopickup": False, "auto_more": "raw_explicit", "vision_radius": 4},
-            "level_dump": level_dump(initial_observation, {}),
+            "level_dump": level_dump(
+                initial_observation,
+                observed_entity_annotations(initial_observation),
+                observations=observations,
+                unseen_glyph=unseen_glyph,
+            ),
         }
         case_dir = output / "cases" / fixture_id
         write_json(case_dir / "meta.json", meta)
@@ -588,6 +653,11 @@ def main() -> None:
     output = args.output.resolve()
     if TASK_DIR.resolve() in output.parents or output == TASK_DIR.resolve():
         raise SystemExit("--output must be outside the task directory so fuzz artifacts cannot accidentally enter the canonical corpus")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        output.mkdir()
+    except FileExistsError as error:
+        raise SystemExit("--output must not already exist; fuzz into a new diagnostic directory") from error
     tape = read_actions(args.actions) if args.actions else []
     pinned_table = json.loads((TASK_DIR / "shared" / "nle_action_map.json").read_text())["actions"]
     reports: list[dict[str, Any]] = []

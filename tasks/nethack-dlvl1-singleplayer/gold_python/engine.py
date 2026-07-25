@@ -95,39 +95,52 @@ class NethackDlvl1Engine:
         hero = dict(level["hero"])
         inventory = deepcopy(level["inventory"])
         self._assign_inventory_letters(inventory)
-        initial_hp = int(dict(level.get("metadata", {})).get("hp", 14))
-        initial_energy = int(dict(level.get("metadata", {})).get("energy", 0))
+        metadata = dict(level.get("metadata", {}))
+        nle_blstats = [int(value) for value in metadata.get("nle_blstats", [])] if isinstance(metadata.get("nle_blstats"), list) else []
+        nle_message_raw = [int(value) for value in metadata.get("nle_message_raw", [])] if isinstance(metadata.get("nle_message_raw"), list) else []
+        initial_hp = int(metadata.get("hp", 14))
+        initial_energy = int(metadata.get("energy", 0))
+        unseen = dict(level.get("unseen", {}))
         self.resolved = deepcopy(resolved)
         self.state = {
             "terrain": [list(row) for row in level["terrain"]],
             "base_glyphs": deepcopy(level["glyphs"]),
             "base_colors": deepcopy(level["colors"]),
+            "unseen_chars": deepcopy(unseen.get("chars", [[" "] * VIEW_WIDTH for _ in range(VIEW_HEIGHT)])),
+            "unseen_glyphs": deepcopy(unseen.get("glyphs", [[0] * VIEW_WIDTH for _ in range(VIEW_HEIGHT)])),
+            "unseen_colors": deepcopy(unseen.get("colors", [[0] * VIEW_WIDTH for _ in range(VIEW_HEIGHT)])),
             "seen": deepcopy(level["seen"]),
             "hero": hero,
             "floor_items": deepcopy(level["objects"]),
             "inventory": inventory,
+            "initial_inventory": deepcopy(inventory),
+            "nle_inventory": deepcopy(metadata.get("nle_inventory", {})),
             "monsters": deepcopy(level["monsters"]),
             "traps": deepcopy(level["traps"]),
             "step_index": 0,
-            "time": 0,
+            "time": nle_blstats[20] if len(nle_blstats) == len(BLSTATS_FIELDS) else 0,
             "rng": int(resolved["seed"]) & 0xFFFFFFFF,
-            "message": "",
-            "message_raw": [],
-            "message_history": [],
+            "message": bytes(nle_message_raw).split(b"\0", 1)[0].decode("utf-8", errors="replace"),
+            "message_raw": nle_message_raw[:],
+            "message_width": len(nle_message_raw),
+            "message_history": [bytes(nle_message_raw).split(b"\0", 1)[0].decode("utf-8", errors="replace")] if nle_message_raw else [],
             "input_mode": self._normal_mode(),
             "terminated": False,
             "truncated": False,
             "terminal_reason": "",
             "reward": 0.0,
             "hp": initial_hp,
-            "hp_max": max(1, int(dict(level.get("metadata", {})).get("hp_max", initial_hp))),
+            "hp_max": max(1, int(metadata.get("hp_max", initial_hp))),
             "energy": initial_energy,
-            "energy_max": max(0, int(dict(level.get("metadata", {})).get("energy_max", initial_energy))),
-            "gold": int(dict(level.get("metadata", {})).get("gold", 0)),
-            "experience": int(dict(level.get("metadata", {})).get("experience", 0)),
-            "experience_level": max(1, int(dict(level.get("metadata", {})).get("experience_level", 1))),
-            "ac": int(dict(level.get("metadata", {})).get("ac", 10)),
-            "hunger": int(dict(level.get("metadata", {})).get("hunger", 900)),
+            "energy_max": max(0, int(metadata.get("energy_max", initial_energy))),
+            "gold": int(metadata.get("gold", 0)),
+            "experience": int(metadata.get("experience", 0)),
+            "experience_level": max(1, int(metadata.get("experience_level", 1))),
+            "ac": int(metadata.get("ac", 10)),
+            "hunger": int(metadata.get("hunger", 900)),
+            "initial_hunger": int(metadata.get("hunger", 900)),
+            "initial_ac": int(metadata.get("ac", 10)),
+            "nle_blstats": nle_blstats,
             "hunger_state": "Not Hungry",
             "strength": int(dict(level.get("metadata", {})).get("strength", 18)),
             "dexterity": int(dict(level.get("metadata", {})).get("dexterity", 10)),
@@ -143,9 +156,9 @@ class NethackDlvl1Engine:
             "engraving": "",
         }
         self.nev = NevLog()
-        self._reveal()
         self._event("task_resolved", "TaskResolved(dlvl1 capture-backed)", transition="reset", payload={"task_id": resolved["task_id"], "config_hash": resolved["config_hash"], "fixture_id": resolved.get("fixture_id", "")})
-        self._message("You enter the dungeon.")
+        if not nle_message_raw:
+            self._message("You enter the dungeon.")
 
     def step(self, action_input: int | str) -> dict[str, Any]:
         if self.resolved is None:
@@ -158,6 +171,8 @@ class NethackDlvl1Engine:
             self._message("Unknown NLE action id.")
             self._event("rule_violation", "RuleViolation(unknown_action)", action=str(action_input), transition="reject", severity="warn")
             return self.symbolic_readout()
+        hero_before = (int(self.state["hero"]["x"]), int(self.state["hero"]["y"]))
+        terrain_before = deepcopy(self.state["terrain"])
         self.state["step_index"] += 1
         self._event("action_applied", f"Action({action.canonical})", action=action.canonical, transition="dispatch", payload=action_payload(action))
         if self.state["input_mode"]["kind"] == "normal":
@@ -166,7 +181,9 @@ class NethackDlvl1Engine:
             spent_turn = self._consume_prompt(action)
         if spent_turn and not self.state["terminated"]:
             self._advance_turn()
-        self._reveal()
+        hero_after = (int(self.state["hero"]["x"]), int(self.state["hero"]["y"]))
+        if hero_after != hero_before or self.state["terrain"] != terrain_before:
+            self._reveal()
         self._check_truncation()
         return self.symbolic_readout()
 
@@ -186,7 +203,7 @@ class NethackDlvl1Engine:
             "blstats_fields": list(BLSTATS_FIELDS),
             "blstats_named": dict(zip(BLSTATS_FIELDS, blstats, strict=True)),
             "message": self._normalise_message(self.state["message"]),
-            "message_raw": list(self.state["message_raw"]),
+            "message_raw": self._message_projection_raw(),
             "inventory": inventory,
             "input_mode": deepcopy(self.state["input_mode"]),
             "done": bool(self.state["terminated"] or self.state["truncated"]),
@@ -281,7 +298,7 @@ class NethackDlvl1Engine:
             return False
         if name in ITEM_COMMANDS:
             after = "direction" if name in {"FIRE", "THROW", "ZAP"} else "normal"
-            self._enter_mode("inventory_letter", action, "What do you want to use?", {"operation": name.lower(), "after": after})
+            self._enter_mode("inventory_letter", action, self._item_prompt(name), {"operation": name.lower(), "after": after})
             return False
         if name == "PICKUP":
             return self._pickup()
@@ -446,7 +463,7 @@ class NethackDlvl1Engine:
             if not running:
                 break
         if moved:
-            self._message("You move.")
+            self._message("")
         return True
 
     def _open(self, direction: tuple[int, int]) -> bool:
@@ -455,9 +472,10 @@ class NethackDlvl1Engine:
             self.state["terrain"][y][x] = "."
             self._message("The door opens.")
             self._event("action_applied", "OpenDoor()", transition="open", payload={"x": x, "y": y})
+            return True
         else:
             self._message("You see no door there.")
-        return True
+            return False
 
     def _close(self, direction: tuple[int, int]) -> bool:
         x, y = self._target(direction)
@@ -510,7 +528,10 @@ class NethackDlvl1Engine:
         items = [item for item in self.state["floor_items"] if item["position"]["x"] == hero["x"] and item["position"]["y"] == hero["y"]]
         if not items:
             if not silent:
-                self._message("There is nothing here to pick up.")
+                if self._terrain_at(int(hero["x"]), int(hero["y"])) in {"<", ">"}:
+                    self._message("The stairs are solidly fixed to the floor.")
+                else:
+                    self._message("There is nothing here to pick up.")
             return False
         for item in items:
             if item["kind"] == "$":
@@ -706,9 +727,9 @@ class NethackDlvl1Engine:
             self._event("episode_truncated", "Terminal(max_steps)", transition="max_steps", payload={"max_steps": max_steps})
 
     def _render_planes(self) -> tuple[list[str], list[list[int]], list[list[int]]]:
-        chars = [[" "] * VIEW_WIDTH for _ in range(VIEW_HEIGHT)]
-        colors = [[0] * VIEW_WIDTH for _ in range(VIEW_HEIGHT)]
-        glyphs = [[0] * VIEW_WIDTH for _ in range(VIEW_HEIGHT)]
+        chars = deepcopy(self.state["unseen_chars"])
+        colors = deepcopy(self.state["unseen_colors"])
+        glyphs = deepcopy(self.state["unseen_glyphs"])
         for y in range(VIEW_HEIGHT):
             for x in range(VIEW_WIDTH):
                 if not self.state["seen"][y][x]:
@@ -731,6 +752,20 @@ class NethackDlvl1Engine:
         return ["".join(row) for row in chars], colors, glyphs
 
     def _inventory_projection(self) -> dict[str, Any]:
+        captured = self.state.get("nle_inventory", {})
+        if captured and self.state["inventory"] == self.state["initial_inventory"]:
+            raw_strings = captured.get("inv_strs", []) if isinstance(captured, dict) else []
+            strings = [
+                bytes(int(value) for value in row).split(b"\0", 1)[0].decode("utf-8", errors="replace") if isinstance(row, list) else str(row)
+                for row in raw_strings
+            ]
+            return {
+                "inv_letters": list(captured.get("inv_letters", [])),
+                "inv_glyphs": list(captured.get("inv_glyphs", [])),
+                "inv_oclasses": list(captured.get("inv_oclasses", [])),
+                "inv_strs": strings,
+                "items": deepcopy(self.state["inventory"]),
+            }
         letters = [0] * 55
         glyphs = [0] * 55
         oclasses = [0] * 55
@@ -744,11 +779,29 @@ class NethackDlvl1Engine:
 
     def _blstats(self) -> list[int]:
         hero = self.state["hero"]
-        return [
-            int(hero["x"]), int(hero["y"]), self.state["strength"], 0, self.state["dexterity"], self.state["constitution"], self.state["intelligence"], self.state["wisdom"], self.state["charisma"], self.state["experience"],
-            self.state["hp"], self.state["hp_max"], 1, self.state["gold"], self.state["energy"], self.state["energy_max"], self.state["ac"], 1, self.state["experience_level"], self.state["experience"],
-            self.state["time"], self._hunger_code(), 0, 0, 1, 0, self._alignment_code(),
-        ]
+        baseline = list(self.state.get("nle_blstats", []))
+        if len(baseline) == len(BLSTATS_FIELDS):
+            values = baseline
+        else:
+            values = [
+                int(hero["x"]), int(hero["y"]), self.state["strength"], 0, self.state["dexterity"], self.state["constitution"], self.state["intelligence"], self.state["wisdom"], self.state["charisma"], self.state["experience"],
+                self.state["hp"], self.state["hp_max"], 1, self.state["gold"], self.state["energy"], self.state["energy_max"], self.state["ac"], 1, self.state["experience_level"], self.state["experience"],
+                self.state["time"], self._hunger_code(), 0, 0, 1, 0, self._alignment_code(),
+            ]
+        values[0] = int(hero["x"])
+        values[1] = int(hero["y"])
+        values[10] = int(self.state["hp"])
+        values[11] = int(self.state["hp_max"])
+        values[13] = int(self.state["gold"])
+        values[14] = int(self.state["energy"])
+        values[15] = int(self.state["energy_max"])
+        values[16] = int(self.state["ac"])
+        values[18] = int(self.state["experience_level"])
+        values[19] = int(self.state["experience"])
+        values[20] = int(self.state["time"])
+        if not baseline or self.state["hunger"] != self.state["initial_hunger"]:
+            values[21] = self._hunger_code()
+        return values
 
     def _alignment_code(self) -> int:
         align = str(dict(self.resolved.get("character", {})).get("align", "law")).lower() if self.resolved else "law"
@@ -757,9 +810,18 @@ class NethackDlvl1Engine:
     def _normal_mode(self) -> dict[str, Any]:
         return {"kind": "normal", "command": "", "prompt": "", "operation": ""}
 
+    def _item_prompt(self, operation: str) -> str:
+        if operation == "EAT":
+            letters = [str(item["letter"]) for item in self.state["inventory"] if item.get("kind") == "%" and item.get("letter")]
+            if letters:
+                return f"What do you want to eat? [{' '.join(letters)} or ?*]"
+            return "What do you want to eat? [*]"
+        return "What do you want to use?"
+
     def _enter_mode(self, kind: str, action: NleAction, prompt: str, extra: dict[str, Any]) -> None:
         self.state["input_mode"] = {"kind": kind, "command": action.canonical, "prompt": prompt, **deepcopy(extra)}
-        self._message(prompt)
+        prompt_raw = list(f"{prompt} ".encode("utf-8")) if self.state.get("message_width") and kind != "more" else None
+        self._message(prompt, raw=prompt_raw)
         self._event("mode_enter", f"ModeEnter({kind})", action=action.canonical, transition=kind, payload=deepcopy(self.state["input_mode"]))
 
     def _exit_mode(self, message: str) -> None:
@@ -769,11 +831,18 @@ class NethackDlvl1Engine:
         if message:
             self._message(message)
 
-    def _message(self, text: str) -> None:
+    def _message(self, text: str, *, raw: list[int] | None = None) -> None:
         self.state["message"] = text
-        self.state["message_raw"] = list(text.encode("utf-8"))
+        self.state["message_raw"] = list(text.encode("utf-8")) if raw is None else list(raw)
         self.state["message_history"].append(text)
         self._event("message", f"Message({text})", transition="message", payload={"raw": list(self.state["message_raw"])})
+
+    def _message_projection_raw(self) -> list[int]:
+        raw = list(self.state["message_raw"])
+        width = int(self.state.get("message_width", 0))
+        if width:
+            return (raw + [0] * width)[:width]
+        return raw
 
     def _event(self, kind: str, message: str, *, action: str | None = None, transition: str | None = None, severity: str = "info", payload: dict[str, Any] | None = None) -> None:
         episode_id = self.resolved["episode_id"] if self.resolved else "unresolved"
@@ -784,7 +853,29 @@ class NethackDlvl1Engine:
         radius = int(self.resolved["rules"].get("vision_radius", 4)) if self.resolved else 4
         for y in range(max(0, hero["y"] - radius), min(VIEW_HEIGHT, hero["y"] + radius + 1)):
             for x in range(max(0, hero["x"] - radius), min(VIEW_WIDTH, hero["x"] + radius + 1)):
-                self.state["seen"][y][x] = True
+                if self.state["terrain"][y][x] != " " and self._line_of_sight(int(hero["x"]), int(hero["y"]), x, y):
+                    self.state["seen"][y][x] = True
+
+    def _line_of_sight(self, start_x: int, start_y: int, target_x: int, target_y: int) -> bool:
+        """Own deterministic FOV for static cells materialized in the level dump."""
+
+        x, y = start_x, start_y
+        delta_x = abs(target_x - start_x)
+        delta_y = -abs(target_y - start_y)
+        step_x = 1 if start_x < target_x else -1
+        step_y = 1 if start_y < target_y else -1
+        error = delta_x + delta_y
+        while (x, y) != (target_x, target_y):
+            if (x, y) != (start_x, start_y) and self.state["terrain"][y][x] in {" ", "|", "-", "+"}:
+                return False
+            twice_error = 2 * error
+            if twice_error >= delta_y:
+                error += delta_y
+                x += step_x
+            if twice_error <= delta_x:
+                error += delta_x
+                y += step_y
+        return self.state["terrain"][target_y][target_x] != " "
 
     def _update_hunger_state(self) -> None:
         hunger = self.state["hunger"]
