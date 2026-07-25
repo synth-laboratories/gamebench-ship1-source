@@ -11,8 +11,7 @@ decision pressure, not private-engine, renderer, or pixel parity.
 Two agents contest a 13×7 map. A mountain barrier in column 6 has one or two
 passages in each pinned layout; `agent_0` starts at `(1,3)` and `agent_1` at
 `(11,3)`. Each full round contains one ordered half-turn for each player. Round
-1 is `agent_0` then `agent_1`; the first actor flips every later round, matching
-the source paper's alternating first-player rule. This is not a joint-step task.
+order is always `agent_0` then `agent_1`. This is not a joint-step task.
 
 An actor submits at most three ordered structured actions: `produce`, `move`,
 `attack`, `build`, `launch`, or `wait`. Units are Tank, Fighter, SAM, and Drone.

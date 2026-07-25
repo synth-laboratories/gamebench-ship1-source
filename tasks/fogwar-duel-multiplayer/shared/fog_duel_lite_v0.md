@@ -12,10 +12,9 @@ free-text channel in this contract.
 - Bases begin at `agent_0: [1,3]` and `agent_1: [11,3]`. Column 6 is a mountain
   barrier with one or two passable cells per pinned layout. Layouts must be
   symmetric and expose a central uranium deposit only on a passable barrier cell.
-- Full round `r` consists of two half-turns. `r=1` starts
-  `[agent_0, agent_1]`; each later round reverses which agent starts. A half-turn
-  is the only public engine `step`, so callers supply an action object for the
-  active actor only.
+- Every full round consists of two half-turns in the fixed order
+  `[agent_0, agent_1]`. A half-turn is the only public engine `step`, so callers
+  supply an action object for the active actor only.
 - A half-turn applies up to three actions in array order. Each rejected action
   consumes its own slot; it does not reject siblings or the whole half-turn.
 - Queued launches resolve only after both half-turns. A base reaching zero HP
