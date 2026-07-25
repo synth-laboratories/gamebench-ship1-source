@@ -14,7 +14,7 @@ from typing import Any
 from synth_containers.tracing import TraceContextV1
 from synth_containers.tracing.capture.emitter import TraceEmitter
 
-EXPECTED_CONTAINERS_VERSION = "0.3.0.20260725"
+EXPECTED_CONTAINERS_VERSION = "0.4.0.20260725"
 if version("synth-containers") != EXPECTED_CONTAINERS_VERSION:
     raise RuntimeError(
         "Craftax Trace V5 requires the central synth-containers "
