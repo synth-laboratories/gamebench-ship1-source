@@ -1,0 +1,25 @@
+{
+  "schema": "gamebench.towermind.nev.v1",
+  "structured": true,
+  "kinds": [
+    "state_transition",
+    "action_applied",
+    "coin_spawned",
+    "coin_collected",
+    "tower_built",
+    "knight_summoned",
+    "friendly_moved",
+    "friendly_disabled_by_fog",
+    "enemy_spawned",
+    "enemy_damaged",
+    "enemy_defeated",
+    "enemy_leaked",
+    "illegal_action",
+    "level_stub",
+    "terminal"
+  ],
+  "illegal_action": {
+    "payload": ["action", "code", "hallucination", "message"],
+    "semantics": "rejected action is not applied; the decision tick still advances on implemented levels"
+  }
+}

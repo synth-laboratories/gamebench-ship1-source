@@ -1,0 +1,17 @@
+{
+  "schema": "gamebench.towermind.scenario.v1",
+  "id": "l2_fog_knight_micro",
+  "level": "L2",
+  "seed": 202,
+  "actions": [
+    {"kind": "collect", "actor": "hero", "target": [1, 2]},
+    {"kind": "build", "tower": "magician", "target": "aoe_gate"},
+    {"kind": "move", "actor": "hero", "target": [2, 2]},
+    {"kind": "collect", "actor": "hero", "target": [2, 2]},
+    {"kind": "build", "tower": "knight", "target": "knight_post"},
+    {"kind": "move", "actor": "knight_0", "target": [5, 2]},
+    {"kind": "move", "actor": "knight_0", "target": [4, 2]},
+    {"kind": "attack", "actor": "knight_0", "target": "enemy_0"},
+    {"kind": "wait"}, {"kind": "wait"}, {"kind": "wait"}, {"kind": "wait"}
+  ]
+}

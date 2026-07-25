@@ -1,0 +1,14 @@
+{
+  "schema": "gamebench.towermind.scenario.v1",
+  "id": "l1_build_collect",
+  "level": "L1",
+  "seed": 101,
+  "actions": [
+    {"kind": "collect", "actor": "hero", "target": [1, 2]},
+    {"kind": "build", "tower": "archer", "target": "gate_archer"},
+    {"kind": "move", "actor": "hero", "target": [2, 2]},
+    {"kind": "collect", "actor": "hero", "target": [2, 2]},
+    {"kind": "wait"}, {"kind": "wait"}, {"kind": "wait"}, {"kind": "wait"},
+    {"kind": "wait"}, {"kind": "wait"}, {"kind": "wait"}, {"kind": "wait"}
+  ]
+}
