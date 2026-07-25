@@ -616,6 +616,7 @@ async def _execute_goex_rollout(
         action_history: list[str] = []
         scheduled_checkpoints: list[dict[str, Any]] = []
         invalid_actions = 0
+        truncated_calls = 0
         step = 0
         llm_calls = 0
         readout = await GOLD.readout(gold_rollout_id)
@@ -634,6 +635,8 @@ async def _execute_goex_rollout(
             llm_calls += 1
             if turn.invalid_parse or turn.repaired:
                 invalid_actions += 1
+            if turn.truncated:
+                truncated_calls += 1
             planned_actions = [
                 str(action) for action in (turn.actions or [turn.action]) if str(action)
             ]
@@ -657,6 +660,10 @@ async def _execute_goex_rollout(
                         else "",
                         "invalid_parse": turn.invalid_parse,
                         "repaired": turn.repaired,
+                        "finish_reason": turn.finish_reason
+                        if batch_index == 0
+                        else None,
+                        "truncated": turn.truncated,
                         "usage": turn.usage if batch_index == 0 else {},
                         "request_id": turn.request_id if batch_index == 0 else None,
                         "model": turn.model if batch_index == 0 else None,
@@ -743,6 +750,9 @@ async def _execute_goex_rollout(
                     "llm_calls": llm_calls,
                     "call_accounting": usage_totals,
                     "invalid_action_count": invalid_actions,
+                    # Distinguishes a budget failure from a formatting failure; a
+                    # nonzero count means invalid_action_count is not about prompting.
+                    "truncated_call_count": truncated_calls,
                     "model": agent.config.model,
                     "gold_rollout_id": gold_rollout_id,
                     "achievements": _achievement_names(readout),
