@@ -1,0 +1,26 @@
+{
+  "schema": "gamebench.nethack.scenario.v1",
+  "scenario_id": "bootstrap_inventory_prompt",
+  "task_id": "bootstrap_inventory_prompt",
+  "seed": 9,
+  "rules": {"max_steps": 12, "autopickup": false, "auto_more": "raw_explicit", "vision_radius": 4},
+  "level_dump": {
+    "terrain": ["", "  -------", "  |@....|", "  -------"],
+    "objects": [
+      {"id": "ration", "position": {"x": 4, "y": 2}, "kind": "%", "name": "a food ration", "nutrition": 600}
+    ],
+    "metadata": {"hp": 14, "hp_max": 14, "hunger": 900}
+  },
+  "actions": ["CompassDirection.E", "Command.PICKUP", "Command.EAT", "Command.APPLY"],
+  "expected": {
+    "public": {
+      "done": false,
+      "terminal_reason": "",
+      "blstats_named": {"x": 4, "y": 2, "hunger": 0},
+      "inventory": {"items": []},
+      "input_mode": {"kind": "normal"}
+    },
+    "private": {"hunger": 1497}
+  },
+  "required_nev_kinds": ["pickup", "eat", "mode_enter", "mode_exit"]
+}

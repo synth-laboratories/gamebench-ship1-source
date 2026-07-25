@@ -1,0 +1,8 @@
+{
+  "schema": "gamebench.nethack.gold_event_expectations.v1",
+  "scenarios": {
+    "bootstrap_descend": ["task_resolved", "move", "stairs_descend", "terminal"],
+    "bootstrap_inventory_prompt": ["task_resolved", "pickup", "mode_enter", "mode_exit", "eat"],
+    "bootstrap_trap_death": ["task_resolved", "move", "death"]
+  }
+}

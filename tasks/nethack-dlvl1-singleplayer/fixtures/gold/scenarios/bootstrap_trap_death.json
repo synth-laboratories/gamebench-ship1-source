@@ -1,0 +1,18 @@
+{
+  "schema": "gamebench.nethack.scenario.v1",
+  "scenario_id": "bootstrap_trap_death",
+  "task_id": "bootstrap_trap_death",
+  "seed": 11,
+  "rules": {"max_steps": 8, "autopickup": false, "auto_more": "raw_explicit", "vision_radius": 4},
+  "level_dump": {
+    "terrain": ["", "  -------", "  |@....|", "  -------"],
+    "traps": [{"id": "fatal-pit", "kind": "pit", "damage": 14, "position": {"x": 4, "y": 2}}],
+    "metadata": {"hp": 14, "hp_max": 14, "hunger": 900}
+  },
+  "actions": ["CompassDirection.E"],
+  "expected": {
+    "public": {"done": true, "terminated": true, "terminal_reason": "death", "blstats_named": {"x": 4, "y": 2}},
+    "private": {"hp": 0}
+  },
+  "required_nev_kinds": ["death", "action_applied", "move"]
+}
