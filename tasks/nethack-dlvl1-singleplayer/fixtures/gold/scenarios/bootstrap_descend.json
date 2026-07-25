@@ -1,0 +1,23 @@
+{
+  "schema": "gamebench.nethack.scenario.v1",
+  "scenario_id": "bootstrap_descend",
+  "task_id": "bootstrap_descend",
+  "seed": 7,
+  "character": {"role": "val", "race": "hum", "gender": "fem", "align": "law"},
+  "rules": {"max_steps": 8, "autopickup": false, "auto_more": "raw_explicit", "vision_radius": 4},
+  "level_dump": {
+    "terrain": ["", "  -----", "  |@>.|", "  -----"],
+    "metadata": {"hp": 14, "hp_max": 14, "hunger": 900}
+  },
+  "actions": ["CompassDirection.E", "MiscDirection.DOWN"],
+  "expected": {
+    "public": {
+      "done": true,
+      "terminated": true,
+      "truncated": false,
+      "terminal_reason": "descended",
+      "blstats_named": {"x": 4, "y": 2, "dungeon_level": 1}
+    }
+  },
+  "required_nev_kinds": ["task_resolved", "move", "stairs_descend", "terminal"]
+}
