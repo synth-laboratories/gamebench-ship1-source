@@ -75,10 +75,18 @@ def decode_inventory_strings(rows: Any) -> list[str]:
     return result
 
 
-def expected_public(snapshot: dict[str, Any]) -> dict[str, Any]:
+def expected_nle_projection(snapshot: dict[str, Any]) -> dict[str, Any]:
+    """Decode the raw public observation captured from NLE.
+
+    Capture lifecycle fields live alongside ``projection`` in snapshots.  They
+    normally describe the same point in the tape, except for the frozen
+    ``dlvl1_descend`` boundary: that snapshot is intentionally the last
+    dlvl-1 observation *before* NLE enters dlvl-2.
+    """
+
     projection = dict(snapshot.get("projection", {}))
     inventory = dict(projection.get("inventory", {}))
-    expected = {
+    return {
         "chars": decode_chars(projection.get("chars", [])),
         "colors": projection.get("colors", []),
         "glyphs": projection.get("glyphs", []),
@@ -91,10 +99,15 @@ def expected_public(snapshot: dict[str, Any]) -> dict[str, Any]:
             "inv_oclasses": inventory.get("inv_oclasses", []),
             "inv_strs": decode_inventory_strings(inventory.get("inv_strs", [])),
         },
+    }
+
+
+def expected_public(snapshot: dict[str, Any]) -> dict[str, Any]:
+    return {
+        **expected_nle_projection(snapshot),
         "done": bool(snapshot.get("done", False)),
         "terminal_reason": str(snapshot.get("terminal_reason", "")),
     }
-    return expected
 
 
 def load_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -140,32 +153,120 @@ def rust_step_projections(task: dict[str, Any], actions: list[dict[str, Any]]) -
     return list(json.loads(completed.stdout)["snapshots"])
 
 
-def compare_fixture(fixture_dir: Path, lane: str) -> list[str]:
-    task, actions, snapshots = fixture_task(fixture_dir)
+def is_dlvl1_descend(record: dict[str, Any]) -> bool:
+    return str(record.get("boundary", "")) == "dlvl1_descend"
+
+
+def descent_terminal_contract(projection: dict[str, Any]) -> dict[str, Any]:
+    """The post-DOWN contract the dlvl-1 gold owns without an NLE dlvl-2 view."""
+
+    return {
+        "done": bool(projection.get("done", False)),
+        "terminated": bool(projection.get("terminated", False)),
+        "terminal_reason": str(projection.get("terminal_reason", "")),
+    }
+
+
+def compare_lane(
+    fixture_dir: Path,
+    lane: str,
+    actions: list[dict[str, Any]],
+    snapshots: list[dict[str, Any]],
+    projections: list[dict[str, Any]],
+) -> list[str]:
+    """Compare one replay lane, honoring the frozen pre-dlvl2 boundary.
+
+    The trace contains reset followed by the public state after each applied
+    action.  A frozen ``dlvl1_descend`` snapshot instead records NLE's state
+    before the DOWN action, because the oracle is forbidden from entering
+    dlvl-2.  Compare that snapshot at the pre-action trace index, then apply
+    the gold DOWN action solely to check its owned terminal contract.
+    """
+
     by_step = {int(snapshot["step"]): snapshot for snapshot in snapshots}
     failures: list[str] = []
-    if lane == "python":
-        projections = python_step_projections(task, actions)
-        for step in sorted(by_step):
-            if step >= len(projections):
-                failures.append(f"{fixture_dir.name} python step {step}: gold trace ended after step {len(projections) - 1}")
+    compared_steps: set[int] = set()
+
+    initial = by_step.get(0)
+    if initial is not None:
+        if not projections:
+            failures.append(f"{fixture_dir.name} {lane} step 0: gold trace is empty")
+            return failures
+        difference = first_difference(expected_public(initial), projections[0])
+        if difference:
+            failures.append(f"{fixture_dir.name} {lane} step 0: {difference}")
+            return failures
+        compared_steps.add(0)
+
+    for action_index, record in enumerate(actions, start=1):
+        step = int(record.get("step", action_index))
+        snapshot = by_step.get(step)
+        if snapshot is None:
+            if is_dlvl1_descend(record):
+                failures.append(f"{fixture_dir.name} {lane} step {step}: missing pre-descend NLE snapshot")
                 break
-            actual = projections[step]
-            difference = first_difference(expected_public(by_step[step]), actual)
+            continue
+        compared_steps.add(step)
+
+        if is_dlvl1_descend(record):
+            pre_action_index = action_index - 1
+            if pre_action_index >= len(projections):
+                failures.append(
+                    f"{fixture_dir.name} {lane} step {step}: gold trace ended before the pre-descend state"
+                )
+                break
+            difference = first_difference(expected_nle_projection(snapshot), projections[pre_action_index])
             if difference:
-                failures.append(f"{fixture_dir.name} python step {step}: {difference}")
+                failures.append(f"{fixture_dir.name} {lane} step {step} pre-descend: {difference}")
                 break
-    else:
-        projections = rust_step_projections(task, actions)
-        for step in sorted(by_step):
+
+            post_action_index = action_index
+            if post_action_index >= len(projections):
+                failures.append(
+                    f"{fixture_dir.name} {lane} step {step}: gold trace ended before applying dlvl1 descent"
+                )
+                break
+            difference = first_difference(
+                {"done": True, "terminated": True, "terminal_reason": "descended"},
+                descent_terminal_contract(projections[post_action_index]),
+            )
+            if difference:
+                failures.append(f"{fixture_dir.name} {lane} step {step} descent terminal contract: {difference}")
+                break
+            continue
+
+        projection_index = action_index
+        if projection_index >= len(projections):
+            failures.append(f"{fixture_dir.name} {lane} step {step}: gold trace ended after step {projection_index - 1}")
+            break
+        difference = first_difference(expected_public(snapshot), projections[projection_index])
+        if difference:
+            failures.append(f"{fixture_dir.name} {lane} step {step}: {difference}")
+            break
+
+    # Preserve comparison of any legacy snapshot that was not paired with an
+    # action record.  Canonical capture tapes pair every post-reset snapshot.
+    if not failures:
+        for step in sorted(set(by_step) - compared_steps):
             if step >= len(projections):
-                failures.append(f"{fixture_dir.name} rust step {step}: gold trace ended after step {len(projections) - 1}")
+                failures.append(f"{fixture_dir.name} {lane} step {step}: gold trace ended after step {len(projections) - 1}")
                 break
             difference = first_difference(expected_public(by_step[step]), projections[step])
             if difference:
-                failures.append(f"{fixture_dir.name} rust step {step}: {difference}")
+                failures.append(f"{fixture_dir.name} {lane} step {step}: {difference}")
                 break
     return failures
+
+
+def compare_fixture(fixture_dir: Path, lane: str) -> list[str]:
+    task, actions, snapshots = fixture_task(fixture_dir)
+    if lane == "python":
+        projections = python_step_projections(task, actions)
+    elif lane == "rust":
+        projections = rust_step_projections(task, actions)
+    else:
+        raise ValueError(f"unsupported replay lane {lane!r}")
+    return compare_lane(fixture_dir, lane, actions, snapshots, projections)
 
 
 def main() -> None:

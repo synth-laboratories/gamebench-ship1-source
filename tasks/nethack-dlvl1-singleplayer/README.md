@@ -25,6 +25,10 @@ observation snapshots.  Both gold lanes then replay those files without NLE.
   terminal state.
 - `>` performed while standing on the captured down-stair emits
   `stairs_descend` and `terminal(descended)`.  No post-descend NLE map is read.
+  Capture refuses an unproven `DOWN`: it needs an earlier raw `>` observation
+  at the hero coordinate, freezes that pre-action projection, and never steps
+  NLE into dlvl 2.  Promotion rechecks that proof and every raw snapshot's Main
+  Dungeon dlvl-1 identity.
 
 ## Layout
 
@@ -59,6 +63,39 @@ dependency explanation if `nle==0.9.0` is unavailable; minimal CI only replays
 already committed captures.  Capture default is raw NLE `MORE` behavior, so
 every `MiscAction.MORE` remains visible in a tape.
 
+## Canonical NLE capture workflow
+
+Capture always stages **outside** this task; it cannot write directly into the
+canonical corpus.  A staged capture retains the initial NLE blstats, message
+buffer, inventory arrays, unseen planes, and initial visibility mask.  Static
+terrain/glyph/color cells are hydrated only when the same NLE tape later
+observes them.  Gold owns later FOW refreshes from hero/terrain state and its
+own LOS rule; a fixture may not encode an action-indexed future-visibility
+schedule.  Gold never calls NLE while replaying a fixture.
+
+Visible dynamic glyphs must be represented by owned `objects`, `monsters`, or
+`traps` annotations rather than left in terrain.  A `terrain_underlay` entry
+may fill only a visible dynamic reset cell and must use static values supported
+by NLE evidence.  Annotations cannot replace raw planes or reset metadata.
+
+```bash
+.venv/bin/python scripts/capture_nle_fixture.py \
+  --fixture-id val-east-seed-20260725 \
+  --actions /tmp/val-east.jsonl \
+  --seed 20260725 \
+  --output /tmp/val-east-seed-20260725
+
+.venv-properties/bin/python scripts/promote_nle_fixture.py \
+  --source /tmp/val-east-seed-20260725 \
+  --fixture-id val-east-seed-20260725
+```
+
+Promotion refuses an existing destination and requires strict Python and Rust
+replay to be green first.  It also validates the pinned action table, schema,
+contiguous step-zero snapshots, and rejects diagnostic-fuzz artifacts or
+future-visibility schedules.  It copies only `meta.json`, `level_dump.json`,
+`actions.jsonl`, and `snapshots.jsonl`.
+
 ## Live NLE differential fuzzing
 
 The optional fuzzer runs live NLE and the own gold lanes from the same
@@ -92,10 +129,11 @@ direction and `MORE` prompts, and uses `ESC` to recover other raw prompts:
 .venv/bin/python scripts/fuzz_nle_differential.py --cases 25 --steps 32 --seed 20260725 --lane both --campaign prompt-probe-v0 --output /tmp/nethack-nle-prompt-probe
 ```
 
-Pass `--actions <jsonl>` to replay arbitrary pinned action IDs; a `DOWN` away
-from a known stair is sent to NLE normally, while an actual descent is emitted
-as a terminal pre-dlvl-2 boundary.  Risky host/episode-escaping commands remain
-for explicit tapes rather than generated campaigns.
+Pass `--actions <jsonl>` to replay arbitrary pinned action IDs.  A `DOWN`
+without earlier raw `>` evidence at the hero coordinate is rejected before NLE
+can cross the geography boundary; a proven descent is emitted as a terminal
+pre-dlvl-2 boundary.  Risky host/episode-escaping commands remain for explicit
+tapes rather than generated campaigns.
 
 Every run writes `coverage.json` beside `run.json`.  It separates selected
 action IDs from action IDs actually stepped in NLE (a protected pre-dlvl-2
@@ -135,6 +173,8 @@ NLE observations, and strict-green in both lanes.
 
 The checked-in implementation establishes the dual-lane engine, full action
 acceptance, fixed-crop observation contract, deterministic checkpoint/restore,
-and capture/discrepancy plumbing.  It is not yet an assertion that the required
-33 authentic NLE tapes have been captured; coverage and deliberate stubs are
-tracked in [`PROGRESS.md`](PROGRESS.md).
+and capture/discrepancy plumbing.  `val-east-seed-20260725` is the first
+authentic strict-green tape (reset plus one east move), so the canonical corpus
+is **1 / 33** required v0 tapes.  It is not a claim that the remaining action,
+combat, inventory, or descent behaviors match NLE; coverage and deliberate
+stubs are tracked in [`PROGRESS.md`](PROGRESS.md).

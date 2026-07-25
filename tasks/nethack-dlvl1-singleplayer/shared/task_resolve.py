@@ -110,6 +110,16 @@ def _normalise_seen(raw: Any, *, terrain: list[list[str]]) -> list[list[bool]]:
     return [[cell != " " for cell in row] for row in terrain]
 
 
+def _normalise_unseen(raw: Any) -> dict[str, list[list[Any]]]:
+    data = dict(raw) if isinstance(raw, dict) else {}
+    chars = _normalise_rows(data.get("chars"), fill=" ")
+    return {
+        "chars": chars,
+        "glyphs": _normalise_int_rows(data.get("glyphs"), fallback=chars, default=0),
+        "colors": _normalise_int_rows(data.get("colors"), fallback=chars, default=0),
+    }
+
+
 def _position(value: Any) -> dict[str, int]:
     data = value if isinstance(value, dict) else {}
     return {"x": int(data.get("x", 0)), "y": int(data.get("y", 0))}
@@ -175,6 +185,8 @@ def normalise_level_dump(raw: dict[str, Any]) -> dict[str, Any]:
     """Return a JSON-only 21×79 dump suitable for either independent gold lane."""
 
     data = dict(raw)
+    if "visibility_schedule" in data:
+        raise ValueError("level_dump may not encode a future action-indexed visibility schedule")
     terrain = _normalise_rows(data.get("terrain", data.get("chars", data.get("grid", []))))
     hero_raw = data.get("hero", {})
     hero = _position(hero_raw)
@@ -192,6 +204,7 @@ def normalise_level_dump(raw: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("level_dump must contain a hero position inside the 21x79 crop")
     glyphs = _normalise_int_rows(data.get("glyphs"), fallback=terrain, default=-1)
     colors = _normalise_int_rows(data.get("colors"), fallback=terrain, default=7)
+    seen = _normalise_seen(data.get("seen"), terrain=terrain)
     hero = {
         **hero,
         "glyph": int(dict(hero_raw).get("glyph", ord("@"))) if isinstance(hero_raw, dict) else ord("@"),
@@ -211,7 +224,8 @@ def normalise_level_dump(raw: dict[str, Any]) -> dict[str, Any]:
         "terrain": ["".join(row) for row in terrain],
         "glyphs": glyphs,
         "colors": colors,
-        "seen": _normalise_seen(data.get("seen"), terrain=terrain),
+        "seen": seen,
+        "unseen": _normalise_unseen(data.get("unseen")),
         "hero": hero,
         "objects": floor_items,
         "inventory": inventory,

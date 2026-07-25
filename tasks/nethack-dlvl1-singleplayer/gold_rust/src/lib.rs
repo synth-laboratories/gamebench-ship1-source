@@ -16,7 +16,7 @@ const BLSTATS_FIELDS: [&str; 27] = [
     "x", "y", "strength", "strength_percent", "dexterity", "constitution", "intelligence", "wisdom", "charisma", "score", "hp", "hp_max", "depth", "gold", "energy", "energy_max", "ac", "monster_level", "experience_level", "experience", "time", "hunger", "capacity", "dungeon_number", "dungeon_level", "condition", "alignment",
 ];
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Position {
     pub x: i64,
     pub y: i64,
@@ -30,7 +30,7 @@ pub struct Hero {
     pub color: i64,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Item {
     pub id: String,
     pub letter: String,
@@ -91,10 +91,15 @@ pub struct GameState {
     pub terrain: Vec<Vec<String>>,
     pub base_glyphs: Vec<Vec<i64>>,
     pub base_colors: Vec<Vec<i64>>,
+    pub unseen_chars: Vec<Vec<String>>,
+    pub unseen_glyphs: Vec<Vec<i64>>,
+    pub unseen_colors: Vec<Vec<i64>>,
     pub seen: Vec<Vec<bool>>,
     pub hero: Hero,
     pub floor_items: Vec<Item>,
     pub inventory: Vec<Item>,
+    pub initial_inventory: Vec<Item>,
+    pub nle_inventory: Value,
     pub monsters: Vec<Monster>,
     pub traps: Vec<Trap>,
     pub step_index: i64,
@@ -102,6 +107,7 @@ pub struct GameState {
     pub rng: u32,
     pub message: String,
     pub message_raw: Vec<u8>,
+    pub message_width: usize,
     pub message_history: Vec<String>,
     pub input_mode: Value,
     pub terminated: bool,
@@ -117,7 +123,9 @@ pub struct GameState {
     pub experience_level: i64,
     pub ac: i64,
     pub hunger: i64,
+    pub initial_hunger: i64,
     pub hunger_state: String,
+    pub nle_blstats: Vec<i64>,
     pub strength: i64,
     pub dexterity: i64,
     pub constitution: i64,
@@ -196,40 +204,61 @@ impl NethackSession {
         let terrain = level.get("terrain").and_then(Value::as_array).cloned().unwrap_or_default().iter().map(|row| row.as_str().unwrap_or("").chars().map(|ch| ch.to_string()).collect::<Vec<_>>()).collect::<Vec<_>>();
         let base_glyphs = int_matrix(level.get("glyphs"));
         let base_colors = int_matrix(level.get("colors"));
+        let unseen = object_or_empty(level.get("unseen"));
+        let unseen_chars = normalise_rows(unseen.get("chars"));
+        let unseen_glyphs = normalize_int_rows(unseen.get("glyphs"), &unseen_chars, 0);
+        let unseen_colors = normalize_int_rows(unseen.get("colors"), &unseen_chars, 0);
         let seen = bool_matrix(level.get("seen"));
+        let nle_blstats = int_values(metadata.get("nle_blstats"));
+        let nle_message_raw = byte_values(metadata.get("nle_message_raw"));
+        let has_capture_message = !nle_message_raw.is_empty();
+        let initial_message = text_from_raw(&nle_message_raw);
+        let initial_message_history = if has_capture_message { vec![initial_message.clone()] } else { Vec::new() };
+        let initial_hp = integer_map(&metadata, "hp", 14);
+        let initial_energy = integer_map(&metadata, "energy", 0);
+        let initial_hunger = integer_map(&metadata, "hunger", 900);
+        let initial_inventory = inventory.clone();
         let mut session = Self {
             resolved: resolved.clone(),
             state: GameState {
                 terrain,
                 base_glyphs,
                 base_colors,
+                unseen_chars,
+                unseen_glyphs,
+                unseen_colors,
                 seen,
                 hero,
                 floor_items: level.get("objects").and_then(Value::as_array).cloned().unwrap_or_default().iter().enumerate().map(|(index, item)| item_from_value(item, index, true)).collect(),
                 inventory,
+                initial_inventory,
+                nle_inventory: metadata.get("nle_inventory").cloned().unwrap_or_else(|| json!({})),
                 monsters: level.get("monsters").and_then(Value::as_array).cloned().unwrap_or_default().iter().enumerate().map(|(index, item)| monster_from_value(item, index)).collect(),
                 traps: level.get("traps").and_then(Value::as_array).cloned().unwrap_or_default().iter().enumerate().map(|(index, item)| trap_from_value(item, index)).collect(),
                 step_index: 0,
-                time: 0,
+                time: if nle_blstats.len() == BLSTATS_FIELDS.len() { nle_blstats[20] } else { 0 },
                 rng: integer(&resolved, "seed", 0) as u32,
-                message: String::new(),
-                message_raw: Vec::new(),
-                message_history: Vec::new(),
+                message: initial_message,
+                message_raw: nle_message_raw.clone(),
+                message_width: nle_message_raw.len(),
+                message_history: initial_message_history,
                 input_mode: normal_mode(),
                 terminated: false,
                 truncated: false,
                 terminal_reason: String::new(),
                 reward: 0.0,
-                hp: integer_map(&metadata, "hp", 14),
-                hp_max: integer_map(&metadata, "hp_max", integer_map(&metadata, "hp", 14)).max(1),
-                energy: integer_map(&metadata, "energy", 0),
-                energy_max: integer_map(&metadata, "energy_max", integer_map(&metadata, "energy", 0)).max(0),
+                hp: initial_hp,
+                hp_max: integer_map(&metadata, "hp_max", initial_hp).max(1),
+                energy: initial_energy,
+                energy_max: integer_map(&metadata, "energy_max", initial_energy).max(0),
                 gold: integer_map(&metadata, "gold", 0),
                 experience: integer_map(&metadata, "experience", 0),
                 experience_level: integer_map(&metadata, "experience_level", 1).max(1),
                 ac: integer_map(&metadata, "ac", 10),
-                hunger: integer_map(&metadata, "hunger", 900),
+                hunger: initial_hunger,
+                initial_hunger,
                 hunger_state: "Not Hungry".to_string(),
+                nle_blstats,
                 strength: integer_map(&metadata, "strength", 18),
                 dexterity: integer_map(&metadata, "dexterity", 10),
                 constitution: integer_map(&metadata, "constitution", 10),
@@ -245,9 +274,10 @@ impl NethackSession {
             },
             events: Vec::new(),
         };
-        session.reveal();
         session.event("task_resolved", "TaskResolved(dlvl1 capture-backed)", None, Some("reset"), "info", json!({"task_id": string(&resolved, "task_id", "manual"), "config_hash": string(&resolved, "config_hash", ""), "fixture_id": string(&resolved, "fixture_id", "")}));
-        session.message("You enter the dungeon.");
+        if !has_capture_message {
+            session.message("You enter the dungeon.");
+        }
         Ok(session)
     }
 
@@ -261,6 +291,8 @@ impl NethackSession {
             self.event("rule_violation", "RuleViolation(unknown_action)", Some(input.to_string()), Some("reject"), "warn", json!({}));
             return self.readout();
         };
+        let hero_before = (self.state.hero.x, self.state.hero.y);
+        let terrain_before = self.state.terrain.clone();
         self.state.step_index += 1;
         self.event("action_applied", &format!("Action({})", action.canonical), Some(action.canonical.clone()), Some("dispatch"), "info", action.payload());
         let spent_turn = if mode_kind(&self.state.input_mode) == "normal" {
@@ -271,7 +303,9 @@ impl NethackSession {
         if spent_turn && !self.state.terminated {
             self.advance_turn();
         }
-        self.reveal();
+        if hero_before != (self.state.hero.x, self.state.hero.y) || terrain_before != self.state.terrain {
+            self.refresh_visibility();
+        }
         self.check_truncation();
         self.readout()
     }
@@ -293,7 +327,7 @@ impl NethackSession {
             "blstats_fields": BLSTATS_FIELDS,
             "blstats_named": named,
             "message": normalize_message(&self.state.message),
-            "message_raw": self.state.message_raw,
+            "message_raw": self.message_projection_raw(),
             "inventory": self.inventory_projection(),
             "input_mode": self.state.input_mode,
             "done": self.state.terminated || self.state.truncated,
@@ -417,7 +451,8 @@ impl NethackSession {
             return false;
         }
         if matches!(name, "APPLY" | "DIP" | "DROP" | "EAT" | "FIRE" | "INVOKE" | "PUTON" | "QUAFF" | "QUIVER" | "READ" | "REMOVE" | "RUB" | "TAKEOFF" | "THROW" | "TIP" | "WEAR" | "WIELD" | "ZAP") {
-            self.enter_mode("inventory_letter", action, "What do you want to use?", json!({"operation": name.to_ascii_lowercase(), "after": if matches!(name, "FIRE" | "THROW" | "ZAP") { "direction" } else { "normal" }}));
+            let prompt = self.item_prompt(name);
+            self.enter_mode("inventory_letter", action, &prompt, json!({"operation": name.to_ascii_lowercase(), "after": if matches!(name, "FIRE" | "THROW" | "ZAP") { "direction" } else { "normal" }}));
             return false;
         }
         if name == "PICKUP" {
@@ -461,6 +496,24 @@ impl NethackSession {
         }
         self.message(&format!("{} is accepted but has no fixture effect.", action.canonical));
         false
+    }
+
+    fn item_prompt(&self, operation: &str) -> String {
+        if operation != "EAT" {
+            return "What do you want to use?".to_string();
+        }
+        let letters = self
+            .state
+            .inventory
+            .iter()
+            .filter(|item| item.kind == "%" && !item.letter.is_empty())
+            .map(|item| item.letter.as_str())
+            .collect::<Vec<_>>();
+        if letters.is_empty() {
+            "What do you want to eat? [*]".to_string()
+        } else {
+            format!("What do you want to eat? [{} or ?*]", letters.join(" "))
+        }
     }
 
     fn consume_prompt(&mut self, action: &ActionSpec) -> bool {
@@ -643,7 +696,7 @@ impl NethackSession {
             }
         }
         if moved {
-            self.message("You move.");
+            self.message("");
         }
         true
     }
@@ -654,10 +707,10 @@ impl NethackSession {
             self.state.terrain[y as usize][x as usize] = ".".to_string();
             self.message("The door opens.");
             self.event("action_applied", "OpenDoor()", None, Some("open"), "info", json!({"x": x, "y": y}));
-        } else {
-            self.message("You see no door there.");
+            return true;
         }
-        true
+        self.message("You see no door there.");
+        false
     }
 
     fn close(&mut self, direction: (i64, i64)) -> bool {
@@ -721,7 +774,11 @@ impl NethackSession {
         let items = self.state.floor_items.iter().filter(|item| item.position.x == x && item.position.y == y).cloned().collect::<Vec<_>>();
         if items.is_empty() {
             if !silent {
-                self.message("There is nothing here to pick up.");
+                if matches!(self.state.terrain[y as usize][x as usize].as_str(), "<" | ">") {
+                    self.message("The stairs are solidly fixed to the floor.");
+                } else {
+                    self.message("There is nothing here to pick up.");
+                }
             }
             return false;
         }
@@ -970,9 +1027,9 @@ impl NethackSession {
     }
 
     fn render_planes(&self) -> (Vec<String>, Vec<Vec<i64>>, Vec<Vec<i64>>) {
-        let mut chars = vec![vec![" ".to_string(); VIEW_WIDTH]; VIEW_HEIGHT];
-        let mut colors = vec![vec![0; VIEW_WIDTH]; VIEW_HEIGHT];
-        let mut glyphs = vec![vec![0; VIEW_WIDTH]; VIEW_HEIGHT];
+        let mut chars = self.state.unseen_chars.clone();
+        let mut colors = self.state.unseen_colors.clone();
+        let mut glyphs = self.state.unseen_glyphs.clone();
         for y in 0..VIEW_HEIGHT {
             for x in 0..VIEW_WIDTH {
                 if self.state.seen[y][x] {
@@ -1009,6 +1066,22 @@ impl NethackSession {
     }
 
     fn inventory_projection(&self) -> Value {
+        if let Some(captured) = self.state.nle_inventory.as_object().filter(|captured| !captured.is_empty()) {
+            if self.state.inventory == self.state.initial_inventory {
+                let strings = captured
+                    .get("inv_strs")
+                    .and_then(Value::as_array)
+                    .map(|entries| entries.iter().map(nle_inventory_string).collect::<Vec<_>>())
+                    .unwrap_or_default();
+                return json!({
+                    "inv_letters": captured.get("inv_letters").cloned().unwrap_or_else(|| json!([])),
+                    "inv_glyphs": captured.get("inv_glyphs").cloned().unwrap_or_else(|| json!([])),
+                    "inv_oclasses": captured.get("inv_oclasses").cloned().unwrap_or_else(|| json!([])),
+                    "inv_strs": strings,
+                    "items": self.state.inventory,
+                });
+            }
+        }
         let mut letters = vec![0i64; 55];
         let mut glyphs = vec![0i64; 55];
         let mut oclasses = vec![0i64; 55];
@@ -1023,11 +1096,31 @@ impl NethackSession {
     }
 
     fn blstats(&self) -> Vec<i64> {
-        vec![
-            self.state.hero.x, self.state.hero.y, self.state.strength, 0, self.state.dexterity, self.state.constitution, self.state.intelligence, self.state.wisdom, self.state.charisma, self.state.experience,
-            self.state.hp, self.state.hp_max, 1, self.state.gold, self.state.energy, self.state.energy_max, self.state.ac, 1, self.state.experience_level, self.state.experience,
-            self.state.time, self.hunger_code(), 0, 0, 1, 0, self.alignment_code(),
-        ]
+        let has_baseline = self.state.nle_blstats.len() == BLSTATS_FIELDS.len();
+        let mut values = if has_baseline {
+            self.state.nle_blstats.clone()
+        } else {
+            vec![
+                self.state.hero.x, self.state.hero.y, self.state.strength, 0, self.state.dexterity, self.state.constitution, self.state.intelligence, self.state.wisdom, self.state.charisma, self.state.experience,
+                self.state.hp, self.state.hp_max, 1, self.state.gold, self.state.energy, self.state.energy_max, self.state.ac, 1, self.state.experience_level, self.state.experience,
+                self.state.time, self.hunger_code(), 0, 0, 1, 0, self.alignment_code(),
+            ]
+        };
+        values[0] = self.state.hero.x;
+        values[1] = self.state.hero.y;
+        values[10] = self.state.hp;
+        values[11] = self.state.hp_max;
+        values[13] = self.state.gold;
+        values[14] = self.state.energy;
+        values[15] = self.state.energy_max;
+        values[16] = self.state.ac;
+        values[18] = self.state.experience_level;
+        values[19] = self.state.experience;
+        values[20] = self.state.time;
+        if !has_baseline || self.state.hunger != self.state.initial_hunger {
+            values[21] = self.hunger_code();
+        }
+        values
     }
 
     fn alignment_code(&self) -> i64 {
@@ -1056,7 +1149,12 @@ impl NethackSession {
             }
         }
         self.state.input_mode = Value::Object(mode);
-        self.message(prompt);
+        let raw_prompt = if self.state.message_width > 0 && kind != "more" {
+            format!("{prompt} ")
+        } else {
+            prompt.to_string()
+        };
+        self.message_with_raw(prompt, &raw_prompt);
         self.event("mode_enter", &format!("ModeEnter({kind})"), Some(action.canonical.clone()), Some(kind), "info", self.state.input_mode.clone());
     }
 
@@ -1071,10 +1169,24 @@ impl NethackSession {
     }
 
     fn message(&mut self, text: &str) {
+        self.message_with_raw(text, text);
+    }
+
+    fn message_with_raw(&mut self, text: &str, raw_text: &str) {
         self.state.message = text.to_string();
-        self.state.message_raw = text.as_bytes().to_vec();
+        self.state.message_raw = raw_text.as_bytes().to_vec();
         self.state.message_history.push(text.to_string());
         self.event("message", &format!("Message({text})"), None, Some("message"), "info", json!({"raw": self.state.message_raw}));
+    }
+
+    fn message_projection_raw(&self) -> Vec<u8> {
+        if self.state.message_width == 0 {
+            return self.state.message_raw.clone();
+        }
+        let mut raw = self.state.message_raw.clone();
+        raw.resize(self.state.message_width, 0);
+        raw.truncate(self.state.message_width);
+        raw
     }
 
     fn event(&mut self, kind: &str, message: &str, action: Option<String>, transition: Option<&str>, severity: &str, payload: Value) {
@@ -1091,11 +1203,46 @@ impl NethackSession {
         });
     }
 
-    fn reveal(&mut self) {
-        let radius = integer(self.resolved.get("rules").unwrap_or(&Value::Null), "vision_radius", 4);
-        for y in (self.state.hero.y - radius).max(0)..=(self.state.hero.y + radius).min((VIEW_HEIGHT - 1) as i64) {
-            for x in (self.state.hero.x - radius).max(0)..=(self.state.hero.x + radius).min((VIEW_WIDTH - 1) as i64) {
-                self.state.seen[y as usize][x as usize] = true;
+    fn refresh_visibility(&mut self) {
+        let radius = integer(self.resolved.get("rules").unwrap_or(&Value::Null), "vision_radius", 4).max(0);
+        let hero = (self.state.hero.x, self.state.hero.y);
+        for y in (hero.1 - radius).max(0)..=(hero.1 + radius).min((VIEW_HEIGHT - 1) as i64) {
+            for x in (hero.0 - radius).max(0)..=(hero.0 + radius).min((VIEW_WIDTH - 1) as i64) {
+                if self.state.seen[y as usize][x as usize] || self.state.terrain[y as usize][x as usize] == " " {
+                    continue;
+                }
+                if self.has_line_of_sight(hero, (x, y)) {
+                    self.state.seen[y as usize][x as usize] = true;
+                }
+            }
+        }
+    }
+
+    fn has_line_of_sight(&self, source: (i64, i64), target: (i64, i64)) -> bool {
+        let (mut x, mut y) = source;
+        let dx = (target.0 - source.0).abs();
+        let sx = if source.0 < target.0 { 1 } else { -1 };
+        let dy = -(target.1 - source.1).abs();
+        let sy = if source.1 < target.1 { 1 } else { -1 };
+        let mut error = dx + dy;
+        loop {
+            if (x, y) != source && (x, y) != target {
+                let terrain = self.terrain_at(x, y);
+                if terrain == " " || is_opaque_terrain(terrain) {
+                    return false;
+                }
+            }
+            if (x, y) == target {
+                return true;
+            }
+            let twice_error = 2 * error;
+            if twice_error >= dy && x != target.0 {
+                error += dy;
+                x += sx;
+            }
+            if twice_error <= dx && y != target.1 {
+                error += dx;
+                y += sy;
             }
         }
     }
@@ -1289,6 +1436,9 @@ pub fn resolve_task(task: &Value, seed_override: Option<i64>) -> Result<Value, S
 
 fn normalize_level_dump(raw: &Value) -> Result<Value, String> {
     let data = object_or_empty(Some(raw));
+    if data.contains_key("visibility_schedule") {
+        return Err("level_dump may not encode a future action-indexed visibility schedule".to_string());
+    }
     let terrain_source = data.get("terrain").or_else(|| data.get("chars")).or_else(|| data.get("grid"));
     let mut terrain = normalise_rows(terrain_source);
     let hero_raw = data.get("hero").cloned().unwrap_or_else(|| json!({}));
@@ -1322,6 +1472,10 @@ fn normalize_level_dump(raw: &Value) -> Result<Value, String> {
     let glyphs = normalize_int_rows(data.get("glyphs"), &terrain, -1);
     let colors = normalize_int_rows(data.get("colors"), &terrain, 7);
     let seen = normalize_seen(data.get("seen"), &terrain);
+    let unseen = object_or_empty(data.get("unseen"));
+    let unseen_chars = normalise_rows(unseen.get("chars"));
+    let unseen_glyphs = normalize_int_rows(unseen.get("glyphs"), &unseen_chars, 0);
+    let unseen_colors = normalize_int_rows(unseen.get("colors"), &unseen_chars, 0);
     let objects = data.get("objects").or_else(|| data.get("items")).and_then(Value::as_array).cloned().unwrap_or_default().iter().enumerate().map(|(index, item)| serde_json::to_value(item_from_value(item, index, true)).unwrap()).collect::<Vec<_>>();
     let inventory = data.get("inventory").and_then(Value::as_array).cloned().unwrap_or_default().iter().enumerate().map(|(index, item)| serde_json::to_value(item_from_value(item, index, false)).unwrap()).collect::<Vec<_>>();
     let monsters = data.get("monsters").and_then(Value::as_array).cloned().unwrap_or_default().iter().enumerate().map(|(index, item)| serde_json::to_value(monster_from_value(item, index)).unwrap()).collect::<Vec<_>>();
@@ -1333,6 +1487,7 @@ fn normalize_level_dump(raw: &Value) -> Result<Value, String> {
         "glyphs": glyphs,
         "colors": colors,
         "seen": seen,
+        "unseen": {"chars": unseen_chars, "glyphs": unseen_glyphs, "colors": unseen_colors},
         "hero": hero_object,
         "objects": objects,
         "inventory": inventory,
@@ -1539,6 +1694,10 @@ fn is_passable(cell: &str) -> bool {
     matches!(cell, "." | "#" | ">" | "<" | "_" | "{" | "}" | "\\" | "~" | "^")
 }
 
+fn is_opaque_terrain(cell: &str) -> bool {
+    matches!(cell, "|" | "-" | "+")
+}
+
 fn in_bounds(x: i64, y: i64) -> bool {
     (0..VIEW_WIDTH as i64).contains(&x) && (0..VIEW_HEIGHT as i64).contains(&y)
 }
@@ -1581,6 +1740,33 @@ fn string(value: &Value, key: &str, default: &str) -> String {
 
 fn string_map(value: &Map<String, Value>, key: &str, default: &str) -> String {
     value.get(key).map(value_to_string).unwrap_or_else(|| default.to_string())
+}
+
+fn int_values(value: Option<&Value>) -> Vec<i64> {
+    value
+        .and_then(Value::as_array)
+        .map(|values| values.iter().filter_map(|entry| entry.as_i64().or_else(|| entry.as_f64().map(|number| number as i64))).collect())
+        .unwrap_or_default()
+}
+
+fn byte_values(value: Option<&Value>) -> Vec<u8> {
+    int_values(value).into_iter().filter_map(|entry| u8::try_from(entry).ok()).collect()
+}
+
+fn text_from_raw(raw: &[u8]) -> String {
+    let end = raw.iter().position(|byte| *byte == 0).unwrap_or(raw.len());
+    String::from_utf8_lossy(&raw[..end]).into_owned()
+}
+
+fn nle_inventory_string(value: &Value) -> String {
+    value.as_array().map(|entries| {
+        let raw = entries
+            .iter()
+            .filter_map(|entry| entry.as_i64().or_else(|| entry.as_f64().map(|number| number as i64)))
+            .filter_map(|entry| u8::try_from(entry).ok())
+            .collect::<Vec<_>>();
+        text_from_raw(&raw)
+    }).unwrap_or_else(|| value_to_string(value))
 }
 
 fn value_to_string(value: &Value) -> String {

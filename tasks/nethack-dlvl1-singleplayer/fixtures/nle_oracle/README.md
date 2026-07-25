@@ -17,8 +17,12 @@ contains the projected observation after each action plus an initial step-zero
 snapshot.  The down-stair boundary is captured without stepping live NLE into
 dlvl 2.
 
-No synthetic gold output may be put in this directory.  Until NLE captures are
-materialized, it intentionally contains only this format note.
+No synthetic gold output may be put in this directory.  The first strict-green
+capture is `val-east-seed-20260725`: reset plus one raw
+`CompassDirection.E` action on Main Dungeon dlvl 1.  It preserves the raw NLE
+reset planes and a static floor cell first observed by that transition; gold's
+own FOW rule decides when that known cell becomes visible.  It does not claim
+coverage of doors, combat, inventory, or descent.
 
 The required 33 tapes are a v0 minimum: a strict-green, hand-reviewed canonical
 gate.  It is expected to grow beyond 33, but generated diagnostic artifacts
