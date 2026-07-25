@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import asyncio
+import random
 import sys
 import types
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +29,8 @@ if "transformers" not in sys.modules:
     sys.modules["transformers"] = transformers
 
 from evaluate_tinker_policy_rollouts import sample_policy_text, summarize_model
+import evaluate_tinker_action_puzzles as action_puzzles
+from evaluate_tinker_state_puzzles import sample_step_count, score_answer
 
 
 class _Tokenizer:
@@ -136,6 +140,82 @@ class PolicyRolloutMetricsTest(unittest.TestCase):
             summary["stop_reason_counts"],
             {"None": 1, "length": 1, "stop": 1},
         )
+
+    def test_observation_counts_are_scored_from_strict_text(self) -> None:
+        scores = score_answer(
+            {
+                "observation": (
+                    "<observation>\n"
+                    "visible: tree=5, stone=2\n"
+                    "opportunities: collect_wood=5, collect_stone=2\n"
+                    "</observation>"
+                )
+            },
+            {
+                "important_terms": ["tree", "stone"],
+                "important_counts": {"tree": 5, "stone": 2},
+                "achievement_hints": ["collect_wood", "collect_stone"],
+                "achievement_hint_counts": {
+                    "collect_wood": 5,
+                    "collect_stone": 2,
+                },
+                "immediate_achievements": [],
+                "immediate_actions": [],
+            },
+        )
+
+        self.assertEqual(scores["important_count_exact_recall"], 1.0)
+        self.assertEqual(scores["achievement_count_exact_recall"], 1.0)
+
+    def test_action_sampler_checkpoints_the_randomized_state(self) -> None:
+        calls: list[tuple[str, str]] = []
+        initial = {
+            "valid_actions": ["right"],
+            "observation": {"local_map": ["initial"], "achievements": []},
+        }
+        moved = {
+            "valid_actions": ["right"],
+            "observation": {"local_map": ["moved"], "achievements": ["collect_wood"]},
+        }
+
+        async def fake_http_json(_client, _base_url, method, path, payload=None, **_kwargs):
+            del payload
+            calls.append((method, path))
+            if path == "/rollouts":
+                return {"rollout_id": "rollout-1"}
+            if path.endswith("/readout"):
+                return moved if any(call[1].endswith("/step") for call in calls) else initial
+            if path.endswith("/step"):
+                return {"readout": moved, "terminated": False, "truncated": False}
+            if path.endswith("/checkpoint"):
+                return {"blob": "moved-checkpoint"}
+            raise AssertionError((method, path))
+
+        with patch.object(action_puzzles, "http_json", fake_http_json):
+            sample = asyncio.run(
+                action_puzzles.sample_checkpoint(
+                    object(),
+                    "http://game",
+                    {"task_template": "tasks/policy_dev_template.json"},
+                    seed=0,
+                    max_steps_between=1,
+                    view_radius=2,
+                )
+            )
+
+        self.assertEqual(sample["local_map_full"], ["moved"])
+        self.assertEqual(sample["checkpoint_blob"], "moved-checkpoint")
+        self.assertLess(
+            next(index for index, call in enumerate(calls) if call[1].endswith("/step")),
+            next(
+                index
+                for index, call in enumerate(calls)
+                if call[1].endswith("/checkpoint")
+            ),
+        )
+
+    def test_state_sampler_allows_zero_steps_between_samples(self) -> None:
+        self.assertEqual(sample_step_count(random.Random(7), 0), 0)
 
 
 if __name__ == "__main__":

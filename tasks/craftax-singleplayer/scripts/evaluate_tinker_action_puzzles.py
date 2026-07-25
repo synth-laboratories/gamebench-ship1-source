@@ -193,7 +193,6 @@ async def sample_checkpoint(
     rollout_id = str(payload["rollout_id"])
     try:
         readout = await http_json(client, base_url, "GET", f"/rollouts/{rollout_id}/readout")
-        checkpoint = await http_json(client, base_url, "POST", f"/rollouts/{rollout_id}/checkpoint", None)
         valid = [str(item) for item in readout.get("valid_actions") or ["noop"]]
         for _ in range(rng.randint(0, max_steps_between)):
             action = rng.choice(valid)
@@ -204,9 +203,25 @@ async def sample_checkpoint(
                 f"/rollouts/{rollout_id}/step",
                 {"action": action},
             )
+            stepped_readout = stepped.get("readout")
+            if isinstance(stepped_readout, dict):
+                readout = stepped_readout
             if stepped.get("terminated") or stepped.get("truncated"):
                 break
             valid = [str(item) for item in (stepped.get("readout") or {}).get("valid_actions") or valid]
+        readout = await http_json(
+            client,
+            base_url,
+            "GET",
+            f"/rollouts/{rollout_id}/readout",
+        )
+        checkpoint = await http_json(
+            client,
+            base_url,
+            "POST",
+            f"/rollouts/{rollout_id}/checkpoint",
+            None,
+        )
         return {
             "seed": seed,
             "rollout_id": rollout_id,

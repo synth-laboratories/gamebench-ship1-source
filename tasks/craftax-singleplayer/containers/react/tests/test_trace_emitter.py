@@ -115,9 +115,22 @@ def test_sync_and_async_rollouts_preserve_required_trace_context(monkeypatch) ->
             )
         )
         await service.ROLLOUT_TASKS[submitted["rollout_id"]]
+        await service.resume_async(
+            "parent-captured",
+            FakeRequest(
+                {
+                    "checkpoint_id": "checkpoint-captured",
+                    "trace_context": context,
+                    "overrides": {
+                        "env": {"config": {}, "seed": 3},
+                        "policy": {"config": {}},
+                    },
+                }
+            ),
+        )
 
     asyncio.run(exercise())
-    assert contexts == [context, context]
+    assert contexts == [context, context, context]
 
 
 def test_capture_context_rejects_missing_secret_or_environment_identity() -> None:

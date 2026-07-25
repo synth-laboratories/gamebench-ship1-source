@@ -288,6 +288,11 @@ async def resume_async(parent_rollout_id: str, request: Request) -> dict[str, An
     effective_payload = (
         dict(overrides) if isinstance(overrides, dict) else dict(payload)
     )
+    if "trace_context" not in effective_payload and isinstance(
+        payload.get("trace_context"),
+        dict,
+    ):
+        effective_payload["trace_context"] = dict(payload["trace_context"])
     checkpoint_id = str(
         payload.get("checkpoint_id")
         or effective_payload.get("checkpoint_id")

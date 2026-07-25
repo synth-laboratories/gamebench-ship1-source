@@ -337,6 +337,18 @@ def find_reported_count(value: Any, target: str) -> int | None:
             found = find_reported_count(item, target)
             if found is not None:
                 return found
+    elif isinstance(value, str):
+        target_pattern = r"[\s_]+".join(
+            re.escape(part)
+            for part in re.split(r"[\s_]+", target_norm)
+            if part
+        )
+        match = re.search(
+            rf"\b{target_pattern}\b\s*(?:=|:)\s*(-?\d+)\b",
+            value.lower(),
+        )
+        if match:
+            return int(match.group(1))
     return None
 
 
@@ -384,8 +396,14 @@ def score_answer(answer: dict[str, Any], labels: dict[str, Any]) -> dict[str, An
         if any(normalized_phrase_in_text(alias, text) for alias in aliases):
             immediate_action_semantic_hit.add(action)
     reported_counts = {
-        "visible_counts": answer.get("visible_counts", {}),
-        "achievement_counts": answer.get("achievement_counts", {}),
+        "visible_counts": answer.get(
+            "visible_counts",
+            answer.get("observation", {}),
+        ),
+        "achievement_counts": answer.get(
+            "achievement_counts",
+            answer.get("observation", {}),
+        ),
     }
     important_count_hit = {
         name
@@ -612,6 +630,12 @@ async def immediate_labels(
     return sorted(actions), sorted(achievements)
 
 
+def sample_step_count(rng: random.Random, max_steps_between: int) -> int:
+    if max_steps_between < 0:
+        raise ValueError("max_steps_between must be non-negative")
+    return rng.randint(1, max_steps_between) if max_steps_between else 0
+
+
 async def sample_states(
     client: httpx.AsyncClient,
     base_url: str,
@@ -645,7 +669,8 @@ async def sample_states(
                 }
             )
             valid = [str(item) for item in readout.get("valid_actions") or ["noop"]]
-            for _ in range(rng.randint(1, max_steps_between)):
+            step_count = sample_step_count(rng, max_steps_between)
+            for _ in range(step_count):
                 action = rng.choice(valid)
                 payload = await http_json(
                     client,
