@@ -12,8 +12,8 @@ pub const ENV_FAMILY: &str = "nethack-dlvl1-singleplayer";
 pub const VIEW_HEIGHT: usize = 21;
 pub const VIEW_WIDTH: usize = 79;
 const CHECKPOINT_SCHEMA: &str = "gamebench.checkpoint.v1";
-const BLSTATS_FIELDS: [&str; 25] = [
-    "x", "y", "strength", "strength_percent", "dexterity", "constitution", "intelligence", "wisdom", "charisma", "score", "hp", "hp_max", "depth", "gold", "energy", "energy_max", "ac", "monster_level", "experience_level", "experience", "time", "hunger", "capacity", "dungeon_number", "dungeon_level",
+const BLSTATS_FIELDS: [&str; 27] = [
+    "x", "y", "strength", "strength_percent", "dexterity", "constitution", "intelligence", "wisdom", "charisma", "score", "hp", "hp_max", "depth", "gold", "energy", "energy_max", "ac", "monster_level", "experience_level", "experience", "time", "hunger", "capacity", "dungeon_number", "dungeon_level", "condition", "alignment",
 ];
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -1013,8 +1013,23 @@ impl NethackSession {
         vec![
             self.state.hero.x, self.state.hero.y, self.state.strength, 0, self.state.dexterity, self.state.constitution, self.state.intelligence, self.state.wisdom, self.state.charisma, self.state.experience,
             self.state.hp, self.state.hp_max, 1, self.state.gold, self.state.energy, self.state.energy_max, self.state.ac, 1, self.state.experience_level, self.state.experience,
-            self.state.time, self.hunger_code(), 0, 0, 1,
+            self.state.time, self.hunger_code(), 0, 0, 1, 0, self.alignment_code(),
         ]
+    }
+
+    fn alignment_code(&self) -> i64 {
+        let align = self
+            .resolved
+            .get("character")
+            .and_then(|character| character.get("align"))
+            .and_then(Value::as_str)
+            .unwrap_or("law")
+            .to_ascii_lowercase();
+        match align.as_str() {
+            "law" | "lawful" => 1,
+            "cha" | "chaotic" => -1,
+            _ => 0,
+        }
     }
 
     fn enter_mode(&mut self, kind: &str, action: &ActionSpec, prompt: &str, extra: Value) {
@@ -1154,6 +1169,46 @@ pub fn run_scenario_entry(entry: &Value) -> Result<Value, String> {
         "state": {"public": public.clone(), "private": private.clone()},
         "readout": readout,
         "checkpoint": {"blob": checkpoint, "public": public, "private": private},
+    }))
+}
+
+/// Run a scenario once and retain the public projection after every action.
+///
+/// This is an oracle-development adapter, not a second engine API: it lets a
+/// live NLE fuzzer compare an entire Rust trace without spawning one Cargo
+/// process for every action prefix.
+pub fn run_scenario_trace_entry(entry: &Value) -> Result<Value, String> {
+    let task = task_from_entry(entry);
+    let scenario_id = entry
+        .get("scenario_id")
+        .or_else(|| task.get("task_id"))
+        .map(value_to_string)
+        .unwrap_or_else(|| "manual".to_string());
+    let mut session = NethackSession::reset(resolve_task(&task, None)?)?;
+    let actions = entry
+        .get("actions")
+        .or_else(|| task.get("actions"))
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
+    let mut snapshots = vec![session.public_projection()];
+    let mut applied_actions = Vec::new();
+    for action in actions {
+        if session.state.terminated || session.state.truncated {
+            break;
+        }
+        applied_actions.push(action.clone());
+        session.step(action);
+        snapshots.push(session.public_projection());
+    }
+    let readout = session.readout();
+    let checkpoint = String::from_utf8(session.checkpoint_bytes()).map_err(|error| error.to_string())?;
+    Ok(json!({
+        "scenario_id": scenario_id,
+        "actions_applied": applied_actions,
+        "snapshots": snapshots,
+        "readout": readout,
+        "checkpoint": checkpoint,
     }))
 }
 

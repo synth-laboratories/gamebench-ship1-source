@@ -1,4 +1,4 @@
-use nethack_dlvl1_gold::{run_scenario_entry, NethackSession};
+use nethack_dlvl1_gold::{run_scenario_entry, run_scenario_trace_entry, NethackSession};
 use serde_json::{json, Value};
 use std::io::{self, Read};
 
@@ -13,6 +13,9 @@ fn main() {
         let checkpoint = request.get("checkpoint").and_then(Value::as_str).expect("checkpoint string");
         let actions = request.get("actions").and_then(Value::as_array).cloned().unwrap_or_default();
         restore_projection(checkpoint, &actions)
+    } else if args.iter().any(|argument| argument == "--trace-stdin") {
+        let entry: Value = serde_json::from_str(&input).expect("parse trace scenario JSON");
+        run_scenario_trace_entry(&entry).expect("run own Rust scenario trace")
     } else {
         let entry: Value = serde_json::from_str(&input).expect("parse scenario JSON");
         run_scenario_entry(&entry).expect("run own Rust scenario")

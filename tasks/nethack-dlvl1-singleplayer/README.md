@@ -21,7 +21,7 @@ observation snapshots.  Both gold lanes then replay those files without NLE.
 - Fixtures provide the authoritative dlvl-1 `level_dump`; open-play seeds use
   gold's own deterministic mixer and make no same-seed NLE generation claim.
 - Observations expose a fixed 21×79 `chars`/`colors`/`glyphs` projection,
-  25-slot `blstats`, normalized message plus raw bytes, inventory arrays, and
+  27-slot NLE `blstats` (including condition and alignment), normalized message plus raw bytes, inventory arrays, and
   terminal state.
 - `>` performed while standing on the captured down-stair emits
   `stairs_descend` and `terminal(descended)`.  No post-descend NLE map is read.
@@ -58,6 +58,39 @@ The NLE capture script is intentionally optional.  It errors with a direct
 dependency explanation if `nle==0.9.0` is unavailable; minimal CI only replays
 already committed captures.  Capture default is raw NLE `MORE` behavior, so
 every `MiscAction.MORE` remains visible in a tape.
+
+## Live NLE differential fuzzing
+
+The optional fuzzer runs live NLE and the own gold lanes from the same
+capture-backed reset.  It is a diagnostic oracle tool: it never imports NLE
+from gold code and it does not write candidate captures into the checked-in
+corpus automatically.
+
+On this macOS host, use CPython 3.10 for NLE 0.9.0.  Its bundled bindings do
+not build on CPython 3.11, and CMake 4 needs the policy compatibility setting
+during the NLE build:
+
+```bash
+uv venv --python 3.10 .venv
+CMAKE_POLICY_VERSION_MINIMUM=3.5 uv pip install --python .venv/bin/python -r requirements-nle-fuzz.txt
+.venv/bin/python scripts/fuzz_nle_differential.py --cases 10 --steps 32 --seed 20260725 --lane python --output /tmp/nethack-nle-fuzz
+```
+
+Use `--lane both` to include the Rust trace lane.  The output directory holds
+reproducible, capture-shaped cases and structured discrepancy reports; inspect
+or replay it without copying artifacts under `fixtures/nle_oracle/`:
+
+```bash
+python scripts/compare_nle_discrepancies.py --root /tmp/nethack-nle-fuzz --lane both
+```
+
+The default policy generates visible navigation and explicit `MORE` inputs.
+Pass `--actions <jsonl>` to replay arbitrary pinned action IDs; a `DOWN` away
+from a known stair is sent to NLE normally, while an actual descent is emitted
+as a terminal pre-dlvl-2 boundary.
+
+The fuzzer labels bootstrap-masked transition results as diagnostics, not as
+canonical conformance passes or contributions to the required 33 tapes.
 
 ## Current status
 

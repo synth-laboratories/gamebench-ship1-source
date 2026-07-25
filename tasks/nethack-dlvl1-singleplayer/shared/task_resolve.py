@@ -46,6 +46,8 @@ BLSTATS_FIELDS = (
     "capacity",
     "dungeon_number",
     "dungeon_level",
+    "condition",
+    "alignment",
 )
 
 

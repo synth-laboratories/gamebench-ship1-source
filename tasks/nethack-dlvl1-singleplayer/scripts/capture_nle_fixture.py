@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Capture a raw NLE dlvl-1 tape without making NLE a gold dependency.
 
-The script is intentionally the sole task-local NLE import.  It records action
-space indices rather than enum keycodes and preserves raw observation arrays.
+NLE imports are confined to this capture script and the optional live fuzzer;
+gold engines never import it.  This script records action-space indices rather
+than enum keycodes and preserves raw observation arrays.
 """
 
 from __future__ import annotations
@@ -35,6 +36,8 @@ OBSERVATION_KEYS = (
     "tty_colors",
     "tty_cursor",
 )
+NLE_SEED_MASK = (1 << 63) - 1
+DISPLAY_SEED_XOR = 0x5DEECE66D
 
 
 def canonical_json(value: Any) -> str:
@@ -150,14 +153,47 @@ def read_actions(path: Path) -> list[int]:
     return actions
 
 
-def on_down_stair(observation: dict[str, Any]) -> bool:
+def deterministic_nle_seeds(seed: int) -> tuple[int, int]:
+    """Pin both NetHack RNGs; NLE otherwise samples the display RNG itself."""
+
+    core = int(seed) & NLE_SEED_MASK
+    return core, (core ^ DISPLAY_SEED_XOR) & NLE_SEED_MASK
+
+
+def hero_position(observation: dict[str, Any]) -> tuple[int, int] | None:
     projected = project(observation)
     blstats = projected["blstats"]
     if len(blstats) < 2:
-        return False
-    x, y = int(blstats[0]), int(blstats[1])
+        return None
+    return int(blstats[0]), int(blstats[1])
+
+
+def dungeon_identity(observation: dict[str, Any]) -> tuple[int, ...]:
+    """Read only NLE blstats to keep an unexpected descent out of the capture."""
+
+    raw_blstats = to_json_array(observation.get("blstats", []))
+    if not isinstance(raw_blstats, list):
+        return ()
+    blstats = [int(value) for value in raw_blstats]
+    if len(blstats) >= 25:
+        return int(blstats[23]), int(blstats[24])
+    if len(blstats) >= 13:
+        return (int(blstats[12]),)
+    return ()
+
+
+def visible_down_stairs(observation: dict[str, Any]) -> set[tuple[int, int]]:
+    """Return down-stair coordinates seen before a hero glyph can cover them."""
+
+    projected = project(observation)
     chars = projected["chars"]
-    return 0 <= y < len(chars) and 0 <= x < len(chars[y]) and int(chars[y][x]) == ord(">")
+    return {
+        (x, y)
+        for y, row in enumerate(chars)
+        if isinstance(row, list)
+        for x, cell in enumerate(row)
+        if int(cell) == ord(">")
+    }
 
 
 def main() -> None:
@@ -178,11 +214,21 @@ def main() -> None:
 
     output = args.output or TASK_DIR / "fixtures" / "nle_oracle" / args.fixture_id
     annotations = json.loads(args.annotations.read_text()) if args.annotations else {}
-    env = nle.env.NLE(character=args.character, observation_keys=OBSERVATION_KEYS, actions=tuple(nethack.ACTIONS))
+    env = nle.env.NLE(
+        character=args.character,
+        observation_keys=OBSERVATION_KEYS,
+        actions=tuple(nethack.ACTIONS),
+        allow_all_modes=True,
+        allow_all_yn_questions=True,
+    )
+    core_seed, display_seed = deterministic_nle_seeds(args.seed)
     if hasattr(env, "seed"):
-        env.seed(args.seed)
+        seeded = env.seed(core=core_seed, disp=display_seed, reseed=False)
+    else:
+        seeded = (core_seed, display_seed, False)
     observation = normalise_reset(env.reset())
     initial_observation = deepcopy(observation)
+    known_down_stairs = visible_down_stairs(observation)
     table = action_table(env)
     expected_table = json.loads((TASK_DIR / "shared" / "nle_action_map.json").read_text())["actions"]
     table_hash = hashlib.sha256(canonical_json(table).encode("utf-8")).hexdigest()
@@ -196,23 +242,34 @@ def main() -> None:
         if not 0 <= action_id < len(table):
             raise ValueError(f"action id {action_id} is outside NLE action table length {len(table)}")
         action_name = table[action_id][1]
-        if action_name == "MiscDirection.DOWN" and on_down_stair(observation):
-            action_records.append({"step": step, "action_id": action_id, "action_name": action_name, "boundary": "dlvl1_descend"})
-            snapshots.append({"step": step, "projection": project(observation), "done": True, "terminal_reason": "descended", "oracle_boundary": "pre_dlvl2"})
-            break
+        known_down_stairs.update(visible_down_stairs(observation))
+        pre_action_projection = project(observation)
+        if action_name == "MiscDirection.DOWN":
+            position = hero_position(observation)
+            if position in known_down_stairs:
+                action_records.append({"step": step, "action_id": action_id, "action_name": action_name, "boundary": "dlvl1_descend"})
+                snapshots.append({"step": step, "projection": pre_action_projection, "done": True, "terminal_reason": "descended", "oracle_boundary": "pre_dlvl2"})
+                break
+        pre_action_dungeon = dungeon_identity(observation)
         stepped = env.step(action_id)
         if isinstance(stepped, tuple) and len(stepped) >= 3:
-            observation = dict(stepped[0])
+            next_observation = dict(stepped[0])
             done = bool(stepped[2])
         else:
-            observation = dict(stepped)
+            next_observation = dict(stepped)
             done = False
+        if action_name == "MiscDirection.DOWN" and dungeon_identity(next_observation) != pre_action_dungeon:
+            action_records.append({"step": step, "action_id": action_id, "action_name": action_name, "boundary": "dlvl1_descend"})
+            snapshots.append({"step": step, "projection": pre_action_projection, "done": True, "terminal_reason": "descended", "oracle_boundary": "pre_dlvl2"})
+            break
+        observation = next_observation
+        known_down_stairs.update(visible_down_stairs(observation))
         action_records.append({"step": step, "action_id": action_id, "action_name": action_name})
         snapshots.append({"step": step, "projection": project(observation), "done": done, "terminal_reason": "death" if done else ""})
         if done:
             break
     output.mkdir(parents=True, exist_ok=True)
-    (output / "meta.json").write_text(json.dumps({"schema": "gamebench.nethack.nle_capture.v1", "fixture_id": args.fixture_id, "nle_version": getattr(nle, "__version__", "unknown"), "nethack_version": "3.6.6", "character": {"nle_character": args.character}, "seed": args.seed, "observation_keys": OBSERVATION_KEYS, "auto_more": "raw_explicit", "action_table": table, "action_table_sha256": table_hash}, indent=2, sort_keys=True) + "\n")
+    (output / "meta.json").write_text(json.dumps({"schema": "gamebench.nethack.nle_capture.v1", "fixture_id": args.fixture_id, "nle_version": getattr(nle, "__version__", "unknown"), "nethack_version": "3.6.6", "character": {"nle_character": args.character}, "seed": args.seed, "nle_seeds": {"core": int(seeded[0]), "display": int(seeded[1]), "reseed": bool(seeded[2])}, "observation_keys": OBSERVATION_KEYS, "auto_more": "raw_explicit", "action_table": table, "action_table_sha256": table_hash}, indent=2, sort_keys=True) + "\n")
     (output / "level_dump.json").write_text(json.dumps(level_dump(initial_observation, annotations), indent=2, sort_keys=True) + "\n")
     (output / "actions.jsonl").write_text("".join(json.dumps(record, sort_keys=True) + "\n" for record in action_records))
     (output / "snapshots.jsonl").write_text("".join(json.dumps(record, sort_keys=True) + "\n" for record in snapshots))
