@@ -1,0 +1,16 @@
+{
+  "schema_version": "gamebench.task.v1",
+  "env_family": "settlers-multiplayer",
+  "scenario_id": "robber_and_illegal_action_reliability",
+  "seed": 4,
+  "max_turns": 40,
+  "checkpoint_after": 2,
+  "actions": [
+    {"kind": "build_road", "edge": 1},
+    {"kind": "move_robber", "tile": 3, "victim": "agent_1"},
+    {"kind": "end_turn"},
+    {"kind": "end_turn"},
+    {"kind": "end_turn"},
+    {"kind": "build_settlement", "vertex": 2}
+  ]
+}

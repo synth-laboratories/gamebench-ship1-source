@@ -1,0 +1,10 @@
+{
+  "schema_version": "gamebench.policy_sweep.v1",
+  "suite_id": "settlers_policy_dev_v1",
+  "seeds": [11, 12, 13],
+  "max_turns": 80,
+  "agents": ["agent_0", "agent_1", "agent_2", "agent_3"],
+  "turn_model": "alternating",
+  "baseline": "alphabeta_depth2_spirit",
+  "score": "win_rate_and_mean_vp_vs_fixed_baseline"
+}

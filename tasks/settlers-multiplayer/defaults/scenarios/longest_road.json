@@ -1,0 +1,13 @@
+{
+  "schema_version": "gamebench.task.v1",
+  "env_family": "settlers-multiplayer",
+  "scenario_id": "longest_road_network_race",
+  "seed": 2,
+  "max_turns": 48,
+  "checkpoint_after": 8,
+  "actions": [
+    {"kind": "build_road", "edge": 1}, {"kind": "end_turn"}, {"kind": "move_robber", "tile": 1, "victim": "agent_1"}, {"kind": "end_turn"},
+    {"kind": "build_road", "edge": 2}, {"kind": "end_turn"}, {"kind": "end_turn"}, {"kind": "end_turn"},
+    {"kind": "build_road", "edge": 23}
+  ]
+}
