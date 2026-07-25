@@ -316,6 +316,11 @@ async fn simulate(
     for (index, sequence) in body.sequences.iter().enumerate() {
         let mut sim = session.engine.clone();
         sim.restore_checkpoint_bytes(&root).map_err(bad_request)?;
+        let root_invalid_action_count = sim
+            .private
+            .get("invalid_action_count")
+            .and_then(Value::as_i64)
+            .unwrap_or(0);
         let mut reward_trace = Vec::new();
         for action in sequence {
             if sim.is_done() {
@@ -335,6 +340,12 @@ async fn simulate(
             "actions": sequence,
             "reward": sim.private.get("total_reward").cloned().unwrap_or(json!(0.0)),
             "reward_trace": reward_trace,
+            "invalid_action_delta": sim
+                .private
+                .get("invalid_action_count")
+                .and_then(Value::as_i64)
+                .unwrap_or(0)
+                - root_invalid_action_count,
             "achievements": sim.private.get("achievements").cloned().unwrap_or_else(|| json!([])),
             "terminated": sim.private.get("terminated").and_then(Value::as_bool).unwrap_or(false),
             "truncated": sim.private.get("truncated").and_then(Value::as_bool).unwrap_or(false),
