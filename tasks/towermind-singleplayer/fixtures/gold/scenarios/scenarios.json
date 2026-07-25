@@ -1,0 +1,172 @@
+{
+  "scenarios": [
+    {
+      "actions": [
+        {
+          "kind": "build",
+          "target": "not_a_slot",
+          "tower": "archer"
+        },
+        {
+          "actor": "knight_99",
+          "kind": "collect",
+          "target": [
+            1,
+            2
+          ]
+        },
+        {
+          "kind": "wait"
+        }
+      ],
+      "id": "illegal_action",
+      "level": "L1",
+      "schema": "gamebench.towermind.scenario.v1",
+      "seed": 303
+    },
+    {
+      "actions": [
+        {
+          "actor": "hero",
+          "kind": "collect",
+          "target": [
+            1,
+            2
+          ]
+        },
+        {
+          "kind": "build",
+          "target": "gate_archer",
+          "tower": "archer"
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "target": [
+            2,
+            2
+          ]
+        },
+        {
+          "actor": "hero",
+          "kind": "collect",
+          "target": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        }
+      ],
+      "id": "l1_build_collect",
+      "level": "L1",
+      "schema": "gamebench.towermind.scenario.v1",
+      "seed": 101
+    },
+    {
+      "actions": [
+        {
+          "actor": "hero",
+          "kind": "collect",
+          "target": [
+            1,
+            2
+          ]
+        },
+        {
+          "kind": "build",
+          "target": "aoe_gate",
+          "tower": "magician"
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "target": [
+            2,
+            2
+          ]
+        },
+        {
+          "actor": "hero",
+          "kind": "collect",
+          "target": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "build",
+          "target": "knight_post",
+          "tower": "knight"
+        },
+        {
+          "actor": "knight_0",
+          "kind": "move",
+          "target": [
+            5,
+            2
+          ]
+        },
+        {
+          "actor": "knight_0",
+          "kind": "move",
+          "target": [
+            4,
+            2
+          ]
+        },
+        {
+          "actor": "knight_0",
+          "kind": "attack",
+          "target": "enemy_0"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        },
+        {
+          "kind": "wait"
+        }
+      ],
+      "id": "l2_fog_knight_micro",
+      "level": "L2",
+      "schema": "gamebench.towermind.scenario.v1",
+      "seed": 202
+    },
+    {
+      "actions": [],
+      "id": "l3_stub_preview",
+      "level": "L3",
+      "schema": "gamebench.towermind.scenario.v1",
+      "seed": 404
+    }
+  ],
+  "schema": "gamebench.towermind.fixtures.v1"
+}

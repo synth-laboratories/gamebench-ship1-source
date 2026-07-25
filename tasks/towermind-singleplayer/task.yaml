@@ -1,0 +1,39 @@
+schema_version: gamebench.task_family.v1
+id: towermind-singleplayer
+task_id: towermind-singleplayer
+name: TowerMind Semantic Tower Defense
+kind: gamebench_gold_reference
+game: towermind_semantic_td
+visibility: private
+agent_count: 1
+agents: [agent_0]
+turn_model: single_agent_discrete_time
+action_api: discrete_kind_with_spatial_target
+observation_api: structured_state_and_textual_json
+levels: [L1, L2, L3, L4, L5]
+implemented_levels: [L1, L2]
+stub_levels: [L3, L4, L5]
+scenario_dir: defaults/scenarios
+fixture_dir: fixtures/gold
+python_entrypoint: gold_python.engine:TowerMindEnv
+rust_crate: gold_rust
+service_entrypoint: scripts/run_service.py
+policy_runner: scripts/run_policy.py
+parity_verifier: scripts/verify_python_rust_parity.py
+fixture_generator: scripts/generate_gold_fixtures.py
+fixture_verifier: scripts/verify_gold_fixtures.py
+oracle:
+  type: canonical_nev_and_state_projection
+  eventlogs: fixtures/gold/eventlogs/eventlogs.json
+  state_projections: fixtures/gold/states/states.json
+status:
+  reference_engine_python: tasks/towermind-singleplayer/gold_python/
+  reference_engine_rust: tasks/towermind-singleplayer/gold_rust/
+  implementation: dual_lane_author_semantics
+  deterministic_scenarios: 4
+  checkpoint_format: json-v1
+eval_families: [engine_rebuild, code_policy_deo, policy_puzzle]
+paper:
+  arxiv: "2601.05899"
+  upstream: https://github.com/tb6147877/TowerMind
+  posture: own_symbolic_emulator_not_unity_wrapper

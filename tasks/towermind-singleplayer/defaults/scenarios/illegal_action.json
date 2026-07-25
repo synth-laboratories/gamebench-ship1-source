@@ -1,0 +1,11 @@
+{
+  "schema": "gamebench.towermind.scenario.v1",
+  "id": "illegal_action",
+  "level": "L1",
+  "seed": 303,
+  "actions": [
+    {"kind": "build", "tower": "archer", "target": "not_a_slot"},
+    {"kind": "collect", "actor": "knight_99", "target": [1, 2]},
+    {"kind": "wait"}
+  ]
+}

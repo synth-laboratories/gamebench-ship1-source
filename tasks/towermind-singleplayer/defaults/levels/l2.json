@@ -1,0 +1,26 @@
+{
+  "id": "L2",
+  "title": "Fog Crossroads",
+  "availability": "implemented",
+  "width": 10,
+  "height": 7,
+  "base_hp": 4,
+  "hero_start": [1, 2],
+  "road": [[0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [5, 3], [6, 3], [7, 3], [8, 3], [9, 3]],
+  "build_slots": {
+    "aoe_gate": [3, 2],
+    "knight_post": [6, 2],
+    "fog_bait": [4, 2],
+    "far_bait": [8, 6]
+  },
+  "fog_cells": [[4, 1], [5, 1], [4, 2], [5, 2]],
+  "coin_spawns": [
+    {"tick": 0, "id": "l2_coin_a", "at": [1, 2], "value": 5},
+    {"tick": 2, "id": "l2_coin_b", "at": [2, 2], "value": 5},
+    {"tick": 7, "id": "l2_coin_c", "at": [6, 2], "value": 2}
+  ],
+  "waves": [
+    {"id": "cluster", "kind": "scout", "count": 3, "hp": 2, "spawn_tick": 1, "spawn_every": 2},
+    {"id": "fog_brute", "kind": "brute", "count": 1, "hp": 5, "spawn_tick": 8, "spawn_every": 1}
+  ]
+}

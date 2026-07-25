@@ -71,3 +71,9 @@ id = "overcooked-v2-multiplayer"
 policy_suite = "defaults/policy_sweep/policy_dev_v1.json"
 policy_baseline = "policies/heuristic_baseline.py"
 candidate_subdir = "overcooked_v2"
+
+[[task]]
+id = "towermind-singleplayer"
+policy_suite = "defaults/scenarios/l1_build_collect.json"
+policy_baseline = "policies/heuristic_baseline.py"
+candidate_subdir = "towermind"

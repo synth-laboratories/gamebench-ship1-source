@@ -1,0 +1,24 @@
+{
+  "id": "L1",
+  "title": "Gate Coins",
+  "availability": "implemented",
+  "width": 10,
+  "height": 7,
+  "base_hp": 3,
+  "hero_start": [1, 2],
+  "road": [[0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [5, 3], [6, 3], [7, 3], [8, 3], [9, 3]],
+  "build_slots": {
+    "gate_archer": [3, 2],
+    "crossroad": [5, 2],
+    "far_bait": [8, 6]
+  },
+  "fog_cells": [[7, 5]],
+  "coin_spawns": [
+    {"tick": 0, "id": "l1_coin_a", "at": [1, 2], "value": 3},
+    {"tick": 2, "id": "l1_coin_b", "at": [2, 2], "value": 2}
+  ],
+  "waves": [
+    {"id": "scouts", "kind": "scout", "count": 2, "hp": 2, "spawn_tick": 1, "spawn_every": 3},
+    {"id": "brute", "kind": "brute", "count": 1, "hp": 4, "spawn_tick": 7, "spawn_every": 1}
+  ]
+}
