@@ -1,0 +1,5 @@
+# Optional oracle-only development environment.  Gold engines must not import
+# these packages.  NLE 0.9.0 uses pkg_resources at runtime without declaring
+# setuptools, so both pins are deliberate.
+nle==0.9.0
+setuptools==80.9.0

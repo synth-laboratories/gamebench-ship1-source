@@ -8,6 +8,7 @@ frozen NLE tape exercises it in both lanes.
 | --- | --- | --- | --- |
 | Action surface | All pinned `nle.nethack.ACTIONS` ids accepted; canonical names and raw adapter keys accepted | 0 / 33 tapes | plumbing complete |
 | Level input | Capture-backed 21×79 terrain/glyph/color dump, hero, objects, monsters, traps, memory | 0 / 33 tapes | plumbing complete |
+| Live NLE fuzz | Seedable live NLE action tapes, out-of-tree capture artifacts, strict and bootstrap-masked transition diagnostics | 0 / 33 tapes | diagnostic tooling complete; canonical coverage remains pending |
 | Geography | Main Dungeon dlvl 1 only; `>` on down stair terminalizes as `descended`; branch dumps rejected | 0 / 33 tapes | modeled |
 | FOW / memory | Seen-cell memory and local visibility refresh | 0 / 33 tapes | modeled, needs NLE calibration |
 | Movement / doors | 8-way walk, long movement, open/close/kick direction modes, walls and stairs | 0 / 33 tapes | modeled, needs NLE tapes |
@@ -27,9 +28,21 @@ frozen NLE tape exercises it in both lanes.
 - [ ] Pin NLE installation in a reproducible dev-extra lockfile note and materialize
       `fixtures/nle_oracle/<fixture-id>/` from raw action IDs.
 
+## First live differential result
+
+The optional CPython 3.10 NLE 0.9.0 environment is now provisioned and the
+diagnostic fuzzer has run against both own lanes.  Seed `20260725` generated a
+navigation tape with an immediate, reproducible bootstrap-masked transition
+difference: after `CompassDirection.E`, NLE exposed `chars[15][33] == "."`
+while both gold lanes rendered a blank.  Strict comparison also exposes the
+expected unhydrated reset fields (for example strength-percent).  These are
+recorded oracle gaps, not green conformance evidence; the artifacts remain
+under `/tmp` and the canonical corpus is still **0 / 33**.
+
 ## Open limitation
 
-The local host did not have `nle` installed while this foundation was built.
-That is recorded as a GameBench papercut; capture is purposefully not faked from
-gold output.  `compare_nle_discrepancies.py` therefore supports an empty corpus
-by default, but `--require-fixtures` fails until authentic captures land.
+The foundation was built before this host had an NLE environment.  A
+task-specific CPython 3.10 oracle environment now supports live diagnostic
+fuzzing, but no candidate output is promoted automatically: capture remains
+purposefully unfaked, and `compare_nle_discrepancies.py --require-fixtures`
+still fails against the empty canonical corpus until authentic captures land.

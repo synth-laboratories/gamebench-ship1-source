@@ -128,16 +128,16 @@ def python_step_projections(task: dict[str, Any], actions: list[dict[str, Any]])
     return projections
 
 
-def rust_projection(task: dict[str, Any], action_prefix: list[int]) -> dict[str, Any]:
-    entry = {**task, "actions": action_prefix}
+def rust_step_projections(task: dict[str, Any], actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    entry = {**task, "actions": [int(record["action_id"]) for record in actions]}
     completed = subprocess.run(
-        ["cargo", "run", "--quiet", "--manifest-path", str(TASK_DIR / "gold_rust" / "Cargo.toml"), "--bin", "scenario"],
+        ["cargo", "run", "--quiet", "--manifest-path", str(TASK_DIR / "gold_rust" / "Cargo.toml"), "--bin", "scenario", "--", "--trace-stdin"],
         input=json.dumps(entry),
         text=True,
         capture_output=True,
         check=True,
     )
-    return json.loads(completed.stdout)["readout"]["public"]
+    return list(json.loads(completed.stdout)["snapshots"])
 
 
 def compare_fixture(fixture_dir: Path, lane: str) -> list[str]:
@@ -146,24 +146,25 @@ def compare_fixture(fixture_dir: Path, lane: str) -> list[str]:
     failures: list[str] = []
     if lane == "python":
         projections = python_step_projections(task, actions)
-        for step, actual in enumerate(projections):
-            if step not in by_step:
-                continue
+        for step in sorted(by_step):
+            if step >= len(projections):
+                failures.append(f"{fixture_dir.name} python step {step}: gold trace ended after step {len(projections) - 1}")
+                break
+            actual = projections[step]
             difference = first_difference(expected_public(by_step[step]), actual)
             if difference:
                 failures.append(f"{fixture_dir.name} python step {step}: {difference}")
                 break
     else:
-        prefix: list[int] = []
-        for step in range(len(actions) + 1):
-            if step in by_step:
-                actual = rust_projection(task, prefix)
-                difference = first_difference(expected_public(by_step[step]), actual)
-                if difference:
-                    failures.append(f"{fixture_dir.name} rust step {step}: {difference}")
-                    break
-            if step < len(actions):
-                prefix.append(int(actions[step]["action_id"]))
+        projections = rust_step_projections(task, actions)
+        for step in sorted(by_step):
+            if step >= len(projections):
+                failures.append(f"{fixture_dir.name} rust step {step}: gold trace ended after step {len(projections) - 1}")
+                break
+            difference = first_difference(expected_public(by_step[step]), projections[step])
+            if difference:
+                failures.append(f"{fixture_dir.name} rust step {step}: {difference}")
+                break
     return failures
 
 
@@ -171,10 +172,16 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--lane", choices=("python", "rust", "both"), default="both")
     parser.add_argument("--fixture", action="append", default=[])
+    parser.add_argument(
+        "--root",
+        type=Path,
+        default=TASK_DIR / "fixtures" / "nle_oracle",
+        help="Capture-root directory; permits replaying an out-of-tree fuzz artifact without copying it into the checked-in corpus.",
+    )
     parser.add_argument("--require-fixtures", action="store_true")
     args = parser.parse_args()
-    root = TASK_DIR / "fixtures" / "nle_oracle"
-    fixture_dirs = [root / fixture_id for fixture_id in args.fixture] if args.fixture else sorted(path.parent for path in root.glob("*/meta.json"))
+    root = args.root.resolve()
+    fixture_dirs = [root / fixture_id for fixture_id in args.fixture] if args.fixture else sorted(path.parent for path in root.rglob("meta.json"))
     if not fixture_dirs:
         if args.require_fixtures:
             raise SystemExit("No authentic frozen NLE captures are present. Run capture_nle_fixture.py in an nle==0.9.0 dev environment.")

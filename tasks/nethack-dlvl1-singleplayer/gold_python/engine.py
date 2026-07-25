@@ -747,8 +747,12 @@ class NethackDlvl1Engine:
         return [
             int(hero["x"]), int(hero["y"]), self.state["strength"], 0, self.state["dexterity"], self.state["constitution"], self.state["intelligence"], self.state["wisdom"], self.state["charisma"], self.state["experience"],
             self.state["hp"], self.state["hp_max"], 1, self.state["gold"], self.state["energy"], self.state["energy_max"], self.state["ac"], 1, self.state["experience_level"], self.state["experience"],
-            self.state["time"], self._hunger_code(), 0, 0, 1,
+            self.state["time"], self._hunger_code(), 0, 0, 1, 0, self._alignment_code(),
         ]
+
+    def _alignment_code(self) -> int:
+        align = str(dict(self.resolved.get("character", {})).get("align", "law")).lower() if self.resolved else "law"
+        return {"law": 1, "lawful": 1, "neu": 0, "neutral": 0, "cha": -1, "chaotic": -1}.get(align, 0)
 
     def _normal_mode(self) -> dict[str, Any]:
         return {"kind": "normal", "command": "", "prompt": "", "operation": ""}

@@ -30,7 +30,7 @@ used to establish oracle tapes.
 Every rollout response contains `readout.public`, whose stable comparison fields
 are `chars`, `colors`, `glyphs`, `blstats`, `message`, `inventory`, `input_mode`,
 `done`, and `terminal_reason`.  The map plane is always a 21×79 crop.  `blstats`
-uses the pinned 25-field NLE ordering and is accompanied by `blstats_named`.
+uses the pinned 27-field NLE ordering and is accompanied by `blstats_named`.
 
 Checkpoint blobs use `gamebench.checkpoint.v1`, include the resolved fixture
 input, simulator state, and complete structured NEV log, and can be restored
