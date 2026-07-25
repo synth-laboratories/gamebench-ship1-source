@@ -262,7 +262,7 @@ def resolve_task(task: dict[str, Any], *, seed_override: int | None = None) -> d
         "max_steps": 0,
         "autopickup": False,
         "auto_more": "raw_explicit",
-        "vision_radius": 4,
+        "vision_radius": 5,
         **dict(data.get("rules", {})),
     }
     if str(rules.get("auto_more")) != "raw_explicit":

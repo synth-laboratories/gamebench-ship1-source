@@ -18,6 +18,24 @@ from .core.nev import NevLog
 
 PASSABLE = {".", "#", ">", "<", "_", "{", "}", "\\", "~", "^"}
 WALLS = {" ", "|", "-", "+"}
+OPEN_DOOR_DASH_GLYPH = 2372
+OPEN_DOOR_BAR_GLYPH = 2373
+CLOSED_DOOR_DASH_GLYPH = 2374
+CLOSED_DOOR_BAR_GLYPH = 2375
+DOOR_GLYPHS = frozenset({OPEN_DOOR_DASH_GLYPH, OPEN_DOOR_BAR_GLYPH, CLOSED_DOOR_DASH_GLYPH, CLOSED_DOOR_BAR_GLYPH})
+OPEN_DOOR_GLYPHS = frozenset({OPEN_DOOR_DASH_GLYPH, OPEN_DOOR_BAR_GLYPH})
+CLOSED_DOOR_GLYPHS = frozenset({CLOSED_DOOR_DASH_GLYPH, CLOSED_DOOR_BAR_GLYPH})
+OPENED_DOOR_GLYPHS = {
+    CLOSED_DOOR_DASH_GLYPH: OPEN_DOOR_DASH_GLYPH,
+    CLOSED_DOOR_BAR_GLYPH: OPEN_DOOR_BAR_GLYPH,
+}
+CLOSED_DOOR_GLYPHS_BY_OPEN = {opened: closed for closed, opened in OPENED_DOOR_GLYPHS.items()}
+DOOR_CHARS = {
+    OPEN_DOOR_DASH_GLYPH: "-",
+    OPEN_DOOR_BAR_GLYPH: "|",
+    CLOSED_DOOR_DASH_GLYPH: "+",
+    CLOSED_DOOR_BAR_GLYPH: "+",
+}
 ITEM_COMMANDS = {
     "APPLY",
     "DIP",
@@ -106,6 +124,7 @@ class NethackDlvl1Engine:
             "terrain": [list(row) for row in level["terrain"]],
             "base_glyphs": deepcopy(level["glyphs"]),
             "base_colors": deepcopy(level["colors"]),
+            "door_glyphs": self._initial_door_glyphs(level["glyphs"]),
             "unseen_chars": deepcopy(unseen.get("chars", [[" "] * VIEW_WIDTH for _ in range(VIEW_HEIGHT)])),
             "unseen_glyphs": deepcopy(unseen.get("glyphs", [[0] * VIEW_WIDTH for _ in range(VIEW_HEIGHT)])),
             "unseen_colors": deepcopy(unseen.get("colors", [[0] * VIEW_WIDTH for _ in range(VIEW_HEIGHT)])),
@@ -173,6 +192,7 @@ class NethackDlvl1Engine:
             return self.symbolic_readout()
         hero_before = (int(self.state["hero"]["x"]), int(self.state["hero"]["y"]))
         terrain_before = deepcopy(self.state["terrain"])
+        door_glyphs_before = deepcopy(self.state["door_glyphs"])
         self.state["step_index"] += 1
         self._event("action_applied", f"Action({action.canonical})", action=action.canonical, transition="dispatch", payload=action_payload(action))
         if self.state["input_mode"]["kind"] == "normal":
@@ -182,7 +202,7 @@ class NethackDlvl1Engine:
         if spent_turn and not self.state["terminated"]:
             self._advance_turn()
         hero_after = (int(self.state["hero"]["x"]), int(self.state["hero"]["y"]))
-        if hero_after != hero_before or self.state["terrain"] != terrain_before:
+        if hero_after != hero_before or self.state["terrain"] != terrain_before or self.state["door_glyphs"] != door_glyphs_before:
             self._reveal()
         self._check_truncation()
         return self.symbolic_readout()
@@ -297,6 +317,9 @@ class NethackDlvl1Engine:
             self._enter_mode("direction", action, "In what direction?", {"operation": operation, "running": name in {"MOVEFAR", "RUSH", "RUSH2"}, "force_move": name == "MOVE"})
             return False
         if name in ITEM_COMMANDS:
+            if name == "APPLY" and not any(item["kind"] == "(" for item in self.state["inventory"]):
+                self._message("You don't have anything to use or apply.")
+                return False
             after = "direction" if name in {"FIRE", "THROW", "ZAP"} else "normal"
             self._enter_mode("inventory_letter", action, self._item_prompt(name), {"operation": name.lower(), "after": after})
             return False
@@ -440,12 +463,11 @@ class NethackDlvl1Engine:
             if monster is not None and not force_move:
                 self._fight(monster)
                 return True
-            terrain = self._terrain_at(x, y)
-            if terrain in WALLS:
+            if self._is_opaque_at(x, y):
                 if not moved:
                     self._message("You bump into a wall.")
                 break
-            if terrain not in PASSABLE:
+            if not self._is_passable_at(x, y):
                 if not moved:
                     self._message("You cannot move there.")
                 break
@@ -468,8 +490,8 @@ class NethackDlvl1Engine:
 
     def _open(self, direction: tuple[int, int]) -> bool:
         x, y = self._target(direction)
-        if self._in_bounds(x, y) and self._terrain_at(x, y) == "+":
-            self.state["terrain"][y][x] = "."
+        if self._in_bounds(x, y) and self._is_closed_door_at(x, y):
+            self._open_door_at(x, y)
             self._message("The door opens.")
             self._event("action_applied", "OpenDoor()", transition="open", payload={"x": x, "y": y})
             return True
@@ -479,20 +501,24 @@ class NethackDlvl1Engine:
 
     def _close(self, direction: tuple[int, int]) -> bool:
         x, y = self._target(direction)
-        if self._in_bounds(x, y) and self._terrain_at(x, y) == ".":
-            self.state["terrain"][y][x] = "+"
+        if self._in_bounds(x, y) and self._is_open_door_at(x, y):
+            self._close_door_at(x, y)
             self._message("The door closes.")
+            return True
+        if self._in_bounds(x, y) and self._is_closed_door_at(x, y):
+            self._message("This door is already closed.")
+            return False
         else:
-            self._message("You see no open door there.")
-        return True
+            self._message("You see no door there.")
+            return False
 
     def _kick(self, direction: tuple[int, int]) -> bool:
         x, y = self._target(direction)
-        if not self._in_bounds(x, y) or self._terrain_at(x, y) != "+":
+        if not self._in_bounds(x, y) or not self._is_closed_door_at(x, y):
             self._message("You kick at empty space.")
             return True
         if self._roll(2) == 0:
-            self.state["terrain"][y][x] = "."
+            self._open_door_at(x, y)
             self._message("The door crashes open!")
         else:
             self._message("WHAMMM!!!")
@@ -638,7 +664,7 @@ class NethackDlvl1Engine:
             if not trap["seen"] and max(abs(trap["position"]["x"] - hero["x"]), abs(trap["position"]["y"] - hero["y"])) <= 1:
                 trap["seen"] = True
                 found = True
-        self._message("You find a trap." if found else "You search.")
+        self._message("You find a trap." if found else "")
         return True
 
     def _inspect_trap(self, direction: tuple[int, int]) -> bool:
@@ -696,7 +722,7 @@ class NethackDlvl1Engine:
         dx = 0 if monster["position"]["x"] == hero["x"] else (1 if hero["x"] > monster["position"]["x"] else -1)
         dy = 0 if monster["position"]["y"] == hero["y"] else (1 if hero["y"] > monster["position"]["y"] else -1)
         x, y = monster["position"]["x"] + dx, monster["position"]["y"] + dy
-        if self._in_bounds(x, y) and self._terrain_at(x, y) in PASSABLE and not self._monster_at(x, y) and (x, y) != (hero["x"], hero["y"]):
+        if self._in_bounds(x, y) and self._is_passable_at(x, y) and not self._monster_at(x, y) and (x, y) != (hero["x"], hero["y"]):
             monster["position"] = {"x": x, "y": y}
 
     def _trigger_trap(self, x: int, y: int) -> None:
@@ -734,9 +760,10 @@ class NethackDlvl1Engine:
             for x in range(VIEW_WIDTH):
                 if not self.state["seen"][y][x]:
                     continue
-                chars[y][x] = self.state["terrain"][y][x]
-                colors[y][x] = int(self.state["base_colors"][y][x])
-                glyphs[y][x] = int(self.state["base_glyphs"][y][x])
+                char, color, glyph = self._terrain_projection_at(x, y)
+                chars[y][x] = char
+                colors[y][x] = color
+                glyphs[y][x] = glyph
         for item in self.state["floor_items"]:
             x, y = item["position"]["x"], item["position"]["y"]
             if self._in_bounds(x, y) and self.state["seen"][y][x]:
@@ -850,7 +877,7 @@ class NethackDlvl1Engine:
 
     def _reveal(self) -> None:
         hero = self.state["hero"]
-        radius = int(self.resolved["rules"].get("vision_radius", 4)) if self.resolved else 4
+        radius = int(self.resolved["rules"].get("vision_radius", 5)) if self.resolved else 5
         for y in range(max(0, hero["y"] - radius), min(VIEW_HEIGHT, hero["y"] + radius + 1)):
             for x in range(max(0, hero["x"] - radius), min(VIEW_WIDTH, hero["x"] + radius + 1)):
                 if self.state["terrain"][y][x] != " " and self._line_of_sight(int(hero["x"]), int(hero["y"]), x, y):
@@ -866,7 +893,7 @@ class NethackDlvl1Engine:
         step_y = 1 if start_y < target_y else -1
         error = delta_x + delta_y
         while (x, y) != (target_x, target_y):
-            if (x, y) != (start_x, start_y) and self.state["terrain"][y][x] in {" ", "|", "-", "+"}:
+            if (x, y) != (start_x, start_y) and self._is_opaque_at(x, y):
                 return False
             twice_error = 2 * error
             if twice_error >= delta_y:
@@ -894,6 +921,46 @@ class NethackDlvl1Engine:
 
     def _terrain_at(self, x: int, y: int) -> str:
         return self.state["terrain"][y][x]
+
+    @staticmethod
+    def _initial_door_glyphs(base_glyphs: list[list[int]]) -> list[list[int]]:
+        return [[int(glyph) if int(glyph) in DOOR_GLYPHS else 0 for glyph in row] for row in base_glyphs]
+
+    def _door_glyph_at(self, x: int, y: int) -> int:
+        return int(self.state["door_glyphs"][y][x])
+
+    def _is_open_door_at(self, x: int, y: int) -> bool:
+        return self._door_glyph_at(x, y) in OPEN_DOOR_GLYPHS
+
+    def _is_closed_door_at(self, x: int, y: int) -> bool:
+        glyph = self._door_glyph_at(x, y)
+        # Hand-authored task fixtures predate capture-backed glyph planes and
+        # encode a closed door as terrain '+'.  Keep that representation
+        # actionable; captures always take the glyph-specific branch above.
+        return glyph in CLOSED_DOOR_GLYPHS or (glyph == 0 and self._terrain_at(x, y) == "+")
+
+    def _open_door_at(self, x: int, y: int) -> None:
+        glyph = self._door_glyph_at(x, y)
+        if glyph == 0 and self._terrain_at(x, y) == "+":
+            # Terrain-only inputs carry no orientation.  Materialize the
+            # canonical horizontal door state only after it is operated on.
+            glyph = CLOSED_DOOR_DASH_GLYPH
+        self.state["door_glyphs"][y][x] = OPENED_DOOR_GLYPHS[glyph]
+
+    def _close_door_at(self, x: int, y: int) -> None:
+        self.state["door_glyphs"][y][x] = CLOSED_DOOR_GLYPHS_BY_OPEN[self._door_glyph_at(x, y)]
+
+    def _is_passable_at(self, x: int, y: int) -> bool:
+        return self._is_open_door_at(x, y) or self._terrain_at(x, y) in PASSABLE
+
+    def _is_opaque_at(self, x: int, y: int) -> bool:
+        return not self._is_open_door_at(x, y) and self._terrain_at(x, y) in WALLS
+
+    def _terrain_projection_at(self, x: int, y: int) -> tuple[str, int, int]:
+        glyph = self._door_glyph_at(x, y)
+        if glyph in DOOR_GLYPHS:
+            return DOOR_CHARS[glyph], int(self.state["base_colors"][y][x]), glyph
+        return self._terrain_at(x, y), int(self.state["base_colors"][y][x]), int(self.state["base_glyphs"][y][x])
 
     def _monster_at(self, x: int, y: int) -> dict[str, Any] | None:
         return next((monster for monster in self.state["monsters"] if monster["position"]["x"] == x and monster["position"]["y"] == y), None)

@@ -1,64 +1,50 @@
 # NetHack dlvl-1 coverage ledger
 
-This ledger records what the own gold engines model today.  A listed action is
-not automatically an NLE-parity claim: the claim becomes green only when a
-frozen NLE tape exercises it in both lanes.
+The canonical corpus currently has **12 / 33** required strict NLE tapes
+(36.4%). Every listed tape compares the complete captured public observation
+in both own lanes: chars, glyphs, colors, blstats, fixed-width raw message,
+and inventory planes. This is evidence coverage, not a claim of general
+NetHack parity.
 
 | Subsystem | Current own-engine support | Frozen NLE evidence | Status |
 | --- | --- | --- | --- |
-| Action surface | All pinned `nle.nethack.ACTIONS` ids accepted; canonical names and raw adapter keys accepted | 1 / 33 tapes (`CompassDirection.E`) | one action strictly replayed; broad surface remains plumbing |
-| Level input | Capture-backed 21×79 terrain/glyph/color dump, hero, objects, monsters, traps, memory | 1 / 33 tapes | raw reset planes, blstats, message and inventory baselines calibrated for the first tape |
-| Live NLE fuzz | Seedable navigation/prompt-probe campaigns, out-of-tree capture artifacts, coverage JSON, strict and bootstrap-masked transition diagnostics | 1 / 33 tapes promoted from a minimized navigation probe | diagnostic tooling complete; broader canonical coverage remains pending |
-| Property invariants | Constrained Hypothesis lab fixtures, observation/state integrity, determinism, checkpoint, and Python/Rust trace properties | N/A | own-engine consistency coverage; not NLE parity |
-| Geography | Main Dungeon dlvl 1 only; `>` on down stair terminalizes as `descended`; branch dumps rejected | 1 / 33 tapes | first tape is Main Dungeon dlvl 1; descent remains unproven |
-| FOW / memory | Capture-specific unseen planes plus gold-owned LOS refresh after movement/terrain change | 1 / 33 tapes | reset and one east-step disclosure strictly calibrated |
-| Movement / doors | 8-way walk, long movement, open/close/kick direction modes, walls and stairs | 1 / 33 tapes (`E` walk) | one empty east move strictly replayed; doors/stairs remain unproven |
-| Combat | Deterministic dlvl-1 monster melee, death, XP/gold basics | 0 / 33 tapes | modeled, needs NLE tapes |
-| Hunger / food | Turn clock, hunger bands, food inventory prompt and nutrition | 0 / 33 tapes | modeled, needs NLE tapes |
-| Inventory | Letter assignment, pickup/drop, wield/wear/takeoff/puton/remove/quiver | 0 / 33 tapes | modeled, needs NLE tapes |
-| Consumables | Eat, quaff, read, apply prompt paths with declared fixture effects | 0 / 33 tapes | modeled, needs NLE tapes |
-| Traps / pets | Fixture-declared traps and basic pet occupancy | 0 / 33 tapes | modeled, needs NLE tapes |
-| Prayer / engraving / magic | Prompt-aware accepted command path and fixture-defined outcomes | 0 / 33 tapes | accepted/stubbed pending captures |
-| Shops / branches / dlvl2 | No shop model; Mines-bearing capture rejected; deeper play hard-stops | N/A | deliberately out of geography |
+| Action surface | All pinned `nle.nethack.ACTIONS` ids are accepted with canonical names and raw adapter keys | 12 / 33 tapes across movement, prompts, pickup, search, and doors | adapter breadth is not parity by itself |
+| Level input | Capture-backed 21×79 terrain/glyph/color dump, hero, objects, monsters, traps, and unseen planes | 12 / 33 tapes | raw reset planes, blstats, messages, and inventory baselines are checked exactly |
+| Pixel parity gate | Strict comparator checks characters, glyphs, colors, blstats, messages, and inventory at every snapshot | 12 / 33 tapes | no partial-plane pass is accepted for promotion |
+| Live NLE fuzz | NLE and Rust consume the same action IDs from the same reset; strict baseline comparison is the default | diagnostic only | every discrepancy is retained out of tree and logged before it is minimized or fixed |
+| Property invariants | Hypothesis constrained fixtures, public observation integrity, determinism, checkpoints, and Python/Rust trace properties | N/A | own-engine consistency only; not NLE evidence |
+| Geography | Main Dungeon dlvl 1 only; `>` terminalizes as `descended`; branch/dlvl-2 dumps rejected | 0 / 33 descent tapes | descent route is captured but blocked on room/corridor visibility and pet motion |
+| FOW / memory | Capture-specific unseen planes plus gold-owned LOS refresh after movement and door state changes | navigation and door tapes | ordinary room/corridor visibility remains a known strict-fuzz gap |
+| Movement / doors | 8-way walk, long movement, direction prompts, glyph-backed open/closed doors, kick | east movement; door open in both orientations; closed/no-door close; kick | open-door resistance and broader terrain/LOS behavior remain unproven |
+| Inventory / food | Letter assignment, pickup, empty-stair response, food prompt/cancel, empty/non-applicable apply handling | pickup, stair pickup, eat cancel | broader item semantics remain unproven |
+| Combat | Deterministic melee, death, XP, and gold basics | 0 / 33 tapes | clean lichen kill capture awaits score calibration; monster timing is a fuzz gap |
+| Traps / pets | Fixture-declared traps and basic occupancy | 0 / 33 tapes | raw pet/monster motion and trap projection remain unproven |
+| Shops / branches / dlvl2 | No shop model; deeper play hard-stops | N/A | deliberately outside geography |
 
-## Capture backlog
+## Current strict corpus
 
-- [ ] ≥20 short NLE tapes: navigation, door, jackal, eat, pickup, wear, descend.
-- [ ] ≥10 medium tapes: hunger, combat death, multi-prompt inventory, prayer/engraving.
-- [ ] ≥3 adversarial tapes: trap, mimic-door, or scroll use.
-- [ ] Pin NLE installation in a reproducible dev-extra lockfile note and materialize
-      `fixtures/nle_oracle/<fixture-id>/` from raw action IDs.
-- [ ] Promote a strict-green canonical minimum of 33 tapes, then expand only by
-      novel minimized behavior signatures toward the focused 60–100+ corpus.
+- `val-east-seed-20260725`: one raw east move.
+- `val-east-pickup-seed-20260725`: movement followed by pickup.
+- `val-stair-pickup-seed-10`: return to a revealed stair and fixed-stair pickup.
+- `val-search-seed-20260725`: empty search turn.
+- `val-eat-cancel-seed-20260725`: food prompt then cancel.
+- `val-open-cancel-seed-20260725`: open prompt then cancel.
+- `val-open-empty-east-seed-20260725`: failed open after a direction response.
+- `val-door-kick-seed-20261040`: failed kick against a closed door.
+- `val-door-close-seed-20260061`: close against an already-closed door.
+- `val-close-empty-east-seed-20260725`: close against a non-door.
+- `val-door-open-horizontal-seed-20260316`: `2374` closed door opens to `-`/`2372`.
+- `val-door-open-vertical-seed-20260315`: `2375` closed door opens to `|`/`2373`.
 
-## First strict NLE result
+## Active discrepancy backlog
 
-The optional CPython 3.10 NLE 0.9.0 environment produced a deterministic
-Main Dungeon dlvl-1 navigation capture for seed `20260725`:
-`val-east-seed-20260725`.  Its reset and one `CompassDirection.E` transition
-strictly replay in both own lanes.  The calibration fixed the initially found
-FOW discrepancy: after the east move, NLE exposes `chars[15][33] == "."`;
-the frozen dump now preserves hidden raw planes and captured static underlay,
-while the gold-owned LOS refresh exposes it only after the hero moves.  It also
-preserves the reset's 27-slot blstats, fixed-width message buffer, and 55-slot
-inventory arrays.
-
-This is **1 / 33** required tapes (about 3.0%), not a general navigation or
-NetHack-fidelity claim.  The original live-fuzz artifacts remain diagnostic
-under `/tmp`; only the minimized strict-green capture was promoted.
-
-The current prompt-probe reaches seven distinct NLE-stepped action IDs and
-now matches the captured food-letter prompt and empty-stair pickup response in
-both lanes.  Its next reported discrepancy is intentionally retained as a
-diagnostic data gap: a player glyph can hide its static underfoot tile until a
-movement tape exposes it, so this prompt-only tape cannot yet prove the stair
-underlay without adding unsupported future-state data.
-
-## Open limitation
-
-The foundation was built before this host had an NLE environment.  A
-task-specific CPython 3.10 oracle environment now supports live diagnostic
-fuzzing and one authentic capture has landed, but no candidate output is
-promoted automatically.  The next evidence must extend beyond this one empty
-movement transition—especially doors, combat, inventory prompts, hunger, and
-the descent boundary—while keeping the corpus strict-green in both lanes.
+- Implement room/corridor visibility that matches NLE exactly; this is the
+  prerequisite for the captured dlvl-1 descent route.
+- Model raw pet/monster scheduling and overlays; current fuzz finds static
+  entity projections where NLE moves an entity.
+- Calibrate combat score/XP and promote the clean one-action lichen kill only
+  after every changed blstats slot matches.
+- Resolve static terrain hidden under the hero without smuggling future state
+  into a level dump; fixed-stair pickup fuzz currently exposes this gap.
+- Extend strict tapes toward and past 33 only with novel minimized behavior
+  signatures. Diagnostic fuzz artifacts never enter `fixtures/nle_oracle/`.

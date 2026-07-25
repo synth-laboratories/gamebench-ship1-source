@@ -617,7 +617,7 @@ def capture_case(*, case_index: int, seed: int, character: str, steps: int, camp
             "task_id": fixture_id,
             "seed": case_seed,
             "character": {"nle_character": character},
-            "rules": {"max_steps": 0, "autopickup": False, "auto_more": "raw_explicit", "vision_radius": 4},
+            "rules": {"max_steps": 0, "autopickup": False, "auto_more": "raw_explicit", "vision_radius": 5},
             "level_dump": level_dump(
                 initial_observation,
                 observed_entity_annotations(initial_observation),
@@ -645,7 +645,9 @@ def main() -> None:
     parser.add_argument("--character", default="val-hum-fem-law")
     parser.add_argument("--actions", type=Path, default=None, help="Optional JSONL action tape; remaining steps use the selected campaign.")
     parser.add_argument("--output", type=Path, required=True, help="Explicit out-of-tree artifact root; candidate captures are never written to fixtures/nle_oracle.")
-    parser.add_argument("--strict-baseline", action="store_true", help="Treat reset mismatches as transition discrepancies instead of masking them.")
+    parser.set_defaults(strict_baseline=True)
+    parser.add_argument("--strict-baseline", dest="strict_baseline", action="store_true", help="Require exact reset and transition observations (the default).")
+    parser.add_argument("--mask-baseline", dest="strict_baseline", action="store_false", help="Diagnostic-only: mask reset mismatches to isolate later transitions.")
     parser.add_argument("--allow-divergences", action="store_true", help="Report diagnostic discrepancies but exit zero after writing artifacts.")
     args = parser.parse_args()
     if args.cases < 1 or args.steps < 1:

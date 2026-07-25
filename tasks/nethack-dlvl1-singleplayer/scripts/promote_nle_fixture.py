@@ -148,7 +148,7 @@ def validate_capture(source: Path, fixture_id: str) -> None:
             "task_id": fixture_id,
             "seed": int(meta.get("seed", 0)),
             "character": dict(meta.get("character", {})),
-            "rules": {"max_steps": 0, "autopickup": False, "auto_more": str(meta.get("auto_more", "raw_explicit")), "vision_radius": 4},
+            "rules": {"max_steps": 0, "autopickup": False, "auto_more": str(meta.get("auto_more", "raw_explicit")), "vision_radius": 5},
             "level_dump": level_dump,
         }
     )
