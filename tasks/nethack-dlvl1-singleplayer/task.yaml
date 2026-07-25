@@ -34,6 +34,8 @@ status:
     frozen_nle_discrepancy: scripts/compare_nle_discrepancies.py
     live_nle_differential_fuzz: scripts/fuzz_nle_differential.py
     live_nle_dev_requirements: requirements-nle-fuzz.txt
+    property_invariants: tests/test_hypothesis_properties.py
+    property_test_requirements: requirements-property-tests.txt
     live_nle_twin_step: optional_dev_extra
     required_oracle_tapes_v0: 33
     current_oracle_tapes: 0

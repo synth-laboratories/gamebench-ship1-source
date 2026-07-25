@@ -84,13 +84,52 @@ or replay it without copying artifacts under `fixtures/nle_oracle/`:
 python scripts/compare_nle_discrepancies.py --root /tmp/nethack-nle-fuzz --lane both
 ```
 
-The default policy generates visible navigation and explicit `MORE` inputs.
+The default `navigation-v0` campaign generates visible navigation and explicit
+`MORE` inputs.  `prompt-probe-v0` adds a bounded safe command family, resolves
+direction and `MORE` prompts, and uses `ESC` to recover other raw prompts:
+
+```bash
+.venv/bin/python scripts/fuzz_nle_differential.py --cases 25 --steps 32 --seed 20260725 --lane both --campaign prompt-probe-v0 --output /tmp/nethack-nle-prompt-probe
+```
+
 Pass `--actions <jsonl>` to replay arbitrary pinned action IDs; a `DOWN` away
 from a known stair is sent to NLE normally, while an actual descent is emitted
-as a terminal pre-dlvl-2 boundary.
+as a terminal pre-dlvl-2 boundary.  Risky host/episode-escaping commands remain
+for explicit tapes rather than generated campaigns.
+
+Every run writes `coverage.json` beside `run.json`.  It separates selected
+action IDs from action IDs actually stepped in NLE (a protected pre-dlvl-2
+descent is selected but intentionally not stepped), then records `(action,
+inferred-input-mode)` contexts, action families, inferred prompt modes,
+terminal reasons, observed public-plane/blstats deltas, lane discrepancy
+signatures, and a per-case novelty hash.  These are diagnostic coverage
+measurements, not a conformance percentage.
 
 The fuzzer labels bootstrap-masked transition results as diagnostics, not as
 canonical conformance passes or contributions to the required 33 tapes.
+
+## Property invariants
+
+`requirements-property-tests.txt` pins the optional Hypothesis dependency for
+the task-local Python/Rust integrity suite.  It covers constrained dlvl-1 lab
+fixtures, action-adapter equivalence, observation shapes, determinism,
+checkpoint continuation, and short cross-lane traces.  It does not make an NLE
+fidelity claim; frozen strict NLE replay remains the parity authority.
+
+```bash
+uv venv --python 3.10 .venv-properties
+uv pip install --python .venv-properties/bin/python -r requirements-property-tests.txt
+.venv-properties/bin/python -m unittest discover -s tests -p 'test_*.py'
+```
+
+## Corpus growth
+
+The required 33 authentic NLE tapes are the v0 **minimum**, not a cap.  Keep
+them as strict-green, hand-reviewed canonical regressions.  Grow a separate
+focused regression corpus (target 60–100+ tapes) from minimized novel behavior
+signatures, and retain large live-fuzz campaigns only as out-of-tree diagnostic
+artifacts until a candidate is deterministic, dlvl-1-only, fully annotated from
+NLE observations, and strict-green in both lanes.
 
 ## Current status
 

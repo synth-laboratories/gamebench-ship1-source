@@ -15,6 +15,7 @@ import json
 import random
 import subprocess
 import sys
+from collections import Counter
 from copy import deepcopy
 from pathlib import Path
 from typing import Any, Iterable
@@ -51,6 +52,16 @@ DIRECTIONS = (
     ("CompassDirection.SE", 1, 1),
     ("CompassDirection.SW", -1, 1),
     ("CompassDirection.NW", -1, -1),
+)
+PROMPT_PROBE_ACTIONS = (
+    "Command.SEARCH",
+    "Command.PICKUP",
+    "Command.OPEN",
+    "Command.CLOSE",
+    "Command.KICK",
+    "Command.INVENTORY",
+    "Command.APPLY",
+    "Command.EAT",
 )
 
 
@@ -193,6 +204,27 @@ def tty_text(observation: dict[str, Any]) -> str:
     return "\n".join("".join(chr(int(cell)) for cell in row if isinstance(cell, int)) for row in values)
 
 
+def inferred_input_mode(observation: dict[str, Any]) -> str:
+    """Classify the raw NLE screen for campaign recovery and coverage metrics."""
+
+    tty = tty_text(observation).lower()
+    message = str(project(observation).get("message", "")).lower()
+    text = f"{tty}\n{message}"
+    if "--more--" in text:
+        return "more"
+    if "in what direction" in text or "what direction" in text:
+        return "direction"
+    if "(y/n" in text or "[yn" in text or "[y/n" in text:
+        return "ynq"
+    if "what do you want to use" in text or "what do you want to eat" in text or "what do you want to wield" in text:
+        return "inventory_letter"
+    if "pick an object" in text or "pick a category" in text:
+        return "menu"
+    if "what do you want to call" in text or "what do you want to name" in text:
+        return "string"
+    return "normal"
+
+
 def choose_navigation_action(observation: dict[str, Any], table: list[list[Any]], rng: random.Random) -> tuple[int, str, list[int]]:
     """Choose a safe movement/MORE action using only the visible NLE plane."""
 
@@ -219,6 +251,31 @@ def choose_navigation_action(observation: dict[str, Any], table: list[list[Any]]
         wait = action_id_by_name(table, "MiscDirection.WAIT")
         return wait, "no_visible_navigation_target", [wait]
     return rng.choice(candidates), "visible_navigation", candidates
+
+
+def choose_prompt_probe_action(observation: dict[str, Any], table: list[list[Any]], rng: random.Random) -> tuple[int, str, list[int]]:
+    """Probe safe commands and recover raw NLE prompts with representable input."""
+
+    mode = inferred_input_mode(observation)
+    if mode == "more":
+        action_id = action_id_by_name(table, "MiscAction.MORE")
+        return action_id, "prompt_recovery_more", [action_id]
+    if mode == "direction":
+        candidates = [action_id_by_name(table, name) for name, _, _ in DIRECTIONS]
+        return rng.choice(candidates), "prompt_recovery_direction", candidates
+    if mode != "normal":
+        action_id = action_id_by_name(table, "Command.ESC")
+        return action_id, f"prompt_recovery_{mode}", [action_id]
+    candidates = [action_id_by_name(table, name) for name in PROMPT_PROBE_ACTIONS]
+    return rng.choice(candidates), "safe_prompt_probe", candidates
+
+
+def choose_campaign_action(campaign: str, observation: dict[str, Any], table: list[list[Any]], rng: random.Random) -> tuple[int, str, list[int]]:
+    if campaign == "navigation-v0":
+        return choose_navigation_action(observation, table, rng)
+    if campaign == "prompt-probe-v0":
+        return choose_prompt_probe_action(observation, table, rng)
+    raise ValueError(f"unsupported live NLE campaign {campaign!r}")
 
 
 def normalise_step(result: Any) -> tuple[dict[str, Any], bool]:
@@ -295,7 +352,124 @@ def write_jsonl(path: Path, values: list[dict[str, Any]]) -> None:
     path.write_text("".join(json.dumps(value, sort_keys=True) + "\n" for value in values))
 
 
-def capture_case(*, case_index: int, seed: int, character: str, steps: int, table: list[list[Any]], tape: list[int], output: Path) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+def action_family(action_name: str) -> str:
+    return action_name.partition(".")[0] or "unknown"
+
+
+def changed_blstats_slots(snapshots: list[dict[str, Any]]) -> list[int]:
+    if not snapshots:
+        return []
+    initial = list(dict(snapshots[0].get("projection", {})).get("blstats", []))
+    changed: set[int] = set()
+    for snapshot in snapshots[1:]:
+        current = list(dict(snapshot.get("projection", {})).get("blstats", []))
+        for index, (before, after) in enumerate(zip(initial, current, strict=False)):
+            if before != after:
+                changed.add(index)
+    return sorted(changed)
+
+
+def coverage_report(table: list[list[Any]], cases: list[dict[str, Any]]) -> dict[str, Any]:
+    """Summarize selected and NLE-stepped inputs, not a parity claim."""
+
+    actions = [record for case in cases for record in case["actions"]]
+    selected_action_ids = sorted({int(record["action_id"]) for record in actions})
+    nle_stepped_actions = [record for record in actions if record.get("nle_stepped") is True]
+    nle_stepped_action_ids = sorted({int(record["action_id"]) for record in nle_stepped_actions})
+    contexts = sorted(
+        {
+            (
+                int(record["action_id"]),
+                str(record["action_name"]),
+                str(record.get("input_mode", "unknown")),
+                record.get("nle_stepped") is True,
+            )
+            for record in actions
+        }
+    )
+    family_counts = Counter(action_family(str(record["action_name"])) for record in actions)
+    mode_counts = Counter(str(record.get("input_mode", "unknown")) for record in actions)
+    selection_counts = Counter(str(record.get("selection", "unknown")) for record in actions)
+    terminal_counts = Counter(
+        str(snapshot.get("terminal_reason", ""))
+        for case in cases
+        for snapshot in case["snapshots"]
+        if snapshot.get("terminal_reason")
+    )
+    mutable_blstats = sorted({slot for case in cases for slot in changed_blstats_slots(case["snapshots"])})
+    observation_delta_counts = Counter()
+    for case in cases:
+        snapshots = case["snapshots"]
+        if not snapshots:
+            continue
+        baseline = dict(snapshots[0].get("projection", {}))
+        for snapshot in snapshots[1:]:
+            current = dict(snapshot.get("projection", {}))
+            for key in ("chars", "colors", "glyphs", "message_raw", "inventory"):
+                if baseline.get(key) != current.get(key):
+                    observation_delta_counts[key] += 1
+    differential_counts = Counter()
+    first_paths = Counter()
+    signatures: list[dict[str, Any]] = []
+    for case in cases:
+        report = case["report"]
+        for lane in report["lanes"]:
+            status = str(lane["bootstrap_masked_transition_v0"]["status"])
+            differential_counts[f"transition_{status}"] += 1
+            difference = lane["bootstrap_masked_transition_v0"].get("first_difference")
+            if difference:
+                first_paths[str(difference.get("path", "unknown"))] += 1
+        initial = dict(case["snapshots"][0].get("projection", {})) if case["snapshots"] else {}
+        signature_payload = {
+            "initial_chars": initial.get("chars", []),
+            "contexts": [
+                (record["action_id"], record.get("input_mode", "unknown"), record.get("nle_stepped") is True)
+                for record in case["actions"]
+            ],
+            "terminal_reasons": [snapshot.get("terminal_reason", "") for snapshot in case["snapshots"] if snapshot.get("terminal_reason")],
+        }
+        signatures.append(
+            {
+                "fixture_id": case["meta"]["fixture_id"],
+                "sha256": hashlib.sha256(canonical_json(signature_payload).encode("utf-8")).hexdigest(),
+            }
+        )
+    return {
+        "schema": "gamebench.nethack.live_fuzz_coverage.v1",
+        "diagnostic_fuzz": True,
+        "not_a_conformance_pass": True,
+        "cases": len(cases),
+        "action_ids": {
+            "selected": selected_action_ids,
+            "selected_count": len(selected_action_ids),
+            "nle_stepped": nle_stepped_action_ids,
+            "nle_stepped_count": len(nle_stepped_action_ids),
+            "pinned_count": len(table),
+            "selected_fraction": len(selected_action_ids) / len(table) if table else 0.0,
+            "nle_stepped_fraction": len(nle_stepped_action_ids) / len(table) if table else 0.0,
+        },
+        "action_contexts": [
+            {"action_id": action_id, "action_name": action_name, "input_mode": input_mode, "nle_stepped": nle_stepped}
+            for action_id, action_name, input_mode, nle_stepped in contexts
+        ],
+        "enum_family_step_counts": dict(sorted(family_counts.items())),
+        "input_mode_step_counts": dict(sorted(mode_counts.items())),
+        "selection_step_counts": dict(sorted(selection_counts.items())),
+        "terminal_reason_counts": dict(sorted(terminal_counts.items())),
+        "observation": {
+            "changed_blstats_slots": mutable_blstats,
+            "changed_blstats_slot_count": len(mutable_blstats),
+            "snapshot_delta_counts": dict(sorted(observation_delta_counts.items())),
+        },
+        "differential": {
+            "transition_lane_counts": dict(sorted(differential_counts.items())),
+            "first_difference_paths": dict(sorted(first_paths.items())),
+        },
+        "novelty_signatures": signatures,
+    }
+
+
+def capture_case(*, case_index: int, seed: int, character: str, steps: int, campaign: str, table: list[list[Any]], tape: list[int], output: Path) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
     try:
         import nle
         from nle import nethack
@@ -328,12 +502,13 @@ def capture_case(*, case_index: int, seed: int, character: str, steps: int, tabl
         action_records: list[dict[str, Any]] = []
         stop_reason = "step_budget"
         for step in range(1, steps + 1):
+            input_mode = inferred_input_mode(observation)
             if step <= len(tape):
                 action_id = int(tape[step - 1])
                 selection = "provided_tape"
                 candidates = [action_id]
             else:
-                action_id, selection, candidates = choose_navigation_action(observation, table, rng)
+                action_id, selection, candidates = choose_campaign_action(campaign, observation, table, rng)
             if not 0 <= action_id < len(table):
                 raise ValueError(f"fuzz action {action_id} is outside pinned NLE action table length {len(table)}")
             action_name = str(table[action_id][1])
@@ -343,7 +518,7 @@ def capture_case(*, case_index: int, seed: int, character: str, steps: int, tabl
                 if hero_position(observation) not in known_down_stairs:
                     pre_action_dungeon = dungeon_identity(observation)
                 else:
-                    action_records.append({"step": step, "action_id": action_id, "action_name": action_name, "selection": selection, "candidates": candidates, "boundary": "dlvl1_descend"})
+                    action_records.append({"step": step, "action_id": action_id, "action_name": action_name, "input_mode": input_mode, "selection": selection, "candidates": candidates, "boundary": "dlvl1_descend", "nle_stepped": False})
                     snapshots.append({"step": step, "projection": pre_action_projection, "done": True, "terminal_reason": "descended", "oracle_boundary": "pre_dlvl2"})
                     stop_reason = "dlvl1_descend"
                     break
@@ -352,13 +527,13 @@ def capture_case(*, case_index: int, seed: int, character: str, steps: int, tabl
             result = env.step(action_id)
             next_observation, done = normalise_step(result)
             if action_name == "MiscDirection.DOWN" and dungeon_identity(next_observation) != pre_action_dungeon:
-                action_records.append({"step": step, "action_id": action_id, "action_name": action_name, "selection": selection, "candidates": candidates, "boundary": "dlvl1_descend"})
+                action_records.append({"step": step, "action_id": action_id, "action_name": action_name, "input_mode": input_mode, "selection": selection, "candidates": candidates, "boundary": "dlvl1_descend", "nle_stepped": True})
                 snapshots.append({"step": step, "projection": pre_action_projection, "done": True, "terminal_reason": "descended", "oracle_boundary": "pre_dlvl2"})
                 stop_reason = "dlvl1_descend"
                 break
             observation = next_observation
             known_down_stairs.update(visible_down_stairs(observation))
-            action_records.append({"step": step, "action_id": action_id, "action_name": action_name, "selection": selection, "candidates": candidates})
+            action_records.append({"step": step, "action_id": action_id, "action_name": action_name, "input_mode": input_mode, "selection": selection, "candidates": candidates, "nle_stepped": True})
             snapshots.append({"step": step, "projection": project(observation), "done": done, "terminal_reason": "nle_done_unknown" if done else ""})
             if done:
                 stop_reason = "nle_done"
@@ -376,7 +551,7 @@ def capture_case(*, case_index: int, seed: int, character: str, steps: int, tabl
             "auto_more": "raw_explicit",
             "action_table": table,
             "action_table_sha256": hashlib.sha256(canonical_json(table).encode("utf-8")).hexdigest(),
-            "fuzz": {"diagnostic_fuzz": True, "not_a_conformance_pass": True, "policy": "navigation-v0", "requested_steps": steps, "stop_reason": stop_reason},
+            "fuzz": {"diagnostic_fuzz": True, "not_a_conformance_pass": True, "campaign": campaign, "requested_steps": steps, "stop_reason": stop_reason},
         }
         task = {
             "task_id": fixture_id,
@@ -401,8 +576,9 @@ def main() -> None:
     parser.add_argument("--steps", type=int, default=32)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--lane", choices=("python", "rust", "both"), default="both")
+    parser.add_argument("--campaign", choices=("navigation-v0", "prompt-probe-v0"), default="navigation-v0", help="State-aware action family; supplied --actions always takes priority.")
     parser.add_argument("--character", default="val-hum-fem-law")
-    parser.add_argument("--actions", type=Path, default=None, help="Optional JSONL action tape; remaining steps use navigation-v0.")
+    parser.add_argument("--actions", type=Path, default=None, help="Optional JSONL action tape; remaining steps use the selected campaign.")
     parser.add_argument("--output", type=Path, required=True, help="Explicit out-of-tree artifact root; candidate captures are never written to fixtures/nle_oracle.")
     parser.add_argument("--strict-baseline", action="store_true", help="Treat reset mismatches as transition discrepancies instead of masking them.")
     parser.add_argument("--allow-divergences", action="store_true", help="Report diagnostic discrepancies but exit zero after writing artifacts.")
@@ -415,8 +591,9 @@ def main() -> None:
     tape = read_actions(args.actions) if args.actions else []
     pinned_table = json.loads((TASK_DIR / "shared" / "nle_action_map.json").read_text())["actions"]
     reports: list[dict[str, Any]] = []
+    cases: list[dict[str, Any]] = []
     for case_index in range(args.cases):
-        meta, task, actions, snapshots = capture_case(case_index=case_index, seed=args.seed, character=args.character, steps=args.steps, table=pinned_table, tape=tape, output=output)
+        meta, task, actions, snapshots = capture_case(case_index=case_index, seed=args.seed, character=args.character, steps=args.steps, campaign=args.campaign, table=pinned_table, tape=tape, output=output)
         expected = [nle_projection(snapshot) for snapshot in snapshots]
         lanes = ("python", "rust") if args.lane == "both" else (args.lane,)
         case_reports: list[dict[str, Any]] = []
@@ -433,6 +610,9 @@ def main() -> None:
         }
         write_json(output / "results" / f"{meta['fixture_id']}.json", report)
         reports.append(report)
+        cases.append({"meta": meta, "actions": actions, "snapshots": snapshots, "report": report})
+    coverage = coverage_report(pinned_table, cases)
+    write_json(output / "coverage.json", coverage)
     summary = {
         "schema": "gamebench.nethack.live_fuzz_run.v1",
         "diagnostic_fuzz": True,
@@ -441,7 +621,9 @@ def main() -> None:
         "steps": args.steps,
         "seed": args.seed,
         "lane": args.lane,
+        "campaign": args.campaign,
         "strict_baseline": args.strict_baseline,
+        "coverage": coverage,
         "reports": reports,
     }
     write_json(output / "run.json", summary)
@@ -450,7 +632,7 @@ def main() -> None:
         for report in reports
         for lane in report["lanes"]
     )
-    print(json.dumps({"status": "diverged" if diverged else "no_new_transition_divergence", "artifact_root": str(output), "cases": args.cases, "lanes": args.lane, "diagnostic_fuzz": True}, sort_keys=True))
+    print(json.dumps({"status": "diverged" if diverged else "no_new_transition_divergence", "artifact_root": str(output), "cases": args.cases, "lanes": args.lane, "campaign": args.campaign, "distinct_selected_action_ids": coverage["action_ids"]["selected_count"], "distinct_nle_stepped_action_ids": coverage["action_ids"]["nle_stepped_count"], "diagnostic_fuzz": True}, sort_keys=True))
     if diverged and not args.allow_divergences:
         raise SystemExit(1)
 

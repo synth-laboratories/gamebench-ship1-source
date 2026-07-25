@@ -8,7 +8,8 @@ frozen NLE tape exercises it in both lanes.
 | --- | --- | --- | --- |
 | Action surface | All pinned `nle.nethack.ACTIONS` ids accepted; canonical names and raw adapter keys accepted | 0 / 33 tapes | plumbing complete |
 | Level input | Capture-backed 21×79 terrain/glyph/color dump, hero, objects, monsters, traps, memory | 0 / 33 tapes | plumbing complete |
-| Live NLE fuzz | Seedable live NLE action tapes, out-of-tree capture artifacts, strict and bootstrap-masked transition diagnostics | 0 / 33 tapes | diagnostic tooling complete; canonical coverage remains pending |
+| Live NLE fuzz | Seedable navigation/prompt-probe campaigns, out-of-tree capture artifacts, coverage JSON, strict and bootstrap-masked transition diagnostics | 0 / 33 tapes | diagnostic tooling complete; canonical coverage remains pending |
+| Property invariants | Constrained Hypothesis lab fixtures, observation/state integrity, determinism, checkpoint, and Python/Rust trace properties | N/A | own-engine consistency coverage; not NLE parity |
 | Geography | Main Dungeon dlvl 1 only; `>` on down stair terminalizes as `descended`; branch dumps rejected | 0 / 33 tapes | modeled |
 | FOW / memory | Seen-cell memory and local visibility refresh | 0 / 33 tapes | modeled, needs NLE calibration |
 | Movement / doors | 8-way walk, long movement, open/close/kick direction modes, walls and stairs | 0 / 33 tapes | modeled, needs NLE tapes |
@@ -27,6 +28,8 @@ frozen NLE tape exercises it in both lanes.
 - [ ] ≥3 adversarial tapes: trap, mimic-door, or scroll use.
 - [ ] Pin NLE installation in a reproducible dev-extra lockfile note and materialize
       `fixtures/nle_oracle/<fixture-id>/` from raw action IDs.
+- [ ] Promote a strict-green canonical minimum of 33 tapes, then expand only by
+      novel minimized behavior signatures toward the focused 60–100+ corpus.
 
 ## First live differential result
 

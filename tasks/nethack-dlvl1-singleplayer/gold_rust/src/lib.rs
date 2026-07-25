@@ -134,7 +134,7 @@ pub struct GameState {
 
 #[derive(Clone, Debug)]
 pub struct ActionSpec {
-    pub id: usize,
+    pub id: Option<usize>,
     pub canonical: String,
     pub value: i64,
 }
@@ -440,6 +440,19 @@ impl NethackSession {
         }
         if name == "EXTLIST" {
             self.enter_mode("more", action, "--More--", json!({}));
+            return false;
+        }
+        if action.canonical == "UnsafeActions.HELP" || name == "HELP" {
+            self.message("Use the action map for the full NLE command surface.");
+            return false;
+        }
+        if action.canonical == "UnsafeActions.PREVMSG" || name == "PREVMSG" {
+            let previous = if self.state.message_history.len() >= 2 {
+                self.state.message_history[self.state.message_history.len() - 2].clone()
+            } else {
+                "No previous message.".to_string()
+            };
+            self.message(&previous);
             return false;
         }
         if is_info_command(name) || action.enum_class() == "TextCharacters" {
@@ -1452,29 +1465,41 @@ fn action_specs() -> Vec<ActionSpec> {
     let raw: Value = serde_json::from_str(include_str!("../../shared/nle_action_map.json")).expect("valid checked-in action map");
     raw.get("actions").and_then(Value::as_array).cloned().unwrap_or_default().into_iter().filter_map(|entry| {
         let cells = entry.as_array()?;
-        Some(ActionSpec { id: cells.first()?.as_u64()? as usize, canonical: cells.get(1)?.as_str()?.to_string(), value: cells.get(2)?.as_i64()? })
+        Some(ActionSpec { id: Some(cells.first()?.as_u64()? as usize), canonical: cells.get(1)?.as_str()?.to_string(), value: cells.get(2)?.as_i64()? })
+    }).collect()
+}
+
+fn unsafe_action_specs() -> Vec<ActionSpec> {
+    let raw: Value = serde_json::from_str(include_str!("../../shared/nle_action_map.json")).expect("valid checked-in action map");
+    raw.get("accepted_unsafe_keycodes").and_then(Value::as_array).cloned().unwrap_or_default().into_iter().filter_map(|entry| {
+        let cells = entry.as_array()?;
+        Some(ActionSpec { id: None, canonical: cells.first()?.as_str()?.to_string(), value: cells.get(1)?.as_i64()? })
     }).collect()
 }
 
 fn coerce_action(input: &Value) -> Option<ActionSpec> {
     let actions = action_specs();
+    let unsafe_actions = unsafe_action_specs();
     if let Some(id) = input.as_i64() {
-        return actions.into_iter().find(|action| action.id == id as usize);
+        return actions.into_iter().find(|action| action.id == Some(id as usize));
     }
     let raw = input.as_str()?;
     let token = raw.trim();
     if let Ok(id) = token.parse::<usize>() {
-        return actions.into_iter().find(|action| action.id == id);
+        return actions.into_iter().find(|action| action.id == Some(id));
     }
     if let Some(action) = actions.iter().find(|action| action.canonical == token) {
         return Some(action.clone());
     }
+    if let Some(action) = unsafe_actions.iter().find(|action| action.canonical == token) {
+        return Some(action.clone());
+    }
     let aliases = BTreeMap::from([
-        ("up", "MiscDirection.UP"), ("down", "MiscDirection.DOWN"), ("wait", "MiscDirection.WAIT"), ("more", "MiscAction.MORE"), ("escape", "Command.ESC"), ("inventory", "Command.INVENTORY"), ("pickup", "Command.PICKUP"), ("open", "Command.OPEN"), ("close", "Command.CLOSE"), ("kick", "Command.KICK"), ("search", "Command.SEARCH"), ("eat", "Command.EAT"), ("wear", "Command.WEAR"), ("wield", "Command.WIELD"), ("quit", "Command.QUIT"),
+        ("up", "MiscDirection.UP"), ("down", "MiscDirection.DOWN"), ("wait", "MiscDirection.WAIT"), ("more", "MiscAction.MORE"), ("escape", "Command.ESC"), ("inventory", "Command.INVENTORY"), ("pickup", "Command.PICKUP"), ("open", "Command.OPEN"), ("close", "Command.CLOSE"), ("kick", "Command.KICK"), ("search", "Command.SEARCH"), ("eat", "Command.EAT"), ("wear", "Command.WEAR"), ("wield", "Command.WIELD"), ("quit", "Command.QUIT"), ("help", "UnsafeActions.HELP"), ("prevmsg", "UnsafeActions.PREVMSG"),
     ]);
     if !token.contains('.') {
         if let Some(canonical) = aliases.get(token.to_ascii_lowercase().as_str()) {
-            return actions.iter().find(|action| action.canonical == *canonical).cloned();
+            return actions.iter().chain(unsafe_actions.iter()).find(|action| action.canonical == *canonical).cloned();
         }
         let upper = token.to_ascii_uppercase();
         for enum_class in ["CompassDirection", "CompassDirectionLonger", "MiscDirection", "MiscAction", "Command", "TextCharacters"] {
@@ -1485,7 +1510,10 @@ fn coerce_action(input: &Value) -> Option<ActionSpec> {
         }
     }
     if raw.chars().count() == 1 {
-        return actions.into_iter().find(|action| action.key() == raw);
+        return unsafe_actions.iter().find(|action| action.key() == raw).or_else(|| actions.iter().find(|action| action.key() == raw)).cloned();
+    }
+    if token.chars().count() == 1 {
+        return unsafe_actions.into_iter().find(|action| action.key() == token).or_else(|| actions.into_iter().find(|action| action.key() == token));
     }
     None
 }
