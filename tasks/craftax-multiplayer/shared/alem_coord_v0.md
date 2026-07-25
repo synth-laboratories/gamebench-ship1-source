@@ -19,7 +19,7 @@ The default Craftax-Coop profile is unchanged. Enable the profile at reset or ro
 |---|---|---|---|
 | `sync_2` | `agent_0`, `agent_1` | Both act (`do` or `attack`) on the same site target in one joint step. | Warrior |
 | `sync_all` | all three agents | All three act on the same site target in one joint step. | Warrior |
-| `handover` | `agent_2` → `agent_1` | Miner deposits iron at the site; Forager completes it within two subsequent decision windows. | Miner to open; Forager to complete |
+| `handover` | `agent_2` → `agent_1` | Miner deposits iron at the site; the Forager may complete only on a later joint step, within the next two decision windows. | Miner to open; Forager to complete |
 
 Specialists always pass their gate. A non-specialist uses the deterministic `mix64(seed ^ timestep ^ (site_index << 16) ^ player_index) % 10000` roll and passes when it is less than `10000 - alpha_milli * 10`. The emitted `soft_role_roll` records `alpha_milli`, the roll, required role, and outcome.
 
@@ -56,4 +56,4 @@ Profile state is checkpointed in optional `alem_coord` state. Episode metrics ar
 
 ## Fixture and parity surface
 
-The pinned fixtures are `alem_sync_2_success`, `alem_sync_all_success`, `alem_handover_success`, `alem_handover_expired`, and `alem_soft_role_denial`. `scripts/verify_python_rust_parity.py` runs all five through independent Python and Rust profile loops, including checkpoint restoration; `scripts/verify_gold_fixtures.py` validates the checked-in event/state artifacts.
+The pinned fixtures are `alem_sync_2_success`, `alem_sync_all_success`, `alem_handover_success`, `alem_handover_same_step_pending`, `alem_handover_expired`, and `alem_soft_role_denial`. `scripts/verify_python_rust_parity.py` runs all six through independent Python and Rust profile loops, compares the profile-visible observations, and bridges a Python `handover_opened` checkpoint through Rust before replaying the completion suffix. `scripts/verify_gold_fixtures.py` validates the checked-in event/state artifacts.

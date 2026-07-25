@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{json, Map, Value};
 use std::collections::{BTreeMap, BTreeSet};
 
 pub mod render;
@@ -991,6 +991,7 @@ impl CraftaxCoopEnv {
             }
             let current = self.state.alem_coord.as_ref().unwrap().sites[site_index].clone();
             if current.status == "opened"
+                && current.opened_at.is_some_and(|opened_at| opened_at < self.state.timestep)
                 && receiver_acts
                 && self.soft_role_allowed(site_index, receiver, current.receiver_role.as_deref())
             {
@@ -3067,6 +3068,38 @@ impl CraftaxCoopEnv {
             .iter()
             .map(Self::player_json)
             .collect::<Vec<_>>();
+        let achievements = self
+            .state
+            .achievements
+            .iter()
+            .map(|name| (name.clone(), true))
+            .collect::<BTreeMap<_, _>>();
+        let mut shared = Map::from_iter([
+            ("timestep".into(), json!(self.state.timestep)),
+            ("light_level".into(), json!(self.state.light_level)),
+            ("boss_health".into(), json!(self.state.boss_health)),
+            ("boss_progress".into(), json!(self.state.boss_progress)),
+            ("trade_count".into(), json!(self.state.trade_count)),
+            ("food_trade_count".into(), json!(self.state.food_trade_count)),
+            ("drink_trade_count".into(), json!(self.state.drink_trade_count)),
+            ("revives".into(), json!(self.state.revives)),
+            ("friendly_fire_damage".into(), json!(self.state.ff_damage_dealt)),
+            ("chests_opened".into(), json!(self.state.chests_opened)),
+            ("monsters_killed".into(), json!(self.state.monsters_killed)),
+            ("achievements".into(), json!(achievements)),
+        ]);
+        if let Some(coord) = &self.state.alem_coord {
+            let sites = coord
+                .sites
+                .iter()
+                .map(|site| json!({"site_id":site.site_id,"kind":site.kind,"status":site.status,"target":[site.level,site.x,site.y]}))
+                .collect::<Vec<_>>();
+            shared.insert("rules_profile".into(), json!("alem_coord_v0"));
+            shared.insert(
+                "coordination".into(),
+                json!({"scenario":coord.scenario,"alpha_milli":coord.alpha_milli,"sites":sites,"metrics":self.alem_metrics()}),
+            );
+        }
         self.state.players.iter().enumerate().map(|(index,p)|{
             let mut view=Vec::new();
             for y in p.y as isize-radius..=p.y as isize+radius { let mut row=Vec::new(); for x in p.x as isize-radius..=p.x as isize+radius {
@@ -3078,9 +3111,8 @@ impl CraftaxCoopEnv {
                 row.push(json!({"x":x,"y":y,"terrain":terrain,"item":item,"light":light,"agents":agents,"mobs":mobs}));
             } view.push(Value::Array(row)); }
             let visible=self.state.monsters.iter().filter(|m|m.level==p.level&&m.x.abs_diff(p.x)<=radius as usize&&m.y.abs_diff(p.y)<=radius as usize).collect::<Vec<_>>();
-            let achievements=self.state.achievements.iter().map(|name|(name.clone(),true)).collect::<BTreeMap<_,_>>();
             let personal=self.state.achievements_by_agent[&p.agent_id].iter().map(|name|(name.clone(),true)).collect::<BTreeMap<_,_>>();
-            (p.agent_id.clone(),json!({"agent_id":p.agent_id,"agent_index":index,"role":p.role,"legal_agent_ids":self.state.players.iter().map(|q|q.agent_id.clone()).collect::<Vec<_>>(),"legal_actions":self.legal_actions(&p.agent_id),"self":Self::player_json(p),"achievements":personal,"teammate_dashboard":dashboard,"level":p.level,"map_size":[MAP_SIZE,MAP_SIZE],"num_levels":NUM_LEVELS,"local_view":view,"ascii":self.render_ascii(p,radius),"visible_monsters":visible,"last_joint_event":self.state.last_joint_event,"shared":{"timestep":self.state.timestep,"light_level":self.state.light_level,"boss_health":self.state.boss_health,"boss_progress":self.state.boss_progress,"trade_count":self.state.trade_count,"food_trade_count":self.state.food_trade_count,"drink_trade_count":self.state.drink_trade_count,"revives":self.state.revives,"friendly_fire_damage":self.state.ff_damage_dealt,"chests_opened":self.state.chests_opened,"monsters_killed":self.state.monsters_killed,"achievements":achievements}}))
+            (p.agent_id.clone(),json!({"agent_id":p.agent_id,"agent_index":index,"role":p.role,"legal_agent_ids":self.state.players.iter().map(|q|q.agent_id.clone()).collect::<Vec<_>>(),"legal_actions":self.legal_actions(&p.agent_id),"self":Self::player_json(p),"achievements":personal,"teammate_dashboard":dashboard,"level":p.level,"map_size":[MAP_SIZE,MAP_SIZE],"num_levels":NUM_LEVELS,"local_view":view,"ascii":self.render_ascii(p,radius),"visible_monsters":visible,"last_joint_event":self.state.last_joint_event,"shared":shared.clone()}))
         }).collect()
     }
 

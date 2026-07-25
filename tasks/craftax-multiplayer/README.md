@@ -42,7 +42,7 @@ Python and Rust emit the same canonical structured and legacy NEV records for pa
 
 `python scripts/verify_python_rust_parity.py`
 
-The parity command also runs five ALEM profile fixtures (`sync_2`, `sync_all`, handover success/expiry, and soft-role denial) through independent Python and Rust loops.
+The parity command also runs six ALEM profile fixtures (`sync_2`, `sync_all`, handover success/same-step pending/expiry, and soft-role denial) through independent Python and Rust loops, including an ALEM Python-to-Rust checkpoint bridge.
 
 Canonical multiplayer fixture verification (five deterministic task bundles with
 structured NEV, legacy NEV, projected observations/state, request expiry,

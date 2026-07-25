@@ -20,6 +20,25 @@ fn player_summaries(env: &CraftaxCoopEnv) -> Vec<Value> {
         .collect()
 }
 
+fn profile_observations(env: &CraftaxCoopEnv) -> Value {
+    let observations = env.observations(5);
+    Value::Object(
+        observations
+            .into_iter()
+            .map(|(agent_id, observation)| {
+                (
+                    agent_id,
+                    json!({
+                        "legal_action_count": observation["legal_actions"].as_array().unwrap().len(),
+                        "shared": observation["shared"],
+                        "last_joint_event": observation["last_joint_event"],
+                    }),
+                )
+            })
+            .collect(),
+    )
+}
+
 fn main() {
     let mut raw = String::new();
     io::stdin().read_to_string(&mut raw).unwrap();
@@ -34,6 +53,7 @@ fn main() {
         config,
     );
     let checkpoint_after = scenario.get("checkpoint_after").and_then(Value::as_u64);
+    let initial_observations = profile_observations(&env);
     let mut checkpoint_equivalent = true;
     let mut steps = Vec::new();
     for (index, raw_action) in scenario["joint_actions"].as_array().unwrap().iter().enumerate() {
@@ -66,6 +86,8 @@ fn main() {
             "players": player_summaries(&env),
             "alem_coord": env.state.alem_coord,
             "alem_metrics": env.alem_metrics(),
+            "initial_observations": initial_observations,
+            "final_observations": profile_observations(&env),
         })
     );
 }

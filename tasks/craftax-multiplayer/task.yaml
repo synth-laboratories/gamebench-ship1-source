@@ -53,4 +53,4 @@ status:
   reference_engine_rust: tasks/craftax-multiplayer/gold_rust/
   implementation: dual_lane_author_semantics
   marl_contract: spec/marl_env_standards.md
-  deterministic_scenarios: 10
+  deterministic_scenarios: 11

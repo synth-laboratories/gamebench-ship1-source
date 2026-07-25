@@ -213,6 +213,8 @@ def verify_expectations(entry: dict[str, Any], outcome: dict[str, Any]) -> None:
             raise AssertionError(f"{entry['scenario_id']}: expected coord_reward={expected['coord_reward']}, got {actual}")
     if "event_kind" in expected and expected["event_kind"] not in {event["kind"] for event in outcome["structured_nev"]}:
         raise AssertionError(f"{entry['scenario_id']}: missing event {expected['event_kind']}")
+    if "absent_event_kind" in expected and expected["absent_event_kind"] in {event["kind"] for event in outcome["structured_nev"]}:
+        raise AssertionError(f"{entry['scenario_id']}: unexpectedly emitted {expected['absent_event_kind']}")
 
 
 def alem_parity_projection(outcome: dict[str, Any]) -> dict[str, Any]:
@@ -230,6 +232,20 @@ def alem_parity_projection(outcome: dict[str, Any]) -> dict[str, Any]:
         "players": state["players"],
         "alem_coord": state["alem_coord"],
         "alem_metrics": state["alem_metrics"],
+        "initial_observations": alem_observation_surface(outcome["initial_observations"]),
+        "final_observations": alem_observation_surface(outcome["final_observations"]),
+    }
+
+
+def alem_observation_surface(observations: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """The profile-visible subset that must match across both gold engines."""
+    return {
+        agent_id: {
+            "legal_action_count": observation["legal_action_count"],
+            "shared": observation["shared"],
+            "last_joint_event": observation["last_joint_event"],
+        }
+        for agent_id, observation in observations.items()
     }
 
 

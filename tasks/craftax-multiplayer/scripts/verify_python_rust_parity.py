@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from copy import deepcopy
 from dataclasses import asdict
 from pathlib import Path
 
@@ -52,7 +53,8 @@ def main()->None:
     cross_checkpoint = verify_cross_language_checkpoint(env)
     service_build = verify_rust_service_build()
     alem = verify_alem_profile_fixtures()
-    print(json.dumps({"status":"pass","projection":python,"scenarios":scenarios,"cross_checkpoint":cross_checkpoint,"rust_service":service_build,"alem":alem},sort_keys=True))
+    alem_cross_checkpoint = verify_alem_cross_language_checkpoint()
+    print(json.dumps({"status":"pass","projection":python,"scenarios":scenarios,"cross_checkpoint":cross_checkpoint,"rust_service":service_build,"alem":alem,"alem_cross_checkpoint":alem_cross_checkpoint},sort_keys=True))
 
 def verify_rust_service_build() -> str:
     completed = subprocess.run(
@@ -66,8 +68,8 @@ def verify_rust_service_build() -> str:
 
 def verify_alem_profile_fixtures() -> dict:
     fixtures = [entry for entry in load_scenarios() if entry.get("rules_profile") == "alem_coord_v0"]
-    if len(fixtures) < 5:
-        raise SystemExit("ALEM parity requires at least five profile fixtures")
+    if len(fixtures) < 6:
+        raise SystemExit("ALEM parity requires at least six profile fixtures")
     for entry in fixtures:
         python = alem_parity_projection(run_scenario(entry))
         rust = cargo_json("alem_fixture", json.dumps(entry))
@@ -75,6 +77,66 @@ def verify_alem_profile_fixtures() -> dict:
             print(json.dumps({"scenario_id":entry["scenario_id"],"python":python,"rust":rust},indent=2,sort_keys=True))
             raise SystemExit("Python/Rust ALEM fixture parity mismatch")
     return {"fixtures":len(fixtures),"status":"pass"}
+
+def alem_observation_surface(environment: CraftaxCoopEnv) -> dict:
+    return {
+        agent_id: {
+            "legal_action_count": len(observation["legal_actions"]),
+            "shared": observation["shared"],
+            "last_joint_event": observation["last_joint_event"],
+        }
+        for agent_id, observation in environment.observations().items()
+    }
+
+def alem_coordination_state(environment: CraftaxCoopEnv) -> dict:
+    state = environment._require_state()
+    return {
+        "alem_coord": state.to_dict()["alem_coord"],
+        "players": [
+            {
+                "agent_id": player.agent_id,
+                "level": player.level,
+                "position": [player.x, player.y],
+                "facing": player.facing,
+                "iron": player.inventory["iron"],
+            }
+            for player in state.players
+        ],
+    }
+
+def verify_alem_cross_language_checkpoint() -> str:
+    environment = CraftaxCoopEnv(
+        max_timesteps=16,
+        rules_profile="alem_coord_v0",
+        coordination={"scenario": "handover", "alpha": 0.3},
+    )
+    environment.reset(7)
+    environment.step({"agent_0": "noop", "agent_1": "noop", "agent_2": "do"})
+    checkpoint = environment.checkpoint()
+    restored = {
+        "state": deepcopy(alem_coordination_state(environment)),
+        "observations": deepcopy(alem_observation_surface(environment)),
+        "nev": deepcopy(environment._require_state().nev),
+    }
+    cursor = len(environment._require_state().nev)
+    _, _, _, info = environment.step({"agent_0": "noop", "agent_1": "do", "agent_2": "noop"})
+    expected = {
+        "restored": restored,
+        "after": {
+            "state": alem_coordination_state(environment),
+            "observations": alem_observation_surface(environment),
+            "nev_suffix": environment._require_state().nev[cursor:],
+            "step_events": info["events"],
+        },
+    }
+    actual = cargo_json(
+        "alem_checkpoint_bridge",
+        json.dumps({"checkpoint": checkpoint, "joint_action": {"agent_0": "noop", "agent_1": "do", "agent_2": "noop"}}),
+    )
+    if expected != actual:
+        print(json.dumps({"python": expected, "rust": actual}, indent=2, sort_keys=True))
+        raise SystemExit("Python -> Rust ALEM checkpoint bridge mismatch")
+    return "pass"
 
 def verify_cross_language_checkpoint(environment: CraftaxCoopEnv) -> str:
     python_checkpoint = environment.checkpoint()

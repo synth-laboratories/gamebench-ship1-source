@@ -353,7 +353,7 @@ class CraftaxCoopEnv:
                         site.status, site.opened_at = "opened", state.timestep
                         self._award("coord_handover_offer", provider)
                         self._event("handover_opened", giver=provider.agent_id, receiver=receiver.agent_id, resource=site.resource, site_id=site.site_id, window=site.window)
-                if site.status == "opened" and receiver_acts and self._soft_role_allowed(site, receiver, site.receiver_role):
+                if site.status == "opened" and site.opened_at is not None and site.opened_at < state.timestep and receiver_acts and self._soft_role_allowed(site, receiver, site.receiver_role):
                     assert site.resource is not None
                     receiver.inventory[site.resource] = min(99, receiver.inventory[site.resource] + 1)
                     reward += self._resolve_coord_site(site, True, "handover_completed", giver=provider.agent_id, receiver=receiver.agent_id, resource=site.resource)

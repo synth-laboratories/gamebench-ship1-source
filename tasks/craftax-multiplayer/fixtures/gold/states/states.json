@@ -3328,6 +3328,3349 @@
               "action": "noop",
               "agent_id": "agent_0",
               "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "action": "do",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "action": "do",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "agent_id": "agent_2",
+              "alpha_milli": 300,
+              "kind": "soft_role_roll",
+              "required_role": "miner",
+              "roll": 6730,
+              "site_id": "handover_site",
+              "success": true,
+              "timestep": 0
+            },
+            {
+              "giver": "agent_2",
+              "kind": "handover_opened",
+              "receiver": "agent_1",
+              "resource": "iron",
+              "site_id": "handover_site",
+              "timestep": 0,
+              "window": 2
+            }
+          ],
+          "legal_action_count": 71,
+          "legal_agent_ids": [
+            "agent_0",
+            "agent_1",
+            "agent_2"
+          ],
+          "level": 0,
+          "local_view_digest": "3eb4059bb0c6b5307f79ea7d263c7365e9f0de0d5310e48ba8bfeb0e223a6269",
+          "map_size": [
+            48,
+            48
+          ],
+          "num_levels": 9,
+          "role": "warrior",
+          "self": {
+            "agent_id": "agent_0",
+            "alive": true,
+            "attributes": {
+              "dexterity": 1,
+              "intelligence": 1,
+              "level_points": 0,
+              "strength": 1,
+              "xp": 0
+            },
+            "drink": 9,
+            "energy": 9,
+            "equipment": {
+              "armour": 0,
+              "armour_slots": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "arrows": 0,
+              "books": 0,
+              "bow": 0,
+              "enchantments": {
+                "armour": null,
+                "armour_slots": [
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                "bow": null,
+                "sword": null
+              },
+              "learned_spell": false,
+              "pickaxe": 0,
+              "potions": {
+                "blue": 0,
+                "cyan": 0,
+                "green": 0,
+                "pink": 0,
+                "red": 0,
+                "yellow": 0
+              },
+              "saplings": 0,
+              "sword": 0,
+              "torches": 0
+            },
+            "facing": "down",
+            "food": 9,
+            "health": 9.0,
+            "intrinsics": {
+              "fatigue": 1.0,
+              "hunger": 1.0,
+              "recover": 1.0,
+              "recover_mana": 1.0,
+              "thirst": 1.0
+            },
+            "inventory": {
+              "coal": 0,
+              "diamond": 0,
+              "drink": 0,
+              "food": 0,
+              "iron": 0,
+              "ruby": 0,
+              "sapphire": 0,
+              "stone": 0,
+              "wood": 0
+            },
+            "level": 0,
+            "mana": 9,
+            "position": [
+              5,
+              3
+            ],
+            "request": {
+              "remaining": 0,
+              "resource": null
+            },
+            "resting": false,
+            "role": "warrior",
+            "sleeping": false
+          },
+          "shared": {
+            "achievements": {
+              "all_roles_alive": true,
+              "coord_handover_offer": true
+            },
+            "boss_health": 8,
+            "boss_progress": 0,
+            "chests_opened": [
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ]
+            ],
+            "coordination": {
+              "alpha_milli": 300,
+              "metrics": {
+                "base_reward": 0.0,
+                "coord_reward": 0.0,
+                "coord_success_rate": {
+                  "handover": {
+                    "rate": 0.0,
+                    "resolved": 0,
+                    "success": 0
+                  },
+                  "sync_2": {
+                    "rate": 0.0,
+                    "resolved": 0,
+                    "success": 0
+                  },
+                  "sync_all": {
+                    "rate": 0.0,
+                    "resolved": 0,
+                    "success": 0
+                  }
+                }
+              },
+              "scenario": "handover",
+              "sites": [
+                {
+                  "kind": "handover",
+                  "site_id": "handover_site",
+                  "status": "opened",
+                  "target": [
+                    0,
+                    4,
+                    4
+                  ]
+                }
+              ]
+            },
+            "drink_trade_count": 0,
+            "food_trade_count": 0,
+            "friendly_fire_damage": 0.0,
+            "light_level": 1.0,
+            "monsters_killed": [
+              10,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "revives": 0,
+            "rules_profile": "alem_coord_v0",
+            "timestep": 1,
+            "trade_count": 0
+          },
+          "teammate_dashboard": [
+            {
+              "agent_id": "agent_0",
+              "alive": true,
+              "attributes": {
+                "dexterity": 1,
+                "intelligence": 1,
+                "level_points": 0,
+                "strength": 1,
+                "xp": 0
+              },
+              "drink": 9,
+              "energy": 9,
+              "equipment": {
+                "armour": 0,
+                "armour_slots": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "arrows": 0,
+                "books": 0,
+                "bow": 0,
+                "enchantments": {
+                  "armour": null,
+                  "armour_slots": [
+                    null,
+                    null,
+                    null,
+                    null
+                  ],
+                  "bow": null,
+                  "sword": null
+                },
+                "learned_spell": false,
+                "pickaxe": 0,
+                "potions": {
+                  "blue": 0,
+                  "cyan": 0,
+                  "green": 0,
+                  "pink": 0,
+                  "red": 0,
+                  "yellow": 0
+                },
+                "saplings": 0,
+                "sword": 0,
+                "torches": 0
+              },
+              "facing": "down",
+              "food": 9,
+              "health": 9.0,
+              "intrinsics": {
+                "fatigue": 1.0,
+                "hunger": 1.0,
+                "recover": 1.0,
+                "recover_mana": 1.0,
+                "thirst": 1.0
+              },
+              "inventory": {
+                "coal": 0,
+                "diamond": 0,
+                "drink": 0,
+                "food": 0,
+                "iron": 0,
+                "ruby": 0,
+                "sapphire": 0,
+                "stone": 0,
+                "wood": 0
+              },
+              "level": 0,
+              "mana": 9,
+              "position": [
+                5,
+                3
+              ],
+              "request": {
+                "remaining": 0,
+                "resource": null
+              },
+              "resting": false,
+              "role": "warrior",
+              "sleeping": false
+            },
+            {
+              "agent_id": "agent_1",
+              "alive": true,
+              "attributes": {
+                "dexterity": 1,
+                "intelligence": 1,
+                "level_points": 0,
+                "strength": 1,
+                "xp": 0
+              },
+              "drink": 9,
+              "energy": 9,
+              "equipment": {
+                "armour": 0,
+                "armour_slots": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "arrows": 0,
+                "books": 0,
+                "bow": 0,
+                "enchantments": {
+                  "armour": null,
+                  "armour_slots": [
+                    null,
+                    null,
+                    null,
+                    null
+                  ],
+                  "bow": null,
+                  "sword": null
+                },
+                "learned_spell": false,
+                "pickaxe": 0,
+                "potions": {
+                  "blue": 0,
+                  "cyan": 0,
+                  "green": 0,
+                  "pink": 0,
+                  "red": 0,
+                  "yellow": 0
+                },
+                "saplings": 0,
+                "sword": 0,
+                "torches": 0
+              },
+              "facing": "right",
+              "food": 9,
+              "health": 9.0,
+              "intrinsics": {
+                "fatigue": 1.0,
+                "hunger": 1.0,
+                "recover": 1.0,
+                "recover_mana": 1.0,
+                "thirst": 1.0
+              },
+              "inventory": {
+                "coal": 0,
+                "diamond": 0,
+                "drink": 0,
+                "food": 0,
+                "iron": 0,
+                "ruby": 0,
+                "sapphire": 0,
+                "stone": 0,
+                "wood": 0
+              },
+              "level": 0,
+              "mana": 9,
+              "position": [
+                3,
+                4
+              ],
+              "request": {
+                "remaining": 0,
+                "resource": null
+              },
+              "resting": false,
+              "role": "forager",
+              "sleeping": false
+            },
+            {
+              "agent_id": "agent_2",
+              "alive": true,
+              "attributes": {
+                "dexterity": 1,
+                "intelligence": 1,
+                "level_points": 0,
+                "strength": 1,
+                "xp": 0
+              },
+              "drink": 9,
+              "energy": 9,
+              "equipment": {
+                "armour": 0,
+                "armour_slots": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "arrows": 0,
+                "books": 0,
+                "bow": 0,
+                "enchantments": {
+                  "armour": null,
+                  "armour_slots": [
+                    null,
+                    null,
+                    null,
+                    null
+                  ],
+                  "bow": null,
+                  "sword": null
+                },
+                "learned_spell": false,
+                "pickaxe": 0,
+                "potions": {
+                  "blue": 0,
+                  "cyan": 0,
+                  "green": 0,
+                  "pink": 0,
+                  "red": 0,
+                  "yellow": 0
+                },
+                "saplings": 0,
+                "sword": 0,
+                "torches": 0
+              },
+              "facing": "down",
+              "food": 9,
+              "health": 9.0,
+              "intrinsics": {
+                "fatigue": 1.0,
+                "hunger": 1.0,
+                "recover": 1.0,
+                "recover_mana": 1.0,
+                "thirst": 1.0
+              },
+              "inventory": {
+                "coal": 0,
+                "diamond": 0,
+                "drink": 0,
+                "food": 0,
+                "iron": 0,
+                "ruby": 0,
+                "sapphire": 0,
+                "stone": 0,
+                "wood": 0
+              },
+              "level": 0,
+              "mana": 9,
+              "position": [
+                4,
+                3
+              ],
+              "request": {
+                "remaining": 0,
+                "resource": null
+              },
+              "resting": false,
+              "role": "miner",
+              "sleeping": false
+            }
+          ],
+          "visible_monsters": []
+        },
+        "agent_1": {
+          "agent_id": "agent_1",
+          "agent_index": 1,
+          "ascii": "###########\n##OOOOOOOOO\n##OO.~...~.\n##OO..O.O..\n##O...20...\n##O..1#.T..\n##O....f...\n##O..~.....\n##O...~....\n##O..O.T...\n##O........",
+          "last_joint_event": [
+            {
+              "action": "noop",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "action": "do",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "action": "do",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "agent_id": "agent_2",
+              "alpha_milli": 300,
+              "kind": "soft_role_roll",
+              "required_role": "miner",
+              "roll": 6730,
+              "site_id": "handover_site",
+              "success": true,
+              "timestep": 0
+            },
+            {
+              "giver": "agent_2",
+              "kind": "handover_opened",
+              "receiver": "agent_1",
+              "resource": "iron",
+              "site_id": "handover_site",
+              "timestep": 0,
+              "window": 2
+            }
+          ],
+          "legal_action_count": 71,
+          "legal_agent_ids": [
+            "agent_0",
+            "agent_1",
+            "agent_2"
+          ],
+          "level": 0,
+          "local_view_digest": "af727953d3cb7f671fc167210934f06383bb51cd94d603bb8022ab6013635ea0",
+          "map_size": [
+            48,
+            48
+          ],
+          "num_levels": 9,
+          "role": "forager",
+          "self": {
+            "agent_id": "agent_1",
+            "alive": true,
+            "attributes": {
+              "dexterity": 1,
+              "intelligence": 1,
+              "level_points": 0,
+              "strength": 1,
+              "xp": 0
+            },
+            "drink": 9,
+            "energy": 9,
+            "equipment": {
+              "armour": 0,
+              "armour_slots": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "arrows": 0,
+              "books": 0,
+              "bow": 0,
+              "enchantments": {
+                "armour": null,
+                "armour_slots": [
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                "bow": null,
+                "sword": null
+              },
+              "learned_spell": false,
+              "pickaxe": 0,
+              "potions": {
+                "blue": 0,
+                "cyan": 0,
+                "green": 0,
+                "pink": 0,
+                "red": 0,
+                "yellow": 0
+              },
+              "saplings": 0,
+              "sword": 0,
+              "torches": 0
+            },
+            "facing": "right",
+            "food": 9,
+            "health": 9.0,
+            "intrinsics": {
+              "fatigue": 1.0,
+              "hunger": 1.0,
+              "recover": 1.0,
+              "recover_mana": 1.0,
+              "thirst": 1.0
+            },
+            "inventory": {
+              "coal": 0,
+              "diamond": 0,
+              "drink": 0,
+              "food": 0,
+              "iron": 0,
+              "ruby": 0,
+              "sapphire": 0,
+              "stone": 0,
+              "wood": 0
+            },
+            "level": 0,
+            "mana": 9,
+            "position": [
+              3,
+              4
+            ],
+            "request": {
+              "remaining": 0,
+              "resource": null
+            },
+            "resting": false,
+            "role": "forager",
+            "sleeping": false
+          },
+          "shared": {
+            "achievements": {
+              "all_roles_alive": true,
+              "coord_handover_offer": true
+            },
+            "boss_health": 8,
+            "boss_progress": 0,
+            "chests_opened": [
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ]
+            ],
+            "coordination": {
+              "alpha_milli": 300,
+              "metrics": {
+                "base_reward": 0.0,
+                "coord_reward": 0.0,
+                "coord_success_rate": {
+                  "handover": {
+                    "rate": 0.0,
+                    "resolved": 0,
+                    "success": 0
+                  },
+                  "sync_2": {
+                    "rate": 0.0,
+                    "resolved": 0,
+                    "success": 0
+                  },
+                  "sync_all": {
+                    "rate": 0.0,
+                    "resolved": 0,
+                    "success": 0
+                  }
+                }
+              },
+              "scenario": "handover",
+              "sites": [
+                {
+                  "kind": "handover",
+                  "site_id": "handover_site",
+                  "status": "opened",
+                  "target": [
+                    0,
+                    4,
+                    4
+                  ]
+                }
+              ]
+            },
+            "drink_trade_count": 0,
+            "food_trade_count": 0,
+            "friendly_fire_damage": 0.0,
+            "light_level": 1.0,
+            "monsters_killed": [
+              10,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "revives": 0,
+            "rules_profile": "alem_coord_v0",
+            "timestep": 1,
+            "trade_count": 0
+          },
+          "teammate_dashboard": [
+            {
+              "agent_id": "agent_0",
+              "alive": true,
+              "attributes": {
+                "dexterity": 1,
+                "intelligence": 1,
+                "level_points": 0,
+                "strength": 1,
+                "xp": 0
+              },
+              "drink": 9,
+              "energy": 9,
+              "equipment": {
+                "armour": 0,
+                "armour_slots": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "arrows": 0,
+                "books": 0,
+                "bow": 0,
+                "enchantments": {
+                  "armour": null,
+                  "armour_slots": [
+                    null,
+                    null,
+                    null,
+                    null
+                  ],
+                  "bow": null,
+                  "sword": null
+                },
+                "learned_spell": false,
+                "pickaxe": 0,
+                "potions": {
+                  "blue": 0,
+                  "cyan": 0,
+                  "green": 0,
+                  "pink": 0,
+                  "red": 0,
+                  "yellow": 0
+                },
+                "saplings": 0,
+                "sword": 0,
+                "torches": 0
+              },
+              "facing": "down",
+              "food": 9,
+              "health": 9.0,
+              "intrinsics": {
+                "fatigue": 1.0,
+                "hunger": 1.0,
+                "recover": 1.0,
+                "recover_mana": 1.0,
+                "thirst": 1.0
+              },
+              "inventory": {
+                "coal": 0,
+                "diamond": 0,
+                "drink": 0,
+                "food": 0,
+                "iron": 0,
+                "ruby": 0,
+                "sapphire": 0,
+                "stone": 0,
+                "wood": 0
+              },
+              "level": 0,
+              "mana": 9,
+              "position": [
+                5,
+                3
+              ],
+              "request": {
+                "remaining": 0,
+                "resource": null
+              },
+              "resting": false,
+              "role": "warrior",
+              "sleeping": false
+            },
+            {
+              "agent_id": "agent_1",
+              "alive": true,
+              "attributes": {
+                "dexterity": 1,
+                "intelligence": 1,
+                "level_points": 0,
+                "strength": 1,
+                "xp": 0
+              },
+              "drink": 9,
+              "energy": 9,
+              "equipment": {
+                "armour": 0,
+                "armour_slots": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "arrows": 0,
+                "books": 0,
+                "bow": 0,
+                "enchantments": {
+                  "armour": null,
+                  "armour_slots": [
+                    null,
+                    null,
+                    null,
+                    null
+                  ],
+                  "bow": null,
+                  "sword": null
+                },
+                "learned_spell": false,
+                "pickaxe": 0,
+                "potions": {
+                  "blue": 0,
+                  "cyan": 0,
+                  "green": 0,
+                  "pink": 0,
+                  "red": 0,
+                  "yellow": 0
+                },
+                "saplings": 0,
+                "sword": 0,
+                "torches": 0
+              },
+              "facing": "right",
+              "food": 9,
+              "health": 9.0,
+              "intrinsics": {
+                "fatigue": 1.0,
+                "hunger": 1.0,
+                "recover": 1.0,
+                "recover_mana": 1.0,
+                "thirst": 1.0
+              },
+              "inventory": {
+                "coal": 0,
+                "diamond": 0,
+                "drink": 0,
+                "food": 0,
+                "iron": 0,
+                "ruby": 0,
+                "sapphire": 0,
+                "stone": 0,
+                "wood": 0
+              },
+              "level": 0,
+              "mana": 9,
+              "position": [
+                3,
+                4
+              ],
+              "request": {
+                "remaining": 0,
+                "resource": null
+              },
+              "resting": false,
+              "role": "forager",
+              "sleeping": false
+            },
+            {
+              "agent_id": "agent_2",
+              "alive": true,
+              "attributes": {
+                "dexterity": 1,
+                "intelligence": 1,
+                "level_points": 0,
+                "strength": 1,
+                "xp": 0
+              },
+              "drink": 9,
+              "energy": 9,
+              "equipment": {
+                "armour": 0,
+                "armour_slots": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "arrows": 0,
+                "books": 0,
+                "bow": 0,
+                "enchantments": {
+                  "armour": null,
+                  "armour_slots": [
+                    null,
+                    null,
+                    null,
+                    null
+                  ],
+                  "bow": null,
+                  "sword": null
+                },
+                "learned_spell": false,
+                "pickaxe": 0,
+                "potions": {
+                  "blue": 0,
+                  "cyan": 0,
+                  "green": 0,
+                  "pink": 0,
+                  "red": 0,
+                  "yellow": 0
+                },
+                "saplings": 0,
+                "sword": 0,
+                "torches": 0
+              },
+              "facing": "down",
+              "food": 9,
+              "health": 9.0,
+              "intrinsics": {
+                "fatigue": 1.0,
+                "hunger": 1.0,
+                "recover": 1.0,
+                "recover_mana": 1.0,
+                "thirst": 1.0
+              },
+              "inventory": {
+                "coal": 0,
+                "diamond": 0,
+                "drink": 0,
+                "food": 0,
+                "iron": 0,
+                "ruby": 0,
+                "sapphire": 0,
+                "stone": 0,
+                "wood": 0
+              },
+              "level": 0,
+              "mana": 9,
+              "position": [
+                4,
+                3
+              ],
+              "request": {
+                "remaining": 0,
+                "resource": null
+              },
+              "resting": false,
+              "role": "miner",
+              "sleeping": false
+            }
+          ],
+          "visible_monsters": []
+        },
+        "agent_2": {
+          "agent_id": "agent_2",
+          "agent_index": 2,
+          "ascii": "###########\n###########\n#OOOOOOOOOO\n#OO.~...~..\n#OO..O.O...\n#O...20....\n#O..1#.T...\n#O....f....\n#O..~.....T\n#O...~.....\n#O..O.T...~",
+          "last_joint_event": [
+            {
+              "action": "noop",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "action": "do",
+              "agent_id": "agent_1",
+              "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "action": "do",
+              "agent_id": "agent_2",
+              "kind": "joint_action",
+              "timestep": 0
+            },
+            {
+              "agent_id": "agent_2",
+              "alpha_milli": 300,
+              "kind": "soft_role_roll",
+              "required_role": "miner",
+              "roll": 6730,
+              "site_id": "handover_site",
+              "success": true,
+              "timestep": 0
+            },
+            {
+              "giver": "agent_2",
+              "kind": "handover_opened",
+              "receiver": "agent_1",
+              "resource": "iron",
+              "site_id": "handover_site",
+              "timestep": 0,
+              "window": 2
+            }
+          ],
+          "legal_action_count": 71,
+          "legal_agent_ids": [
+            "agent_0",
+            "agent_1",
+            "agent_2"
+          ],
+          "level": 0,
+          "local_view_digest": "4b250e9913c0b792b595db022bfe638fcc84b8ca4ec29ab674bf9694af2e6e13",
+          "map_size": [
+            48,
+            48
+          ],
+          "num_levels": 9,
+          "role": "miner",
+          "self": {
+            "agent_id": "agent_2",
+            "alive": true,
+            "attributes": {
+              "dexterity": 1,
+              "intelligence": 1,
+              "level_points": 0,
+              "strength": 1,
+              "xp": 0
+            },
+            "drink": 9,
+            "energy": 9,
+            "equipment": {
+              "armour": 0,
+              "armour_slots": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "arrows": 0,
+              "books": 0,
+              "bow": 0,
+              "enchantments": {
+                "armour": null,
+                "armour_slots": [
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                "bow": null,
+                "sword": null
+              },
+              "learned_spell": false,
+              "pickaxe": 0,
+              "potions": {
+                "blue": 0,
+                "cyan": 0,
+                "green": 0,
+                "pink": 0,
+                "red": 0,
+                "yellow": 0
+              },
+              "saplings": 0,
+              "sword": 0,
+              "torches": 0
+            },
+            "facing": "down",
+            "food": 9,
+            "health": 9.0,
+            "intrinsics": {
+              "fatigue": 1.0,
+              "hunger": 1.0,
+              "recover": 1.0,
+              "recover_mana": 1.0,
+              "thirst": 1.0
+            },
+            "inventory": {
+              "coal": 0,
+              "diamond": 0,
+              "drink": 0,
+              "food": 0,
+              "iron": 0,
+              "ruby": 0,
+              "sapphire": 0,
+              "stone": 0,
+              "wood": 0
+            },
+            "level": 0,
+            "mana": 9,
+            "position": [
+              4,
+              3
+            ],
+            "request": {
+              "remaining": 0,
+              "resource": null
+            },
+            "resting": false,
+            "role": "miner",
+            "sleeping": false
+          },
+          "shared": {
+            "achievements": {
+              "all_roles_alive": true,
+              "coord_handover_offer": true
+            },
+            "boss_health": 8,
+            "boss_progress": 0,
+            "chests_opened": [
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ]
+            ],
+            "coordination": {
+              "alpha_milli": 300,
+              "metrics": {
+                "base_reward": 0.0,
+                "coord_reward": 0.0,
+                "coord_success_rate": {
+                  "handover": {
+                    "rate": 0.0,
+                    "resolved": 0,
+                    "success": 0
+                  },
+                  "sync_2": {
+                    "rate": 0.0,
+                    "resolved": 0,
+                    "success": 0
+                  },
+                  "sync_all": {
+                    "rate": 0.0,
+                    "resolved": 0,
+                    "success": 0
+                  }
+                }
+              },
+              "scenario": "handover",
+              "sites": [
+                {
+                  "kind": "handover",
+                  "site_id": "handover_site",
+                  "status": "opened",
+                  "target": [
+                    0,
+                    4,
+                    4
+                  ]
+                }
+              ]
+            },
+            "drink_trade_count": 0,
+            "food_trade_count": 0,
+            "friendly_fire_damage": 0.0,
+            "light_level": 1.0,
+            "monsters_killed": [
+              10,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "revives": 0,
+            "rules_profile": "alem_coord_v0",
+            "timestep": 1,
+            "trade_count": 0
+          },
+          "teammate_dashboard": [
+            {
+              "agent_id": "agent_0",
+              "alive": true,
+              "attributes": {
+                "dexterity": 1,
+                "intelligence": 1,
+                "level_points": 0,
+                "strength": 1,
+                "xp": 0
+              },
+              "drink": 9,
+              "energy": 9,
+              "equipment": {
+                "armour": 0,
+                "armour_slots": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "arrows": 0,
+                "books": 0,
+                "bow": 0,
+                "enchantments": {
+                  "armour": null,
+                  "armour_slots": [
+                    null,
+                    null,
+                    null,
+                    null
+                  ],
+                  "bow": null,
+                  "sword": null
+                },
+                "learned_spell": false,
+                "pickaxe": 0,
+                "potions": {
+                  "blue": 0,
+                  "cyan": 0,
+                  "green": 0,
+                  "pink": 0,
+                  "red": 0,
+                  "yellow": 0
+                },
+                "saplings": 0,
+                "sword": 0,
+                "torches": 0
+              },
+              "facing": "down",
+              "food": 9,
+              "health": 9.0,
+              "intrinsics": {
+                "fatigue": 1.0,
+                "hunger": 1.0,
+                "recover": 1.0,
+                "recover_mana": 1.0,
+                "thirst": 1.0
+              },
+              "inventory": {
+                "coal": 0,
+                "diamond": 0,
+                "drink": 0,
+                "food": 0,
+                "iron": 0,
+                "ruby": 0,
+                "sapphire": 0,
+                "stone": 0,
+                "wood": 0
+              },
+              "level": 0,
+              "mana": 9,
+              "position": [
+                5,
+                3
+              ],
+              "request": {
+                "remaining": 0,
+                "resource": null
+              },
+              "resting": false,
+              "role": "warrior",
+              "sleeping": false
+            },
+            {
+              "agent_id": "agent_1",
+              "alive": true,
+              "attributes": {
+                "dexterity": 1,
+                "intelligence": 1,
+                "level_points": 0,
+                "strength": 1,
+                "xp": 0
+              },
+              "drink": 9,
+              "energy": 9,
+              "equipment": {
+                "armour": 0,
+                "armour_slots": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "arrows": 0,
+                "books": 0,
+                "bow": 0,
+                "enchantments": {
+                  "armour": null,
+                  "armour_slots": [
+                    null,
+                    null,
+                    null,
+                    null
+                  ],
+                  "bow": null,
+                  "sword": null
+                },
+                "learned_spell": false,
+                "pickaxe": 0,
+                "potions": {
+                  "blue": 0,
+                  "cyan": 0,
+                  "green": 0,
+                  "pink": 0,
+                  "red": 0,
+                  "yellow": 0
+                },
+                "saplings": 0,
+                "sword": 0,
+                "torches": 0
+              },
+              "facing": "right",
+              "food": 9,
+              "health": 9.0,
+              "intrinsics": {
+                "fatigue": 1.0,
+                "hunger": 1.0,
+                "recover": 1.0,
+                "recover_mana": 1.0,
+                "thirst": 1.0
+              },
+              "inventory": {
+                "coal": 0,
+                "diamond": 0,
+                "drink": 0,
+                "food": 0,
+                "iron": 0,
+                "ruby": 0,
+                "sapphire": 0,
+                "stone": 0,
+                "wood": 0
+              },
+              "level": 0,
+              "mana": 9,
+              "position": [
+                3,
+                4
+              ],
+              "request": {
+                "remaining": 0,
+                "resource": null
+              },
+              "resting": false,
+              "role": "forager",
+              "sleeping": false
+            },
+            {
+              "agent_id": "agent_2",
+              "alive": true,
+              "attributes": {
+                "dexterity": 1,
+                "intelligence": 1,
+                "level_points": 0,
+                "strength": 1,
+                "xp": 0
+              },
+              "drink": 9,
+              "energy": 9,
+              "equipment": {
+                "armour": 0,
+                "armour_slots": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "arrows": 0,
+                "books": 0,
+                "bow": 0,
+                "enchantments": {
+                  "armour": null,
+                  "armour_slots": [
+                    null,
+                    null,
+                    null,
+                    null
+                  ],
+                  "bow": null,
+                  "sword": null
+                },
+                "learned_spell": false,
+                "pickaxe": 0,
+                "potions": {
+                  "blue": 0,
+                  "cyan": 0,
+                  "green": 0,
+                  "pink": 0,
+                  "red": 0,
+                  "yellow": 0
+                },
+                "saplings": 0,
+                "sword": 0,
+                "torches": 0
+              },
+              "facing": "down",
+              "food": 9,
+              "health": 9.0,
+              "intrinsics": {
+                "fatigue": 1.0,
+                "hunger": 1.0,
+                "recover": 1.0,
+                "recover_mana": 1.0,
+                "thirst": 1.0
+              },
+              "inventory": {
+                "coal": 0,
+                "diamond": 0,
+                "drink": 0,
+                "food": 0,
+                "iron": 0,
+                "ruby": 0,
+                "sapphire": 0,
+                "stone": 0,
+                "wood": 0
+              },
+              "level": 0,
+              "mana": 9,
+              "position": [
+                4,
+                3
+              ],
+              "request": {
+                "remaining": 0,
+                "resource": null
+              },
+              "resting": false,
+              "role": "miner",
+              "sleeping": false
+            }
+          ],
+          "visible_monsters": []
+        }
+      },
+      "final_state_hash": "4f69e87f5113020f47eab3bda85778ff64c59e18c00ed3447ff34eee6c7e4a6a",
+      "initial_observations": {
+        "agent_0": {
+          "agent_id": "agent_0",
+          "agent_index": 0,
+          "ascii": "###########\n###########\nOOOOOOOOOOO\nOO.~...~...\nOO..O.O....\nO...20....~\nO..1#.T....\nO....f....O\nO..~.....T.\nO...~......\nO..O.T...~.",
+          "last_joint_event": [
+            {
+              "kind": "game_started",
+              "seed": 7,
+              "task_id": "craftax-multiplayer",
+              "timestep": 0
+            },
+            {
+              "alpha_milli": 300,
+              "kind": "coord_site_spawned",
+              "participants": [
+                "agent_2",
+                "agent_1"
+              ],
+              "site_id": "handover_site",
+              "site_kind": "handover",
+              "target": [
+                0,
+                4,
+                4
+              ],
+              "timestep": 0
+            }
+          ],
+          "legal_action_count": 71,
+          "legal_agent_ids": [
+            "agent_0",
+            "agent_1",
+            "agent_2"
+          ],
+          "level": 0,
+          "local_view_digest": "3eb4059bb0c6b5307f79ea7d263c7365e9f0de0d5310e48ba8bfeb0e223a6269",
+          "map_size": [
+            48,
+            48
+          ],
+          "num_levels": 9,
+          "role": "warrior",
+          "self": {
+            "agent_id": "agent_0",
+            "alive": true,
+            "attributes": {
+              "dexterity": 1,
+              "intelligence": 1,
+              "level_points": 0,
+              "strength": 1,
+              "xp": 0
+            },
+            "drink": 9,
+            "energy": 9,
+            "equipment": {
+              "armour": 0,
+              "armour_slots": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "arrows": 0,
+              "books": 0,
+              "bow": 0,
+              "enchantments": {
+                "armour": null,
+                "armour_slots": [
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                "bow": null,
+                "sword": null
+              },
+              "learned_spell": false,
+              "pickaxe": 0,
+              "potions": {
+                "blue": 0,
+                "cyan": 0,
+                "green": 0,
+                "pink": 0,
+                "red": 0,
+                "yellow": 0
+              },
+              "saplings": 0,
+              "sword": 0,
+              "torches": 0
+            },
+            "facing": "down",
+            "food": 9,
+            "health": 9.0,
+            "intrinsics": {
+              "fatigue": 0.0,
+              "hunger": 0.0,
+              "recover": 0.0,
+              "recover_mana": 0.0,
+              "thirst": 0.0
+            },
+            "inventory": {
+              "coal": 0,
+              "diamond": 0,
+              "drink": 0,
+              "food": 0,
+              "iron": 0,
+              "ruby": 0,
+              "sapphire": 0,
+              "stone": 0,
+              "wood": 0
+            },
+            "level": 0,
+            "mana": 9,
+            "position": [
+              5,
+              3
+            ],
+            "request": {
+              "remaining": 0,
+              "resource": null
+            },
+            "resting": false,
+            "role": "warrior",
+            "sleeping": false
+          },
+          "shared": {
+            "achievements": {},
+            "boss_health": 8,
+            "boss_progress": 0,
+            "chests_opened": [
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ]
+            ],
+            "coordination": {
+              "alpha_milli": 300,
+              "metrics": {
+                "base_reward": 0.0,
+                "coord_reward": 0.0,
+                "coord_success_rate": {
+                  "handover": {
+                    "rate": 0.0,
+                    "resolved": 0,
+                    "success": 0
+                  },
+                  "sync_2": {
+                    "rate": 0.0,
+                    "resolved": 0,
+                    "success": 0
+                  },
+                  "sync_all": {
+                    "rate": 0.0,
+                    "resolved": 0,
+                    "success": 0
+                  }
+                }
+              },
+              "scenario": "handover",
+              "sites": [
+                {
+                  "kind": "handover",
+                  "site_id": "handover_site",
+                  "status": "open",
+                  "target": [
+                    0,
+                    4,
+                    4
+                  ]
+                }
+              ]
+            },
+            "drink_trade_count": 0,
+            "food_trade_count": 0,
+            "friendly_fire_damage": 0.0,
+            "light_level": 1.0,
+            "monsters_killed": [
+              10,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "revives": 0,
+            "rules_profile": "alem_coord_v0",
+            "timestep": 0,
+            "trade_count": 0
+          },
+          "teammate_dashboard": [
+            {
+              "agent_id": "agent_0",
+              "alive": true,
+              "attributes": {
+                "dexterity": 1,
+                "intelligence": 1,
+                "level_points": 0,
+                "strength": 1,
+                "xp": 0
+              },
+              "drink": 9,
+              "energy": 9,
+              "equipment": {
+                "armour": 0,
+                "armour_slots": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "arrows": 0,
+                "books": 0,
+                "bow": 0,
+                "enchantments": {
+                  "armour": null,
+                  "armour_slots": [
+                    null,
+                    null,
+                    null,
+                    null
+                  ],
+                  "bow": null,
+                  "sword": null
+                },
+                "learned_spell": false,
+                "pickaxe": 0,
+                "potions": {
+                  "blue": 0,
+                  "cyan": 0,
+                  "green": 0,
+                  "pink": 0,
+                  "red": 0,
+                  "yellow": 0
+                },
+                "saplings": 0,
+                "sword": 0,
+                "torches": 0
+              },
+              "facing": "down",
+              "food": 9,
+              "health": 9.0,
+              "intrinsics": {
+                "fatigue": 0.0,
+                "hunger": 0.0,
+                "recover": 0.0,
+                "recover_mana": 0.0,
+                "thirst": 0.0
+              },
+              "inventory": {
+                "coal": 0,
+                "diamond": 0,
+                "drink": 0,
+                "food": 0,
+                "iron": 0,
+                "ruby": 0,
+                "sapphire": 0,
+                "stone": 0,
+                "wood": 0
+              },
+              "level": 0,
+              "mana": 9,
+              "position": [
+                5,
+                3
+              ],
+              "request": {
+                "remaining": 0,
+                "resource": null
+              },
+              "resting": false,
+              "role": "warrior",
+              "sleeping": false
+            },
+            {
+              "agent_id": "agent_1",
+              "alive": true,
+              "attributes": {
+                "dexterity": 1,
+                "intelligence": 1,
+                "level_points": 0,
+                "strength": 1,
+                "xp": 0
+              },
+              "drink": 9,
+              "energy": 9,
+              "equipment": {
+                "armour": 0,
+                "armour_slots": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "arrows": 0,
+                "books": 0,
+                "bow": 0,
+                "enchantments": {
+                  "armour": null,
+                  "armour_slots": [
+                    null,
+                    null,
+                    null,
+                    null
+                  ],
+                  "bow": null,
+                  "sword": null
+                },
+                "learned_spell": false,
+                "pickaxe": 0,
+                "potions": {
+                  "blue": 0,
+                  "cyan": 0,
+                  "green": 0,
+                  "pink": 0,
+                  "red": 0,
+                  "yellow": 0
+                },
+                "saplings": 0,
+                "sword": 0,
+                "torches": 0
+              },
+              "facing": "right",
+              "food": 9,
+              "health": 9.0,
+              "intrinsics": {
+                "fatigue": 0.0,
+                "hunger": 0.0,
+                "recover": 0.0,
+                "recover_mana": 0.0,
+                "thirst": 0.0
+              },
+              "inventory": {
+                "coal": 0,
+                "diamond": 0,
+                "drink": 0,
+                "food": 0,
+                "iron": 0,
+                "ruby": 0,
+                "sapphire": 0,
+                "stone": 0,
+                "wood": 0
+              },
+              "level": 0,
+              "mana": 9,
+              "position": [
+                3,
+                4
+              ],
+              "request": {
+                "remaining": 0,
+                "resource": null
+              },
+              "resting": false,
+              "role": "forager",
+              "sleeping": false
+            },
+            {
+              "agent_id": "agent_2",
+              "alive": true,
+              "attributes": {
+                "dexterity": 1,
+                "intelligence": 1,
+                "level_points": 0,
+                "strength": 1,
+                "xp": 0
+              },
+              "drink": 9,
+              "energy": 9,
+              "equipment": {
+                "armour": 0,
+                "armour_slots": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "arrows": 0,
+                "books": 0,
+                "bow": 0,
+                "enchantments": {
+                  "armour": null,
+                  "armour_slots": [
+                    null,
+                    null,
+                    null,
+                    null
+                  ],
+                  "bow": null,
+                  "sword": null
+                },
+                "learned_spell": false,
+                "pickaxe": 0,
+                "potions": {
+                  "blue": 0,
+                  "cyan": 0,
+                  "green": 0,
+                  "pink": 0,
+                  "red": 0,
+                  "yellow": 0
+                },
+                "saplings": 0,
+                "sword": 0,
+                "torches": 0
+              },
+              "facing": "down",
+              "food": 9,
+              "health": 9.0,
+              "intrinsics": {
+                "fatigue": 0.0,
+                "hunger": 0.0,
+                "recover": 0.0,
+                "recover_mana": 0.0,
+                "thirst": 0.0
+              },
+              "inventory": {
+                "coal": 0,
+                "diamond": 0,
+                "drink": 0,
+                "food": 0,
+                "iron": 1,
+                "ruby": 0,
+                "sapphire": 0,
+                "stone": 0,
+                "wood": 0
+              },
+              "level": 0,
+              "mana": 9,
+              "position": [
+                4,
+                3
+              ],
+              "request": {
+                "remaining": 0,
+                "resource": null
+              },
+              "resting": false,
+              "role": "miner",
+              "sleeping": false
+            }
+          ],
+          "visible_monsters": []
+        },
+        "agent_1": {
+          "agent_id": "agent_1",
+          "agent_index": 1,
+          "ascii": "###########\n##OOOOOOOOO\n##OO.~...~.\n##OO..O.O..\n##O...20...\n##O..1#.T..\n##O....f...\n##O..~.....\n##O...~....\n##O..O.T...\n##O........",
+          "last_joint_event": [
+            {
+              "kind": "game_started",
+              "seed": 7,
+              "task_id": "craftax-multiplayer",
+              "timestep": 0
+            },
+            {
+              "alpha_milli": 300,
+              "kind": "coord_site_spawned",
+              "participants": [
+                "agent_2",
+                "agent_1"
+              ],
+              "site_id": "handover_site",
+              "site_kind": "handover",
+              "target": [
+                0,
+                4,
+                4
+              ],
+              "timestep": 0
+            }
+          ],
+          "legal_action_count": 71,
+          "legal_agent_ids": [
+            "agent_0",
+            "agent_1",
+            "agent_2"
+          ],
+          "level": 0,
+          "local_view_digest": "af727953d3cb7f671fc167210934f06383bb51cd94d603bb8022ab6013635ea0",
+          "map_size": [
+            48,
+            48
+          ],
+          "num_levels": 9,
+          "role": "forager",
+          "self": {
+            "agent_id": "agent_1",
+            "alive": true,
+            "attributes": {
+              "dexterity": 1,
+              "intelligence": 1,
+              "level_points": 0,
+              "strength": 1,
+              "xp": 0
+            },
+            "drink": 9,
+            "energy": 9,
+            "equipment": {
+              "armour": 0,
+              "armour_slots": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "arrows": 0,
+              "books": 0,
+              "bow": 0,
+              "enchantments": {
+                "armour": null,
+                "armour_slots": [
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                "bow": null,
+                "sword": null
+              },
+              "learned_spell": false,
+              "pickaxe": 0,
+              "potions": {
+                "blue": 0,
+                "cyan": 0,
+                "green": 0,
+                "pink": 0,
+                "red": 0,
+                "yellow": 0
+              },
+              "saplings": 0,
+              "sword": 0,
+              "torches": 0
+            },
+            "facing": "right",
+            "food": 9,
+            "health": 9.0,
+            "intrinsics": {
+              "fatigue": 0.0,
+              "hunger": 0.0,
+              "recover": 0.0,
+              "recover_mana": 0.0,
+              "thirst": 0.0
+            },
+            "inventory": {
+              "coal": 0,
+              "diamond": 0,
+              "drink": 0,
+              "food": 0,
+              "iron": 0,
+              "ruby": 0,
+              "sapphire": 0,
+              "stone": 0,
+              "wood": 0
+            },
+            "level": 0,
+            "mana": 9,
+            "position": [
+              3,
+              4
+            ],
+            "request": {
+              "remaining": 0,
+              "resource": null
+            },
+            "resting": false,
+            "role": "forager",
+            "sleeping": false
+          },
+          "shared": {
+            "achievements": {},
+            "boss_health": 8,
+            "boss_progress": 0,
+            "chests_opened": [
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ]
+            ],
+            "coordination": {
+              "alpha_milli": 300,
+              "metrics": {
+                "base_reward": 0.0,
+                "coord_reward": 0.0,
+                "coord_success_rate": {
+                  "handover": {
+                    "rate": 0.0,
+                    "resolved": 0,
+                    "success": 0
+                  },
+                  "sync_2": {
+                    "rate": 0.0,
+                    "resolved": 0,
+                    "success": 0
+                  },
+                  "sync_all": {
+                    "rate": 0.0,
+                    "resolved": 0,
+                    "success": 0
+                  }
+                }
+              },
+              "scenario": "handover",
+              "sites": [
+                {
+                  "kind": "handover",
+                  "site_id": "handover_site",
+                  "status": "open",
+                  "target": [
+                    0,
+                    4,
+                    4
+                  ]
+                }
+              ]
+            },
+            "drink_trade_count": 0,
+            "food_trade_count": 0,
+            "friendly_fire_damage": 0.0,
+            "light_level": 1.0,
+            "monsters_killed": [
+              10,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "revives": 0,
+            "rules_profile": "alem_coord_v0",
+            "timestep": 0,
+            "trade_count": 0
+          },
+          "teammate_dashboard": [
+            {
+              "agent_id": "agent_0",
+              "alive": true,
+              "attributes": {
+                "dexterity": 1,
+                "intelligence": 1,
+                "level_points": 0,
+                "strength": 1,
+                "xp": 0
+              },
+              "drink": 9,
+              "energy": 9,
+              "equipment": {
+                "armour": 0,
+                "armour_slots": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "arrows": 0,
+                "books": 0,
+                "bow": 0,
+                "enchantments": {
+                  "armour": null,
+                  "armour_slots": [
+                    null,
+                    null,
+                    null,
+                    null
+                  ],
+                  "bow": null,
+                  "sword": null
+                },
+                "learned_spell": false,
+                "pickaxe": 0,
+                "potions": {
+                  "blue": 0,
+                  "cyan": 0,
+                  "green": 0,
+                  "pink": 0,
+                  "red": 0,
+                  "yellow": 0
+                },
+                "saplings": 0,
+                "sword": 0,
+                "torches": 0
+              },
+              "facing": "down",
+              "food": 9,
+              "health": 9.0,
+              "intrinsics": {
+                "fatigue": 0.0,
+                "hunger": 0.0,
+                "recover": 0.0,
+                "recover_mana": 0.0,
+                "thirst": 0.0
+              },
+              "inventory": {
+                "coal": 0,
+                "diamond": 0,
+                "drink": 0,
+                "food": 0,
+                "iron": 0,
+                "ruby": 0,
+                "sapphire": 0,
+                "stone": 0,
+                "wood": 0
+              },
+              "level": 0,
+              "mana": 9,
+              "position": [
+                5,
+                3
+              ],
+              "request": {
+                "remaining": 0,
+                "resource": null
+              },
+              "resting": false,
+              "role": "warrior",
+              "sleeping": false
+            },
+            {
+              "agent_id": "agent_1",
+              "alive": true,
+              "attributes": {
+                "dexterity": 1,
+                "intelligence": 1,
+                "level_points": 0,
+                "strength": 1,
+                "xp": 0
+              },
+              "drink": 9,
+              "energy": 9,
+              "equipment": {
+                "armour": 0,
+                "armour_slots": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "arrows": 0,
+                "books": 0,
+                "bow": 0,
+                "enchantments": {
+                  "armour": null,
+                  "armour_slots": [
+                    null,
+                    null,
+                    null,
+                    null
+                  ],
+                  "bow": null,
+                  "sword": null
+                },
+                "learned_spell": false,
+                "pickaxe": 0,
+                "potions": {
+                  "blue": 0,
+                  "cyan": 0,
+                  "green": 0,
+                  "pink": 0,
+                  "red": 0,
+                  "yellow": 0
+                },
+                "saplings": 0,
+                "sword": 0,
+                "torches": 0
+              },
+              "facing": "right",
+              "food": 9,
+              "health": 9.0,
+              "intrinsics": {
+                "fatigue": 0.0,
+                "hunger": 0.0,
+                "recover": 0.0,
+                "recover_mana": 0.0,
+                "thirst": 0.0
+              },
+              "inventory": {
+                "coal": 0,
+                "diamond": 0,
+                "drink": 0,
+                "food": 0,
+                "iron": 0,
+                "ruby": 0,
+                "sapphire": 0,
+                "stone": 0,
+                "wood": 0
+              },
+              "level": 0,
+              "mana": 9,
+              "position": [
+                3,
+                4
+              ],
+              "request": {
+                "remaining": 0,
+                "resource": null
+              },
+              "resting": false,
+              "role": "forager",
+              "sleeping": false
+            },
+            {
+              "agent_id": "agent_2",
+              "alive": true,
+              "attributes": {
+                "dexterity": 1,
+                "intelligence": 1,
+                "level_points": 0,
+                "strength": 1,
+                "xp": 0
+              },
+              "drink": 9,
+              "energy": 9,
+              "equipment": {
+                "armour": 0,
+                "armour_slots": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "arrows": 0,
+                "books": 0,
+                "bow": 0,
+                "enchantments": {
+                  "armour": null,
+                  "armour_slots": [
+                    null,
+                    null,
+                    null,
+                    null
+                  ],
+                  "bow": null,
+                  "sword": null
+                },
+                "learned_spell": false,
+                "pickaxe": 0,
+                "potions": {
+                  "blue": 0,
+                  "cyan": 0,
+                  "green": 0,
+                  "pink": 0,
+                  "red": 0,
+                  "yellow": 0
+                },
+                "saplings": 0,
+                "sword": 0,
+                "torches": 0
+              },
+              "facing": "down",
+              "food": 9,
+              "health": 9.0,
+              "intrinsics": {
+                "fatigue": 0.0,
+                "hunger": 0.0,
+                "recover": 0.0,
+                "recover_mana": 0.0,
+                "thirst": 0.0
+              },
+              "inventory": {
+                "coal": 0,
+                "diamond": 0,
+                "drink": 0,
+                "food": 0,
+                "iron": 1,
+                "ruby": 0,
+                "sapphire": 0,
+                "stone": 0,
+                "wood": 0
+              },
+              "level": 0,
+              "mana": 9,
+              "position": [
+                4,
+                3
+              ],
+              "request": {
+                "remaining": 0,
+                "resource": null
+              },
+              "resting": false,
+              "role": "miner",
+              "sleeping": false
+            }
+          ],
+          "visible_monsters": []
+        },
+        "agent_2": {
+          "agent_id": "agent_2",
+          "agent_index": 2,
+          "ascii": "###########\n###########\n#OOOOOOOOOO\n#OO.~...~..\n#OO..O.O...\n#O...20....\n#O..1#.T...\n#O....f....\n#O..~.....T\n#O...~.....\n#O..O.T...~",
+          "last_joint_event": [
+            {
+              "kind": "game_started",
+              "seed": 7,
+              "task_id": "craftax-multiplayer",
+              "timestep": 0
+            },
+            {
+              "alpha_milli": 300,
+              "kind": "coord_site_spawned",
+              "participants": [
+                "agent_2",
+                "agent_1"
+              ],
+              "site_id": "handover_site",
+              "site_kind": "handover",
+              "target": [
+                0,
+                4,
+                4
+              ],
+              "timestep": 0
+            }
+          ],
+          "legal_action_count": 71,
+          "legal_agent_ids": [
+            "agent_0",
+            "agent_1",
+            "agent_2"
+          ],
+          "level": 0,
+          "local_view_digest": "4b250e9913c0b792b595db022bfe638fcc84b8ca4ec29ab674bf9694af2e6e13",
+          "map_size": [
+            48,
+            48
+          ],
+          "num_levels": 9,
+          "role": "miner",
+          "self": {
+            "agent_id": "agent_2",
+            "alive": true,
+            "attributes": {
+              "dexterity": 1,
+              "intelligence": 1,
+              "level_points": 0,
+              "strength": 1,
+              "xp": 0
+            },
+            "drink": 9,
+            "energy": 9,
+            "equipment": {
+              "armour": 0,
+              "armour_slots": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "arrows": 0,
+              "books": 0,
+              "bow": 0,
+              "enchantments": {
+                "armour": null,
+                "armour_slots": [
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                "bow": null,
+                "sword": null
+              },
+              "learned_spell": false,
+              "pickaxe": 0,
+              "potions": {
+                "blue": 0,
+                "cyan": 0,
+                "green": 0,
+                "pink": 0,
+                "red": 0,
+                "yellow": 0
+              },
+              "saplings": 0,
+              "sword": 0,
+              "torches": 0
+            },
+            "facing": "down",
+            "food": 9,
+            "health": 9.0,
+            "intrinsics": {
+              "fatigue": 0.0,
+              "hunger": 0.0,
+              "recover": 0.0,
+              "recover_mana": 0.0,
+              "thirst": 0.0
+            },
+            "inventory": {
+              "coal": 0,
+              "diamond": 0,
+              "drink": 0,
+              "food": 0,
+              "iron": 1,
+              "ruby": 0,
+              "sapphire": 0,
+              "stone": 0,
+              "wood": 0
+            },
+            "level": 0,
+            "mana": 9,
+            "position": [
+              4,
+              3
+            ],
+            "request": {
+              "remaining": 0,
+              "resource": null
+            },
+            "resting": false,
+            "role": "miner",
+            "sleeping": false
+          },
+          "shared": {
+            "achievements": {},
+            "boss_health": 8,
+            "boss_progress": 0,
+            "chests_opened": [
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ],
+              [
+                false,
+                false,
+                false
+              ]
+            ],
+            "coordination": {
+              "alpha_milli": 300,
+              "metrics": {
+                "base_reward": 0.0,
+                "coord_reward": 0.0,
+                "coord_success_rate": {
+                  "handover": {
+                    "rate": 0.0,
+                    "resolved": 0,
+                    "success": 0
+                  },
+                  "sync_2": {
+                    "rate": 0.0,
+                    "resolved": 0,
+                    "success": 0
+                  },
+                  "sync_all": {
+                    "rate": 0.0,
+                    "resolved": 0,
+                    "success": 0
+                  }
+                }
+              },
+              "scenario": "handover",
+              "sites": [
+                {
+                  "kind": "handover",
+                  "site_id": "handover_site",
+                  "status": "open",
+                  "target": [
+                    0,
+                    4,
+                    4
+                  ]
+                }
+              ]
+            },
+            "drink_trade_count": 0,
+            "food_trade_count": 0,
+            "friendly_fire_damage": 0.0,
+            "light_level": 1.0,
+            "monsters_killed": [
+              10,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "revives": 0,
+            "rules_profile": "alem_coord_v0",
+            "timestep": 0,
+            "trade_count": 0
+          },
+          "teammate_dashboard": [
+            {
+              "agent_id": "agent_0",
+              "alive": true,
+              "attributes": {
+                "dexterity": 1,
+                "intelligence": 1,
+                "level_points": 0,
+                "strength": 1,
+                "xp": 0
+              },
+              "drink": 9,
+              "energy": 9,
+              "equipment": {
+                "armour": 0,
+                "armour_slots": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "arrows": 0,
+                "books": 0,
+                "bow": 0,
+                "enchantments": {
+                  "armour": null,
+                  "armour_slots": [
+                    null,
+                    null,
+                    null,
+                    null
+                  ],
+                  "bow": null,
+                  "sword": null
+                },
+                "learned_spell": false,
+                "pickaxe": 0,
+                "potions": {
+                  "blue": 0,
+                  "cyan": 0,
+                  "green": 0,
+                  "pink": 0,
+                  "red": 0,
+                  "yellow": 0
+                },
+                "saplings": 0,
+                "sword": 0,
+                "torches": 0
+              },
+              "facing": "down",
+              "food": 9,
+              "health": 9.0,
+              "intrinsics": {
+                "fatigue": 0.0,
+                "hunger": 0.0,
+                "recover": 0.0,
+                "recover_mana": 0.0,
+                "thirst": 0.0
+              },
+              "inventory": {
+                "coal": 0,
+                "diamond": 0,
+                "drink": 0,
+                "food": 0,
+                "iron": 0,
+                "ruby": 0,
+                "sapphire": 0,
+                "stone": 0,
+                "wood": 0
+              },
+              "level": 0,
+              "mana": 9,
+              "position": [
+                5,
+                3
+              ],
+              "request": {
+                "remaining": 0,
+                "resource": null
+              },
+              "resting": false,
+              "role": "warrior",
+              "sleeping": false
+            },
+            {
+              "agent_id": "agent_1",
+              "alive": true,
+              "attributes": {
+                "dexterity": 1,
+                "intelligence": 1,
+                "level_points": 0,
+                "strength": 1,
+                "xp": 0
+              },
+              "drink": 9,
+              "energy": 9,
+              "equipment": {
+                "armour": 0,
+                "armour_slots": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "arrows": 0,
+                "books": 0,
+                "bow": 0,
+                "enchantments": {
+                  "armour": null,
+                  "armour_slots": [
+                    null,
+                    null,
+                    null,
+                    null
+                  ],
+                  "bow": null,
+                  "sword": null
+                },
+                "learned_spell": false,
+                "pickaxe": 0,
+                "potions": {
+                  "blue": 0,
+                  "cyan": 0,
+                  "green": 0,
+                  "pink": 0,
+                  "red": 0,
+                  "yellow": 0
+                },
+                "saplings": 0,
+                "sword": 0,
+                "torches": 0
+              },
+              "facing": "right",
+              "food": 9,
+              "health": 9.0,
+              "intrinsics": {
+                "fatigue": 0.0,
+                "hunger": 0.0,
+                "recover": 0.0,
+                "recover_mana": 0.0,
+                "thirst": 0.0
+              },
+              "inventory": {
+                "coal": 0,
+                "diamond": 0,
+                "drink": 0,
+                "food": 0,
+                "iron": 0,
+                "ruby": 0,
+                "sapphire": 0,
+                "stone": 0,
+                "wood": 0
+              },
+              "level": 0,
+              "mana": 9,
+              "position": [
+                3,
+                4
+              ],
+              "request": {
+                "remaining": 0,
+                "resource": null
+              },
+              "resting": false,
+              "role": "forager",
+              "sleeping": false
+            },
+            {
+              "agent_id": "agent_2",
+              "alive": true,
+              "attributes": {
+                "dexterity": 1,
+                "intelligence": 1,
+                "level_points": 0,
+                "strength": 1,
+                "xp": 0
+              },
+              "drink": 9,
+              "energy": 9,
+              "equipment": {
+                "armour": 0,
+                "armour_slots": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "arrows": 0,
+                "books": 0,
+                "bow": 0,
+                "enchantments": {
+                  "armour": null,
+                  "armour_slots": [
+                    null,
+                    null,
+                    null,
+                    null
+                  ],
+                  "bow": null,
+                  "sword": null
+                },
+                "learned_spell": false,
+                "pickaxe": 0,
+                "potions": {
+                  "blue": 0,
+                  "cyan": 0,
+                  "green": 0,
+                  "pink": 0,
+                  "red": 0,
+                  "yellow": 0
+                },
+                "saplings": 0,
+                "sword": 0,
+                "torches": 0
+              },
+              "facing": "down",
+              "food": 9,
+              "health": 9.0,
+              "intrinsics": {
+                "fatigue": 0.0,
+                "hunger": 0.0,
+                "recover": 0.0,
+                "recover_mana": 0.0,
+                "thirst": 0.0
+              },
+              "inventory": {
+                "coal": 0,
+                "diamond": 0,
+                "drink": 0,
+                "food": 0,
+                "iron": 1,
+                "ruby": 0,
+                "sapphire": 0,
+                "stone": 0,
+                "wood": 0
+              },
+              "level": 0,
+              "mana": 9,
+              "position": [
+                4,
+                3
+              ],
+              "request": {
+                "remaining": 0,
+                "resource": null
+              },
+              "resting": false,
+              "role": "miner",
+              "sleeping": false
+            }
+          ],
+          "visible_monsters": []
+        }
+      },
+      "initial_state_hash": "1af83dc1b6a31e122e1f1784378e2bf8585504a234828d35f463c0d4c99bebdd",
+      "scenario_id": "alem_handover_same_step_pending",
+      "state": {
+        "achievements": [
+          "all_roles_alive",
+          "coord_handover_offer"
+        ],
+        "alem_coord": {
+          "alpha_milli": 300,
+          "base_reward": 0.0,
+          "coord_reward": 0.0,
+          "scenario": "handover",
+          "site_metrics": {
+            "handover": {
+              "resolved": 0,
+              "success": 0
+            },
+            "sync_2": {
+              "resolved": 0,
+              "success": 0
+            },
+            "sync_all": {
+              "resolved": 0,
+              "success": 0
+            }
+          },
+          "sites": [
+            {
+              "kind": "handover",
+              "level": 0,
+              "opened_at": 0,
+              "participants": [
+                "agent_2",
+                "agent_1"
+              ],
+              "receiver_role": "forager",
+              "required_role": "miner",
+              "resource": "iron",
+              "site_id": "handover_site",
+              "site_index": 2,
+              "status": "opened",
+              "window": 2,
+              "x": 4,
+              "y": 4
+            }
+          ]
+        },
+        "alem_metrics": {
+          "base_reward": 0.0,
+          "coord_reward": 0.0,
+          "coord_success_rate": {
+            "handover": {
+              "rate": 0.0,
+              "resolved": 0,
+              "success": 0
+            },
+            "sync_2": {
+              "rate": 0.0,
+              "resolved": 0,
+              "success": 0
+            },
+            "sync_all": {
+              "rate": 0.0,
+              "resolved": 0,
+              "success": 0
+            }
+          }
+        },
+        "boss_health": 8,
+        "boss_progress": 0,
+        "drink_trade_count": 0,
+        "food_trade_count": 0,
+        "friendly_fire_damage": 0.0,
+        "map_samples": {
+          "boss": "necromancer",
+          "fire_table": "enchantment_table_fire",
+          "ice_table": "enchantment_table_ice",
+          "overworld_fountain": "fountain",
+          "overworld_spawn": [
+            "grass",
+            "grass",
+            "grass"
+          ]
+        },
+        "max_timesteps": 16,
+        "monster_count": 0,
+        "monsters_killed": [
+          10,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "plant_count": 0,
+        "players": [
+          {
+            "agent_id": "agent_0",
+            "alive": true,
+            "attributes": {
+              "dexterity": 1,
+              "intelligence": 1,
+              "level_points": 0,
+              "strength": 1,
+              "xp": 0
+            },
+            "drink": 9,
+            "energy": 9,
+            "equipment": {
+              "armour": 0,
+              "armour_slots": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "arrows": 0,
+              "books": 0,
+              "bow": 0,
+              "enchantments": {
+                "armour": null,
+                "armour_slots": [
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                "bow": null,
+                "sword": null
+              },
+              "learned_spell": false,
+              "pickaxe": 0,
+              "potions": {
+                "blue": 0,
+                "cyan": 0,
+                "green": 0,
+                "pink": 0,
+                "red": 0,
+                "yellow": 0
+              },
+              "saplings": 0,
+              "sword": 0,
+              "torches": 0
+            },
+            "facing": "down",
+            "food": 9,
+            "health": 9.0,
+            "intrinsics": {
+              "fatigue": 1.0,
+              "hunger": 1.0,
+              "recover": 1.0,
+              "recover_mana": 1.0,
+              "thirst": 1.0
+            },
+            "inventory": {
+              "coal": 0,
+              "diamond": 0,
+              "drink": 0,
+              "food": 0,
+              "iron": 0,
+              "ruby": 0,
+              "sapphire": 0,
+              "stone": 0,
+              "wood": 0
+            },
+            "level": 0,
+            "mana": 9,
+            "position": [
+              5,
+              3
+            ],
+            "request": {
+              "remaining": 0,
+              "resource": null
+            },
+            "resting": false,
+            "role": "warrior",
+            "sleeping": false
+          },
+          {
+            "agent_id": "agent_1",
+            "alive": true,
+            "attributes": {
+              "dexterity": 1,
+              "intelligence": 1,
+              "level_points": 0,
+              "strength": 1,
+              "xp": 0
+            },
+            "drink": 9,
+            "energy": 9,
+            "equipment": {
+              "armour": 0,
+              "armour_slots": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "arrows": 0,
+              "books": 0,
+              "bow": 0,
+              "enchantments": {
+                "armour": null,
+                "armour_slots": [
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                "bow": null,
+                "sword": null
+              },
+              "learned_spell": false,
+              "pickaxe": 0,
+              "potions": {
+                "blue": 0,
+                "cyan": 0,
+                "green": 0,
+                "pink": 0,
+                "red": 0,
+                "yellow": 0
+              },
+              "saplings": 0,
+              "sword": 0,
+              "torches": 0
+            },
+            "facing": "right",
+            "food": 9,
+            "health": 9.0,
+            "intrinsics": {
+              "fatigue": 1.0,
+              "hunger": 1.0,
+              "recover": 1.0,
+              "recover_mana": 1.0,
+              "thirst": 1.0
+            },
+            "inventory": {
+              "coal": 0,
+              "diamond": 0,
+              "drink": 0,
+              "food": 0,
+              "iron": 0,
+              "ruby": 0,
+              "sapphire": 0,
+              "stone": 0,
+              "wood": 0
+            },
+            "level": 0,
+            "mana": 9,
+            "position": [
+              3,
+              4
+            ],
+            "request": {
+              "remaining": 0,
+              "resource": null
+            },
+            "resting": false,
+            "role": "forager",
+            "sleeping": false
+          },
+          {
+            "agent_id": "agent_2",
+            "alive": true,
+            "attributes": {
+              "dexterity": 1,
+              "intelligence": 1,
+              "level_points": 0,
+              "strength": 1,
+              "xp": 0
+            },
+            "drink": 9,
+            "energy": 9,
+            "equipment": {
+              "armour": 0,
+              "armour_slots": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "arrows": 0,
+              "books": 0,
+              "bow": 0,
+              "enchantments": {
+                "armour": null,
+                "armour_slots": [
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                "bow": null,
+                "sword": null
+              },
+              "learned_spell": false,
+              "pickaxe": 0,
+              "potions": {
+                "blue": 0,
+                "cyan": 0,
+                "green": 0,
+                "pink": 0,
+                "red": 0,
+                "yellow": 0
+              },
+              "saplings": 0,
+              "sword": 0,
+              "torches": 0
+            },
+            "facing": "down",
+            "food": 9,
+            "health": 9.0,
+            "intrinsics": {
+              "fatigue": 1.0,
+              "hunger": 1.0,
+              "recover": 1.0,
+              "recover_mana": 1.0,
+              "thirst": 1.0
+            },
+            "inventory": {
+              "coal": 0,
+              "diamond": 0,
+              "drink": 0,
+              "food": 0,
+              "iron": 0,
+              "ruby": 0,
+              "sapphire": 0,
+              "stone": 0,
+              "wood": 0
+            },
+            "level": 0,
+            "mana": 9,
+            "position": [
+              4,
+              3
+            ],
+            "request": {
+              "remaining": 0,
+              "resource": null
+            },
+            "resting": false,
+            "role": "miner",
+            "sleeping": false
+          }
+        ],
+        "potion_mapping": [
+          "exhaustion",
+          "drain_mana",
+          "health",
+          "harm",
+          "mana",
+          "energy"
+        ],
+        "projectile_count": 0,
+        "revives": 0,
+        "seed": 7,
+        "terminated": false,
+        "termination_reason": null,
+        "timestep": 1,
+        "trade_count": 0
+      }
+    },
+    {
+      "checkpoint_equivalent": true,
+      "final_observations": {
+        "agent_0": {
+          "agent_id": "agent_0",
+          "agent_index": 0,
+          "ascii": "###########\n###########\nOOOOOOOOOOO\nOO.~...~...\nOO..O.O....\nO...20....~\nO..1#.T....\nO....f....O\nO..~.....T.\nO...~......\nO..O.T...~.",
+          "last_joint_event": [
+            {
+              "action": "noop",
+              "agent_id": "agent_0",
+              "kind": "joint_action",
               "timestep": 1
             },
             {
