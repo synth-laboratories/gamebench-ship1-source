@@ -49,6 +49,12 @@ Actions are JSON objects such as:
   and checkpoint artifacts.
 - `policies/heuristic_baseline.py` is a small deterministic placement/pickup
   baseline suitable for a local code-policy smoke run.
+- `defaults/policy_sweep/policy_dev_v1.json` is the fixed L1/L2 code-policy
+  DEO suite. Its score combines leak-derived reward, base-pressure survival,
+  waves-cleared rate, and illegal-action reliability. The Harbor baseline is
+  deliberately a legal pickup-only policy; the checked-in candidate demonstrates
+  public-observation tower placement and hero/knight micro without a seed or
+  fixture lookup.
 
 ## Local commands
 
@@ -58,6 +64,36 @@ python3 scripts/verify_python_rust_parity.py
 python3 scripts/verify_gold_fixtures.py
 python3 scripts/run_policy.py --level L1 --steps 40
 python3 scripts/run_service.py --port 8094
+```
+
+## Code-policy DEO
+
+The generic Harbor `code_policy_deo_hillclimb` bundle resolves this task through
+`adapters/eval_registry.toml`: it uses
+`defaults/policy_sweep/policy_dev_v1.json`, the importable baseline at
+`containers/codepolicy/heuristic_policy.py`, and candidates under the
+`towermind` namespace. A candidate exports `act(observation) -> action`, where
+the observation is the public structured/textual TowerMind state.
+
+Run the checked-in end-to-end example (it creates artifacts only in the supplied
+directory, or in a new temporary directory when `--output` is omitted):
+
+```bash
+cd tasks/towermind-singleplayer
+python3 scripts/run_code_policy_deo_example.py --output /tmp/towermind-deo
+```
+
+It evaluates the pickup-first baseline and
+`examples/code_policy_deo/candidates/towermind/fog_aware_tower_micro_v1`, then
+fails unless the best non-baseline policy improves the canonical leaderboard by
+at least `0.01`. To run the same task-local runner with another candidate root:
+
+```bash
+python3 scripts/run_hillclimb.py \
+  --suite defaults/policy_sweep/policy_dev_v1.json \
+  --baseline containers/codepolicy/heuristic_policy.py \
+  --candidate-root /path/to/candidates \
+  --output /tmp/towermind-hillclimb
 ```
 
 After an intentional semantics change, regenerate the checked-in fixtures with
