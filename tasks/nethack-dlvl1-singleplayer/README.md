@@ -98,10 +98,12 @@ future-visibility schedules.  It copies only `meta.json`, `level_dump.json`,
 
 ## Live NLE differential fuzzing
 
-The optional fuzzer runs live NLE and the own gold lanes from the same
-capture-backed reset.  It is a diagnostic oracle tool: it never imports NLE
-from gold code and it does not write candidate captures into the checked-in
-corpus automatically.
+The optional fuzzer gives live NLE and the own Rust lane the exact same
+pinned action IDs from the same capture-backed reset.  It compares every
+captured public plane—characters, glyphs, colors, raw messages, blstats, and
+inventory—at reset and after every action. It is a diagnostic oracle tool: it
+never imports NLE from gold code and it does not write candidate captures into
+the checked-in corpus automatically.
 
 On this macOS host, use CPython 3.10 for NLE 0.9.0.  Its bundled bindings do
 not build on CPython 3.11, and CMake 4 needs the policy compatibility setting
@@ -110,10 +112,12 @@ during the NLE build:
 ```bash
 uv venv --python 3.10 .venv
 CMAKE_POLICY_VERSION_MINIMUM=3.5 uv pip install --python .venv/bin/python -r requirements-nle-fuzz.txt
-.venv/bin/python scripts/fuzz_nle_differential.py --cases 10 --steps 32 --seed 20260725 --lane python --output /tmp/nethack-nle-fuzz
+.venv/bin/python scripts/fuzz_nle_differential.py --cases 10 --steps 32 --seed 20260725 --lane rust --output /tmp/nethack-nle-fuzz
 ```
 
-Use `--lane both` to include the Rust trace lane.  The output directory holds
+Use `--lane both` to include the independent Python trace lane. Strict reset
+and transition comparison is the default; `--mask-baseline` is an explicit
+diagnostic-only escape hatch for isolating later transitions. The output directory holds
 reproducible, capture-shaped cases and structured discrepancy reports; inspect
 or replay it without copying artifacts under `fixtures/nle_oracle/`:
 
@@ -126,7 +130,7 @@ The default `navigation-v0` campaign generates visible navigation and explicit
 direction and `MORE` prompts, and uses `ESC` to recover other raw prompts:
 
 ```bash
-.venv/bin/python scripts/fuzz_nle_differential.py --cases 25 --steps 32 --seed 20260725 --lane both --campaign prompt-probe-v0 --output /tmp/nethack-nle-prompt-probe
+.venv/bin/python scripts/fuzz_nle_differential.py --cases 25 --steps 32 --seed 20260725 --lane rust --campaign prompt-probe-v0 --output /tmp/nethack-nle-prompt-probe
 ```
 
 Pass `--actions <jsonl>` to replay arbitrary pinned action IDs.  A `DOWN`
@@ -173,8 +177,10 @@ NLE observations, and strict-green in both lanes.
 
 The checked-in implementation establishes the dual-lane engine, full action
 acceptance, fixed-crop observation contract, deterministic checkpoint/restore,
-and capture/discrepancy plumbing.  `val-east-seed-20260725` is the first
-authentic strict-green tape (reset plus one east move), so the canonical corpus
-is **1 / 33** required v0 tapes.  It is not a claim that the remaining action,
-combat, inventory, or descent behaviors match NLE; coverage and deliberate
-stubs are tracked in [`PROGRESS.md`](PROGRESS.md).
+and capture/discrepancy plumbing.  The canonical corpus is now **12 / 33
+(36.4%)** required v0 tapes.  Every promoted tape is strict-green in both own
+lanes: chars, glyph IDs, colors, raw messages, blstats, and inventory must all
+match NLE at every recorded action.  That is a pixel-faithful evidence claim
+for these tapes, not a general parity claim.  Room/corridor visibility, dynamic
+entities, hidden terrain under the hero, combat scoring, traps/death, and
+descent still need authentic strict-green evidence; see [`PROGRESS.md`](PROGRESS.md).

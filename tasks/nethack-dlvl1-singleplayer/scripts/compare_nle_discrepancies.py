@@ -123,7 +123,7 @@ def fixture_task(fixture_dir: Path) -> tuple[dict[str, Any], list[dict[str, Any]
         "task_id": str(meta.get("fixture_id", fixture_dir.name)),
         "seed": int(meta.get("seed", 0)),
         "character": dict(meta.get("character", {})),
-        "rules": {"max_steps": 0, "autopickup": False, "auto_more": str(meta.get("auto_more", "raw_explicit")), "vision_radius": 4},
+        "rules": {"max_steps": 0, "autopickup": False, "auto_more": str(meta.get("auto_more", "raw_explicit")), "vision_radius": 5},
         "level_dump": level_dump,
     }
     return task, actions, snapshots

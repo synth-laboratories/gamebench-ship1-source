@@ -17,15 +17,15 @@ contains the projected observation after each action plus an initial step-zero
 snapshot.  The down-stair boundary is captured without stepping live NLE into
 dlvl 2.
 
-No synthetic gold output may be put in this directory.  The first strict-green
-capture is `val-east-seed-20260725`: reset plus one raw
-`CompassDirection.E` action on Main Dungeon dlvl 1.  It preserves the raw NLE
-reset planes and a static floor cell first observed by that transition; gold's
-own FOW rule decides when that known cell becomes visible.  It does not claim
-coverage of doors, combat, inventory, or descent.
+No synthetic gold output may be put in this directory. The corpus currently
+contains 12 strict-green captures, including navigation, fixed-stair pickup,
+food/open prompt cancellation, empty search, failed kick, closed/no-door
+close, and raw horizontal and vertical door opening. Every capture is replayed
+against both gold lanes across the full public observation planes; no fixture
+is a message-only or character-only claim.
 
 The required 33 tapes are a v0 minimum: a strict-green, hand-reviewed canonical
-gate.  It is expected to grow beyond 33, but generated diagnostic artifacts
+gate. It is expected to grow beyond 33, but generated diagnostic artifacts
 remain outside this directory until they are reproducible, minimized, confined
 to Main Dungeon dlvl 1, directly annotated from NLE observations, and strict
 green in both own lanes.

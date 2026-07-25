@@ -1,0 +1,3 @@
+{"action_id": 1, "action_name": "CompassDirection.E", "step": 1}
+{"action_id": 3, "action_name": "CompassDirection.W", "step": 2}
+{"action_id": 61, "action_name": "Command.PICKUP", "step": 3}

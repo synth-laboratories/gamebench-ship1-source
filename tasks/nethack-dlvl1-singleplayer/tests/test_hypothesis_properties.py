@@ -284,6 +284,7 @@ def capture_state_task() -> tuple[dict[str, Any], dict[str, Any]]:
         "initial_message": initial_message,
         "initial_message_raw": capture_buffer(initial_message, width=message_width),
         "wait_message_raw": capture_buffer("You wait.", width=message_width),
+        "search_message_raw": capture_buffer("", width=message_width),
         "eat_message_raw": capture_buffer("What do you want to eat? [a or ?*] ", width=message_width),
         "inventory": {
             "inv_letters": captured_inventory["inv_letters"],
@@ -293,6 +294,44 @@ def capture_state_task() -> tuple[dict[str, Any], dict[str, Any]]:
         },
     }
     return task, expected
+
+
+def door_state_task(closed_glyph: int) -> dict[str, Any]:
+    """Build a glyph-identified door case without conflating it with floor."""
+
+    hero = (5, 4)
+    door = (6, 4)
+    beyond = (7, 4)
+    terrain = [[" "] * VIEW_WIDTH for _ in range(VIEW_HEIGHT)]
+    glyphs = [[0] * VIEW_WIDTH for _ in range(VIEW_HEIGHT)]
+    colors = [[0] * VIEW_WIDTH for _ in range(VIEW_HEIGHT)]
+    for x in range(4, 9):
+        terrain[4][x] = "."
+        glyphs[4][x] = 2378
+        colors[4][x] = 7
+    terrain[door[1]][door[0]] = "+"
+    glyphs[door[1]][door[0]] = closed_glyph
+    colors[door[1]][door[0]] = 3
+    return {
+        "task_id": f"hypothesis-door-{closed_glyph}",
+        "seed": closed_glyph,
+        "rules": {"max_steps": 0, "autopickup": False, "auto_more": "raw_explicit", "vision_radius": 4},
+        "level_dump": {
+            "terrain": ["".join(row) for row in terrain],
+            "hero": {"x": hero[0], "y": hero[1], "glyph": 340, "color": 15},
+            "glyphs": glyphs,
+            "colors": colors,
+            "seen": seen_mask(hero, door),
+            "unseen": {
+                "chars": [[" "] * VIEW_WIDTH for _ in range(VIEW_HEIGHT)],
+                "glyphs": [[0] * VIEW_WIDTH for _ in range(VIEW_HEIGHT)],
+                "colors": [[0] * VIEW_WIDTH for _ in range(VIEW_HEIGHT)],
+            },
+            "metadata": {"hp": 14, "hp_max": 14, "hunger": 900},
+        },
+        "door": door,
+        "beyond": beyond,
+    }
 
 
 def reset_engine(task: dict[str, Any]) -> NethackDlvl1Engine:
@@ -563,6 +602,15 @@ class TestNetHackProperties(unittest.TestCase):
         self.assertEqual(901, one_step["glyphs"][reveal_y][reveal_x])
         self.assertEqual(31, one_step["colors"][reveal_y][reveal_x])
 
+        python_search_trace = python_public_trace(task, ["Command.SEARCH"])
+        rust_search_trace = rust_public_trace(task, ["Command.SEARCH"])
+        self.assertEqual(python_search_trace, rust_search_trace)
+        self.assertEqual(2, len(python_search_trace))
+        search_step = python_search_trace[1]
+        self.assertEqual("", search_step["message"])
+        self.assertEqual(expected["search_message_raw"], search_step["message_raw"])
+        self.assertEqual(expected_one_step_blstats, search_step["blstats"])
+
         python_move_trace = python_public_trace(task, ["CompassDirection.E"])
         rust_move_trace = rust_public_trace(task, ["CompassDirection.E"])
         self.assertEqual(python_move_trace, rust_move_trace)
@@ -606,6 +654,60 @@ class TestNetHackProperties(unittest.TestCase):
         )
         self.assertEqual(expected["eat_message_raw"], eat_prompt["message_raw"])
 
+    @RUST_PROPERTY_SETTINGS
+    @given(closed_glyph=st.sampled_from((2374, 2375)))
+    def test_glyph_identified_doors_preserve_orientation_visibility_and_checkpoints(self, closed_glyph: int) -> None:
+        task = door_state_task(closed_glyph)
+        door_x, door_y = task["door"]
+        beyond_x, beyond_y = task["beyond"]
+        opened_glyph = 2372 if closed_glyph == 2374 else 2373
+        opened_char = "-" if closed_glyph == 2374 else "|"
+        actions = ["Command.OPEN", "CompassDirection.E", "CompassDirection.E", "CompassDirection.W", "Command.CLOSE", "CompassDirection.E"]
+
+        python_trace = python_public_trace(task, actions)
+        rust_trace = rust_public_trace(task, actions)
+        self.assertEqual(python_trace, rust_trace)
+        before, open_prompt, opened, crossed, returned, close_prompt, closed = python_trace
+        self.assertEqual("In what direction?", open_prompt["message"])
+        self.assertEqual("The door opens.", opened["message"])
+        self.assertEqual(opened_char, opened["chars"][door_y][door_x])
+        self.assertEqual(opened_glyph, opened["glyphs"][door_y][door_x])
+        self.assertEqual(3, opened["colors"][door_y][door_x])
+        self.assertEqual(".", opened["chars"][beyond_y][beyond_x])
+        self.assertEqual(before["blstats"][20] + 1, opened["blstats"][20])
+        self.assertEqual([door_x, door_y], crossed["blstats"][:2])
+        self.assertEqual([door_x - 1, door_y], returned["blstats"][:2])
+        self.assertEqual("In what direction?", close_prompt["message"])
+        self.assertEqual("The door closes.", closed["message"])
+        self.assertEqual("+", closed["chars"][door_y][door_x])
+        self.assertEqual(closed_glyph, closed["glyphs"][door_y][door_x])
+        self.assertEqual(3, closed["colors"][door_y][door_x])
+
+        engine = reset_engine(task)
+        apply_tape(engine, actions[:2])
+        checkpoint = engine.checkpoint_bytes()
+        apply_tape(engine, actions[2:])
+        restored = rust_restore(checkpoint, actions[2:])
+        self.assertEqual(engine.symbolic_readout(), restored["projection"])
+
+    def test_plain_terrain_door_remains_openable_without_a_glyph_plane(self) -> None:
+        """Legacy authored '+' terrain is a behavioral fallback, not NLE evidence."""
+
+        task = door_state_task(2374)
+        door_x, door_y = task["door"]
+        task["task_id"] = "hypothesis-plain-terrain-door"
+        task["level_dump"]["glyphs"][door_y][door_x] = 0
+        actions = ["Command.OPEN", "CompassDirection.E", "CompassDirection.E"]
+
+        python_trace = python_public_trace(task, actions)
+        rust_trace = rust_public_trace(task, actions)
+        self.assertEqual(python_trace, rust_trace)
+        opened = python_trace[2]
+        self.assertEqual("The door opens.", opened["message"])
+        self.assertEqual("-", opened["chars"][door_y][door_x])
+        self.assertEqual(2372, opened["glyphs"][door_y][door_x])
+        self.assertEqual([door_x, door_y], python_trace[3]["blstats"][:2])
+
     def test_frozen_descend_boundary_compares_pre_action_then_checks_terminal_contract(self) -> None:
         """Frozen dlvl-1 captures never compare a gold dlvl-2-adjacent message."""
 
@@ -635,6 +737,28 @@ class TestNetHackProperties(unittest.TestCase):
         before, after = python_trace
         self.assertEqual("The stairs are solidly fixed to the floor.", after["message"])
         self.assertEqual(before["blstats"], after["blstats"])
+
+    def test_apply_without_an_applicable_tool_is_message_only_in_both_lanes(self) -> None:
+        for task in (explicit_stair_task(), adapter_task()):
+            python_trace = python_public_trace(task, ["Command.APPLY"])
+            rust_trace = rust_public_trace(task, ["Command.APPLY"])
+            self.assertEqual(python_trace, rust_trace)
+            before, after = python_trace
+            self.assertEqual("You don't have anything to use or apply.", after["message"])
+            self.assertEqual(before["blstats"], after["blstats"])
+            self.assertEqual("normal", after["input_mode"]["kind"])
+
+    def test_close_against_non_door_is_message_only_in_both_lanes(self) -> None:
+        task = explicit_stair_task()
+        actions = ["Command.CLOSE", "CompassDirection.E"]
+        python_trace = python_public_trace(task, actions)
+        rust_trace = rust_public_trace(task, actions)
+        self.assertEqual(python_trace, rust_trace)
+        before, prompt, after = python_trace
+        self.assertEqual("In what direction?", prompt["message"])
+        self.assertEqual("You see no door there.", after["message"])
+        self.assertEqual(before["blstats"], after["blstats"])
+        self.assertEqual("normal", after["input_mode"]["kind"])
 
     def test_all_pinned_ids_and_canonical_names_use_the_same_adapter(self) -> None:
         self.assertEqual(list(range(121)), [int(action_id) for action_id, _, _ in PINNED_ACTIONS])

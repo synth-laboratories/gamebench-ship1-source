@@ -12,6 +12,10 @@ pub const ENV_FAMILY: &str = "nethack-dlvl1-singleplayer";
 pub const VIEW_HEIGHT: usize = 21;
 pub const VIEW_WIDTH: usize = 79;
 const CHECKPOINT_SCHEMA: &str = "gamebench.checkpoint.v1";
+const OPEN_DOOR_DASH_GLYPH: i64 = 2372;
+const OPEN_DOOR_BAR_GLYPH: i64 = 2373;
+const CLOSED_DOOR_DASH_GLYPH: i64 = 2374;
+const CLOSED_DOOR_BAR_GLYPH: i64 = 2375;
 const BLSTATS_FIELDS: [&str; 27] = [
     "x", "y", "strength", "strength_percent", "dexterity", "constitution", "intelligence", "wisdom", "charisma", "score", "hp", "hp_max", "depth", "gold", "energy", "energy_max", "ac", "monster_level", "experience_level", "experience", "time", "hunger", "capacity", "dungeon_number", "dungeon_level", "condition", "alignment",
 ];
@@ -91,6 +95,7 @@ pub struct GameState {
     pub terrain: Vec<Vec<String>>,
     pub base_glyphs: Vec<Vec<i64>>,
     pub base_colors: Vec<Vec<i64>>,
+    pub door_glyphs: Vec<Vec<i64>>,
     pub unseen_chars: Vec<Vec<String>>,
     pub unseen_glyphs: Vec<Vec<i64>>,
     pub unseen_colors: Vec<Vec<i64>>,
@@ -204,6 +209,7 @@ impl NethackSession {
         let terrain = level.get("terrain").and_then(Value::as_array).cloned().unwrap_or_default().iter().map(|row| row.as_str().unwrap_or("").chars().map(|ch| ch.to_string()).collect::<Vec<_>>()).collect::<Vec<_>>();
         let base_glyphs = int_matrix(level.get("glyphs"));
         let base_colors = int_matrix(level.get("colors"));
+        let door_glyphs = initial_door_glyphs(&base_glyphs);
         let unseen = object_or_empty(level.get("unseen"));
         let unseen_chars = normalise_rows(unseen.get("chars"));
         let unseen_glyphs = normalize_int_rows(unseen.get("glyphs"), &unseen_chars, 0);
@@ -224,6 +230,7 @@ impl NethackSession {
                 terrain,
                 base_glyphs,
                 base_colors,
+                door_glyphs,
                 unseen_chars,
                 unseen_glyphs,
                 unseen_colors,
@@ -293,6 +300,7 @@ impl NethackSession {
         };
         let hero_before = (self.state.hero.x, self.state.hero.y);
         let terrain_before = self.state.terrain.clone();
+        let door_glyphs_before = self.state.door_glyphs.clone();
         self.state.step_index += 1;
         self.event("action_applied", &format!("Action({})", action.canonical), Some(action.canonical.clone()), Some("dispatch"), "info", action.payload());
         let spent_turn = if mode_kind(&self.state.input_mode) == "normal" {
@@ -303,7 +311,7 @@ impl NethackSession {
         if spent_turn && !self.state.terminated {
             self.advance_turn();
         }
-        if hero_before != (self.state.hero.x, self.state.hero.y) || terrain_before != self.state.terrain {
+        if hero_before != (self.state.hero.x, self.state.hero.y) || terrain_before != self.state.terrain || door_glyphs_before != self.state.door_glyphs {
             self.refresh_visibility();
         }
         self.check_truncation();
@@ -451,6 +459,10 @@ impl NethackSession {
             return false;
         }
         if matches!(name, "APPLY" | "DIP" | "DROP" | "EAT" | "FIRE" | "INVOKE" | "PUTON" | "QUAFF" | "QUIVER" | "READ" | "REMOVE" | "RUB" | "TAKEOFF" | "THROW" | "TIP" | "WEAR" | "WIELD" | "ZAP") {
+            if name == "APPLY" && !self.state.inventory.iter().any(|item| item.kind == "(") {
+                self.message("You don't have anything to use or apply.");
+                return false;
+            }
             let prompt = self.item_prompt(name);
             self.enter_mode("inventory_letter", action, &prompt, json!({"operation": name.to_ascii_lowercase(), "after": if matches!(name, "FIRE" | "THROW" | "ZAP") { "direction" } else { "normal" }}));
             return false;
@@ -663,14 +675,13 @@ impl NethackSession {
                     return true;
                 }
             }
-            let terrain = self.terrain_at(x, y).to_string();
-            if matches!(terrain.as_str(), " " | "|" | "-" | "+") {
+            if self.is_opaque_at(x, y) {
                 if !moved {
                     self.message("You bump into a wall.");
                 }
                 break;
             }
-            if !is_passable(&terrain) {
+            if !self.is_passable_at(x, y) {
                 if !moved {
                     self.message("You cannot move there.");
                 }
@@ -703,8 +714,8 @@ impl NethackSession {
 
     fn open(&mut self, direction: (i64, i64)) -> bool {
         let (x, y) = self.target(direction);
-        if in_bounds(x, y) && self.terrain_at(x, y) == "+" {
-            self.state.terrain[y as usize][x as usize] = ".".to_string();
+        if in_bounds(x, y) && self.is_closed_door_at(x, y) {
+            self.open_door_at(x, y);
             self.message("The door opens.");
             self.event("action_applied", "OpenDoor()", None, Some("open"), "info", json!({"x": x, "y": y}));
             return true;
@@ -715,23 +726,27 @@ impl NethackSession {
 
     fn close(&mut self, direction: (i64, i64)) -> bool {
         let (x, y) = self.target(direction);
-        if in_bounds(x, y) && self.terrain_at(x, y) == "." {
-            self.state.terrain[y as usize][x as usize] = "+".to_string();
+        if in_bounds(x, y) && self.is_open_door_at(x, y) {
+            self.close_door_at(x, y);
             self.message("The door closes.");
-        } else {
-            self.message("You see no open door there.");
+            return true;
         }
-        true
+        if in_bounds(x, y) && self.is_closed_door_at(x, y) {
+            self.message("This door is already closed.");
+            return false;
+        }
+        self.message("You see no door there.");
+        false
     }
 
     fn kick(&mut self, direction: (i64, i64)) -> bool {
         let (x, y) = self.target(direction);
-        if !in_bounds(x, y) || self.terrain_at(x, y) != "+" {
+        if !in_bounds(x, y) || !self.is_closed_door_at(x, y) {
             self.message("You kick at empty space.");
             return true;
         }
         if self.roll(2) == 0 {
-            self.state.terrain[y as usize][x as usize] = ".".to_string();
+            self.open_door_at(x, y);
             self.message("The door crashes open!");
         } else {
             self.message("WHAMMM!!!");
@@ -914,7 +929,7 @@ impl NethackSession {
                 found = true;
             }
         }
-        self.message(if found { "You find a trap." } else { "You search." });
+        self.message(if found { "You find a trap." } else { "" });
         true
     }
 
@@ -989,7 +1004,7 @@ impl NethackSession {
         let dy = if monster.position.y == hero.y { 0 } else if hero.y > monster.position.y { 1 } else { -1 };
         let x = monster.position.x + dx;
         let y = monster.position.y + dy;
-        if in_bounds(x, y) && is_passable(self.terrain_at(x, y)) && self.monster_index_at(x, y).is_none() && (x, y) != (hero.x, hero.y) {
+        if in_bounds(x, y) && self.is_passable_at(x, y) && self.monster_index_at(x, y).is_none() && (x, y) != (hero.x, hero.y) {
             self.state.monsters[index].position = Position { x, y };
         }
     }
@@ -1033,9 +1048,10 @@ impl NethackSession {
         for y in 0..VIEW_HEIGHT {
             for x in 0..VIEW_WIDTH {
                 if self.state.seen[y][x] {
-                    chars[y][x] = self.state.terrain[y][x].clone();
-                    colors[y][x] = self.state.base_colors[y][x];
-                    glyphs[y][x] = self.state.base_glyphs[y][x];
+                    let (character, color, glyph) = self.terrain_projection_at(x as i64, y as i64);
+                    chars[y][x] = character;
+                    colors[y][x] = color;
+                    glyphs[y][x] = glyph;
                 }
             }
         }
@@ -1204,7 +1220,7 @@ impl NethackSession {
     }
 
     fn refresh_visibility(&mut self) {
-        let radius = integer(self.resolved.get("rules").unwrap_or(&Value::Null), "vision_radius", 4).max(0);
+        let radius = integer(self.resolved.get("rules").unwrap_or(&Value::Null), "vision_radius", 5).max(0);
         let hero = (self.state.hero.x, self.state.hero.y);
         for y in (hero.1 - radius).max(0)..=(hero.1 + radius).min((VIEW_HEIGHT - 1) as i64) {
             for x in (hero.0 - radius).max(0)..=(hero.0 + radius).min((VIEW_WIDTH - 1) as i64) {
@@ -1227,8 +1243,7 @@ impl NethackSession {
         let mut error = dx + dy;
         loop {
             if (x, y) != source && (x, y) != target {
-                let terrain = self.terrain_at(x, y);
-                if terrain == " " || is_opaque_terrain(terrain) {
+                if self.is_opaque_at(x, y) {
                     return false;
                 }
             }
@@ -1283,6 +1298,67 @@ impl NethackSession {
 
     fn terrain_at(&self, x: i64, y: i64) -> &str {
         &self.state.terrain[y as usize][x as usize]
+    }
+
+    fn door_glyph_at(&self, x: i64, y: i64) -> i64 {
+        self.state.door_glyphs[y as usize][x as usize]
+    }
+
+    fn is_open_door_at(&self, x: i64, y: i64) -> bool {
+        matches!(self.door_glyph_at(x, y), OPEN_DOOR_DASH_GLYPH | OPEN_DOOR_BAR_GLYPH)
+    }
+
+    fn is_closed_door_at(&self, x: i64, y: i64) -> bool {
+        let glyph = self.door_glyph_at(x, y);
+        matches!(glyph, CLOSED_DOOR_DASH_GLYPH | CLOSED_DOOR_BAR_GLYPH)
+            || (glyph == 0 && self.terrain_at(x, y) == "+")
+    }
+
+    fn open_door_at(&mut self, x: i64, y: i64) {
+        let glyph = self.door_glyph_at(x, y);
+        let opened = match glyph {
+            CLOSED_DOOR_DASH_GLYPH => OPEN_DOOR_DASH_GLYPH,
+            CLOSED_DOOR_BAR_GLYPH => OPEN_DOOR_BAR_GLYPH,
+            // Older hand-authored task inputs represent doors only as '+'.
+            // Their orientation is unknowable, so materialize the canonical
+            // horizontal representation only when the door is operated on.
+            0 if self.terrain_at(x, y) == "+" => OPEN_DOOR_DASH_GLYPH,
+            glyph => panic!("attempted to open non-closed door glyph {glyph}"),
+        };
+        self.state.door_glyphs[y as usize][x as usize] = opened;
+    }
+
+    fn close_door_at(&mut self, x: i64, y: i64) {
+        let closed = match self.door_glyph_at(x, y) {
+            OPEN_DOOR_DASH_GLYPH => CLOSED_DOOR_DASH_GLYPH,
+            OPEN_DOOR_BAR_GLYPH => CLOSED_DOOR_BAR_GLYPH,
+            glyph => panic!("attempted to close non-open door glyph {glyph}"),
+        };
+        self.state.door_glyphs[y as usize][x as usize] = closed;
+    }
+
+    fn is_passable_at(&self, x: i64, y: i64) -> bool {
+        self.is_open_door_at(x, y) || is_passable(self.terrain_at(x, y))
+    }
+
+    fn is_opaque_at(&self, x: i64, y: i64) -> bool {
+        !self.is_open_door_at(x, y) && matches!(self.terrain_at(x, y), " " | "|" | "-" | "+")
+    }
+
+    fn terrain_projection_at(&self, x: i64, y: i64) -> (String, i64, i64) {
+        let glyph = self.door_glyph_at(x, y);
+        let character = match glyph {
+            OPEN_DOOR_DASH_GLYPH => Some("-"),
+            OPEN_DOOR_BAR_GLYPH => Some("|"),
+            CLOSED_DOOR_DASH_GLYPH | CLOSED_DOOR_BAR_GLYPH => Some("+"),
+            _ => None,
+        };
+        let row = y as usize;
+        let column = x as usize;
+        match character {
+            Some(character) => (character.to_string(), self.state.base_colors[row][column], glyph),
+            None => (self.state.terrain[row][column].clone(), self.state.base_colors[row][column], self.state.base_glyphs[row][column]),
+        }
     }
 
     fn monster_index_at(&self, x: i64, y: i64) -> Option<usize> {
@@ -1406,7 +1482,7 @@ pub fn resolve_task(task: &Value, seed_override: Option<i64>) -> Result<Value, S
     rules.insert("max_steps".to_string(), json!(0));
     rules.insert("autopickup".to_string(), json!(false));
     rules.insert("auto_more".to_string(), json!("raw_explicit"));
-    rules.insert("vision_radius".to_string(), json!(4));
+    rules.insert("vision_radius".to_string(), json!(5));
     if let Some(Value::Object(overrides)) = data.get("rules") {
         for (key, value) in overrides {
             rules.insert(key.clone(), value.clone());
@@ -1694,8 +1770,18 @@ fn is_passable(cell: &str) -> bool {
     matches!(cell, "." | "#" | ">" | "<" | "_" | "{" | "}" | "\\" | "~" | "^")
 }
 
-fn is_opaque_terrain(cell: &str) -> bool {
-    matches!(cell, "|" | "-" | "+")
+fn initial_door_glyphs(base_glyphs: &[Vec<i64>]) -> Vec<Vec<i64>> {
+    base_glyphs
+        .iter()
+        .map(|row| {
+            row.iter()
+                .map(|glyph| match *glyph {
+                    OPEN_DOOR_DASH_GLYPH | OPEN_DOOR_BAR_GLYPH | CLOSED_DOOR_DASH_GLYPH | CLOSED_DOOR_BAR_GLYPH => *glyph,
+                    _ => 0,
+                })
+                .collect()
+        })
+        .collect()
 }
 
 fn in_bounds(x: i64, y: i64) -> bool {
