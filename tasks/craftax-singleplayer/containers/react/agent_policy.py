@@ -60,6 +60,10 @@ class AgentPolicyConfig:
     api_key: str = ""
     model: str = DEFAULT_MODEL
     temperature: float = 0.0
+    # 512 is measured adequate for the providers this policy defaults to: Groq
+    # gpt-oss-120b answers in ~180-230 tokens and Gemini flash-lite in ~11. Qwen3.5
+    # instead reasons in prose on this plain-JSON prompt and truncates at 512 and at
+    # 2048 alike, so it needs the tool-calling policy variant, not a larger budget.
     max_tokens: int = 512
     system_prompt: str = DEFAULT_SYSTEM_PROMPT
     use_lm: bool = True
@@ -135,10 +139,16 @@ class AgentTurnResult:
     usage: dict[str, Any] = field(default_factory=dict)
     request_id: str | None = None
     model: str | None = None
+    finish_reason: str | None = None
 
     @property
     def action(self) -> str:
         return self.actions[0] if self.actions else "noop"
+
+    @property
+    def truncated(self) -> bool:
+        """The provider stopped at the token budget, so no action batch was emitted."""
+        return self.finish_reason == "length"
 
 
 @dataclass(frozen=True)
@@ -292,7 +302,8 @@ async def chat_completion(config: AgentPolicyConfig, prompt: str) -> dict[str, A
         response = await client.post(config.inference_url, headers=headers, json=body)
         response.raise_for_status()
         payload = response.json()
-    content = payload["choices"][0]["message"].get("content", "")
+    choice = payload["choices"][0]
+    content = choice["message"].get("content", "")
     if isinstance(content, list):
         content = "".join(
             part.get("text", "") for part in content if isinstance(part, dict)
@@ -301,6 +312,9 @@ async def chat_completion(config: AgentPolicyConfig, prompt: str) -> dict[str, A
         "assistant_text": str(content),
         "usage": payload.get("usage", {}),
         "request_id": payload.get("id"),
+        # A response cut off at max_tokens cannot carry an action batch. Without
+        # this the caller sees only invalid_parse and blames the prompt.
+        "finish_reason": str(choice.get("finish_reason") or "") or None,
     }
 
 
@@ -365,4 +379,5 @@ class AgentPolicy:
             usage=dict(inference.get("usage", {})),
             request_id=inference.get("request_id"),
             model=self.config.model,
+            finish_reason=inference.get("finish_reason"),
         )
