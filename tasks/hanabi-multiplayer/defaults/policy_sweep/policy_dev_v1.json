@@ -1,0 +1,9 @@
+{
+  "schema": "gamebench.hanabi.policy_sweep.v1",
+  "suite_id": "hanabi_policy_dev_v1",
+  "candidate_agent": "agent_0",
+  "partner_policy": "heuristic_baseline_v1",
+  "max_turns": 100,
+  "seeds": [1201, 1202, 1203, 1204, 1205, 1206, 1207, 1208, 1209, 1210],
+  "score": {"metric": "mean_final_firework_score", "range": [0, 25], "higher_is_better": true}
+}
