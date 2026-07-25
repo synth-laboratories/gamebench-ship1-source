@@ -17,6 +17,8 @@ python_entrypoint: gold_python.engine:SettlersEnv
 rust_crate: gold_rust
 service_entrypoint: scripts/run_service.py
 policy_runner: scripts/run_policy.py
+policy_sweep_runner: scripts/run_policy_sweep.py
+hillclimb_runner: scripts/run_hillclimb.py
 parity_verifier: scripts/verify_python_rust_parity.py
 fixture_generator: scripts/generate_gold_fixtures.py
 fixture_verifier: scripts/verify_gold_fixtures.py
@@ -25,6 +27,12 @@ baseline:
   entrypoint: policies.alphabeta_depth2:AlphaBetaDepth2Baseline
   reported_depth: 2
   ci_action_pruning: true
+code_policy_deo:
+  suite: defaults/policy_sweep/policy_dev_v1.json
+  baseline: containers/codepolicy/heuristic_policy.py
+  candidate_subdir: settlers
+  candidate_agent: agent_0
+  scoring_opponents: alphabeta_depth2_spirit
 oracle:
   type: canonical_turn_nev_and_state
   eventlogs: fixtures/gold/eventlogs/eventlogs.json

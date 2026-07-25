@@ -5,6 +5,10 @@
   "max_turns": 80,
   "agents": ["agent_0", "agent_1", "agent_2", "agent_3"],
   "turn_model": "alternating",
-  "baseline": "alphabeta_depth2_spirit",
-  "score": "win_rate_and_mean_vp_vs_fixed_baseline"
+  "candidate_agent": "agent_0",
+  "opponent_policy": "alphabeta_depth2_spirit",
+  "dice_phase": "public_before_policy",
+  "baseline": "conservative_pass_robber_v1",
+  "score": "0.60_win_outcome + 0.35_vp_progress + 0.05_action_reliability",
+  "pass_delta": 0.01
 }

@@ -45,7 +45,7 @@ candidate_subdir = "fogwar_duel"
 [[task]]
 id = "settlers-multiplayer"
 policy_suite = "defaults/policy_sweep/policy_dev_v1.json"
-policy_baseline = "policies/alphabeta_depth2.py"
+policy_baseline = "containers/codepolicy/heuristic_policy.py"
 candidate_subdir = "settlers"
 
 [[task]]

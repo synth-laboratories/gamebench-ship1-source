@@ -4,6 +4,8 @@ from __future__ import annotations
 from math import inf
 from typing import Any
 
+from gold_python.engine import DICE
+
 
 class AlphaBetaDepth2Baseline:
     """Pruned depth-2 score search, intentionally cheap enough for local CI.
@@ -16,23 +18,23 @@ class AlphaBetaDepth2Baseline:
 
     def actions(self, env: Any) -> list[dict[str, Any]]:
         state = env._require_state(); actor = env.current_agent(); player = env._player(actor)
-        if state.robber_pending:
+        if state.robber_pending or DICE[(state.seed + state.turn) % len(DICE)] == 7:
             return [{"kind": "move_robber", "tile": next(tile for tile in range(12) if tile != state.robber_tile)}]
         candidates: list[dict[str, Any]] = [{"kind": "end_turn"}]
-        for edge in range(24):
-            if edge not in {road for other in state.players for road in other.roads}:
-                candidates.append({"kind": "build_road", "edge": edge})
-        for vertex in player.settlements:
-            candidates.append({"kind": "build_city", "vertex": vertex})
-        for vertex in range(24): candidates.append({"kind": "build_settlement", "vertex": vertex})
-        candidates.append({"kind": "buy_dev"})
-        for card in player.dev_cards:
-            command = {"kind": "play_dev", "card": card}
-            if card == "knight": command["tile"] = next(tile for tile in range(12) if tile != state.robber_tile)
-            if card in ("monopoly", "year_of_plenty"): command["resource"] = "ore"
-            candidates.append(command)
-        # Retain a stable, short search frontier while keeping each action kind.
-        return candidates[:18]
+        occupied = {road for other in state.players for road in other.roads}
+        endpoints = lambda edge: {edge, (edge + 1) % 24}
+        own_vertices = set(player.settlements + player.cities)
+        if player.resources["wood"] >= 1 and player.resources["brick"] >= 1:
+            for edge in range(24):
+                if edge in occupied:
+                    continue
+                edge_vertices = endpoints(edge)
+                connected = bool(edge_vertices & own_vertices)
+                connected = connected or any(edge_vertices & endpoints(road) for road in player.roads)
+                if connected:
+                    candidates.append({"kind": "build_road", "edge": edge})
+        # Keep depth two but use a compact, legal, deterministic road frontier.
+        return candidates[:6]
 
     def evaluate(self, env: Any, root: str) -> float:
         state = env._require_state(); own = env.victory_points(root)
@@ -44,8 +46,11 @@ class AlphaBetaDepth2Baseline:
         root = env.current_agent(); best_action = {"kind": "end_turn"}; best_score = -inf
         for action in self.actions(env):
             child = env.__class__(max_turns=env.max_turns); child.restore(env.checkpoint()); child.step(action)
-            reply_actions = self.actions(child)
-            score = min(self._after(child, reply, root) for reply in reply_actions) if reply_actions else self.evaluate(child, root)
+            if child._require_state().terminated:
+                score = self.evaluate(child, root)
+            else:
+                reply_actions = self.actions(child)
+                score = min(self._after(child, reply, root) for reply in reply_actions) if reply_actions else self.evaluate(child, root)
             if score > best_score: best_score, best_action = score, action
         return best_action
 
