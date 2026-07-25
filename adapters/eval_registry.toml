@@ -37,6 +37,12 @@ policy_baseline = "policies/heuristic_baseline.py"
 candidate_subdir = "craftax_coop"
 
 [[task]]
+id = "settlers-multiplayer"
+policy_suite = "defaults/policy_sweep/policy_dev_v1.json"
+policy_baseline = "policies/alphabeta_depth2.py"
+candidate_subdir = "settlers"
+
+[[task]]
 id = "minihack-singleplayer"
 policy_suite = "defaults/policy_sweep/policy_dev_v1.json"
 policy_baseline = "policies/heuristic_baseline.py"

@@ -1,0 +1,2545 @@
+{
+  "games": [
+    {
+      "legacy": [
+        "GameStarted(8,['agent_0', 'agent_1', 'agent_2', 'agent_3'],10)",
+        "Dice(agent_0,3)",
+        "Produce(agent_3,wheat,2,6)",
+        "Build(agent_0,city,0)",
+        "Vp(agent_0,3,city)",
+        "Dice(agent_1,12)",
+        "TurnEnd(agent_1)",
+        "Dice(agent_2,5)",
+        "TurnEnd(agent_2)",
+        "Dice(agent_3,8)",
+        "Produce(agent_0,brick,1,1)",
+        "Produce(agent_1,brick,1,1)",
+        "TurnEnd(agent_3)"
+      ],
+      "scenario_id": "city_upgrade_victory_point",
+      "steps": [
+        {
+          "action": {
+            "kind": "build_city",
+            "vertex": 0
+          },
+          "actor": "agent_0",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 1,
+          "rewards": {
+            "agent_0": 1.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "d29327e765315eda2071b441fb876acf0ba0b6c40d5d141a80018a8d5b506228"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_1",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 2,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "5404c4eba40cfefde78ce00df38701fbb5e45202bfb907d164b3538445153f6e"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_2",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 3,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "064ff73c37a8db507856a971eb794178a3252e914a141624b098454ef277cbe5"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_3",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 4,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "39454ee741fb9dd084f49e727f7af82dcf1cee0a6aa98a4454fe757ac286d56a"
+        }
+      ],
+      "structured": [
+        {
+          "kind": "game_started",
+          "players": [
+            "agent_0",
+            "agent_1",
+            "agent_2",
+            "agent_3"
+          ],
+          "seed": 8,
+          "turn": 0,
+          "victory_points_to_win": 10
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "dice",
+          "turn": 0,
+          "value": 3
+        },
+        {
+          "agent_id": "agent_3",
+          "amount": 2,
+          "kind": "produce",
+          "resource": "wheat",
+          "tile": 6,
+          "turn": 0
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "build",
+          "piece": "city",
+          "turn": 0,
+          "vertex": 0
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "vp",
+          "reason": "city",
+          "total": 3,
+          "turn": 0
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "dice",
+          "turn": 1,
+          "value": 12
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "turn_end",
+          "turn": 1
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "dice",
+          "turn": 2,
+          "value": 5
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "turn_end",
+          "turn": 2
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "dice",
+          "turn": 3,
+          "value": 8
+        },
+        {
+          "agent_id": "agent_0",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "brick",
+          "tile": 1,
+          "turn": 3
+        },
+        {
+          "agent_id": "agent_1",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "brick",
+          "tile": 1,
+          "turn": 3
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "turn_end",
+          "turn": 3
+        }
+      ]
+    },
+    {
+      "legacy": [
+        "GameStarted(1,['agent_0', 'agent_1', 'agent_2', 'agent_3'],10)",
+        "Dice(agent_0,8)",
+        "Produce(agent_0,brick,1,1)",
+        "Produce(agent_1,brick,1,1)",
+        "DevCard(agent_0,bought,knight)",
+        "Dice(agent_1,6)",
+        "Produce(agent_1,sheep,2,2)",
+        "TurnEnd(agent_1)",
+        "Dice(agent_2,9)",
+        "Produce(agent_1,wheat,1,3)",
+        "Produce(agent_2,wheat,1,3)",
+        "TurnEnd(agent_2)",
+        "Dice(agent_3,7)",
+        "Robber(agent_0,discarded)",
+        "Robber(agent_1,discarded)",
+        "Robber(agent_2,discarded)",
+        "Robber(agent_3,discarded)",
+        "Robber(agent_3,required)",
+        "Robber(agent_3,moved,1,agent_0,wood)",
+        "Dice(agent_0,10)",
+        "Produce(agent_2,wood,1,5)",
+        "Produce(agent_3,wood,1,5)",
+        "DevCard(agent_0,played,knight)",
+        "Robber(agent_0,moved,2,agent_1,wood)",
+        "Dice(agent_1,4)",
+        "Produce(agent_2,ore,2,4)",
+        "TurnEnd(agent_1)",
+        "Dice(agent_2,11)",
+        "Produce(agent_0,sheep,1,7)",
+        "Produce(agent_3,sheep,1,7)",
+        "TurnEnd(agent_2)",
+        "Dice(agent_3,3)",
+        "Produce(agent_3,wheat,2,6)",
+        "TurnEnd(agent_3)",
+        "Dice(agent_0,12)",
+        "IllegalAction(agent_0,dev_card_cost_or_empty_deck)",
+        "Dice(agent_1,5)",
+        "Produce(agent_0,wood,2,0)",
+        "TurnEnd(agent_1)",
+        "Dice(agent_2,8)",
+        "Produce(agent_0,brick,1,1)",
+        "Produce(agent_1,brick,1,1)",
+        "TurnEnd(agent_2)",
+        "Dice(agent_3,6)",
+        "TurnEnd(agent_3)",
+        "Dice(agent_0,9)",
+        "Produce(agent_1,wheat,1,3)",
+        "Produce(agent_2,wheat,1,3)",
+        "IllegalAction(agent_0,dev_card_unowned)",
+        "Dice(agent_1,7)",
+        "Robber(agent_0,discarded)",
+        "Robber(agent_1,discarded)",
+        "Robber(agent_2,discarded)",
+        "Robber(agent_3,discarded)",
+        "Robber(agent_1,required)",
+        "Robber(agent_1,moved,4,agent_0,wood)",
+        "Dice(agent_2,10)",
+        "Produce(agent_2,wood,1,5)",
+        "Produce(agent_3,wood,1,5)",
+        "TurnEnd(agent_2)",
+        "Dice(agent_3,4)",
+        "TurnEnd(agent_3)",
+        "Dice(agent_0,11)",
+        "Produce(agent_0,sheep,1,7)",
+        "Produce(agent_3,sheep,1,7)",
+        "IllegalAction(agent_0,dev_card_cost_or_empty_deck)",
+        "Dice(agent_1,3)",
+        "Produce(agent_3,wheat,2,6)",
+        "TurnEnd(agent_1)",
+        "Dice(agent_2,12)",
+        "TurnEnd(agent_2)",
+        "Dice(agent_3,5)",
+        "Produce(agent_0,wood,2,0)",
+        "TurnEnd(agent_3)",
+        "Dice(agent_0,8)",
+        "Produce(agent_0,brick,1,1)",
+        "Produce(agent_1,brick,1,1)",
+        "IllegalAction(agent_0,dev_card_unowned)"
+      ],
+      "scenario_id": "largest_army_development_race",
+      "steps": [
+        {
+          "action": {
+            "kind": "buy_dev"
+          },
+          "actor": "agent_0",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 1,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "061c50f27c9f8dc1b62c1e12a7968dacccba6cef33d054bd1eacc7672a48b19d"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_1",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 2,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "38f8201160454f10d70ba6f1fdc912ad5d98d1c6775b989906deddfe5f3db597"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_2",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 3,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "bb849ab414631811310074222a452088e5629f7add24505beda956cbb831e513"
+        },
+        {
+          "action": {
+            "kind": "move_robber",
+            "tile": 1,
+            "victim": "agent_0"
+          },
+          "actor": "agent_3",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 4,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "d3494e1bcb3287288a312a9899d77e9b6baa8f030818fd37c80442e493bcc757"
+        },
+        {
+          "action": {
+            "card": "knight",
+            "kind": "play_dev",
+            "tile": 2,
+            "victim": "agent_1"
+          },
+          "actor": "agent_0",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 5,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "c73da2862264eff77d554b294dddc2b0e79fb6d4453138c61da846e338b742d3"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_1",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 6,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "11713f5a4303f0da5163c6e091523dc34214d9f4facbf8d190575c1b4b599cfa"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_2",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 7,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "819db0b747189cf575ac8a0ba540c5f2ab847531e992c7ea34e63ace81f9e1ed"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_3",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 8,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "089c85c78e9aaab99f2fe7eb29b147373b8fde28666a661cb1367a3f1c80111f"
+        },
+        {
+          "action": {
+            "kind": "buy_dev"
+          },
+          "actor": "agent_0",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 9,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "9f73fa487229a90b3d62299719ff51f771312aa3e5086710abb0dd7956931742"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_1",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 10,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "230f7c25d9cab3eb72d7f2d802897e48eb821d88cfff15bfe584df56dca76e0c"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_2",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 11,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "a27df23bd04d9773744e35e80586e8f440cf678dfe0af57ccdd415da0e9f1467"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_3",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 12,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "9b6afe1aa2b1cb425afc6df72728b8706843dde459e9ab241c228a4f511b4f47"
+        },
+        {
+          "action": {
+            "card": "knight",
+            "kind": "play_dev",
+            "tile": 3,
+            "victim": "agent_2"
+          },
+          "actor": "agent_0",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 13,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "f40962c24846e7555f674eddefa4d97fc84a707b31f421e338165cef9bdc0ccf"
+        },
+        {
+          "action": {
+            "kind": "move_robber",
+            "tile": 4,
+            "victim": "agent_0"
+          },
+          "actor": "agent_1",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 14,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "217f0d5d7fbb9fa3ded89d67ef27d628ba33359b01f1e56ecbf6a03e6ba3a3bc"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_2",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 15,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "5e7d3b4a4cdba4a6bf493b4e98c6f956606b2da4948fe310c65ac23a3b3a9355"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_3",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 16,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "f46ee2489accf0897ace83727b9c0201338ef40031a27382d51573b8af077803"
+        },
+        {
+          "action": {
+            "kind": "buy_dev"
+          },
+          "actor": "agent_0",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 17,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "f4971d5daab218af39ad49adc8133dda8c47195fc5fd1aa2f88ab864f2350b19"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_1",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 18,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "1d318bdbf78701bd416ed6484156cdd2d1036e4d0a6331215b5f80a175d80581"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_2",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 19,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "85c964268132eb5342604ddb27738ead9e0254fbbe19014fa463edb79b0f14f3"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_3",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 20,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "03ed673b4c29a60755e99a20be550cfb82445e7b673c7265ef8c31a2a0a4ceb9"
+        },
+        {
+          "action": {
+            "card": "knight",
+            "kind": "play_dev",
+            "tile": 5,
+            "victim": "agent_3"
+          },
+          "actor": "agent_0",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 21,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "edcd9f4a312b8fb21ec600b88bff72fbc3da00c79826a1511a388d35e29720c3"
+        }
+      ],
+      "structured": [
+        {
+          "kind": "game_started",
+          "players": [
+            "agent_0",
+            "agent_1",
+            "agent_2",
+            "agent_3"
+          ],
+          "seed": 1,
+          "turn": 0,
+          "victory_points_to_win": 10
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "dice",
+          "turn": 0,
+          "value": 8
+        },
+        {
+          "agent_id": "agent_0",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "brick",
+          "tile": 1,
+          "turn": 0
+        },
+        {
+          "agent_id": "agent_1",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "brick",
+          "tile": 1,
+          "turn": 0
+        },
+        {
+          "agent_id": "agent_0",
+          "card": "knight",
+          "kind": "dev_card",
+          "phase": "bought",
+          "turn": 0
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "dice",
+          "turn": 1,
+          "value": 6
+        },
+        {
+          "agent_id": "agent_1",
+          "amount": 2,
+          "kind": "produce",
+          "resource": "sheep",
+          "tile": 2,
+          "turn": 1
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "turn_end",
+          "turn": 1
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "dice",
+          "turn": 2,
+          "value": 9
+        },
+        {
+          "agent_id": "agent_1",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "wheat",
+          "tile": 3,
+          "turn": 2
+        },
+        {
+          "agent_id": "agent_2",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "wheat",
+          "tile": 3,
+          "turn": 2
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "turn_end",
+          "turn": 2
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "dice",
+          "turn": 3,
+          "value": 7
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 3
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 3
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 3
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 3
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "robber",
+          "phase": "required",
+          "turn": 3
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "robber",
+          "phase": "moved",
+          "stolen": "wood",
+          "tile": 1,
+          "turn": 3,
+          "victim": "agent_0"
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "dice",
+          "turn": 4,
+          "value": 10
+        },
+        {
+          "agent_id": "agent_2",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "wood",
+          "tile": 5,
+          "turn": 4
+        },
+        {
+          "agent_id": "agent_3",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "wood",
+          "tile": 5,
+          "turn": 4
+        },
+        {
+          "agent_id": "agent_0",
+          "card": "knight",
+          "kind": "dev_card",
+          "phase": "played",
+          "turn": 4
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "robber",
+          "phase": "moved",
+          "stolen": "wood",
+          "tile": 2,
+          "turn": 4,
+          "victim": "agent_1"
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "dice",
+          "turn": 5,
+          "value": 4
+        },
+        {
+          "agent_id": "agent_2",
+          "amount": 2,
+          "kind": "produce",
+          "resource": "ore",
+          "tile": 4,
+          "turn": 5
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "turn_end",
+          "turn": 5
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "dice",
+          "turn": 6,
+          "value": 11
+        },
+        {
+          "agent_id": "agent_0",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "sheep",
+          "tile": 7,
+          "turn": 6
+        },
+        {
+          "agent_id": "agent_3",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "sheep",
+          "tile": 7,
+          "turn": 6
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "turn_end",
+          "turn": 6
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "dice",
+          "turn": 7,
+          "value": 3
+        },
+        {
+          "agent_id": "agent_3",
+          "amount": 2,
+          "kind": "produce",
+          "resource": "wheat",
+          "tile": 6,
+          "turn": 7
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "turn_end",
+          "turn": 7
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "dice",
+          "turn": 8,
+          "value": 12
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "illegal_action",
+          "reason": "dev_card_cost_or_empty_deck",
+          "turn": 8
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "dice",
+          "turn": 9,
+          "value": 5
+        },
+        {
+          "agent_id": "agent_0",
+          "amount": 2,
+          "kind": "produce",
+          "resource": "wood",
+          "tile": 0,
+          "turn": 9
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "turn_end",
+          "turn": 9
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "dice",
+          "turn": 10,
+          "value": 8
+        },
+        {
+          "agent_id": "agent_0",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "brick",
+          "tile": 1,
+          "turn": 10
+        },
+        {
+          "agent_id": "agent_1",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "brick",
+          "tile": 1,
+          "turn": 10
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "turn_end",
+          "turn": 10
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "dice",
+          "turn": 11,
+          "value": 6
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "turn_end",
+          "turn": 11
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "dice",
+          "turn": 12,
+          "value": 9
+        },
+        {
+          "agent_id": "agent_1",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "wheat",
+          "tile": 3,
+          "turn": 12
+        },
+        {
+          "agent_id": "agent_2",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "wheat",
+          "tile": 3,
+          "turn": 12
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "illegal_action",
+          "reason": "dev_card_unowned",
+          "turn": 12
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "dice",
+          "turn": 13,
+          "value": 7
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 13
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 13
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 13
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 13
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "robber",
+          "phase": "required",
+          "turn": 13
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "robber",
+          "phase": "moved",
+          "stolen": "wood",
+          "tile": 4,
+          "turn": 13,
+          "victim": "agent_0"
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "dice",
+          "turn": 14,
+          "value": 10
+        },
+        {
+          "agent_id": "agent_2",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "wood",
+          "tile": 5,
+          "turn": 14
+        },
+        {
+          "agent_id": "agent_3",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "wood",
+          "tile": 5,
+          "turn": 14
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "turn_end",
+          "turn": 14
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "dice",
+          "turn": 15,
+          "value": 4
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "turn_end",
+          "turn": 15
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "dice",
+          "turn": 16,
+          "value": 11
+        },
+        {
+          "agent_id": "agent_0",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "sheep",
+          "tile": 7,
+          "turn": 16
+        },
+        {
+          "agent_id": "agent_3",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "sheep",
+          "tile": 7,
+          "turn": 16
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "illegal_action",
+          "reason": "dev_card_cost_or_empty_deck",
+          "turn": 16
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "dice",
+          "turn": 17,
+          "value": 3
+        },
+        {
+          "agent_id": "agent_3",
+          "amount": 2,
+          "kind": "produce",
+          "resource": "wheat",
+          "tile": 6,
+          "turn": 17
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "turn_end",
+          "turn": 17
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "dice",
+          "turn": 18,
+          "value": 12
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "turn_end",
+          "turn": 18
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "dice",
+          "turn": 19,
+          "value": 5
+        },
+        {
+          "agent_id": "agent_0",
+          "amount": 2,
+          "kind": "produce",
+          "resource": "wood",
+          "tile": 0,
+          "turn": 19
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "turn_end",
+          "turn": 19
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "dice",
+          "turn": 20,
+          "value": 8
+        },
+        {
+          "agent_id": "agent_0",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "brick",
+          "tile": 1,
+          "turn": 20
+        },
+        {
+          "agent_id": "agent_1",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "brick",
+          "tile": 1,
+          "turn": 20
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "illegal_action",
+          "reason": "dev_card_unowned",
+          "turn": 20
+        }
+      ]
+    },
+    {
+      "legacy": [
+        "GameStarted(2,['agent_0', 'agent_1', 'agent_2', 'agent_3'],10)",
+        "Dice(agent_0,6)",
+        "Produce(agent_1,sheep,2,2)",
+        "Build(agent_0,road,1,False)",
+        "Dice(agent_1,9)",
+        "Produce(agent_1,wheat,1,3)",
+        "Produce(agent_2,wheat,1,3)",
+        "TurnEnd(agent_1)",
+        "Dice(agent_2,7)",
+        "Robber(agent_0,discarded)",
+        "Robber(agent_1,discarded)",
+        "Robber(agent_2,discarded)",
+        "Robber(agent_3,discarded)",
+        "Robber(agent_2,required)",
+        "Robber(agent_2,moved,1,agent_1,wood)",
+        "Dice(agent_3,10)",
+        "Produce(agent_2,wood,1,5)",
+        "Produce(agent_3,wood,1,5)",
+        "TurnEnd(agent_3)",
+        "Dice(agent_0,4)",
+        "Produce(agent_2,ore,2,4)",
+        "Build(agent_0,road,2,False)",
+        "Dice(agent_1,11)",
+        "Produce(agent_0,sheep,1,7)",
+        "Produce(agent_3,sheep,1,7)",
+        "TurnEnd(agent_1)",
+        "Dice(agent_2,3)",
+        "Produce(agent_3,wheat,2,6)",
+        "TurnEnd(agent_2)",
+        "Dice(agent_3,12)",
+        "TurnEnd(agent_3)",
+        "Dice(agent_0,5)",
+        "Produce(agent_0,wood,2,0)",
+        "Build(agent_0,road,23,False)",
+        "LongestRoad(agent_0,5)"
+      ],
+      "scenario_id": "longest_road_network_race",
+      "steps": [
+        {
+          "action": {
+            "edge": 1,
+            "kind": "build_road"
+          },
+          "actor": "agent_0",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 1,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "7e4badac58ece8ddf3692eaaaa02f70f02245826dea76b19c9b55eb998056b22"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_1",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 2,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "b275a95f4d26ba03cb73581ba8e032d666f8c1a7567fcf574f4a823cb4c1c234"
+        },
+        {
+          "action": {
+            "kind": "move_robber",
+            "tile": 1,
+            "victim": "agent_1"
+          },
+          "actor": "agent_2",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 3,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "6c3ced71f3018cff9bc80b74fe373caa4762c81a5e281a0021e82c6852314e0c"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_3",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 4,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "6f12ae45e4ba99df0c5401cd0bebb87ef30fd5c7b8ee69e061cef2c4c385f9c7"
+        },
+        {
+          "action": {
+            "edge": 2,
+            "kind": "build_road"
+          },
+          "actor": "agent_0",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 5,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "3103397ff88bc48f8541c3417979bdae9f3afcd7a789ec06d5daff8f1438ea11"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_1",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 6,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "523136246671bb3fad191c98aa96d90d554bc17c7eaf860e5f21cca5131f5715"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_2",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 7,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "1d9f3770ec6a197bc7d462d53d120a829cfb61b3dabf410acb53921b9c11d318"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_3",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 8,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "da2282ea21a7c9f1406b1e36faab77b93029562d8030fb0c6dfc04cbcc72e2d5"
+        },
+        {
+          "action": {
+            "edge": 23,
+            "kind": "build_road"
+          },
+          "actor": "agent_0",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 9,
+          "rewards": {
+            "agent_0": 2.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "ef42043a9688f76bb22714a5346c26dceb2c5deb5a3e8fac918b5227145c6932"
+        }
+      ],
+      "structured": [
+        {
+          "kind": "game_started",
+          "players": [
+            "agent_0",
+            "agent_1",
+            "agent_2",
+            "agent_3"
+          ],
+          "seed": 2,
+          "turn": 0,
+          "victory_points_to_win": 10
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "dice",
+          "turn": 0,
+          "value": 6
+        },
+        {
+          "agent_id": "agent_1",
+          "amount": 2,
+          "kind": "produce",
+          "resource": "sheep",
+          "tile": 2,
+          "turn": 0
+        },
+        {
+          "agent_id": "agent_0",
+          "edge": 1,
+          "free": false,
+          "kind": "build",
+          "piece": "road",
+          "turn": 0
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "dice",
+          "turn": 1,
+          "value": 9
+        },
+        {
+          "agent_id": "agent_1",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "wheat",
+          "tile": 3,
+          "turn": 1
+        },
+        {
+          "agent_id": "agent_2",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "wheat",
+          "tile": 3,
+          "turn": 1
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "turn_end",
+          "turn": 1
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "dice",
+          "turn": 2,
+          "value": 7
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 2
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 2
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 2
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 2
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "robber",
+          "phase": "required",
+          "turn": 2
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "robber",
+          "phase": "moved",
+          "stolen": "wood",
+          "tile": 1,
+          "turn": 2,
+          "victim": "agent_1"
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "dice",
+          "turn": 3,
+          "value": 10
+        },
+        {
+          "agent_id": "agent_2",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "wood",
+          "tile": 5,
+          "turn": 3
+        },
+        {
+          "agent_id": "agent_3",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "wood",
+          "tile": 5,
+          "turn": 3
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "turn_end",
+          "turn": 3
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "dice",
+          "turn": 4,
+          "value": 4
+        },
+        {
+          "agent_id": "agent_2",
+          "amount": 2,
+          "kind": "produce",
+          "resource": "ore",
+          "tile": 4,
+          "turn": 4
+        },
+        {
+          "agent_id": "agent_0",
+          "edge": 2,
+          "free": false,
+          "kind": "build",
+          "piece": "road",
+          "turn": 4
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "dice",
+          "turn": 5,
+          "value": 11
+        },
+        {
+          "agent_id": "agent_0",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "sheep",
+          "tile": 7,
+          "turn": 5
+        },
+        {
+          "agent_id": "agent_3",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "sheep",
+          "tile": 7,
+          "turn": 5
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "turn_end",
+          "turn": 5
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "dice",
+          "turn": 6,
+          "value": 3
+        },
+        {
+          "agent_id": "agent_3",
+          "amount": 2,
+          "kind": "produce",
+          "resource": "wheat",
+          "tile": 6,
+          "turn": 6
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "turn_end",
+          "turn": 6
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "dice",
+          "turn": 7,
+          "value": 12
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "turn_end",
+          "turn": 7
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "dice",
+          "turn": 8,
+          "value": 5
+        },
+        {
+          "agent_id": "agent_0",
+          "amount": 2,
+          "kind": "produce",
+          "resource": "wood",
+          "tile": 0,
+          "turn": 8
+        },
+        {
+          "agent_id": "agent_0",
+          "edge": 23,
+          "free": false,
+          "kind": "build",
+          "piece": "road",
+          "turn": 8
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "longest_road",
+          "length": 5,
+          "turn": 8
+        }
+      ]
+    },
+    {
+      "legacy": [
+        "GameStarted(0,['agent_0', 'agent_1', 'agent_2', 'agent_3'],10)",
+        "Dice(agent_0,5)",
+        "Build(agent_0,road,1,False)",
+        "Dice(agent_1,8)",
+        "Produce(agent_0,brick,1,1)",
+        "Produce(agent_1,brick,1,1)",
+        "TradeProposed(agent_1,agent_2,{'wood': 1},{'ore': 1})",
+        "Dice(agent_2,6)",
+        "Produce(agent_1,sheep,2,2)",
+        "TradeAccepted(agent_2,agent_1)",
+        "Dice(agent_3,9)",
+        "Produce(agent_1,wheat,1,3)",
+        "Produce(agent_2,wheat,1,3)",
+        "DevCard(agent_3,bought,knight)",
+        "Dice(agent_0,7)",
+        "Robber(agent_0,discarded)",
+        "Robber(agent_1,discarded)",
+        "Robber(agent_2,discarded)",
+        "Robber(agent_3,discarded)",
+        "Robber(agent_0,required)",
+        "Robber(agent_0,moved,2,agent_1,wood)",
+        "Dice(agent_1,10)",
+        "Produce(agent_2,wood,1,5)",
+        "Produce(agent_3,wood,1,5)",
+        "TurnEnd(agent_1)",
+        "Dice(agent_2,4)",
+        "Produce(agent_2,ore,2,4)",
+        "IllegalAction(agent_2,city_cost_or_ownership)",
+        "Dice(agent_3,11)",
+        "Produce(agent_0,sheep,1,7)",
+        "Produce(agent_3,sheep,1,7)",
+        "TurnEnd(agent_3)"
+      ],
+      "scenario_id": "four_player_opening_trade_city",
+      "steps": [
+        {
+          "action": {
+            "edge": 1,
+            "kind": "build_road"
+          },
+          "actor": "agent_0",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 1,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "dba7a020e5ab4736477e1518e4cd1ee3ea63283e9a00c18872af45be87c60f09"
+        },
+        {
+          "action": {
+            "give": "wood",
+            "kind": "trade_propose",
+            "to": "agent_2",
+            "want": "ore"
+          },
+          "actor": "agent_1",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 2,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "84649835bb7ae7e75162937f704b1a3a0c1742d4ae83fca69811497b96dab06e"
+        },
+        {
+          "action": {
+            "kind": "trade_accept"
+          },
+          "actor": "agent_2",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 3,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "380c6cb341e5f42c0bad0f334c9f5901d72c1eb1d0f4ebd3ea7d599eb417be03"
+        },
+        {
+          "action": {
+            "kind": "buy_dev"
+          },
+          "actor": "agent_3",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 4,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "7f006d6a3ed35273e0b7b72acc3fad90a56412e2783779d2416f4e3489397949"
+        },
+        {
+          "action": {
+            "kind": "move_robber",
+            "tile": 2,
+            "victim": "agent_1"
+          },
+          "actor": "agent_0",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 5,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "51d2a6ce6fedca5340840417c01efecfa5397be52027638436bdc35916c6c19e"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_1",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 6,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "05fbc3cac6cb5a98ee4e2f948e40ad5faecafee768ab27cd799605bee83e8e88"
+        },
+        {
+          "action": {
+            "kind": "build_city",
+            "vertex": 12
+          },
+          "actor": "agent_2",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 7,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "a4d4c350d08e08d5673de298b2696a31f6de60d84949d021d6d0856e5a6c0a0e"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_3",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 8,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "4ad27a1a64a4af2b7e3f5bb9baa932f393f13e1722d66cfa17ef723bb6d24651"
+        }
+      ],
+      "structured": [
+        {
+          "kind": "game_started",
+          "players": [
+            "agent_0",
+            "agent_1",
+            "agent_2",
+            "agent_3"
+          ],
+          "seed": 0,
+          "turn": 0,
+          "victory_points_to_win": 10
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "dice",
+          "turn": 0,
+          "value": 5
+        },
+        {
+          "agent_id": "agent_0",
+          "edge": 1,
+          "free": false,
+          "kind": "build",
+          "piece": "road",
+          "turn": 0
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "dice",
+          "turn": 1,
+          "value": 8
+        },
+        {
+          "agent_id": "agent_0",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "brick",
+          "tile": 1,
+          "turn": 1
+        },
+        {
+          "agent_id": "agent_1",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "brick",
+          "tile": 1,
+          "turn": 1
+        },
+        {
+          "agent_id": "agent_1",
+          "give": {
+            "wood": 1
+          },
+          "kind": "trade_proposed",
+          "to": "agent_2",
+          "turn": 1,
+          "want": {
+            "ore": 1
+          }
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "dice",
+          "turn": 2,
+          "value": 6
+        },
+        {
+          "agent_id": "agent_1",
+          "amount": 2,
+          "kind": "produce",
+          "resource": "sheep",
+          "tile": 2,
+          "turn": 2
+        },
+        {
+          "agent_id": "agent_2",
+          "from_agent": "agent_1",
+          "kind": "trade_accepted",
+          "turn": 2
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "dice",
+          "turn": 3,
+          "value": 9
+        },
+        {
+          "agent_id": "agent_1",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "wheat",
+          "tile": 3,
+          "turn": 3
+        },
+        {
+          "agent_id": "agent_2",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "wheat",
+          "tile": 3,
+          "turn": 3
+        },
+        {
+          "agent_id": "agent_3",
+          "card": "knight",
+          "kind": "dev_card",
+          "phase": "bought",
+          "turn": 3
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "dice",
+          "turn": 4,
+          "value": 7
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 4
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 4
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 4
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 4
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "robber",
+          "phase": "required",
+          "turn": 4
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "robber",
+          "phase": "moved",
+          "stolen": "wood",
+          "tile": 2,
+          "turn": 4,
+          "victim": "agent_1"
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "dice",
+          "turn": 5,
+          "value": 10
+        },
+        {
+          "agent_id": "agent_2",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "wood",
+          "tile": 5,
+          "turn": 5
+        },
+        {
+          "agent_id": "agent_3",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "wood",
+          "tile": 5,
+          "turn": 5
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "turn_end",
+          "turn": 5
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "dice",
+          "turn": 6,
+          "value": 4
+        },
+        {
+          "agent_id": "agent_2",
+          "amount": 2,
+          "kind": "produce",
+          "resource": "ore",
+          "tile": 4,
+          "turn": 6
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "illegal_action",
+          "reason": "city_cost_or_ownership",
+          "turn": 6
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "dice",
+          "turn": 7,
+          "value": 11
+        },
+        {
+          "agent_id": "agent_0",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "sheep",
+          "tile": 7,
+          "turn": 7
+        },
+        {
+          "agent_id": "agent_3",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "sheep",
+          "tile": 7,
+          "turn": 7
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "turn_end",
+          "turn": 7
+        }
+      ]
+    },
+    {
+      "legacy": [
+        "GameStarted(4,['agent_0', 'agent_1', 'agent_2', 'agent_3'],10)",
+        "Dice(agent_0,7)",
+        "Robber(agent_0,discarded)",
+        "Robber(agent_1,discarded)",
+        "Robber(agent_2,discarded)",
+        "Robber(agent_3,discarded)",
+        "Robber(agent_0,required)",
+        "IllegalAction(agent_0,build_road,not_legal_in_current_phase)",
+        "Dice(agent_0,7)",
+        "Robber(agent_0,discarded)",
+        "Robber(agent_1,discarded)",
+        "Robber(agent_2,discarded)",
+        "Robber(agent_3,discarded)",
+        "Robber(agent_0,required)",
+        "Robber(agent_0,moved,3,agent_1,wood)",
+        "Dice(agent_1,10)",
+        "Produce(agent_2,wood,1,5)",
+        "Produce(agent_3,wood,1,5)",
+        "TurnEnd(agent_1)",
+        "Dice(agent_2,4)",
+        "Produce(agent_2,ore,2,4)",
+        "TurnEnd(agent_2)",
+        "Dice(agent_3,11)",
+        "Produce(agent_0,sheep,1,7)",
+        "Produce(agent_3,sheep,1,7)",
+        "TurnEnd(agent_3)",
+        "Dice(agent_0,3)",
+        "Produce(agent_3,wheat,2,6)",
+        "IllegalAction(agent_0,settlement_cost_network_or_distance)"
+      ],
+      "scenario_id": "robber_and_illegal_action_reliability",
+      "steps": [
+        {
+          "action": {
+            "edge": 1,
+            "kind": "build_road"
+          },
+          "actor": "agent_0",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 1,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "b58f493166ca49a018c7ce6f5830361d7972d9ade0785ab0196374c8b59b0d77"
+        },
+        {
+          "action": {
+            "kind": "move_robber",
+            "tile": 3,
+            "victim": "agent_1"
+          },
+          "actor": "agent_0",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 2,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "956c8df94dd7c849b1c5f37d2813af8bdf416aa649c197b96de327ef57b1e130"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_1",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 3,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "8d51d088647787a595c0b073f5c2300e87d8f7099f4bb66ee02cf09b3a17a9a2"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_2",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 4,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "138e4d8bc045de974a0e3a1dafa8ab05dd76a00fcddcf0fb1dfedf18ddab0326"
+        },
+        {
+          "action": {
+            "kind": "end_turn"
+          },
+          "actor": "agent_3",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 5,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "4ba84718f1cc9c7b5ab90b2ad820ed313bcaf95969f833bc05ded653d9f7d7c6"
+        },
+        {
+          "action": {
+            "kind": "build_settlement",
+            "vertex": 2
+          },
+          "actor": "agent_0",
+          "dones": {
+            "__all__": false,
+            "agent_0": false,
+            "agent_1": false,
+            "agent_2": false,
+            "agent_3": false
+          },
+          "index": 6,
+          "rewards": {
+            "agent_0": 0.0,
+            "agent_1": 0.0,
+            "agent_2": 0.0,
+            "agent_3": 0.0
+          },
+          "state_hash": "6de0c3c84b55fa2c944215996eb8113866501b7f082c012d4b1364262c76ca4c"
+        }
+      ],
+      "structured": [
+        {
+          "kind": "game_started",
+          "players": [
+            "agent_0",
+            "agent_1",
+            "agent_2",
+            "agent_3"
+          ],
+          "seed": 4,
+          "turn": 0,
+          "victory_points_to_win": 10
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "dice",
+          "turn": 0,
+          "value": 7
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 0
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 0
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 0
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 0
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "robber",
+          "phase": "required",
+          "turn": 0
+        },
+        {
+          "action": "build_road",
+          "agent_id": "agent_0",
+          "kind": "illegal_action",
+          "reason": "not_legal_in_current_phase",
+          "turn": 0
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "dice",
+          "turn": 0,
+          "value": 7
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 0
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 0
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 0
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "robber",
+          "phase": "discarded",
+          "turn": 0
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "robber",
+          "phase": "required",
+          "turn": 0
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "robber",
+          "phase": "moved",
+          "stolen": "wood",
+          "tile": 3,
+          "turn": 0,
+          "victim": "agent_1"
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "dice",
+          "turn": 1,
+          "value": 10
+        },
+        {
+          "agent_id": "agent_2",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "wood",
+          "tile": 5,
+          "turn": 1
+        },
+        {
+          "agent_id": "agent_3",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "wood",
+          "tile": 5,
+          "turn": 1
+        },
+        {
+          "agent_id": "agent_1",
+          "kind": "turn_end",
+          "turn": 1
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "dice",
+          "turn": 2,
+          "value": 4
+        },
+        {
+          "agent_id": "agent_2",
+          "amount": 2,
+          "kind": "produce",
+          "resource": "ore",
+          "tile": 4,
+          "turn": 2
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "turn_end",
+          "turn": 2
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "dice",
+          "turn": 3,
+          "value": 11
+        },
+        {
+          "agent_id": "agent_0",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "sheep",
+          "tile": 7,
+          "turn": 3
+        },
+        {
+          "agent_id": "agent_3",
+          "amount": 1,
+          "kind": "produce",
+          "resource": "sheep",
+          "tile": 7,
+          "turn": 3
+        },
+        {
+          "agent_id": "agent_3",
+          "kind": "turn_end",
+          "turn": 3
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "dice",
+          "turn": 4,
+          "value": 3
+        },
+        {
+          "agent_id": "agent_3",
+          "amount": 2,
+          "kind": "produce",
+          "resource": "wheat",
+          "tile": 6,
+          "turn": 4
+        },
+        {
+          "agent_id": "agent_0",
+          "kind": "illegal_action",
+          "reason": "settlement_cost_network_or_distance",
+          "turn": 4
+        }
+      ]
+    }
+  ],
+  "schema_version": "gamebench.settlers.eventlogs.v1"
+}

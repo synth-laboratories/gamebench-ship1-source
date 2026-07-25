@@ -1,0 +1,18 @@
+{
+  "schema_version": "gamebench.task.v1",
+  "env_family": "settlers-multiplayer",
+  "scenario_id": "four_player_opening_trade_city",
+  "seed": 0,
+  "max_turns": 80,
+  "checkpoint_after": 4,
+  "actions": [
+    {"kind": "build_road", "edge": 1},
+    {"kind": "trade_propose", "to": "agent_2", "give": "wood", "want": "ore"},
+    {"kind": "trade_accept"},
+    {"kind": "buy_dev"},
+    {"kind": "move_robber", "tile": 2, "victim": "agent_1"},
+    {"kind": "end_turn"},
+    {"kind": "build_city", "vertex": 12},
+    {"kind": "end_turn"}
+  ]
+}
