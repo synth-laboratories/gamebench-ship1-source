@@ -47,6 +47,17 @@ def validate_scenario(entry: dict[str, Any], source: Path | None = None) -> None
         raise ValueError(f"{label}: roles must be {ROLES}")
     if not isinstance(entry.get("seed"), int) or not isinstance(entry.get("max_timesteps"), int):
         raise ValueError(f"{label}: seed and max_timesteps must be integers")
+    profile = entry.get("rules_profile")
+    if profile is not None and profile != "alem_coord_v0":
+        raise ValueError(f"{label}: unsupported rules_profile")
+    if profile == "alem_coord_v0":
+        coordination = entry.get("coordination")
+        if not isinstance(coordination, dict):
+            raise ValueError(f"{label}: ALEM scenarios require coordination")
+        if coordination.get("scenario") not in {"sync_2", "sync_all", "handover"}:
+            raise ValueError(f"{label}: invalid ALEM coordination scenario")
+        if coordination.get("alpha") not in {0.3, 0.6, 0.9}:
+            raise ValueError(f"{label}: invalid ALEM alpha")
     for index, joint_action in enumerate(entry.get("joint_actions", ())):
         if set(joint_action) != set(AGENT_IDS):
             raise ValueError(f"{label}: joint action {index} must name every agent exactly once")
@@ -54,7 +65,11 @@ def validate_scenario(entry: dict[str, Any], source: Path | None = None) -> None
 
 def run_scenario(entry: dict[str, Any]) -> dict[str, Any]:
     validate_scenario(entry)
-    env = CraftaxCoopEnv(max_timesteps=entry["max_timesteps"])
+    env = CraftaxCoopEnv(
+        max_timesteps=entry["max_timesteps"],
+        rules_profile=entry.get("rules_profile"),
+        coordination=entry.get("coordination"),
+    )
     initial_observations, reset_info = env.reset(entry["seed"])
     initial_projection = observation_projection(initial_observations)
     checkpoint_after = entry.get("checkpoint_after")
@@ -109,7 +124,7 @@ def run_scenario(entry: dict[str, Any]) -> dict[str, Any]:
 
 def state_projection(env: CraftaxCoopEnv) -> dict[str, Any]:
     state = env._require_state()
-    return {
+    projection = {
         "seed": state.seed,
         "timestep": state.timestep,
         "max_timesteps": state.max_timesteps,
@@ -137,6 +152,10 @@ def state_projection(env: CraftaxCoopEnv) -> dict[str, Any]:
             "boss": state.maps[8][24][24],
         },
     }
+    if state.alem_coord is not None:
+        projection["alem_coord"] = state.to_dict()["alem_coord"]
+        projection["alem_metrics"] = env.alem_metrics()
+    return projection
 
 
 def observation_projection(observations: dict[str, dict[str, Any]]) -> dict[str, Any]:
@@ -184,6 +203,50 @@ def verify_expectations(entry: dict[str, Any], outcome: dict[str, Any]) -> None:
                 raise AssertionError(f"{entry['scenario_id']}: expected {key}={expected[key]}")
     if expected.get("checkpoint_equivalent") and not outcome["checkpoint_equivalent"]:
         raise AssertionError(f"{entry['scenario_id']}: checkpoint restore changed state or observations")
+    if "coord_site_status" in expected:
+        coord = state.get("alem_coord")
+        if coord is None or coord["sites"][0]["status"] != expected["coord_site_status"]:
+            raise AssertionError(f"{entry['scenario_id']}: unexpected coordination site status")
+    if "coord_reward" in expected:
+        actual = state.get("alem_metrics", {}).get("coord_reward")
+        if actual != expected["coord_reward"]:
+            raise AssertionError(f"{entry['scenario_id']}: expected coord_reward={expected['coord_reward']}, got {actual}")
+    if "event_kind" in expected and expected["event_kind"] not in {event["kind"] for event in outcome["structured_nev"]}:
+        raise AssertionError(f"{entry['scenario_id']}: missing event {expected['event_kind']}")
+    if "absent_event_kind" in expected and expected["absent_event_kind"] in {event["kind"] for event in outcome["structured_nev"]}:
+        raise AssertionError(f"{entry['scenario_id']}: unexpectedly emitted {expected['absent_event_kind']}")
+
+
+def alem_parity_projection(outcome: dict[str, Any]) -> dict[str, Any]:
+    """Compact cross-language projection for all checked-in ALEM profile fixtures."""
+    state = outcome["state"]
+    return {
+        "scenario_id": outcome["scenario_id"],
+        "checkpoint_equivalent": outcome["checkpoint_equivalent"],
+        "structured_nev": outcome["structured_nev"],
+        "legacy_nev": outcome["legacy_nev"],
+        "steps": [
+            {key: record[key] for key in ("index", "joint_action", "rewards", "dones", "events")}
+            for record in outcome["steps"]
+        ],
+        "players": state["players"],
+        "alem_coord": state["alem_coord"],
+        "alem_metrics": state["alem_metrics"],
+        "initial_observations": alem_observation_surface(outcome["initial_observations"]),
+        "final_observations": alem_observation_surface(outcome["final_observations"]),
+    }
+
+
+def alem_observation_surface(observations: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """The profile-visible subset that must match across both gold engines."""
+    return {
+        agent_id: {
+            "legal_action_count": observation["legal_action_count"],
+            "shared": observation["shared"],
+            "last_joint_event": observation["last_joint_event"],
+        }
+        for agent_id, observation in observations.items()
+    }
 
 
 def fixture_documents(scenarios: list[dict[str, Any]]) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:

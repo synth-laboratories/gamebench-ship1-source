@@ -1,0 +1,16 @@
+{
+  "schema_version": "gamebench.task.v1",
+  "task_id": "craftax_coop_alem_sync_2_success",
+  "env_family": "craftax-multiplayer",
+  "scenario_id": "alem_sync_2_success",
+  "rules_profile": "alem_coord_v0",
+  "coordination": {"scenario": "sync_2", "alpha": 0.3},
+  "seed": 5,
+  "max_timesteps": 16,
+  "agents": ["agent_0", "agent_1", "agent_2"],
+  "roles": {"agent_0": "warrior", "agent_1": "forager", "agent_2": "miner"},
+  "joint_actions": [
+    {"agent_0": "do", "agent_1": "do", "agent_2": {"kind": "say", "to": "all", "code": "MEET_AT", "site_id": "sync_2_site"}}
+  ],
+  "expect": {"timestep": 1, "terminated": false, "coord_site_status": "completed", "coord_reward": 2.0, "event_kind": "coord_sync_success"}
+}

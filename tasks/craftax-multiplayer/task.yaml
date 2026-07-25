@@ -17,6 +17,14 @@ levels: 9
 joint_action: simultaneous
 reward: shared
 step_api: joint_action_dict
+rules_profiles:
+  default:
+    description: Existing Craftax-Coop rules; unchanged by the optional ALEM profile.
+  alem_coord_v0:
+    paper: arXiv:2606.08340
+    coordination: [sync_2, sync_all, handover]
+    soft_role_alpha: [0.3, 0.6, 0.9]
+    communication: structured_say_only
 scenario_dir: defaults/scenarios
 fixture_dir: fixtures/gold
 python_entrypoint: gold_python.engine:CraftaxCoopEnv
@@ -45,4 +53,4 @@ status:
   reference_engine_rust: tasks/craftax-multiplayer/gold_rust/
   implementation: dual_lane_author_semantics
   marl_contract: spec/marl_env_standards.md
-  deterministic_scenarios: 5
+  deterministic_scenarios: 11

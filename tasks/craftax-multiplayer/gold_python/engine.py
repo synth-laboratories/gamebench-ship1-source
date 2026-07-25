@@ -6,7 +6,7 @@ from copy import deepcopy
 from typing import Any
 
 from .constants import ACHIEVEMENT_REWARDS, BASE_ACTIONS, BOSS_HEALTH, DAY_LENGTH, FLOOR_MOBS, GLYPHS, KILL_ACHIEVEMENTS, LEVEL_ACHIEVEMENTS, MAP_SIZE, MAX_TIMESTEPS, MOB_DAMAGE, MOB_HEALTH, NUM_LEVELS, POTION_COLOURS, PROJECTILE_KIND, REQUEST_ACTIONS, REQUEST_DURATION, RESOURCES, ROLES
-from .state import Monster, Plant, Player, Projectile, WorldState
+from .state import AlemCoordState, CoordSite, Monster, Plant, Player, Projectile, WorldState
 
 
 class CraftaxCoopEnv:
@@ -14,12 +14,25 @@ class CraftaxCoopEnv:
 
     env_family = "craftax-multiplayer"
 
-    def __init__(self, agent_count: int = 3, max_timesteps: int = MAX_TIMESTEPS, view_radius: int = 5):
+    def __init__(
+        self,
+        agent_count: int = 3,
+        max_timesteps: int = MAX_TIMESTEPS,
+        view_radius: int = 5,
+        rules_profile: str | None = None,
+        coordination: dict[str, Any] | None = None,
+    ):
         if agent_count < 2:
             raise ValueError("Craftax-Coop requires at least two agents")
+        if rules_profile not in (None, "alem_coord_v0"):
+            raise ValueError(f"unsupported rules profile: {rules_profile}")
+        if rules_profile == "alem_coord_v0" and agent_count != 3:
+            raise ValueError("alem_coord_v0 requires exactly three agents")
         self.agent_ids = tuple(f"agent_{i}" for i in range(agent_count))
         self.max_timesteps = max_timesteps
         self.view_radius = view_radius
+        self.rules_profile = rules_profile
+        self.coordination = dict(coordination or {})
         self.state: WorldState | None = None
 
     @staticmethod
@@ -83,6 +96,36 @@ class CraftaxCoopEnv:
             maps.append(grid)
         return maps
 
+    def _alem_state(self) -> AlemCoordState:
+        scenario = str(self.coordination.get("scenario", "sync_2"))
+        alpha = self.coordination.get("alpha", 0.3)
+        try:
+            alpha_milli = int(round(float(alpha) * 1000))
+        except (TypeError, ValueError) as exc:
+            raise ValueError("alem_coord_v0 alpha must be one of 0.3, 0.6, 0.9") from exc
+        if alpha_milli not in (300, 600, 900):
+            raise ValueError("alem_coord_v0 alpha must be one of 0.3, 0.6, 0.9")
+        sites = {
+            "sync_2": [CoordSite("sync_2_site", 0, "sync_2", 0, 4, 4, ["agent_0", "agent_1"], "warrior")],
+            "sync_all": [CoordSite("sync_all_site", 1, "sync_all", 0, 4, 4, ["agent_0", "agent_1", "agent_2"], "warrior")],
+            "handover": [CoordSite("handover_site", 2, "handover", 0, 4, 4, ["agent_2", "agent_1"], "miner", "forager", "iron", 2)],
+        }
+        if scenario not in sites:
+            raise ValueError("alem_coord_v0 scenario must be sync_2, sync_all, or handover")
+        return AlemCoordState(scenario=scenario, alpha_milli=alpha_milli, sites=sites[scenario])
+
+    def _configure_alem_map(self, players: list[Player], maps: list[list[list[str]]], coord: AlemCoordState) -> None:
+        positions = {
+            "sync_2": ((4, 3, "down"), (3, 4, "right"), (5, 3, "down")),
+            "sync_all": ((4, 3, "down"), (3, 4, "right"), (5, 4, "left")),
+            "handover": ((5, 3, "down"), (3, 4, "right"), (4, 3, "down")),
+        }[coord.scenario]
+        for player, (x, y, facing) in zip(players, positions, strict=True):
+            player.x, player.y, player.facing = x, y, facing
+        maps[0][4][4] = "coord_site"
+        if coord.scenario == "handover":
+            players[2].inventory["iron"] = 1
+
     def reset(self, seed: int = 0) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
         players = [Player(a, ROLES[i % len(ROLES)], 3 + i, 3) for i, a in enumerate(self.agent_ids)]
         maps = self._generate_maps(seed)
@@ -109,6 +152,19 @@ class CraftaxCoopEnv:
         effects.sort(key=lambda effect: self._mix64(seed + sum(map(ord, effect))))
         self.state = WorldState(seed, 0, self.max_timesteps, players, maps, monsters, item_maps=items, light_maps=lights, ladders_up=ladders_up, ladders_down=ladders_down, boss_health=BOSS_HEALTH, potion_mapping=effects, chests_opened=[[False] * len(players) for _ in range(NUM_LEVELS)], achievements_by_agent={p.agent_id:{name:False for name in ACHIEVEMENT_REWARDS} for p in players})
         self._event("game_started", task_id=self.env_family, seed=seed)
+        if self.rules_profile == "alem_coord_v0":
+            coord = self._alem_state()
+            self._configure_alem_map(players, maps, coord)
+            self.state.alem_coord = coord
+            for site in coord.sites:
+                self._event(
+                    "coord_site_spawned",
+                    alpha_milli=coord.alpha_milli,
+                    participants=list(site.participants),
+                    site_id=site.site_id,
+                    site_kind=site.kind,
+                    target=[site.level, site.x, site.y],
+                )
         return self.observations(), {"seed": seed, "state_hash": self.state_hash()}
 
     @staticmethod
@@ -134,7 +190,7 @@ class CraftaxCoopEnv:
         payload=dict(sorted(payload.items()));event = {"timestep": self.state.timestep, "kind": kind, **payload}
         self.state.nev.append(event)
         self.state.last_joint_event.append(event)
-        args = ",".join(str(v) for v in payload.values())
+        args = ",".join(v if isinstance(v, str) else json.dumps(v, separators=(",", ":")) for v in payload.values())
         label = "".join(part.title() for part in kind.split("_"))
         self.state.legacy_nev.append(f"{label}({args})")
 
@@ -147,6 +203,8 @@ class CraftaxCoopEnv:
     def legal_actions(self, agent_id: str) -> list[str]:
         actions = list(BASE_ACTIONS + REQUEST_ACTIONS)
         actions.extend(f"give_{resource}_to_{other}" for resource in RESOURCES for other in self.agent_ids if other != agent_id)
+        if self.rules_profile == "alem_coord_v0":
+            actions.append("say")
         return actions
 
     def step(self, joint_action: dict[str, Any]) -> tuple[dict[str, dict[str, Any]], dict[str, float], dict[str, bool], dict[str, Any]]:
@@ -159,9 +217,16 @@ class CraftaxCoopEnv:
         for agent_id, action in normalized.items():
             if action["kind"] not in self.legal_actions(agent_id):
                 raise ValueError(f"illegal action for {agent_id}: {action['kind']}")
+            if action["kind"] == "say":
+                self._validate_message(agent_id, action)
         for agent_id in self.agent_ids:self._event("joint_action",agent_id=agent_id,action=normalized[agent_id]["kind"])
-        effective={agent_id:({"kind":"noop"} if not state.players[i].alive or state.players[i].sleeping or state.players[i].resting else normalized[agent_id]) for i,agent_id in enumerate(self.agent_ids)}
+        for agent_id, action in normalized.items():
+            if action["kind"] == "say":
+                self._event("message", sender=agent_id, to=action["to"], code=action["code"], **({"site_id": action["site_id"]} if "site_id" in action else {}))
+                self._award("coord_message", next(player for player in state.players if player.agent_id == agent_id))
+        effective={agent_id:({"kind":"noop"} if not state.players[i].alive or state.players[i].sleeping or state.players[i].resting or normalized[agent_id]["kind"] == "say" else normalized[agent_id]) for i,agent_id in enumerate(self.agent_ids)}
         self._resolve_floor_actions(effective)
+        coord_step_reward = self._resolve_coord_sites(effective)
         self._resolve_joint_do(effective)
         for i, agent_id in enumerate(self.agent_ids):
             if effective[agent_id]["kind"] not in ("do","attack"):self._apply_nonmovement(state.players[i], effective[agent_id])
@@ -185,10 +250,16 @@ class CraftaxCoopEnv:
             player.recover = float(player.recover)
         for monster in state.monsters:
             monster.health = float(monster.health)
-        reward=float(sum(ACHIEVEMENT_REWARDS.get(name,1) for agent,flags in state.achievements_by_agent.items() for name,earned in flags.items() if earned and name not in before[agent])+.1*(sum(p.health for p in state.players)-before_health))
+        base_reward=float(sum(ACHIEVEMENT_REWARDS.get(name,1) for agent,flags in state.achievements_by_agent.items() for name,earned in flags.items() if earned and name not in before[agent])+.1*(sum(p.health for p in state.players)-before_health))
+        if state.alem_coord is not None:
+            state.alem_coord.base_reward += base_reward
+        reward = base_reward + coord_step_reward
         rewards = {a: reward for a in self.agent_ids}
         dones = {a: state.terminated for a in self.agent_ids} | {"__all__": state.terminated}
-        return self.observations(), rewards, dones, {"events": deepcopy(state.last_joint_event), "state_hash": self.state_hash(), "termination_reason": state.termination_reason}
+        info = {"events": deepcopy(state.last_joint_event), "state_hash": self.state_hash(), "termination_reason": state.termination_reason}
+        if state.alem_coord is not None:
+            info["metrics"] = self.alem_metrics()
+        return self.observations(), rewards, dones, info
 
     def _resolve_joint_do(self,actions:dict[str,dict[str,Any]])->None:
         state=self._require_state();groups:dict[tuple[int,int,int],list[Player]]={};delta={"left":(-1,0),"right":(1,0),"up":(0,-1),"down":(0,1)}
@@ -235,6 +306,108 @@ class CraftaxCoopEnv:
         if isinstance(action, str): return {"kind": action}
         if not isinstance(action, dict) or not isinstance(action.get("kind"), str): raise ValueError("actions must be strings or objects with kind")
         return action
+
+    def _validate_message(self, sender: str, action: dict[str, Any]) -> None:
+        if self.rules_profile != "alem_coord_v0":
+            raise ValueError("say is only available under alem_coord_v0")
+        allowed = {"kind", "to", "code", "site_id"}
+        if set(action).difference(allowed):
+            raise ValueError("ALEM messages permit only kind, to, code, and optional site_id")
+        if action.get("to") not in (*self.agent_ids, "all") or action.get("to") == sender:
+            raise ValueError("ALEM message recipient must be another agent or all")
+        if action.get("code") not in {"NEED_IRON", "MEET_AT", "ATTACK_MOB", "BUILD_HERE"}:
+            raise ValueError("invalid ALEM message code")
+        if "site_id" in action and not isinstance(action["site_id"], str):
+            raise ValueError("ALEM message site_id must be a string")
+
+    def _resolve_coord_sites(self, actions: dict[str, dict[str, Any]]) -> float:
+        state = self._require_state()
+        coord = state.alem_coord
+        if coord is None:
+            return 0.0
+        reward = 0.0
+        for site in coord.sites:
+            if site.kind in ("sync_2", "sync_all") and site.status == "open":
+                actors = [
+                    player for player in state.players
+                    if player.agent_id in site.participants
+                    and actions[player.agent_id]["kind"] in ("do", "attack")
+                    and self._front(player) == (site.level, site.x, site.y)
+                ]
+                if actors:
+                    if {player.agent_id for player in actors} != set(site.participants):
+                        reward += self._resolve_coord_site(site, False, "coord_sync_fail", reason="missing_participant")
+                    elif all([self._soft_role_allowed(site, player, site.required_role) for player in actors]):
+                        reward += self._resolve_coord_site(site, True, "coord_sync_success")
+                    else:
+                        reward += self._resolve_coord_site(site, False, "coord_sync_fail", reason="soft_role_denied")
+            elif site.kind == "handover":
+                provider = next(player for player in state.players if player.agent_id == site.participants[0])
+                receiver = next(player for player in state.players if player.agent_id == site.participants[1])
+                provider_acts = actions[provider.agent_id]["kind"] in ("do", "attack") and self._front(provider) == (site.level, site.x, site.y)
+                receiver_acts = actions[receiver.agent_id]["kind"] in ("do", "attack") and self._front(receiver) == (site.level, site.x, site.y)
+                if site.status == "open" and provider_acts and self._soft_role_allowed(site, provider, site.required_role):
+                    assert site.resource is not None
+                    if provider.inventory[site.resource] > 0:
+                        provider.inventory[site.resource] -= 1
+                        site.status, site.opened_at = "opened", state.timestep
+                        self._award("coord_handover_offer", provider)
+                        self._event("handover_opened", giver=provider.agent_id, receiver=receiver.agent_id, resource=site.resource, site_id=site.site_id, window=site.window)
+                if site.status == "opened" and site.opened_at is not None and site.opened_at < state.timestep and receiver_acts and self._soft_role_allowed(site, receiver, site.receiver_role):
+                    assert site.resource is not None
+                    receiver.inventory[site.resource] = min(99, receiver.inventory[site.resource] + 1)
+                    reward += self._resolve_coord_site(site, True, "handover_completed", giver=provider.agent_id, receiver=receiver.agent_id, resource=site.resource)
+                elif site.status == "opened" and site.opened_at is not None and state.timestep - site.opened_at >= site.window:
+                    reward += self._resolve_coord_site(site, False, "handover_expired", giver=provider.agent_id, receiver=receiver.agent_id, resource=site.resource)
+        return reward
+
+    @staticmethod
+    def _front(player: Player) -> tuple[int, int, int]:
+        dx, dy = {"left": (-1, 0), "right": (1, 0), "up": (0, -1), "down": (0, 1)}[player.facing]
+        return player.level, player.x + dx, player.y + dy
+
+    def _soft_role_allowed(self, site: CoordSite, player: Player, required_role: str | None) -> bool:
+        if required_role is None:
+            return True
+        state = self._require_state()
+        player_index = state.players.index(player)
+        roll = self._mix64(state.seed ^ state.timestep ^ (site.site_index << 16) ^ player_index) % 10_000
+        success = player.role == required_role or roll < 10_000 - state.alem_coord.alpha_milli * 10
+        self._event("soft_role_roll", agent_id=player.agent_id, alpha_milli=state.alem_coord.alpha_milli, required_role=required_role, roll=roll, site_id=site.site_id, success=success)
+        if success and player.role != required_role:
+            self._award("coord_soft_role", player)
+        return success
+
+    def _resolve_coord_site(self, site: CoordSite, success: bool, event_kind: str, **payload: Any) -> float:
+        state = self._require_state()
+        assert state.alem_coord is not None
+        site.status = "completed" if success else "failed"
+        metrics = state.alem_coord.site_metrics[site.kind]
+        metrics["resolved"] += 1
+        if success:
+            metrics["success"] += 1
+        event_payload = {"site_id": site.site_id, "site_kind": site.kind, "success": success, **payload}
+        self._event(event_kind, **event_payload)
+        if not success:
+            return 0.0
+        achievement = {"sync_2": "coord_sync_2", "sync_all": "coord_sync_all", "handover": "coord_handover"}[site.kind]
+        self._award(achievement, *self._require_state().players)
+        reward = {"sync_2": 2.0, "sync_all": 3.0, "handover": 2.0}[site.kind]
+        state.alem_coord.coord_reward += reward
+        return reward
+
+    def alem_metrics(self) -> dict[str, Any]:
+        coord = self._require_state().alem_coord
+        if coord is None:
+            return {}
+        return {
+            "base_reward": coord.base_reward,
+            "coord_reward": coord.coord_reward,
+            "coord_success_rate": {
+                kind: {**values, "rate": values["success"] / values["resolved"] if values["resolved"] else 0.0}
+                for kind, values in coord.site_metrics.items()
+            },
+        }
 
     def _expire_requests(self) -> None:
         for p in self._require_state().players:
@@ -754,8 +927,54 @@ class CraftaxCoopEnv:
         self._event("game_ended", outcome=reason)
 
     def observations(self) -> dict[str, dict[str, Any]]:
-        state = self._require_state(); dashboard = [self._player_summary(p) for p in state.players]
-        return {p.agent_id: {"agent_id":p.agent_id,"agent_index":i,"role":p.role,"legal_agent_ids":list(self.agent_ids),"legal_actions":self.legal_actions(p.agent_id),"self":self._player_summary(p),"achievements":{name:True for name,earned in state.achievements_by_agent[p.agent_id].items() if earned},"teammate_dashboard":deepcopy(dashboard),"level":p.level,"map_size":[MAP_SIZE,MAP_SIZE],"num_levels":NUM_LEVELS,"local_view":self._local_view(p),"ascii":self.render_ascii(p.agent_id),"visible_monsters":[deepcopy(m.__dict__) for m in state.monsters if m.level==p.level and abs(m.x-p.x)<=self.view_radius and abs(m.y-p.y)<=self.view_radius],"shared":{"timestep":state.timestep,"light_level":state.light_level,"boss_health":state.boss_health,"boss_progress":state.boss_progress,"trade_count":state.trade_count,"food_trade_count":state.food_trade_count,"drink_trade_count":state.drink_trade_count,"revives":state.revives,"friendly_fire_damage":state.ff_damage_dealt,"chests_opened":deepcopy(state.chests_opened),"monsters_killed":deepcopy(state.monsters_killed),"achievements":{name:True for name,earned in state.achievements.items() if earned}},"last_joint_event":deepcopy(state.last_joint_event)} for i,p in enumerate(state.players)}
+        state = self._require_state()
+        dashboard = [self._player_summary(p) for p in state.players]
+        shared = {
+            "timestep": state.timestep,
+            "light_level": state.light_level,
+            "boss_health": state.boss_health,
+            "boss_progress": state.boss_progress,
+            "trade_count": state.trade_count,
+            "food_trade_count": state.food_trade_count,
+            "drink_trade_count": state.drink_trade_count,
+            "revives": state.revives,
+            "friendly_fire_damage": state.ff_damage_dealt,
+            "chests_opened": deepcopy(state.chests_opened),
+            "monsters_killed": deepcopy(state.monsters_killed),
+            "achievements": {name: True for name, earned in state.achievements.items() if earned},
+        }
+        if state.alem_coord is not None:
+            shared["rules_profile"] = "alem_coord_v0"
+            shared["coordination"] = {
+                "scenario": state.alem_coord.scenario,
+                "alpha_milli": state.alem_coord.alpha_milli,
+                "sites": [
+                    {"site_id": site.site_id, "kind": site.kind, "status": site.status, "target": [site.level, site.x, site.y]}
+                    for site in state.alem_coord.sites
+                ],
+                "metrics": self.alem_metrics(),
+            }
+        return {
+            p.agent_id: {
+                "agent_id": p.agent_id,
+                "agent_index": i,
+                "role": p.role,
+                "legal_agent_ids": list(self.agent_ids),
+                "legal_actions": self.legal_actions(p.agent_id),
+                "self": self._player_summary(p),
+                "achievements": {name: True for name, earned in state.achievements_by_agent[p.agent_id].items() if earned},
+                "teammate_dashboard": deepcopy(dashboard),
+                "level": p.level,
+                "map_size": [MAP_SIZE, MAP_SIZE],
+                "num_levels": NUM_LEVELS,
+                "local_view": self._local_view(p),
+                "ascii": self.render_ascii(p.agent_id),
+                "visible_monsters": [deepcopy(m.__dict__) for m in state.monsters if m.level == p.level and abs(m.x - p.x) <= self.view_radius and abs(m.y - p.y) <= self.view_radius],
+                "shared": deepcopy(shared),
+                "last_joint_event": deepcopy(state.last_joint_event),
+            }
+            for i, p in enumerate(state.players)
+        }
 
     @staticmethod
     def _player_summary(p: Player) -> dict[str, Any]:
@@ -786,7 +1005,7 @@ class CraftaxCoopEnv:
         return {"schema_version":"craftax-coop.checkpoint.v2","state":state}
     def restore(self, checkpoint: dict[str, Any]) -> dict[str, dict[str, Any]]:
         if checkpoint.get("schema_version") != "craftax-coop.checkpoint.v2": raise ValueError("unsupported checkpoint schema")
-        self.state=WorldState.from_dict(deepcopy(checkpoint["state"])); self.agent_ids=tuple(p.agent_id for p in self.state.players); return self.observations()
+        self.state=WorldState.from_dict(deepcopy(checkpoint["state"])); self.agent_ids=tuple(p.agent_id for p in self.state.players); self.rules_profile="alem_coord_v0" if self.state.alem_coord is not None else None; self.coordination={}; return self.observations()
     def state_hash(self) -> str: return hashlib.sha256(json.dumps(self._require_state().to_dict(),sort_keys=True,separators=(",", ":")).encode()).hexdigest()
     def _require_state(self) -> WorldState:
         if self.state is None: raise RuntimeError("reset or restore required")

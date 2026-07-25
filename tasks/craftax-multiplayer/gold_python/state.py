@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-from .constants import ACHIEVEMENTS, RESOURCES
+from .constants import ACHIEVEMENTS, ALEM_COORD_ACHIEVEMENTS, RESOURCES
 
 
 @dataclass
@@ -95,6 +95,43 @@ class Plant:
 
 
 @dataclass
+class CoordSite:
+    """One fixed ALEM Lite coordination objective on a pinned Coop map."""
+
+    site_id: str
+    site_index: int
+    kind: str
+    level: int
+    x: int
+    y: int
+    participants: list[str]
+    required_role: str | None = None
+    receiver_role: str | None = None
+    resource: str | None = None
+    window: int = 0
+    status: str = "open"
+    opened_at: int | None = None
+
+
+@dataclass
+class AlemCoordState:
+    """Profile-only authority for ALEM Lite sites, rewards, and metrics."""
+
+    scenario: str
+    alpha_milli: int
+    sites: list[CoordSite]
+    base_reward: float = 0.0
+    coord_reward: float = 0.0
+    site_metrics: dict[str, dict[str, int]] = field(
+        default_factory=lambda: {
+            "sync_2": {"success": 0, "resolved": 0},
+            "sync_all": {"success": 0, "resolved": 0},
+            "handover": {"success": 0, "resolved": 0},
+        }
+    )
+
+
+@dataclass
 class WorldState:
     seed: int
     timestep: int
@@ -127,9 +164,17 @@ class WorldState:
     nev: list[dict[str, Any]] = field(default_factory=list)
     legacy_nev: list[str] = field(default_factory=list)
     last_joint_event: list[dict[str, Any]] = field(default_factory=list)
+    alem_coord: AlemCoordState | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        data = asdict(self)
+        if data["alem_coord"] is None:
+            del data["alem_coord"]
+            for achievement in ALEM_COORD_ACHIEVEMENTS:
+                data["achievements"].pop(achievement, None)
+                for flags in data["achievements_by_agent"].values():
+                    flags.pop(achievement, None)
+        return data
 
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> "WorldState":
@@ -150,6 +195,11 @@ class WorldState:
         data["monsters"] = [Monster(**monster) for monster in data["monsters"]]
         data["projectiles"] = [Projectile(**projectile) for projectile in data["projectiles"]]
         data["plants"] = [Plant(**plant) for plant in data["plants"]]
+        raw_coord = data.get("alem_coord")
+        if raw_coord is not None:
+            coord = dict(raw_coord)
+            coord["sites"] = [CoordSite(**site) for site in coord.get("sites", ())]
+            data["alem_coord"] = AlemCoordState(**coord)
         if any(player.role not in ("warrior", "forager", "miner") for player in data["players"]):
             raise ValueError("invalid player role in checkpoint")
         if any(player.facing not in ("left", "right", "up", "down") for player in data["players"]):

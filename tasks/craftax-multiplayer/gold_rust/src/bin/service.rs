@@ -1,5 +1,5 @@
 use craftax_coop_gamebench::render::{encode_gif, render_rgb, RenderMode, RgbFrame};
-use craftax_coop_gamebench::CraftaxCoopEnv;
+use craftax_coop_gamebench::{AlemCoordConfig, CraftaxCoopEnv};
 use serde_json::{json, Map, Value};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
@@ -27,7 +27,7 @@ impl Service {
         }
     }
 
-    fn configuration(body: &Value) -> Result<(u64, usize, u64), String> {
+    fn configuration(body: &Value) -> Result<(u64, usize, u64, Option<AlemCoordConfig>), String> {
         let task = body
             .get("task")
             .filter(|value| value.is_object())
@@ -56,12 +56,26 @@ impl Service {
             .or_else(|| task.get("max_steps"))
             .and_then(Value::as_u64)
             .unwrap_or(100_000);
-        Ok((seed, agent_count, max_timesteps))
+        let profile = task.get("rules_profile").map(|value| value.as_str().ok_or_else(|| "rules_profile must be a string".to_string())).transpose()?;
+        let alem = match profile {
+            None => None,
+            Some("alem_coord_v0") => {
+                let coordination = task.get("coordination").and_then(Value::as_object).cloned().unwrap_or_default();
+                let scenario = coordination.get("scenario").and_then(Value::as_str).unwrap_or("sync_2");
+                let alpha_milli = coordination.get("alpha").and_then(Value::as_f64).map(|alpha| (alpha * 1000.0).round() as u16).unwrap_or(300);
+                Some(AlemCoordConfig::new(scenario, alpha_milli)?)
+            }
+            Some(_) => return Err("unsupported rules profile".into()),
+        };
+        Ok((seed, agent_count, max_timesteps, alem))
     }
 
     fn new_env(body: &Value) -> Result<CraftaxCoopEnv, String> {
-        let (seed, agent_count, max_timesteps) = Self::configuration(body)?;
-        Ok(CraftaxCoopEnv::reset(seed, agent_count, max_timesteps))
+        let (seed, agent_count, max_timesteps, alem) = Self::configuration(body)?;
+        Ok(match alem {
+            Some(config) => CraftaxCoopEnv::reset_alem(seed, agent_count, max_timesteps, config),
+            None => CraftaxCoopEnv::reset(seed, agent_count, max_timesteps),
+        })
     }
 
     fn agent_ids(env: &CraftaxCoopEnv) -> Vec<String> {
@@ -76,23 +90,23 @@ impl Service {
         env: &CraftaxCoopEnv,
         raw: Option<&Value>,
         fill_missing: bool,
-    ) -> Result<BTreeMap<String, String>, String> {
+    ) -> Result<BTreeMap<String, Value>, String> {
         let object = raw
             .and_then(Value::as_object)
             .ok_or_else(|| "joint_action must be an object".to_string())?;
         let mut actions = object
             .iter()
             .map(|(agent, value)| {
-                let action = value
+                value
                     .as_str()
                     .or_else(|| value.get("kind").and_then(Value::as_str))
                     .ok_or_else(|| format!("invalid action for {agent}"))?;
-                Ok((agent.clone(), action.to_string()))
+                Ok((agent.clone(), value.clone()))
             })
-            .collect::<Result<BTreeMap<_, _>, String>>()?;
+            .collect::<Result<BTreeMap<String, Value>, String>>()?;
         if fill_missing {
             for agent in Self::agent_ids(env) {
-                actions.entry(agent).or_insert_with(|| "noop".into());
+                actions.entry(agent).or_insert_with(|| json!("noop"));
             }
         }
         Ok(actions)
@@ -122,18 +136,22 @@ impl Service {
 
     fn step_payload(
         env: &mut CraftaxCoopEnv,
-        actions: BTreeMap<String, String>,
+        actions: BTreeMap<String, Value>,
         rollout_id: Option<&str>,
     ) -> Result<Value, String> {
-        let step = env.step(&actions)?;
+        let step = env.step_json(&actions)?;
+        let mut info = Map::from_iter([
+            ("events".into(), json!(step.events)),
+            ("termination_reason".into(), json!(env.state.termination_reason)),
+        ]);
+        if let Some(metrics) = env.alem_metrics() {
+            info.insert("metrics".into(), metrics);
+        }
         let mut payload = Map::from_iter([
             ("observations".into(), json!(env.observations(5))),
             ("rewards".into(), json!(step.rewards)),
             ("dones".into(), json!(step.dones)),
-            (
-                "info".into(),
-                json!({"events":step.events,"termination_reason":env.state.termination_reason}),
-            ),
+            ("info".into(), Value::Object(info)),
         ]);
         if let Some(rollout_id) = rollout_id {
             payload.insert("rollout_id".into(), json!(rollout_id));
@@ -160,7 +178,7 @@ impl Service {
                     break;
                 }
                 let actions = Self::joint_action(&env, Some(raw_action), true)?;
-                env.step(&actions)?;
+                env.step_json(&actions)?;
                 if checkpoint_after == Some(index as u64 + 1) {
                     checkpoint = Some(env.checkpoint_json());
                 }
@@ -174,7 +192,7 @@ impl Service {
                         break;
                     }
                     let joint = Self::joint_action(&env, Some(raw_action), true)?;
-                    env.step(&joint)?;
+                    env.step_json(&joint)?;
                 }
             }
         }
