@@ -21,6 +21,7 @@ from containers.react.craftax_rust_client import (
     CraftaxGoldRequestError,
     CraftaxRustGoldClient,
 )
+from containers.react.trace_emitter import CraftaxTrace
 
 TASK_DIR = Path(__file__).resolve().parents[2]
 TASK_FAMILY = "craftax_singleplayer_rust"
@@ -44,6 +45,7 @@ class RolloutPolicySpec(BaseModel):
 class RolloutRequest(BaseModel):
     trace_correlation_id: str | None = None
     trial_id: str | None = None
+    trace_context: dict[str, str] | None = None
     env: RolloutEnvSpec = Field(default_factory=RolloutEnvSpec)
     policy: RolloutPolicySpec = Field(default_factory=RolloutPolicySpec)
 
@@ -104,6 +106,40 @@ def _achievement_names(readout: dict[str, Any]) -> list[str]:
     if isinstance(raw_public, dict):
         return sorted(str(key) for key, value in raw_public.items() if value)
     return []
+
+
+def _emit_achievement_rewards(
+    trace: CraftaxTrace,
+    *,
+    step: int,
+    new_achievements: list[str],
+    current_achievements: set[str],
+    total_reward: float,
+    action_event: str | None,
+    observation_event: str | None,
+) -> list[str]:
+    """Emit exactly one sparse reward fact for each newly unlocked achievement."""
+
+    emitted: list[str] = []
+    for achievement in new_achievements:
+        reward_event = trace.event(
+            "environment.reward",
+            {
+                "step": step,
+                "achievement": achievement,
+                "value": 1.0,
+                "total_reward": total_reward,
+                "achievements": sorted(current_achievements),
+            },
+            caused_by=tuple(
+                item for item in (action_event, observation_event) if item
+            ),
+            structural={"step": step, "achievement": achievement},
+            actor="environment",
+        )
+        if reward_event:
+            emitted.append(reward_event)
+    return emitted
 
 
 def _objective_labels(readout: dict[str, Any], task: dict[str, Any]) -> list[str]:
@@ -227,6 +263,7 @@ async def rollout(request: Request) -> dict[str, Any]:
             "trace_correlation_id": parsed.trace_correlation_id
             or f"craftax-react-{seed}",
             "trial_id": parsed.trial_id,
+            "trace_context": parsed.trace_context,
         }
     )
     ASYNC_ROLLOUTS[str(record["rollout_id"])] = record
@@ -559,6 +596,7 @@ async def _execute_goex_rollout(
     checkpoint_id: str | None = None,
     progress_rollout_id: str | None = None,
 ) -> dict[str, Any]:
+    trace = CraftaxTrace.from_request(request)
     env_spec = request.get("env") if isinstance(request.get("env"), dict) else {}
     policy_spec = (
         request.get("policy") if isinstance(request.get("policy"), dict) else {}
@@ -581,7 +619,7 @@ async def _execute_goex_rollout(
     world = task.get("world")
     if isinstance(world, dict):
         world["max_steps"] = max_steps
-    agent = AgentPolicy(AgentPolicyConfig.from_mapping(policy_config_raw))
+    agent = AgentPolicy(AgentPolicyConfig.from_mapping(policy_config_raw), trace=trace)
     max_llm_turns = max(int(policy_config_raw.get("max_llm_turns", max_steps)), 1)
     checkpoint_schedule = (
         request.get("checkpoint_schedule")
@@ -599,6 +637,31 @@ async def _execute_goex_rollout(
     request_metadata.setdefault("policy_model", agent.config.model)
 
     try:
+        trace_refs: dict[str, list[str]] = {
+            "observations": [],
+            "proposals": [],
+            "executed_actions": [],
+            "transitions": [],
+            "rewards": [],
+            "checkpoints": [],
+            "lifecycle": [],
+        }
+        rollout_started_event = trace.event(
+            "environment.rollout_started",
+            {
+                "rollout_id": rollout_id,
+                "trace_correlation_id": trace_correlation_id,
+                "parent_rollout_id": parent_rollout_id,
+                "parent_checkpoint_id": checkpoint_id,
+                "task_id": task.get("task_id"),
+                "seed": seed,
+                "max_steps": max_steps,
+            },
+            structural={"rollout_id": rollout_id, "seed": seed},
+            actor="environment",
+        )
+        if rollout_started_event:
+            trace_refs["lifecycle"].append(rollout_started_event)
         created = await GOLD.create_rollout(task=task, seed=seed)
         gold_rollout_id = str(created.get("rollout_id") or "").strip()
         if not gold_rollout_id:
@@ -611,6 +674,20 @@ async def _execute_goex_rollout(
                     status_code=404, detail=f"unknown_checkpoint:{checkpoint_id}"
                 )
             await GOLD.restore(gold_rollout_id, str(checkpoint["blob_b64"]))
+            restored_event = trace.event(
+                "environment.checkpoint_restored",
+                {
+                    "checkpoint_id": checkpoint_id,
+                    "parent_rollout_id": parent_rollout_id,
+                    "rollout_id": rollout_id,
+                    "gold_rollout_id": gold_rollout_id,
+                },
+                caused_by=tuple(item for item in (rollout_started_event,) if item),
+                structural={"checkpoint_id": checkpoint_id},
+                actor="environment",
+            )
+            if restored_event:
+                trace_refs["checkpoints"].append(restored_event)
 
         turns: list[dict[str, Any]] = []
         action_history: list[str] = []
@@ -620,6 +697,22 @@ async def _execute_goex_rollout(
         step = 0
         llm_calls = 0
         readout = await GOLD.readout(gold_rollout_id)
+        observation_event = trace.event(
+            "environment.observation",
+            {
+                "step": step,
+                "observation_text": readout.get("observation_text"),
+                "valid_actions": readout.get("valid_actions"),
+                "public": readout.get("public"),
+                "state": _state_from_readout(readout),
+            },
+            caused_by=tuple(item for item in (rollout_started_event,) if item),
+            structural={"step": step},
+            actor="environment",
+        )
+        if observation_event:
+            trace_refs["observations"].append(observation_event)
+        previous_achievements = set(_achievement_names(readout))
 
         while step < max_steps and llm_calls < max_llm_turns:
             state = _state_from_readout(readout)
@@ -631,8 +724,11 @@ async def _execute_goex_rollout(
                 action_history=action_history,
                 steps_remaining=max_steps - step,
                 llm_calls_remaining=max_llm_turns - llm_calls,
+                llm_call=llm_calls + 1,
             )
             llm_calls += 1
+            if turn.proposal_event_id:
+                trace_refs["proposals"].append(turn.proposal_event_id)
             if turn.invalid_parse or turn.repaired:
                 invalid_actions += 1
             if turn.truncated:
@@ -644,12 +740,80 @@ async def _execute_goex_rollout(
                 planned_actions = ["noop"]
             batch_size = min(len(planned_actions), max_steps - step)
             for batch_index, action in enumerate(planned_actions[:batch_size]):
+                action_event = trace.event(
+                    "environment.action_executed",
+                    {
+                        "action": action,
+                        "step": step,
+                        "llm_call": llm_calls,
+                        "batch_index": batch_index,
+                        "batch_size": batch_size,
+                    },
+                    caused_by=tuple(
+                        item
+                        for item in (turn.proposal_event_id, observation_event)
+                        if item
+                    ),
+                    structural={
+                        "step": step,
+                        "llm_call": llm_calls,
+                        "batch_index": batch_index,
+                    },
+                    actor="environment",
+                )
+                if action_event:
+                    trace_refs["executed_actions"].append(action_event)
                 step_payload = await GOLD.step(gold_rollout_id, action)
                 readout = step_payload.get("readout")
                 if not isinstance(readout, dict):
                     readout = await GOLD.readout(gold_rollout_id)
                 action_history.append(action)
                 private = _private(readout)
+                observation_event = trace.event(
+                    "environment.observation",
+                    {
+                        "step": step + 1,
+                        "observation_text": readout.get("observation_text"),
+                        "valid_actions": readout.get("valid_actions"),
+                        "public": readout.get("public"),
+                        "state": _state_from_readout(readout),
+                    },
+                    caused_by=tuple(item for item in (action_event,) if item),
+                    structural={"step": step + 1},
+                    actor="environment",
+                )
+                if observation_event:
+                    trace_refs["observations"].append(observation_event)
+                transition_event = trace.event(
+                    "environment.transition",
+                    {
+                        "step": step,
+                        "action": action,
+                        "terminated": bool(private.get("terminated")),
+                        "truncated": bool(private.get("truncated")),
+                        "done_reason": private.get("done_reason"),
+                        "total_reward": float(private.get("total_reward") or 0.0),
+                    },
+                    caused_by=tuple(item for item in (action_event, observation_event) if item),
+                    structural={"step": step},
+                    actor="environment",
+                )
+                if transition_event:
+                    trace_refs["transitions"].append(transition_event)
+                current_achievements = set(_achievement_names(readout))
+                new_achievements = sorted(current_achievements - previous_achievements)
+                trace_refs["rewards"].extend(
+                    _emit_achievement_rewards(
+                        trace,
+                        step=step,
+                        new_achievements=new_achievements,
+                        current_achievements=current_achievements,
+                        total_reward=float(private.get("total_reward") or 0.0),
+                        action_event=action_event,
+                        observation_event=observation_event,
+                    )
+                )
+                previous_achievements = current_achievements
                 turns.append(
                     {
                         "ply": step,
@@ -694,6 +858,15 @@ async def _execute_goex_rollout(
                     )
                     CHECKPOINTS[cp_id] = checkpoint
                     scheduled_checkpoints.append(_public_checkpoint(checkpoint))
+                    checkpoint_event = trace.event(
+                        "environment.checkpoint_created",
+                        _public_checkpoint(checkpoint),
+                        caused_by=tuple(item for item in (observation_event,) if item),
+                        structural={"checkpoint_id": cp_id, "llm_call": llm_calls},
+                        actor="environment",
+                    )
+                    if checkpoint_event:
+                        trace_refs["checkpoints"].append(checkpoint_event)
                 private = _private(readout)
                 if bool(private.get("terminated")) or bool(private.get("truncated")):
                     break
@@ -725,6 +898,32 @@ async def _execute_goex_rollout(
             readout,
         )
         CHECKPOINTS[terminal_checkpoint_id] = terminal_checkpoint
+        terminal_checkpoint_event = trace.event(
+            "environment.checkpoint_created",
+            _public_checkpoint(terminal_checkpoint),
+            caused_by=tuple(item for item in (observation_event,) if item),
+            structural={"checkpoint_id": terminal_checkpoint_id, "terminal": True},
+            actor="environment",
+        )
+        if terminal_checkpoint_event:
+            trace_refs["checkpoints"].append(terminal_checkpoint_event)
+        finished_event = trace.event(
+            "environment.rollout_finished",
+            {
+                "rollout_id": rollout_id,
+                "outcome": outcome,
+                "reward": reward,
+                "steps": step,
+                "llm_calls": llm_calls,
+                "achievements": _achievement_names(readout),
+                "terminal_checkpoint_id": terminal_checkpoint_id,
+            },
+            caused_by=tuple(item for item in (observation_event,) if item),
+            structural={"rollout_id": rollout_id},
+            actor="environment",
+        )
+        if finished_event:
+            trace_refs["lifecycle"].append(finished_event)
         return {
             "schema_version": "goex_rollout_response.v1",
             "rollout_id": rollout_id,
@@ -776,14 +975,27 @@ async def _execute_goex_rollout(
             "state": final_state,
             "checkpoint": _public_checkpoint(terminal_checkpoint),
             "scheduled_checkpoints": scheduled_checkpoints,
+            "trace_refs": trace_refs,
             "artifact": [{"artifact_type": "turns", "turns": turns}],
             "artifacts": [{"artifact_type": "turns", "turns": turns}],
         }
     except HTTPException:
         raise
     except Exception as exc:
+        trace.event(
+            "environment.rollout_failed",
+            {
+                "rollout_id": rollout_id,
+                "error_type": type(exc).__name__,
+                "error": str(exc),
+            },
+            structural={"rollout_id": rollout_id},
+            actor="environment",
+        )
         _raise_gold_error(exc)
         raise
+    finally:
+        trace.close()
 
 
 def _checkpoint_from_gold(
