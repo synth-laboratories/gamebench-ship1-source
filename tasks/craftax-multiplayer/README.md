@@ -12,6 +12,16 @@ Actions are objects such as `{"kind":"left"}`, `{"kind":"request_iron"}`, or `{"
 - Forager has triple food/drink capacity, gathers saplings, gains food from passive mobs, and casts the team-heal spell.
 - Miner crafts pickaxes and torches and alone places stone bridges; both Miner and Warrior can cast the learned fireball spell.
 
+## ALEM Lite coordination profile
+
+`alem_coord_v0` is an opt-in, own-emulator coordination extension inspired by [ALEM (arXiv:2606.08340)](https://arxiv.org/abs/2606.08340). It does not wrap `alem-env` or JAX and leaves the default Coop rules unchanged. The profile supplies three fixed, pinned coordination maps: a two-agent same-target sync, an all-agent sync, and an iron handover with a two-step completion window. Its specialist gates use pinned `alpha` values of `0.3`, `0.6`, or `0.9`; non-specialists pass with probability `1-alpha` via the shared deterministic integer mixer.
+
+Profile messages are structured actions only, for example `{"kind":"say","to":"all","code":"MEET_AT","site_id":"sync_2_site"}`. Allowed codes are `NEED_IRON`, `MEET_AT`, `ATTACK_MOB`, and `BUILD_HERE`; free text is rejected. The coordination layer emits `coord_site_spawned`, sync/handover outcomes, `soft_role_roll`, and `message` NEV records, and exposes cumulative `base_reward`, `coord_reward`, and per-site-kind success rates. Full action, event, checkpoint, and metric schema: [`shared/alem_coord_v0.md`](shared/alem_coord_v0.md).
+
+Run the baseline on a profile map:
+
+`python scripts/run_policy.py --rules-profile alem_coord_v0 --alem-scenario handover --seed 7 --steps 4`
+
 ## Parity and author-reference boundaries
 
 Python and Rust are independent runtime authorities with the same deterministic map generator, world/player state, simultaneous conflict rules, role abilities, requests/trades, collection and crafting, mobs and projectiles, plants/chests/potions/books/enchantments, attributes, traversal, boss progression, rewards, checkpoints, observations, NEV, and terminal conditions. `scripts/verify_python_rust_parity.py` compares canonical cooperative, combat, collection, expiry, plant/time, boss, death, timestep, and checkpoint scenarios.
@@ -31,6 +41,8 @@ Python and Rust emit the same canonical structured and legacy NEV records for pa
 `cargo run --manifest-path gold_rust/Cargo.toml --bin service -- 127.0.0.1:8081`
 
 `python scripts/verify_python_rust_parity.py`
+
+The parity command also runs five ALEM profile fixtures (`sync_2`, `sync_all`, handover success/expiry, and soft-role denial) through independent Python and Rust loops.
 
 Canonical multiplayer fixture verification (five deterministic task bundles with
 structured NEV, legacy NEV, projected observations/state, request expiry,

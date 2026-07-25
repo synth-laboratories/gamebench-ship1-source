@@ -27,13 +27,19 @@ class CraftaxService:
         self._next_rollout = 1
 
     @staticmethod
-    def _configuration(body: dict[str, Any]) -> tuple[int, int, int, int]:
+    def _configuration(body: dict[str, Any]) -> tuple[int, int, int, int, str | None, dict[str, Any]]:
         task = body.get("task") if isinstance(body.get("task"), dict) else body
         seed = int(body.get("seed", task.get("seed", 0)))
         agent_count = int(task.get("agent_count", len(task.get("agents", ())) or 3))
         max_timesteps = int(task.get("max_timesteps", task.get("max_steps", 100_000)))
         view_radius = int(task.get("view_radius", 5))
-        return seed, agent_count, max_timesteps, view_radius
+        rules_profile = task.get("rules_profile")
+        if rules_profile is not None and not isinstance(rules_profile, str):
+            raise ValueError("rules_profile must be a string")
+        coordination = task.get("coordination", {})
+        if not isinstance(coordination, dict):
+            raise ValueError("coordination must be an object")
+        return seed, agent_count, max_timesteps, view_radius, rules_profile, coordination
 
     @staticmethod
     def _joint_action(env: CraftaxCoopEnv, raw: Any, *, fill_missing: bool = False) -> dict[str, Any]:
@@ -84,8 +90,8 @@ class CraftaxService:
         return payload
 
     def _new_env(self, body: dict[str, Any]) -> tuple[CraftaxCoopEnv, dict[str, dict[str, Any]], dict[str, Any]]:
-        seed, agent_count, max_timesteps, view_radius = self._configuration(body)
-        env = CraftaxCoopEnv(agent_count, max_timesteps, view_radius)
+        seed, agent_count, max_timesteps, view_radius, rules_profile, coordination = self._configuration(body)
+        env = CraftaxCoopEnv(agent_count, max_timesteps, view_radius, rules_profile, coordination)
         observations, info = env.reset(seed)
         return env, observations, info
 

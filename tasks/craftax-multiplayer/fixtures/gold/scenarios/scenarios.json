@@ -7,6 +7,223 @@
         "agent_1",
         "agent_2"
       ],
+      "coordination": {
+        "alpha": 0.6,
+        "scenario": "handover"
+      },
+      "env_family": "craftax-multiplayer",
+      "expect": {
+        "coord_reward": 0.0,
+        "coord_site_status": "failed",
+        "event_kind": "handover_expired",
+        "terminated": false,
+        "timestep": 3
+      },
+      "joint_actions": [
+        {
+          "agent_0": "noop",
+          "agent_1": "noop",
+          "agent_2": "do"
+        },
+        {
+          "agent_0": "noop",
+          "agent_1": "noop",
+          "agent_2": "noop"
+        },
+        {
+          "agent_0": "noop",
+          "agent_1": "noop",
+          "agent_2": "noop"
+        }
+      ],
+      "max_timesteps": 16,
+      "roles": {
+        "agent_0": "warrior",
+        "agent_1": "forager",
+        "agent_2": "miner"
+      },
+      "rules_profile": "alem_coord_v0",
+      "scenario_id": "alem_handover_expired",
+      "schema_version": "gamebench.task.v1",
+      "seed": 11,
+      "source_file": "alem_handover_expired.json",
+      "task_id": "craftax_coop_alem_handover_expired"
+    },
+    {
+      "agents": [
+        "agent_0",
+        "agent_1",
+        "agent_2"
+      ],
+      "checkpoint_after": 1,
+      "coordination": {
+        "alpha": 0.3,
+        "scenario": "handover"
+      },
+      "env_family": "craftax-multiplayer",
+      "expect": {
+        "checkpoint_equivalent": true,
+        "coord_reward": 2.0,
+        "coord_site_status": "completed",
+        "event_kind": "handover_completed",
+        "terminated": false,
+        "timestep": 2
+      },
+      "joint_actions": [
+        {
+          "agent_0": {
+            "code": "NEED_IRON",
+            "kind": "say",
+            "site_id": "handover_site",
+            "to": "all"
+          },
+          "agent_1": "noop",
+          "agent_2": "do"
+        },
+        {
+          "agent_0": "noop",
+          "agent_1": "do",
+          "agent_2": "noop"
+        }
+      ],
+      "max_timesteps": 16,
+      "roles": {
+        "agent_0": "warrior",
+        "agent_1": "forager",
+        "agent_2": "miner"
+      },
+      "rules_profile": "alem_coord_v0",
+      "scenario_id": "alem_handover_success",
+      "schema_version": "gamebench.task.v1",
+      "seed": 7,
+      "source_file": "alem_handover_success.json",
+      "task_id": "craftax_coop_alem_handover_success"
+    },
+    {
+      "agents": [
+        "agent_0",
+        "agent_1",
+        "agent_2"
+      ],
+      "coordination": {
+        "alpha": 0.9,
+        "scenario": "sync_2"
+      },
+      "env_family": "craftax-multiplayer",
+      "expect": {
+        "coord_reward": 0.0,
+        "coord_site_status": "failed",
+        "event_kind": "coord_sync_fail",
+        "terminated": false,
+        "timestep": 1
+      },
+      "joint_actions": [
+        {
+          "agent_0": "do",
+          "agent_1": "do",
+          "agent_2": "noop"
+        }
+      ],
+      "max_timesteps": 16,
+      "roles": {
+        "agent_0": "warrior",
+        "agent_1": "forager",
+        "agent_2": "miner"
+      },
+      "rules_profile": "alem_coord_v0",
+      "scenario_id": "alem_soft_role_denial",
+      "schema_version": "gamebench.task.v1",
+      "seed": 1,
+      "source_file": "alem_soft_role_denial.json",
+      "task_id": "craftax_coop_alem_soft_role_denial"
+    },
+    {
+      "agents": [
+        "agent_0",
+        "agent_1",
+        "agent_2"
+      ],
+      "coordination": {
+        "alpha": 0.3,
+        "scenario": "sync_2"
+      },
+      "env_family": "craftax-multiplayer",
+      "expect": {
+        "coord_reward": 2.0,
+        "coord_site_status": "completed",
+        "event_kind": "coord_sync_success",
+        "terminated": false,
+        "timestep": 1
+      },
+      "joint_actions": [
+        {
+          "agent_0": "do",
+          "agent_1": "do",
+          "agent_2": {
+            "code": "MEET_AT",
+            "kind": "say",
+            "site_id": "sync_2_site",
+            "to": "all"
+          }
+        }
+      ],
+      "max_timesteps": 16,
+      "roles": {
+        "agent_0": "warrior",
+        "agent_1": "forager",
+        "agent_2": "miner"
+      },
+      "rules_profile": "alem_coord_v0",
+      "scenario_id": "alem_sync_2_success",
+      "schema_version": "gamebench.task.v1",
+      "seed": 5,
+      "source_file": "alem_sync_2_success.json",
+      "task_id": "craftax_coop_alem_sync_2_success"
+    },
+    {
+      "agents": [
+        "agent_0",
+        "agent_1",
+        "agent_2"
+      ],
+      "coordination": {
+        "alpha": 0.3,
+        "scenario": "sync_all"
+      },
+      "env_family": "craftax-multiplayer",
+      "expect": {
+        "coord_reward": 3.0,
+        "coord_site_status": "completed",
+        "event_kind": "coord_sync_success",
+        "terminated": false,
+        "timestep": 1
+      },
+      "joint_actions": [
+        {
+          "agent_0": "do",
+          "agent_1": "do",
+          "agent_2": "do"
+        }
+      ],
+      "max_timesteps": 16,
+      "roles": {
+        "agent_0": "warrior",
+        "agent_1": "forager",
+        "agent_2": "miner"
+      },
+      "rules_profile": "alem_coord_v0",
+      "scenario_id": "alem_sync_all_success",
+      "schema_version": "gamebench.task.v1",
+      "seed": 5,
+      "source_file": "alem_sync_all_success.json",
+      "task_id": "craftax_coop_alem_sync_all_success"
+    },
+    {
+      "agents": [
+        "agent_0",
+        "agent_1",
+        "agent_2"
+      ],
       "checkpoint_after": 2,
       "env_family": "craftax-multiplayer",
       "expect": {

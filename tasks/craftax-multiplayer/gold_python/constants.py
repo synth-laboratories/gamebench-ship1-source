@@ -55,11 +55,18 @@ ACHIEVEMENTS = (
     "enchant_armour", "defeat_knight", "defeat_archer",
     # GameBench cooperative contract achievements retained in addition to author achievements.
     "trade", "all_roles_alive", "level_up",
+    # ALEM Lite profile achievements are coordination-only and do not alter base reward.
+    "coord_sync_2", "coord_sync_all", "coord_handover", "coord_message",
+    "coord_soft_role", "coord_handover_offer",
+)
+ALEM_COORD_ACHIEVEMENTS = (
+    "coord_sync_2", "coord_sync_all", "coord_handover", "coord_message",
+    "coord_soft_role", "coord_handover_offer",
 )
 BASIC_ACHIEVEMENTS=set(ACHIEVEMENTS[:26])|{"trade","all_roles_alive","level_up"}
 INTERMEDIATE_ACHIEVEMENTS={"collect_sapphire","collect_ruby","make_diamond_pickaxe","make_diamond_sword","make_iron_armour","make_diamond_armour","enter_gnomish_mines","enter_dungeon","defeat_gnome_warrior","defeat_gnome_archer","defeat_orc_soldier","defeat_orc_mage","eat_bat","eat_snail","find_bow","fire_bow","open_chest","drink_potion"}
 VERY_ADVANCED_ACHIEVEMENTS={"enter_fire_realm","enter_ice_realm","enter_graveyard","defeat_pigman","defeat_fire_elemental","defeat_frost_troll","defeat_ice_elemental","damage_necromancer","defeat_necromancer"}
-ACHIEVEMENT_REWARDS={name:(0 if name in {"trade","all_roles_alive","level_up"} else 1 if name in BASIC_ACHIEVEMENTS else 3 if name in INTERMEDIATE_ACHIEVEMENTS else 8 if name in VERY_ADVANCED_ACHIEVEMENTS else 5) for name in ACHIEVEMENTS}
+ACHIEVEMENT_REWARDS={name:(0 if name in {"trade","all_roles_alive","level_up",*ALEM_COORD_ACHIEVEMENTS} else 1 if name in BASIC_ACHIEVEMENTS else 3 if name in INTERMEDIATE_ACHIEVEMENTS else 8 if name in VERY_ADVANCED_ACHIEVEMENTS else 5) for name in ACHIEVEMENTS}
 GLYPHS = {"grass": ".", "water": "~", "stone": "O", "tree": "T", "wood":"w", "path":"_", "coal": "c", "iron": "i", "diamond": "d", "ruby": "r", "sapphire": "s", "crafting_table":"C", "furnace":"F", "sand":":", "lava":"L", "plant":"p", "ripe_plant":"P", "wall":"#", "chest":"$", "fountain":"f", "fire_grass":";", "ice_grass":",", "fire_tree":"Y", "ice_shrub":"y", "enchantment_table_fire":"E", "enchantment_table_ice":"e", "necromancer":"N", "grave":"g", "stairs_down": ">", "stairs_up": "<", "boss": "B"}
 
 POTION_COLOURS = ("red", "green", "blue", "pink", "cyan", "yellow")

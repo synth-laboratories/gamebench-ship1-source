@@ -176,6 +176,52 @@ pub struct Event {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct CoordSite {
+    pub site_id: String,
+    pub site_index: u8,
+    pub kind: String,
+    pub level: usize,
+    pub x: usize,
+    pub y: usize,
+    pub participants: Vec<String>,
+    pub required_role: Option<String>,
+    pub receiver_role: Option<String>,
+    pub resource: Option<String>,
+    pub window: u64,
+    pub status: String,
+    pub opened_at: Option<u64>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct AlemCoordState {
+    pub scenario: String,
+    pub alpha_milli: u16,
+    pub sites: Vec<CoordSite>,
+    pub base_reward: f64,
+    pub coord_reward: f64,
+    pub site_metrics: BTreeMap<String, BTreeMap<String, u64>>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct AlemCoordConfig {
+    pub scenario: String,
+    pub alpha_milli: u16,
+}
+
+impl AlemCoordConfig {
+    pub fn new(scenario: impl Into<String>, alpha_milli: u16) -> Result<Self, String> {
+        if ![300, 600, 900].contains(&alpha_milli) {
+            return Err("alem_coord_v0 alpha must be one of 0.3, 0.6, 0.9".into());
+        }
+        let scenario = scenario.into();
+        if !["sync_2", "sync_all", "handover"].contains(&scenario.as_str()) {
+            return Err("alem_coord_v0 scenario must be sync_2, sync_all, or handover".into());
+        }
+        Ok(Self { scenario, alpha_milli })
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct State {
     pub seed: u64,
     pub timestep: u64,
@@ -210,6 +256,8 @@ pub struct State {
     pub last_joint_event: Vec<Event>,
     pub nev: Vec<Event>,
     pub legacy_nev: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub alem_coord: Option<AlemCoordState>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -232,9 +280,30 @@ pub struct CraftaxCoopEnv {
 
 impl CraftaxCoopEnv {
     pub fn reset(seed: u64, agent_count: usize, max_timesteps: u64) -> Self {
+        Self::reset_with_profile(seed, agent_count, max_timesteps, None)
+    }
+
+    pub fn reset_alem(
+        seed: u64,
+        agent_count: usize,
+        max_timesteps: u64,
+        config: AlemCoordConfig,
+    ) -> Self {
+        Self::reset_with_profile(seed, agent_count, max_timesteps, Some(config))
+    }
+
+    fn reset_with_profile(
+        seed: u64,
+        agent_count: usize,
+        max_timesteps: u64,
+        profile: Option<AlemCoordConfig>,
+    ) -> Self {
         assert!(agent_count >= 2);
+        if profile.is_some() {
+            assert_eq!(agent_count, 3, "alem_coord_v0 requires exactly three agents");
+        }
         let roles = ["warrior", "forager", "miner"];
-        let players = (0..agent_count)
+        let mut players: Vec<Player> = (0..agent_count)
             .map(|i| Player {
                 agent_id: format!("agent_{i}"),
                 role: roles[i % 3].into(),
@@ -469,6 +538,24 @@ impl CraftaxCoopEnv {
                 }
             }
         }
+        let alem_coord = profile.map(|config| {
+            let positions = match config.scenario.as_str() {
+                "sync_2" => [(4, 3, "down"), (3, 4, "right"), (5, 3, "down")],
+                "sync_all" => [(4, 3, "down"), (3, 4, "right"), (5, 4, "left")],
+                "handover" => [(5, 3, "down"), (3, 4, "right"), (4, 3, "down")],
+                _ => unreachable!("AlemCoordConfig validates scenario"),
+            };
+            for (player, (x, y, facing)) in players.iter_mut().zip(positions) {
+                player.x = x;
+                player.y = y;
+                player.facing = facing.into();
+            }
+            maps[0][4][4] = "coord_site".into();
+            if config.scenario == "handover" {
+                *players[2].inventory.get_mut("iron").unwrap() = 1;
+            }
+            alem_coord_state(config)
+        });
         let monsters = Vec::new();
         let mut env = Self {
             state: State {
@@ -505,6 +592,7 @@ impl CraftaxCoopEnv {
                 last_joint_event: vec![],
                 nev: vec![],
                 legacy_nev: vec![],
+                alem_coord,
             },
         };
         env.event_values(
@@ -514,27 +602,81 @@ impl CraftaxCoopEnv {
                 ("task_id".into(), json!("craftax-multiplayer")),
             ]),
         );
+        if let Some(coord) = env.state.alem_coord.clone() {
+            for site in coord.sites {
+                env.event_values(
+                    "coord_site_spawned",
+                    BTreeMap::from([
+                        ("alpha_milli".into(), json!(coord.alpha_milli)),
+                        ("participants".into(), json!(site.participants)),
+                        ("site_id".into(), json!(site.site_id)),
+                        ("site_kind".into(), json!(site.kind)),
+                        ("target".into(), json!([site.level, site.x, site.y])),
+                    ]),
+                );
+            }
+        }
         env
     }
 
     pub fn step(&mut self, actions: &BTreeMap<String, String>) -> Result<StepResult, String> {
+        let values = actions
+            .iter()
+            .map(|(agent, action)| (agent.clone(), Value::String(action.clone())))
+            .collect();
+        self.step_json(&values)
+    }
+
+    pub fn step_json(&mut self, raw_actions: &BTreeMap<String, Value>) -> Result<StepResult, String> {
         if self.state.terminated {
             return Err("step called after terminal state".into());
         }
-        if actions.len() != self.state.players.len()
+        if raw_actions.len() != self.state.players.len()
             || self
                 .state
                 .players
                 .iter()
-                .any(|p| !actions.contains_key(&p.agent_id))
+                .any(|p| !raw_actions.contains_key(&p.agent_id))
         {
             return Err("joint action must contain every agent".into());
         }
+        let mut actions = BTreeMap::new();
+        let mut messages = Vec::new();
         for player in &self.state.players {
-            let action = &actions[&player.agent_id];
-            if !self.legal_actions(&player.agent_id).contains(action) {
+            let raw = &raw_actions[&player.agent_id];
+            let action = raw
+                .as_str()
+                .or_else(|| raw.get("kind").and_then(Value::as_str))
+                .ok_or_else(|| format!("invalid action for {}", player.agent_id))?
+                .to_string();
+            if !self.legal_actions(&player.agent_id).contains(&action) {
                 return Err(format!("illegal action for {}: {action}", player.agent_id));
             }
+            if action == "say" {
+                let object = raw.as_object().ok_or_else(|| "ALEM say must be an object".to_string())?;
+                if object.keys().any(|key| !["kind", "to", "code", "site_id"].contains(&key.as_str())) {
+                    return Err("ALEM messages permit only kind, to, code, and optional site_id".into());
+                }
+                let to = object.get("to").and_then(Value::as_str).ok_or_else(|| "ALEM say requires to".to_string())?;
+                if to == player.agent_id || (to != "all" && !self.state.players.iter().any(|other| other.agent_id == to)) {
+                    return Err("ALEM message recipient must be another agent or all".into());
+                }
+                let code = object.get("code").and_then(Value::as_str).ok_or_else(|| "ALEM say requires code".to_string())?;
+                if !["NEED_IRON", "MEET_AT", "ATTACK_MOB", "BUILD_HERE"].contains(&code) {
+                    return Err("invalid ALEM message code".into());
+                }
+                let mut fields = BTreeMap::from([
+                    ("sender".into(), json!(player.agent_id)),
+                    ("to".into(), json!(to)),
+                    ("code".into(), json!(code)),
+                ]);
+                if let Some(site_id) = object.get("site_id") {
+                    let site_id = site_id.as_str().ok_or_else(|| "ALEM message site_id must be a string".to_string())?;
+                    fields.insert("site_id".into(), json!(site_id));
+                }
+                messages.push((player.agent_id.clone(), fields));
+            }
+            actions.insert(player.agent_id.clone(), action);
         }
         self.state.last_joint_event.clear();
         let start = self.state.nev.len();
@@ -558,6 +700,16 @@ impl CraftaxCoopEnv {
                 event_field_text(&fields["agent_id"])
             ));
         }
+        for (sender, fields) in messages {
+            self.event_values("message", fields);
+            let index = self
+                .state
+                .players
+                .iter()
+                .position(|player| player.agent_id == sender)
+                .expect("message sender is a player");
+            self.award("coord_message", &[index]);
+        }
         let effective = self
             .state
             .players
@@ -565,7 +717,7 @@ impl CraftaxCoopEnv {
             .map(|p| {
                 (
                     p.agent_id.clone(),
-                    if !p.alive || p.sleeping || p.resting {
+                    if !p.alive || p.sleeping || p.resting || actions[&p.agent_id] == "say" {
                         "noop".into()
                     } else {
                         actions[&p.agent_id].clone()
@@ -574,6 +726,7 @@ impl CraftaxCoopEnv {
             })
             .collect::<BTreeMap<_, _>>();
         self.resolve_floor_actions(&effective);
+        let coord_step_reward = self.resolve_coord_sites(&effective);
         self.resolve_joint_do(&effective);
         for idx in 0..self.state.players.len() {
             let action = effective[&self.state.players[idx].agent_id].clone();
@@ -698,7 +851,7 @@ impl CraftaxCoopEnv {
         } else if self.state.timestep >= self.state.max_timesteps {
             self.finish("timestep");
         }
-        let reward = self
+        let base_reward = self
             .state
             .achievements_by_agent
             .iter()
@@ -710,6 +863,10 @@ impl CraftaxCoopEnv {
             })
             .sum::<f64>()
             + 0.1 * (self.state.players.iter().map(|p| p.health).sum::<f64>() - before_health);
+        if let Some(coord) = &mut self.state.alem_coord {
+            coord.base_reward += base_reward;
+        }
+        let reward = base_reward + coord_step_reward;
         let rewards = self
             .state
             .players
@@ -727,6 +884,239 @@ impl CraftaxCoopEnv {
             rewards,
             dones,
             events: self.state.nev[start..].to_vec(),
+        })
+    }
+
+    fn resolve_coord_sites(&mut self, actions: &BTreeMap<String, String>) -> f64 {
+        let site_count = self
+            .state
+            .alem_coord
+            .as_ref()
+            .map(|coord| coord.sites.len())
+            .unwrap_or(0);
+        let mut reward = 0.0;
+        for site_index in 0..site_count {
+            let site = self.state.alem_coord.as_ref().unwrap().sites[site_index].clone();
+            if ["sync_2", "sync_all"].contains(&site.kind.as_str()) && site.status == "open" {
+                let actors = self
+                    .state
+                    .players
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(index, player)| {
+                        (site.participants.contains(&player.agent_id)
+                            && ["do", "attack"].contains(&actions[&player.agent_id].as_str())
+                            && player.level == site.level
+                            && self.front(index) == (site.x, site.y))
+                            .then_some(index)
+                    })
+                    .collect::<Vec<_>>();
+                if !actors.is_empty() {
+                    if actors.len() != site.participants.len() {
+                        reward += self.resolve_coord_site(
+                            site_index,
+                            false,
+                            "coord_sync_fail",
+                            BTreeMap::from([("reason".into(), json!("missing_participant"))]),
+                        );
+                    } else if actors
+                        .iter()
+                        .map(|index| self.soft_role_allowed(site_index, *index, site.required_role.as_deref()))
+                        .collect::<Vec<_>>()
+                        .into_iter()
+                        .all(|success| success)
+                    {
+                        reward += self.resolve_coord_site(
+                            site_index,
+                            true,
+                            "coord_sync_success",
+                            BTreeMap::new(),
+                        );
+                    } else {
+                        reward += self.resolve_coord_site(
+                            site_index,
+                            false,
+                            "coord_sync_fail",
+                            BTreeMap::from([("reason".into(), json!("soft_role_denied"))]),
+                        );
+                    }
+                }
+                continue;
+            }
+            if site.kind != "handover" {
+                continue;
+            }
+            let provider = self
+                .state
+                .players
+                .iter()
+                .position(|player| player.agent_id == site.participants[0])
+                .expect("handover provider exists");
+            let receiver = self
+                .state
+                .players
+                .iter()
+                .position(|player| player.agent_id == site.participants[1])
+                .expect("handover receiver exists");
+            let provider_acts = self.state.players[provider].level == site.level
+                && ["do", "attack"].contains(&actions[&site.participants[0]].as_str())
+                && self.front(provider) == (site.x, site.y);
+            let receiver_acts = self.state.players[receiver].level == site.level
+                && ["do", "attack"].contains(&actions[&site.participants[1]].as_str())
+                && self.front(receiver) == (site.x, site.y);
+            if site.status == "open"
+                && provider_acts
+                && self.soft_role_allowed(site_index, provider, site.required_role.as_deref())
+            {
+                let resource = site.resource.as_ref().expect("handover resource");
+                if self.state.players[provider].inventory[resource] > 0 {
+                    *self.state.players[provider].inventory.get_mut(resource).unwrap() -= 1;
+                    {
+                        let current = &mut self.state.alem_coord.as_mut().unwrap().sites[site_index];
+                        current.status = "opened".into();
+                        current.opened_at = Some(self.state.timestep);
+                    }
+                    self.award("coord_handover_offer", &[provider]);
+                    self.event_values(
+                        "handover_opened",
+                        BTreeMap::from([
+                            ("giver".into(), json!(site.participants[0])),
+                            ("receiver".into(), json!(site.participants[1])),
+                            ("resource".into(), json!(resource)),
+                            ("site_id".into(), json!(site.site_id)),
+                            ("window".into(), json!(site.window)),
+                        ]),
+                    );
+                }
+            }
+            let current = self.state.alem_coord.as_ref().unwrap().sites[site_index].clone();
+            if current.status == "opened"
+                && receiver_acts
+                && self.soft_role_allowed(site_index, receiver, current.receiver_role.as_deref())
+            {
+                let resource = current.resource.as_ref().expect("handover resource");
+                let amount = self.state.players[receiver].inventory[resource];
+                *self.state.players[receiver].inventory.get_mut(resource).unwrap() = (amount + 1).min(99);
+                reward += self.resolve_coord_site(
+                    site_index,
+                    true,
+                    "handover_completed",
+                    BTreeMap::from([
+                        ("giver".into(), json!(site.participants[0])),
+                        ("receiver".into(), json!(site.participants[1])),
+                        ("resource".into(), json!(resource)),
+                    ]),
+                );
+            } else if current.status == "opened"
+                && current
+                    .opened_at
+                    .is_some_and(|opened_at| self.state.timestep - opened_at >= current.window)
+            {
+                reward += self.resolve_coord_site(
+                    site_index,
+                    false,
+                    "handover_expired",
+                    BTreeMap::from([
+                        ("giver".into(), json!(site.participants[0])),
+                        ("receiver".into(), json!(site.participants[1])),
+                        ("resource".into(), json!(current.resource)),
+                    ]),
+                );
+            }
+        }
+        reward
+    }
+
+    fn soft_role_allowed(&mut self, site_index: usize, player_index: usize, required_role: Option<&str>) -> bool {
+        let Some(required_role) = required_role else {
+            return true;
+        };
+        let site = self.state.alem_coord.as_ref().unwrap().sites[site_index].clone();
+        let alpha_milli = self.state.alem_coord.as_ref().unwrap().alpha_milli;
+        let player = &self.state.players[player_index];
+        let role = player.role.clone();
+        let roll = mix64(
+            self.state.seed
+                ^ self.state.timestep
+                ^ ((site.site_index as u64) << 16)
+                ^ player_index as u64,
+        ) % 10_000;
+        let success = role == required_role || roll < 10_000 - alpha_milli as u64 * 10;
+        let agent_id = player.agent_id.clone();
+        self.event_values(
+            "soft_role_roll",
+            BTreeMap::from([
+                ("agent_id".into(), json!(agent_id)),
+                ("alpha_milli".into(), json!(alpha_milli)),
+                ("required_role".into(), json!(required_role)),
+                ("roll".into(), json!(roll)),
+                ("site_id".into(), json!(site.site_id)),
+                ("success".into(), json!(success)),
+            ]),
+        );
+        if success && role != required_role {
+            self.award("coord_soft_role", &[player_index]);
+        }
+        success
+    }
+
+    fn resolve_coord_site(
+        &mut self,
+        site_index: usize,
+        success: bool,
+        event_kind: &str,
+        mut fields: BTreeMap<String, Value>,
+    ) -> f64 {
+        let (site_id, kind) = {
+            let coord = self.state.alem_coord.as_mut().expect("ALEM profile enabled");
+            let site = &mut coord.sites[site_index];
+            site.status = if success { "completed" } else { "failed" }.into();
+            let metrics = coord.site_metrics.get_mut(&site.kind).expect("site metrics initialized");
+            *metrics.get_mut("resolved").unwrap() += 1;
+            if success {
+                *metrics.get_mut("success").unwrap() += 1;
+            }
+            (site.site_id.clone(), site.kind.clone())
+        };
+        fields.insert("site_id".into(), json!(site_id));
+        fields.insert("site_kind".into(), json!(kind));
+        fields.insert("success".into(), json!(success));
+        self.event_values(event_kind, fields);
+        if !success {
+            return 0.0;
+        }
+        let achievement = match kind.as_str() {
+            "sync_2" => "coord_sync_2",
+            "sync_all" => "coord_sync_all",
+            "handover" => "coord_handover",
+            _ => unreachable!("ALEM has only known site kinds"),
+        };
+        self.award(achievement, &(0..self.state.players.len()).collect::<Vec<_>>());
+        let reward = match kind.as_str() {
+            "sync_2" => 2.0,
+            "sync_all" => 3.0,
+            "handover" => 2.0,
+            _ => unreachable!(),
+        };
+        self.state.alem_coord.as_mut().unwrap().coord_reward += reward;
+        reward
+    }
+
+    pub fn alem_metrics(&self) -> Option<Value> {
+        self.state.alem_coord.as_ref().map(|coord| {
+            let success_rate = coord
+                .site_metrics
+                .iter()
+                .map(|(kind, values)| {
+                    let success = values["success"];
+                    let resolved = values["resolved"];
+                    (
+                        kind.clone(),
+                        json!({"success":success,"resolved":resolved,"rate":if resolved == 0 { 0.0 } else { success as f64 / resolved as f64 }}),
+                    )
+                })
+                .collect::<BTreeMap<_, _>>();
+            json!({"base_reward":coord.base_reward,"coord_reward":coord.coord_reward,"coord_success_rate":success_rate})
         })
     }
 
@@ -2656,6 +3046,9 @@ impl CraftaxCoopEnv {
         .into_iter()
         .map(str::to_string)
         .collect::<Vec<_>>();
+        if self.state.alem_coord.is_some() {
+            actions.push("say".into());
+        }
         actions.extend(RESOURCES.into_iter().map(|r| format!("request_{r}")));
         for resource in RESOURCES {
             for player in &self.state.players {
@@ -2741,6 +3134,73 @@ impl CraftaxCoopEnv {
 
     fn player_json(p: &Player) -> Value {
         json!({"agent_id":p.agent_id,"role":p.role,"position":[p.x,p.y],"level":p.level,"facing":p.facing,"health":p.health,"food":p.food,"drink":p.drink,"energy":p.energy,"mana":p.mana,"alive":p.alive,"sleeping":p.sleeping,"resting":p.resting,"inventory":p.inventory,"equipment":{"pickaxe":p.pickaxe,"sword":p.sword,"armour":p.armour,"armour_slots":p.armour_slots,"bow":p.bow,"arrows":p.arrows,"torches":p.torches,"books":p.books,"saplings":p.saplings,"potions":p.potions,"learned_spell":p.learned_spell,"enchantments":{"sword":p.sword_enchantment,"armour":p.armour_enchantment,"armour_slots":p.armour_enchantments,"bow":p.bow_enchantment}},"attributes":{"dexterity":p.dexterity,"strength":p.strength,"intelligence":p.intelligence,"xp":p.xp,"level_points":p.level_points},"intrinsics":{"recover":p.recover,"hunger":p.hunger,"thirst":p.thirst,"fatigue":p.fatigue,"recover_mana":p.recover_mana},"request":{"resource":p.request_type,"remaining":p.request_duration}})
+    }
+}
+
+fn alem_coord_state(config: AlemCoordConfig) -> AlemCoordState {
+    let site = match config.scenario.as_str() {
+        "sync_2" => CoordSite {
+            site_id: "sync_2_site".into(),
+            site_index: 0,
+            kind: "sync_2".into(),
+            level: 0,
+            x: 4,
+            y: 4,
+            participants: vec!["agent_0".into(), "agent_1".into()],
+            required_role: Some("warrior".into()),
+            receiver_role: None,
+            resource: None,
+            window: 0,
+            status: "open".into(),
+            opened_at: None,
+        },
+        "sync_all" => CoordSite {
+            site_id: "sync_all_site".into(),
+            site_index: 1,
+            kind: "sync_all".into(),
+            level: 0,
+            x: 4,
+            y: 4,
+            participants: vec!["agent_0".into(), "agent_1".into(), "agent_2".into()],
+            required_role: Some("warrior".into()),
+            receiver_role: None,
+            resource: None,
+            window: 0,
+            status: "open".into(),
+            opened_at: None,
+        },
+        "handover" => CoordSite {
+            site_id: "handover_site".into(),
+            site_index: 2,
+            kind: "handover".into(),
+            level: 0,
+            x: 4,
+            y: 4,
+            participants: vec!["agent_2".into(), "agent_1".into()],
+            required_role: Some("miner".into()),
+            receiver_role: Some("forager".into()),
+            resource: Some("iron".into()),
+            window: 2,
+            status: "open".into(),
+            opened_at: None,
+        },
+        _ => unreachable!("AlemCoordConfig validates scenario"),
+    };
+    AlemCoordState {
+        scenario: config.scenario,
+        alpha_milli: config.alpha_milli,
+        sites: vec![site],
+        base_reward: 0.0,
+        coord_reward: 0.0,
+        site_metrics: ["sync_2", "sync_all", "handover"]
+            .into_iter()
+            .map(|kind| {
+                (
+                    kind.into(),
+                    BTreeMap::from([("success".into(), 0), ("resolved".into(), 0)]),
+                )
+            })
+            .collect(),
     }
 }
 
@@ -2894,7 +3354,12 @@ fn kill_achievement(kind: &str) -> Option<&'static str> {
 }
 
 fn achievement_reward(name: &str) -> f64 {
-    if ["trade", "all_roles_alive", "level_up"].contains(&name) {
+    if [
+        "trade", "all_roles_alive", "level_up", "coord_sync_2", "coord_sync_all",
+        "coord_handover", "coord_message", "coord_soft_role", "coord_handover_offer",
+    ]
+    .contains(&name)
+    {
         return 0.0;
     }
     if [

@@ -31,6 +31,21 @@ def act(observation: dict) -> dict:
     front_dx, front_dy = DELTAS[facing]
     front = _cell(observation, x + front_dx, y + front_dy)
 
+    coordination = observation["shared"].get("coordination")
+    if coordination:
+        site = coordination["sites"][0]
+        if site["kind"] == "sync_2":
+            if agent_id in ("agent_0", "agent_1"):
+                return {"kind": "do"}
+            return {"kind": "say", "to": "all", "code": "MEET_AT", "site_id": site["site_id"]}
+        if site["kind"] == "sync_all":
+            return {"kind": "do"}
+        if role == "miner" and site["status"] == "open":
+            return {"kind": "do"}
+        if role == "forager" and site["status"] == "opened":
+            return {"kind": "do"}
+        return {"kind": "say", "to": "all", "code": "NEED_IRON", "site_id": site["site_id"]}
+
     for teammate in observation["teammate_dashboard"]:
         resource = teammate["request"]["resource"]
         if (

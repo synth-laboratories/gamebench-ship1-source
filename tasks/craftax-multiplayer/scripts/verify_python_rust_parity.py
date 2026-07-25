@@ -10,6 +10,18 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT))
 from gold_python.engine import CraftaxCoopEnv
 from gold_python.state import Monster,Plant
+from scenario_fixtures import alem_parity_projection, load_scenarios, run_scenario
+
+def cargo_json(example: str, payload: str | None = None) -> dict:
+    completed = subprocess.run(
+        ["cargo", "run", "--quiet", "--manifest-path", str(ROOT / "gold_rust/Cargo.toml"), "--example", example],
+        input=payload,
+        text=True,
+        capture_output=True,
+    )
+    if completed.returncode:
+        raise SystemExit(completed.stderr.strip() or f"Rust {example} failed with status {completed.returncode}")
+    return json.loads(completed.stdout)
 
 def projection(env:CraftaxCoopEnv)->dict:
     state=env._require_state()
@@ -20,14 +32,14 @@ def main()->None:
     env.step({"agent_0":"request_iron","agent_1":"cast_spell","agent_2":"give_iron_to_agent_0"})
     env.step({"agent_0":"right","agent_1":"down","agent_2":"left"})
     env.step({"agent_0":"rest","agent_1":"noop","agent_2":"make_iron_pickaxe"})
-    rust=json.loads(subprocess.run(["cargo","run","--quiet","--manifest-path",str(ROOT/"gold_rust/Cargo.toml"),"--example","parity_fixture"],check=True,text=True,capture_output=True).stdout)
+    rust=cargo_json("parity_fixture")
     python=projection(env)
     # Rust serialization is authoritative wire shape; normalize it to the Python dashboard projection.
     rust["players"]=[{"agent_id":p["agent_id"],"role":p["role"],"position":[p["x"],p["y"]],"level":p["level"],"health":p["health"],"food":p["food"],"drink":p["drink"],"energy":p["energy"],"mana":p["mana"],"alive":p["alive"],"sleeping":p["sleeping"],"resting":p["resting"],"inventory":p["inventory"],"equipment":{"pickaxe":p["pickaxe"],"sword":p["sword"],"armour":p["armour"],"armour_slots":p["armour_slots"],"bow":p["bow"],"arrows":p["arrows"],"torches":p["torches"],"books":p["books"],"saplings":p["saplings"],"potions":p["potions"],"learned_spell":p["learned_spell"],"enchantments":{"sword":p["sword_enchantment"],"armour":p["armour_enchantment"],"armour_slots":p["armour_enchantments"],"bow":p["bow_enchantment"]}},"attributes":{"dexterity":p["dexterity"],"strength":p["strength"],"intelligence":p["intelligence"],"xp":p["xp"],"level_points":p["level_points"]},"intrinsics":{"recover":p["recover"],"hunger":p["hunger"],"thirst":p["thirst"],"fatigue":p["fatigue"],"recover_mana":p["recover_mana"]},"request":{"resource":p["request_type"],"remaining":p["request_duration"]},"facing":p["facing"]} for p in rust["players"]]
     if python!=rust:
         print(json.dumps({"python":python,"rust":rust},indent=2,sort_keys=True));raise SystemExit("Python/Rust parity mismatch")
     scenarios=python_scenarios()
-    rust_scenarios=json.loads(subprocess.run(["cargo","run","--quiet","--manifest-path",str(ROOT/"gold_rust/Cargo.toml"),"--example","parity_scenarios"],check=True,text=True,capture_output=True).stdout)
+    rust_scenarios=cargo_json("parity_scenarios")
     if scenarios!=rust_scenarios:
         print(json.dumps({"python":scenarios,"rust":rust_scenarios},indent=2,sort_keys=True));raise SystemExit("Python/Rust scenario parity mismatch")
     assert scenarios["collect"]["iron"]==1 and scenarios["collect"]["tile"]=="path"
@@ -38,7 +50,31 @@ def main()->None:
     assert scenarios["full_transfer"]["trades"]==1 and scenarios["full_transfer"]["request"]=="wood"
     assert scenarios["level_point"]=={"xp":1,"points":2}
     cross_checkpoint = verify_cross_language_checkpoint(env)
-    print(json.dumps({"status":"pass","projection":python,"scenarios":scenarios,"cross_checkpoint":cross_checkpoint},sort_keys=True))
+    service_build = verify_rust_service_build()
+    alem = verify_alem_profile_fixtures()
+    print(json.dumps({"status":"pass","projection":python,"scenarios":scenarios,"cross_checkpoint":cross_checkpoint,"rust_service":service_build,"alem":alem},sort_keys=True))
+
+def verify_rust_service_build() -> str:
+    completed = subprocess.run(
+        ["cargo", "check", "--quiet", "--manifest-path", str(ROOT / "gold_rust/Cargo.toml"), "--bin", "service"],
+        text=True,
+        capture_output=True,
+    )
+    if completed.returncode:
+        raise SystemExit(completed.stderr.strip() or "Rust service build failed")
+    return "pass"
+
+def verify_alem_profile_fixtures() -> dict:
+    fixtures = [entry for entry in load_scenarios() if entry.get("rules_profile") == "alem_coord_v0"]
+    if len(fixtures) < 5:
+        raise SystemExit("ALEM parity requires at least five profile fixtures")
+    for entry in fixtures:
+        python = alem_parity_projection(run_scenario(entry))
+        rust = cargo_json("alem_fixture", json.dumps(entry))
+        if python != rust:
+            print(json.dumps({"scenario_id":entry["scenario_id"],"python":python,"rust":rust},indent=2,sort_keys=True))
+            raise SystemExit("Python/Rust ALEM fixture parity mismatch")
+    return {"fixtures":len(fixtures),"status":"pass"}
 
 def verify_cross_language_checkpoint(environment: CraftaxCoopEnv) -> str:
     python_checkpoint = environment.checkpoint()
