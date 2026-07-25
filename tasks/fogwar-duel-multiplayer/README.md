@@ -61,8 +61,50 @@ python3 scripts/run_service.py
 python3 scripts/run_policy.py --scenario fogwar_nuclear_win_v0
 ```
 
-The Lite scope excludes deposit respawn, free-text diplomacy, a leaderboard
-harness, and all private-engine/runtime dependencies.
+## Code-policy DEO example
+
+The fixed `policy_dev_v1` suite runs `agent_0` against the fixed
+`passive_wait_v1` `agent_1` request stream while preserving engine-owned
+alternation (`agent_0`, then `agent_1`) and private observations. It has one
+scenario each for a visible Tank military win, a valid launch that resolves
+only after `agent_1` completes the round, and an empty opening that measures
+illegal-action reliability. Its score is the mean of
+`0.80 * (agent_0 terminal reward / 3.0) + 0.20 * legal-action reliability`;
+reliability is `1 - illegal policy actions / submitted policy actions`.
+
+The Harbor-compatible baseline is
+`containers/codepolicy/heuristic_policy.py`. The checked-in stronger, pure
+observation-only candidate is
+`examples/code_policy_deo/candidates/fogwar_duel/tactical_observation_v1/heuristic_policy.py`.
+It uses neither scenario identity nor hidden state: it launches only when the
+observation proves the prerequisites, attacks only a currently visible base in
+Tank range, and otherwise waits.
+
+Run the full generic Harbor DEO bundle through the task-local wrapper from the
+repository root. It stages the checked-in candidate under the supplied external
+output root, invokes the generic bundle's `run` and `score` commands, and
+asserts a candidate best-score delta of at least `0.01`:
+
+```bash
+python3 tasks/fogwar-duel-multiplayer/scripts/run_deo_example.py \
+  --output-root /tmp/fogwar-deo-example
+```
+
+The generic run phase writes the canonical `leaderboard.json` under
+`/tmp/fogwar-deo-example/artifacts/gamebench_hillclimb/`; the second writes the
+Harbor verifier result under the same supplied output root. The task-local
+runner can also be called directly with the same external output requirement:
+
+```bash
+python3 tasks/fogwar-duel-multiplayer/scripts/run_hillclimb.py \
+  --suite tasks/fogwar-duel-multiplayer/defaults/policy_sweep/policy_dev_v1.json \
+  --baseline tasks/fogwar-duel-multiplayer/containers/codepolicy/heuristic_policy.py \
+  --candidate-root tasks/fogwar-duel-multiplayer/examples/code_policy_deo/candidates \
+  --output /tmp/fogwar-deo-hillclimb
+```
+
+The Lite scope excludes deposit respawn, free-text diplomacy, and all
+private-engine/runtime dependencies.
 
 The normative board, action, observation, NEV, and checkpoint contract is in
 [`shared/fog_duel_lite_v0.md`](shared/fog_duel_lite_v0.md).
