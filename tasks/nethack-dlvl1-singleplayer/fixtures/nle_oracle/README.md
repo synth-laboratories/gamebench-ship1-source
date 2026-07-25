@@ -19,3 +19,9 @@ dlvl 2.
 
 No synthetic gold output may be put in this directory.  Until NLE captures are
 materialized, it intentionally contains only this format note.
+
+The required 33 tapes are a v0 minimum: a strict-green, hand-reviewed canonical
+gate.  It is expected to grow beyond 33, but generated diagnostic artifacts
+remain outside this directory until they are reproducible, minimized, confined
+to Main Dungeon dlvl 1, directly annotated from NLE observations, and strict
+green in both own lanes.

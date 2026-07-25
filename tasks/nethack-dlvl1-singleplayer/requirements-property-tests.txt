@@ -1,0 +1,3 @@
+# Optional task-local property-test dependencies.  The gold lanes themselves
+# remain stdlib-only and never import Hypothesis at runtime.
+hypothesis==6.161.5

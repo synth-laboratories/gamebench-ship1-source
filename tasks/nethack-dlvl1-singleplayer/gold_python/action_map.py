@@ -14,7 +14,7 @@ MAP_PATH = TASK_DIR / "shared" / "nle_action_map.json"
 
 @dataclass(frozen=True)
 class NleAction:
-    id: int
+    id: int | None
     canonical: str
     value: int
 
@@ -37,19 +37,32 @@ class NleAction:
         return ""
 
 
-def _load() -> tuple[tuple[NleAction, ...], dict[str, NleAction], dict[int, NleAction], dict[str, NleAction]]:
+def _load() -> tuple[
+    tuple[NleAction, ...],
+    dict[str, NleAction],
+    dict[int, NleAction],
+    dict[str, NleAction],
+    dict[str, NleAction],
+    dict[str, NleAction],
+]:
     raw = json.loads(MAP_PATH.read_text())
     actions = tuple(NleAction(int(entry[0]), str(entry[1]), int(entry[2])) for entry in raw["actions"])
-    by_id = {action.id: action for action in actions}
+    unsafe_actions = tuple(
+        NleAction(None, str(entry[0]), int(entry[1]))
+        for entry in raw.get("accepted_unsafe_keycodes", [])
+    )
+    by_id = {action.id: action for action in actions if action.id is not None}
     by_name = {action.canonical: action for action in actions}
     by_key: dict[str, NleAction] = {}
     for action in actions:
         if action.key and action.key not in by_key:
             by_key[action.key] = action
-    return actions, by_name, by_id, by_key
+    unsafe_by_name = {action.canonical: action for action in unsafe_actions}
+    unsafe_by_key = {action.key: action for action in unsafe_actions if action.key}
+    return actions, by_name, by_id, by_key, unsafe_by_name, unsafe_by_key
 
 
-ACTIONS, BY_NAME, BY_ID, BY_KEY = _load()
+ACTIONS, BY_NAME, BY_ID, BY_KEY, UNSAFE_BY_NAME, UNSAFE_BY_KEY = _load()
 ALIASES = {
     "up": "MiscDirection.UP",
     "down": "MiscDirection.DOWN",
@@ -66,6 +79,8 @@ ALIASES = {
     "wear": "Command.WEAR",
     "wield": "Command.WIELD",
     "quit": "Command.QUIT",
+    "help": "UnsafeActions.HELP",
+    "prevmsg": "UnsafeActions.PREVMSG",
 }
 
 
@@ -78,22 +93,27 @@ def coerce_action(value: Any) -> NleAction | None:
         return BY_ID.get(value)
     if not isinstance(value, str):
         return None
-    token = value.strip()
+    raw = value
+    token = raw.strip()
     if token.isdigit() or (token.startswith("-") and token[1:].isdigit()):
         return BY_ID.get(int(token))
     if token in BY_NAME:
         return BY_NAME[token]
+    if token in UNSAFE_BY_NAME:
+        return UNSAFE_BY_NAME[token]
     upper = token.upper()
     if "." not in token:
         alias = ALIASES.get(token.lower())
         if alias:
-            return BY_NAME[alias]
+            return BY_NAME.get(alias) or UNSAFE_BY_NAME.get(alias)
         for enum_class in ("CompassDirection", "CompassDirectionLonger", "MiscDirection", "MiscAction", "Command", "TextCharacters"):
             candidate = f"{enum_class}.{upper}"
             if candidate in BY_NAME:
                 return BY_NAME[candidate]
-    if len(value) == 1:
-        return BY_KEY.get(value)
+    if len(raw) == 1:
+        return UNSAFE_BY_KEY.get(raw) or BY_KEY.get(raw)
+    if len(token) == 1:
+        return UNSAFE_BY_KEY.get(token) or BY_KEY.get(token)
     return None
 
 
