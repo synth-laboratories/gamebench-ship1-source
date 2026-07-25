@@ -1,0 +1,22 @@
+{
+  "id": "fogwar_illegal_reliability_v0",
+  "seed": 4242,
+  "max_rounds": 80,
+  "passages": [[6, 3], [6, 5]],
+  "deposits": [
+    {"kind": "credit", "pos": [3, 1], "reserve": 24},
+    {"kind": "uranium", "pos": [3, 5], "reserve": 24},
+    {"kind": "credit", "pos": [9, 1], "reserve": 24},
+    {"kind": "uranium", "pos": [9, 5], "reserve": 24},
+    {"kind": "uranium", "pos": [6, 3], "reserve": 24, "central": true}
+  ],
+  "initial": {
+    "players": {"agent_0": {"credits": 5, "uranium": 0}, "agent_1": {"credits": 5, "uranium": 0}},
+    "units": [],
+    "buildings": []
+  },
+  "fixture_tape": [
+    {"actions": [{"kind": "move", "unit_id": "agent_0_missing", "to": [2, 2]}, {"kind": "wait"}]},
+    {"actions": [{"kind": "wait"}]}
+  ]
+}

@@ -1,7 +1,7 @@
 schema_version: gamebench.task_family.v1
 id: fogwar-duel-multiplayer
 name: Fog Duel Lite Multiplayer
-kind: gamebench_task_contract
+kind: gamebench_gold_reference
 game: fog_duel_lite
 visibility: private
 task_id: fogwar-duel-multiplayer
@@ -53,6 +53,14 @@ planned_scenarios:
   - fogwar_military_win_v0
   - fogwar_nuclear_win_v0
   - fogwar_illegal_reliability_v0
+python_entrypoint: gold_python.engine:FogDuelEnv
+python_service_entrypoint: scripts/run_service.py
+rust_crate: gold_rust
+rust_binary: fogwar_duel_gold
+policy_runner: scripts/run_policy.py
+parity_verifier: scripts/verify_python_rust_parity.py
+fixture_generator: scripts/generate_gold_fixtures.py
+fixture_verifier: scripts/verify_gold_fixtures.py
 
 actions:
   kinds: [produce, move, attack, build, launch, wait]
@@ -81,7 +89,8 @@ checkpoint:
 eval_families: [engine_rebuild, code_policy_deo, policy_puzzle]
 runtime_dependencies: []
 status:
-  implementation: spike_contract_only
-  gold_python: not_created
-  gold_rust: not_created
-  registry: deferred_until_dual_gold_exists
+  implementation: dual_lane_author_semantics
+  gold_python: tasks/fogwar-duel-multiplayer/gold_python/
+  gold_rust: tasks/fogwar-duel-multiplayer/gold_rust/
+  deterministic_scenarios: 3
+  registry: adapters/eval_registry.toml
