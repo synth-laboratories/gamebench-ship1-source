@@ -1,0 +1,6 @@
+{
+  "distinguishing_experiment": "Present a state where jump is salient and compare against a policy that handles it correctly.",
+  "evidence": "Trace actions show: observe safe pad; jump sideways; miss goal lane; repeat wrong jump.",
+  "flaw_id": "wrong_jump_direction",
+  "summary": "The hidden policy chooses jumps in the wrong direction when a safe forward lily pad is visible."
+}

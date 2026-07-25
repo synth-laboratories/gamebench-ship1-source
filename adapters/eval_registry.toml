@@ -5,6 +5,12 @@ label = "code policy DEO hillclimb"
 harbor_bundle = "code_policy_deo_hillclimb"
 
 [[task]]
+id = "tictactoe-multiplayer"
+policy_suite = "defaults/policy_sweep/policy_dev_v1.json"
+policy_baseline = "containers/codepolicy/heuristic_policy.py"
+candidate_subdir = "tictactoe_mp"
+
+[[task]]
 id = "sokoban-singleplayer"
 policy_suite = "defaults/policy_sweep/policy_dev_v1.json"
 policy_baseline = "containers/codepolicy/heuristic_policy.py"
@@ -35,6 +41,12 @@ id = "minihack-singleplayer"
 policy_suite = "defaults/policy_sweep/policy_dev_v1.json"
 policy_baseline = "policies/heuristic_baseline.py"
 candidate_subdir = "minihack"
+
+[[task]]
+id = "frogs-singleplayer"
+policy_suite = "defaults/policy_sweep/policy_dev_v1.json"
+policy_baseline = "containers/codepolicy/heuristic_policy.py"
+candidate_subdir = "frogs"
 
 [[task]]
 id = "rogue-singleplayer"

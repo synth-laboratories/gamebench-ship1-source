@@ -1,0 +1,25 @@
+{
+  "expected_flaw_id": "fork_blind_defender",
+  "gamebench_task": "tictactoe-multiplayer",
+  "gold_summary": "The hidden policy fails to recognize fork threats and allows the opponent to create dual winning lines.",
+  "hidden_policy_id": "fork_blind_defender",
+  "keywords": [
+    "fork",
+    "threat",
+    "winning",
+    "block"
+  ],
+  "prompt": "Diagnose the hidden multiplayer Tic-Tac-Toe policy flaw for agent_0 from black-box traces.",
+  "puzzle_id": "puzzle_fork_blind_v1",
+  "rollout": {
+    "expected_outcome": "loss",
+    "min_failure_seeds": 2,
+    "opponent_policy_id": "block_win_center_v1",
+    "seeds": [
+      101,
+      102,
+      103
+    ]
+  },
+  "schema_version": "gamebench.policy_puzzle.task.v1"
+}

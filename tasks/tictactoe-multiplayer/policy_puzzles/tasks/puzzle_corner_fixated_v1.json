@@ -1,0 +1,25 @@
+{
+  "expected_flaw_id": "corner_fixated_opener",
+  "gamebench_task": "tictactoe-multiplayer",
+  "gold_summary": "The hidden policy always opens the same corner regardless of opponent replies or center availability.",
+  "hidden_policy_id": "corner_fixated_opener",
+  "keywords": [
+    "corner",
+    "opening",
+    "fixated",
+    "center"
+  ],
+  "prompt": "Diagnose the hidden multiplayer Tic-Tac-Toe policy flaw for agent_0 from black-box traces.",
+  "puzzle_id": "puzzle_corner_fixated_v1",
+  "rollout": {
+    "expected_outcome": "loss",
+    "min_failure_seeds": 2,
+    "opponent_policy_id": "block_win_center_v1",
+    "seeds": [
+      101,
+      102,
+      103
+    ]
+  },
+  "schema_version": "gamebench.policy_puzzle.task.v1"
+}

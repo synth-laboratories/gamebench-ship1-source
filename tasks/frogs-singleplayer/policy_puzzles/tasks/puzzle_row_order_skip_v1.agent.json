@@ -1,0 +1,6 @@
+{
+  "gamebench_task": "frogs-singleplayer",
+  "prompt": "Diagnose the hidden Frogs placement policy flaw from the provided state-action traces.",
+  "puzzle_id": "puzzle_row_order_skip_v1",
+  "schema_version": "gamebench.policy_puzzle.task.v1"
+}

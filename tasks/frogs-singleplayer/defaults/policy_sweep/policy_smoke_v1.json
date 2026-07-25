@@ -1,0 +1,7 @@
+{
+  "schema": "gamebench.frogs.policy_sweep.v1",
+  "suite_id": "frogs_policy_smoke_v1",
+  "task_template": "tasks/policy_dev_template.json",
+  "seeds": [1],
+  "max_steps": 16
+}

@@ -1,0 +1,15 @@
+{
+  "action_summary": [
+    "forward pad safe",
+    "policy jumps backward",
+    "enters hazard",
+    "unnecessary retreat"
+  ],
+  "episode_outcome": "failure_reproduced",
+  "failure_signal": "backward",
+  "gamebench_task": "frogs-singleplayer",
+  "observation_summary": "Frogs trace 2: The hidden policy jumps backward into danger when forward movement is available.",
+  "puzzle_id": "puzzle_backward_jump_v1",
+  "schema_version": "gamebench.policy_puzzle.trace.v1",
+  "seed": 102
+}

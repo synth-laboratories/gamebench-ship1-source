@@ -1,0 +1,16 @@
+{
+  "action_summary": [
+    "X plays corner square index 0",
+    "X plays edge square index 1",
+    "X plays edge square index 3",
+    "center square never chosen by candidate",
+    "loss follows missed fork block; opponent dual winning threats remain"
+  ],
+  "episode_outcome": "failure_reproduced",
+  "failure_signal": "fork",
+  "gamebench_task": "tictactoe-multiplayer",
+  "observation_summary": "tictactoe-multiplayer seed 102 black-box rollout (policy hidden)",
+  "puzzle_id": "puzzle_fork_blind_v1",
+  "schema_version": "gamebench.policy_puzzle.trace.v1",
+  "seed": 102
+}

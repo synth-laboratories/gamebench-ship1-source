@@ -1,0 +1,16 @@
+{
+  "schema": "gamebench.task.frogs.v1",
+  "task_id": "frogs_policy_dev_v2_005",
+  "seed": 205,
+  "board": [
+    ["orange", "purple", "green", "yellow", "green", "purple"],
+    ["green", "purple", "yellow", "green", "green", "blue"],
+    ["red", "yellow", "red", "red", "purple", "green"],
+    ["yellow", "yellow", "red", "green", "orange", "purple"],
+    ["red", "blue", "green", "orange", "yellow", "red"],
+    ["blue", "red", "green", "orange", "orange", "purple"]
+  ],
+  "rules": {"base": "classic_frogs", "overrides": {"max_steps": 24}},
+  "readouts": {"symbolic": "color_grid", "visual": true},
+  "checkpoint_every_n_steps": 1
+}

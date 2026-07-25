@@ -1,0 +1,1 @@
+"""FrogsGame Python gold lane."""

@@ -1,0 +1,6 @@
+{
+  "distinguishing_experiment": "Present a state where fork is salient and compare against a policy that handles it correctly.",
+  "evidence": "Trace actions show: X plays corner square index 0; X plays edge square index 1; X plays edge square index 3; center square never chosen by candidate; loss follows missed fork block; opponent dual winning threats remain.",
+  "flaw_id": "fork_blind_defender",
+  "summary": "The hidden policy fails to recognize fork threats and allows the opponent to create dual winning lines."
+}

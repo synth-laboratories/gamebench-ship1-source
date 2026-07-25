@@ -1,0 +1,6 @@
+{
+  "gamebench_task": "frogs-singleplayer",
+  "prompt": "Diagnose the hidden Frogs policy flaw from the provided state-action traces.",
+  "puzzle_id": "puzzle_backward_jump_v1",
+  "schema_version": "gamebench.policy_puzzle.task.v1"
+}

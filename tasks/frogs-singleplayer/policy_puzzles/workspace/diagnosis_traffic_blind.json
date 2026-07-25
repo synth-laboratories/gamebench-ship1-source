@@ -1,0 +1,6 @@
+{
+  "distinguishing_experiment": "Present a state where car is salient and compare against a policy that handles it correctly.",
+  "evidence": "Trace actions show: cars approaching lane; policy jumps into lane; collision risk; safe pad ignored.",
+  "flaw_id": "car_lane_blind",
+  "summary": "The hidden policy jumps into car lanes when a safe forward lily pad is visible."
+}

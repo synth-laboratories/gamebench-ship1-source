@@ -1,0 +1,11 @@
+{
+  "input_token_budget": 20000,
+  "max_plies": 9,
+  "opponent_policy_id": "block_win_center_v1",
+  "schema": "gamebench.tictactoe_mp.exotic_cybernetics_sweep.v1",
+  "seeds": [
+    101,
+    102
+  ],
+  "suite_id": "tictactoe_mp_exotic_cybernetics_smoke_v2"
+}

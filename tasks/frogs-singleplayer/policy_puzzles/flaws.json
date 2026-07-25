@@ -1,0 +1,36 @@
+{
+  "flaws": [
+    {
+      "flaw_id": "wrong_column_picker",
+      "keywords": ["column", "placement", "wrong", "adjacent"],
+      "summary": "The hidden policy places frogs in an adjacent wrong column even when the correct column is available.",
+      "title": "Wrong column picker"
+    },
+    {
+      "flaw_id": "diagonal_adjacency_blind",
+      "keywords": ["diagonal", "adjacent", "placement", "constraint"],
+      "summary": "The hidden policy places frogs diagonally adjacent to existing frogs, violating placement constraints.",
+      "title": "Diagonal adjacency blind"
+    },
+    {
+      "flaw_id": "early_submit_rusher",
+      "keywords": ["submit", "early", "incomplete", "board"],
+      "summary": "The hidden policy submits the board before all required frogs are placed.",
+      "title": "Early submit rusher"
+    },
+    {
+      "flaw_id": "row_order_skip",
+      "keywords": ["row", "order", "skip", "conflict"],
+      "summary": "The hidden policy fills rows out of order, causing color and column conflicts later.",
+      "title": "Row order skip"
+    },
+    {
+      "flaw_id": "color_repeat_blind",
+      "keywords": ["color", "repeat", "row", "column"],
+      "summary": "The hidden policy reuses a color within the same row or column.",
+      "title": "Color repeat blind"
+    }
+  ],
+  "gamebench_task": "frogs-singleplayer",
+  "schema_version": "gamebench.policy_puzzles.flaws.v1"
+}

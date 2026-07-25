@@ -1,0 +1,6 @@
+{
+  "distinguishing_experiment": "Present a state where block is salient and compare against a policy that handles it correctly.",
+  "evidence": "Trace actions show: X plays corner square index 0; X plays edge square index 1; X plays edge square index 3; center square never chosen by candidate; opponent immediate winning line not blocked.",
+  "flaw_id": "block_miss_defender",
+  "summary": "The hidden policy misses mandatory blocking moves when the opponent has an immediate winning line."
+}

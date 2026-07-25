@@ -1,0 +1,289 @@
+{
+  "scenarios": {
+    "classic_01_valid_submit": {
+      "events": [
+        "TaskResolved(classic_01_valid_submit,dd048d068ce616ca)",
+        "FrogPlaced(0,1)",
+        "FrogPlaced(1,3)",
+        "FrogPlaced(2,0)",
+        "FrogPlaced(3,2)",
+        "SubmissionChecked(correct=true,reward=1.0)",
+        "RewardDelta(1.00,total=1.00)",
+        "Terminal(success)"
+      ],
+      "state": {
+        "private": {
+          "config_hash": "dd048d068ce616ca",
+          "episode_id": "84774fac788de7ed0564b96fb743574e",
+          "max_tool_calls": 200,
+          "step_index": 5,
+          "terminated": true,
+          "tool_call_count": 0,
+          "total_reward": 1.0,
+          "truncated": false
+        },
+        "public": {
+          "board": [
+            [
+              "blue",
+              "red",
+              "green",
+              "yellow"
+            ],
+            [
+              "green",
+              "yellow",
+              "red",
+              "blue"
+            ],
+            [
+              "green",
+              "blue",
+              "yellow",
+              "red"
+            ],
+            [
+              "red",
+              "green",
+              "yellow",
+              "blue"
+            ]
+          ],
+          "frogs": [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              3,
+              2
+            ]
+          ],
+          "submitted": true,
+          "violations": []
+        }
+      }
+    },
+    "classic_02_adjacency_reject": {
+      "events": [
+        "TaskResolved(classic_02_adjacency_reject,dc7e7261926a4798)",
+        "FrogPlaced(0,0)",
+        "RuleViolation(adjacency_conflict)",
+        "SubmissionChecked(correct=false,reward=0.0)",
+        "RewardDelta(0.00,total=0.00)",
+        "Terminal(failure)"
+      ],
+      "state": {
+        "private": {
+          "config_hash": "dc7e7261926a4798",
+          "episode_id": "3960ff9e3f1127dd451ff907c6d863a5",
+          "max_tool_calls": 200,
+          "step_index": 3,
+          "terminated": true,
+          "tool_call_count": 0,
+          "total_reward": 0.0,
+          "truncated": false
+        },
+        "public": {
+          "board": [
+            [
+              "blue",
+              "red",
+              "green",
+              "yellow"
+            ],
+            [
+              "green",
+              "yellow",
+              "red",
+              "blue"
+            ],
+            [
+              "green",
+              "blue",
+              "yellow",
+              "red"
+            ],
+            [
+              "red",
+              "green",
+              "yellow",
+              "blue"
+            ]
+          ],
+          "frogs": [
+            [
+              0,
+              0
+            ]
+          ],
+          "submitted": true,
+          "violations": [
+            {
+              "cells": [],
+              "code": "incomplete",
+              "message": "expected 4 frogs, found 1"
+            }
+          ]
+        }
+      }
+    },
+    "classic_03_row_reject_then_solve": {
+      "events": [
+        "TaskResolved(classic_03_row_reject_then_solve,934e623766bd1983)",
+        "FrogPlaced(0,1)",
+        "RuleViolation(row_conflict)",
+        "FrogPlaced(1,3)",
+        "FrogPlaced(2,0)",
+        "FrogPlaced(3,2)",
+        "SubmissionChecked(correct=true,reward=1.0)",
+        "RewardDelta(1.00,total=1.00)",
+        "Terminal(success)"
+      ],
+      "state": {
+        "private": {
+          "config_hash": "934e623766bd1983",
+          "episode_id": "99763daf6dda8b83067421eb1c2f61cd",
+          "max_tool_calls": 200,
+          "step_index": 6,
+          "terminated": true,
+          "tool_call_count": 0,
+          "total_reward": 1.0,
+          "truncated": false
+        },
+        "public": {
+          "board": [
+            [
+              "blue",
+              "red",
+              "green",
+              "yellow"
+            ],
+            [
+              "green",
+              "yellow",
+              "red",
+              "blue"
+            ],
+            [
+              "green",
+              "blue",
+              "yellow",
+              "red"
+            ],
+            [
+              "red",
+              "green",
+              "yellow",
+              "blue"
+            ]
+          ],
+          "frogs": [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              3,
+              2
+            ]
+          ],
+          "submitted": true,
+          "violations": []
+        }
+      }
+    },
+    "classic_04_remove_reset_flow": {
+      "events": [
+        "TaskResolved(classic_04_remove_reset_flow,fd73b1427a4fa8f8)",
+        "FrogPlaced(0,1)",
+        "FrogRemoved(0,1)",
+        "BoardReset()",
+        "FrogPlaced(0,1)",
+        "FrogPlaced(1,3)",
+        "FrogPlaced(2,0)",
+        "FrogPlaced(3,2)",
+        "SubmissionChecked(correct=true,reward=1.0)",
+        "RewardDelta(1.00,total=1.00)",
+        "Terminal(success)"
+      ],
+      "state": {
+        "private": {
+          "config_hash": "fd73b1427a4fa8f8",
+          "episode_id": "ebbe7906020173917e7bd57ea4ef1307",
+          "max_tool_calls": 200,
+          "step_index": 8,
+          "terminated": true,
+          "tool_call_count": 0,
+          "total_reward": 1.0,
+          "truncated": false
+        },
+        "public": {
+          "board": [
+            [
+              "blue",
+              "red",
+              "green",
+              "yellow"
+            ],
+            [
+              "green",
+              "yellow",
+              "red",
+              "blue"
+            ],
+            [
+              "green",
+              "blue",
+              "yellow",
+              "red"
+            ],
+            [
+              "red",
+              "green",
+              "yellow",
+              "blue"
+            ]
+          ],
+          "frogs": [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              3,
+              2
+            ]
+          ],
+          "submitted": true,
+          "violations": []
+        }
+      }
+    }
+  },
+  "schema": "gamebench.frogs.gold_eventlogs.v1"
+}

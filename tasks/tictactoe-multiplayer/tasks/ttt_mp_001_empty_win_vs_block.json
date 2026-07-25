@@ -1,0 +1,18 @@
+{
+  "schema_version": "gamebench.task.v1",
+  "task_id": "ttt_mp_001_empty_win_vs_block",
+  "env_family": "tictactoe-multiplayer",
+  "scenario_id": "ttt_mp_001_empty_win_vs_block",
+  "seed": 101,
+  "max_plies": 9,
+  "opening_moves": [],
+  "agent_0_policy": {
+    "kind": "monty_python",
+    "module": "win_block_center_v1",
+    "entry": "choose_action"
+  },
+  "agent_1_policy": {
+    "kind": "registry",
+    "policy_id": "block_win_center_v1"
+  }
+}

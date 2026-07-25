@@ -1,0 +1,26 @@
+{
+  "expected_flaw_id": "early_submit_rusher",
+  "gamebench_task": "frogs-singleplayer",
+  "gold_summary": "The hidden policy submits the board before all required frogs are placed.",
+  "hidden_policy_id": "early_submit_rusher",
+  "keywords": [
+    "submit",
+    "early",
+    "incomplete",
+    "board"
+  ],
+  "prompt": "Diagnose the hidden Frogs placement policy flaw from the provided state-action traces.",
+  "puzzle_id": "puzzle_early_submit_v1",
+  "rollout": {
+    "expected_outcome": "failure",
+    "max_steps": 120,
+    "min_failure_seeds": 2,
+    "seeds": [
+      101,
+      102,
+      103
+    ],
+    "task_path": "tasks/policy_dev_template.json"
+  },
+  "schema_version": "gamebench.policy_puzzle.task.v1"
+}

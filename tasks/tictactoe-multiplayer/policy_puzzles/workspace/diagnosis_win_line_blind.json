@@ -1,0 +1,6 @@
+{
+  "distinguishing_experiment": "Present a state where win is salient and compare against a policy that handles it correctly.",
+  "evidence": "Trace actions show: X plays corner square index 0; X plays edge square index 1; X plays edge square index 3; center square never chosen by candidate; candidate skips immediate winning line opportunity.",
+  "flaw_id": "win_line_blind_attacker",
+  "summary": "The hidden policy misses immediate winning moves when a three-in-a-row is one action away."
+}

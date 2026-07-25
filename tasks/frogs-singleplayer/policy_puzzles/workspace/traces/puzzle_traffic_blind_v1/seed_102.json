@@ -1,0 +1,15 @@
+{
+  "action_summary": [
+    "cars approaching lane",
+    "policy jumps into lane",
+    "collision risk",
+    "safe pad ignored"
+  ],
+  "episode_outcome": "failure_reproduced",
+  "failure_signal": "car",
+  "gamebench_task": "frogs-singleplayer",
+  "observation_summary": "Frogs trace 2: The hidden policy jumps into car lanes when a safe forward lily pad is visible.",
+  "puzzle_id": "puzzle_traffic_blind_v1",
+  "schema_version": "gamebench.policy_puzzle.trace.v1",
+  "seed": 102
+}

@@ -1,0 +1,15 @@
+{
+  "action_summary": [
+    "log gap approaching",
+    "policy jumps early",
+    "lands in water",
+    "crossing failed"
+  ],
+  "episode_outcome": "failure_reproduced",
+  "failure_signal": "log",
+  "gamebench_task": "frogs-singleplayer",
+  "observation_summary": "Frogs trace 3: The hidden policy mistimes log crossings and lands in water between moving logs.",
+  "puzzle_id": "puzzle_log_timing_v1",
+  "schema_version": "gamebench.policy_puzzle.trace.v1",
+  "seed": 103
+}
