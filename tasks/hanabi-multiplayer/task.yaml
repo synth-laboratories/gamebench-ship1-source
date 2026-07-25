@@ -1,0 +1,39 @@
+schema_version: gamebench.task_family.v1
+id: hanabi-multiplayer
+name: Hanabi Multiplayer
+kind: gamebench_gold_reference
+game: hanabi
+visibility: private
+task_id: hanabi-multiplayer
+env_family: hanabi
+agent_count: 2
+agents: [agent_0, agent_1]
+reward: shared
+turn_model:
+  kind: alternating_turns
+  step_api: active_agent_action
+  round_order: [agent_0, agent_1]
+  joint_action: false
+rules_contract: shared/hanabi_v1.md
+python_entrypoint: gold_python.engine:HanabiEnv
+policy_runner: scripts/run_policy_sweep.py
+policy_sweep: defaults/policy_sweep/policy_dev_v1.json
+actions:
+  kinds: [play, discard, hint]
+  invalid_action_behavior: consume_turn_and_emit_illegal_action
+observations:
+  schema: gamebench.hanabi.observation.v1
+  visibility: actor_private_own_hand_hidden
+nev:
+  schema: gamebench.nev.v1
+checkpoint:
+  schema: gamebench.hanabi.checkpoint.v1
+  encoding: canonical_utf8_json
+  restore_points: turn_boundaries
+eval_families: [code_policy_deo]
+runtime_dependencies: []
+status:
+  implementation: python_gold
+  gold_python: tasks/hanabi-multiplayer/gold_python/
+  deterministic_seeds: 10
+  registry: adapters/eval_registry.toml

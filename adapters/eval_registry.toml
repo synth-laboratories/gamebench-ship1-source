@@ -43,6 +43,12 @@ policy_baseline = "containers/codepolicy/heuristic_policy.py"
 candidate_subdir = "fogwar_duel"
 
 [[task]]
+id = "hanabi-multiplayer"
+policy_suite = "defaults/policy_sweep/policy_dev_v1.json"
+policy_baseline = "policies/heuristic_baseline.py"
+candidate_subdir = "hanabi"
+
+[[task]]
 id = "settlers-multiplayer"
 policy_suite = "defaults/policy_sweep/policy_dev_v1.json"
 policy_baseline = "containers/codepolicy/heuristic_policy.py"
