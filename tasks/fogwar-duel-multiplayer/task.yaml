@@ -1,0 +1,88 @@
+schema_version: gamebench.task_family.v1
+id: fogwar-duel-multiplayer
+name: Fog Duel Lite Multiplayer
+kind: gamebench_task_contract
+game: fog_duel_lite
+visibility: private
+task_id: fogwar-duel-multiplayer
+env_family: fogwar-duel
+agent_count: 2
+agents: [agent_0, agent_1]
+
+# This task is deliberately sequential.  It must never be adapted to a
+# simultaneous joint-action API.
+turn_model:
+  kind: alternating_half_turns
+  step_api: active_agent_action
+  initial_round_order: [agent_0, agent_1]
+  subsequent_round_order: alternate_first_actor_each_round
+  actions_per_half_turn_max: 3
+  end_of_round_resolution: [queued_launches, fog_memory, income, terminal_check]
+  military_terminal_resolution: immediate
+  joint_action: false
+
+board:
+  size: [13, 7]
+  coordinate_order: [x, y]
+  central_barrier_column: 6
+  passages_per_pinned_layout: [1, 2]
+  base_positions:
+    agent_0: [1, 3]
+    agent_1: [11, 3]
+  layouts: pinned_seeded
+  pinned_layouts:
+    - scenario_id: fogwar_military_win_v0
+      seed: 1307
+      passages: [[6, 1], [6, 3]]
+      central_uranium_deposit: [6, 3]
+    - scenario_id: fogwar_nuclear_win_v0
+      seed: 2718
+      passages: [[6, 3]]
+      central_uranium_deposit: [6, 3]
+    - scenario_id: fogwar_illegal_reliability_v0
+      seed: 4242
+      passages: [[6, 3], [6, 5]]
+      central_uranium_deposit: [6, 3]
+  fog_of_war: true
+  building_memory: last_seen_turn
+
+rules_contract: shared/fog_duel_lite_v0.md
+rules_digest: README.md
+scenario_dir: defaults/scenarios
+fixture_dir: fixtures/gold
+planned_scenarios:
+  - fogwar_military_win_v0
+  - fogwar_nuclear_win_v0
+  - fogwar_illegal_reliability_v0
+
+actions:
+  kinds: [produce, move, attack, build, launch, wait]
+  diplomacy: structured_out_of_action_budget
+  free_text_diplomacy: false
+  invalid_action_behavior: discard_individually_and_emit_illegal_action
+
+observations:
+  schema: gamebench.fog_duel_lite.observation.v0
+  visibility: actor_private_fogged
+  enemy_buildings: remembered_with_last_seen
+  enemy_units: current_visibility_only
+  enemy_uranium: hidden
+
+nev:
+  schema: gamebench.nev.v1
+  task_kinds: shared/fog_duel_lite_v0.md#nev-contract
+  illegal_action_kind: illegal_action
+
+checkpoint:
+  schema: gamebench.fog_duel_lite.checkpoint.v0
+  encoding: canonical_utf8_json
+  restore_points: action_boundaries
+  includes: [scenario_identity, turn_cursor, authoritative_state, fog_memory, diplomacy, queued_launches, rng_state, next_event_sequence]
+
+eval_families: [engine_rebuild, code_policy_deo, policy_puzzle]
+runtime_dependencies: []
+status:
+  implementation: spike_contract_only
+  gold_python: not_created
+  gold_rust: not_created
+  registry: deferred_until_dual_gold_exists
