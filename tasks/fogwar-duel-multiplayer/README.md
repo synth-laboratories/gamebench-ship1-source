@@ -1,6 +1,6 @@
 # Fog Duel Lite multiplayer
 
-`fogwar-duel-multiplayer` is a planned own-language GameBench emulator inspired
+`fogwar-duel-multiplayer` is an own-language GameBench emulator inspired
 by [Age of LLM (arXiv:2606.24391)](https://arxiv.org/abs/2606.24391). The paper's
 private engine is a semantic reference only: this task will own its Python and
 Rust loops, checkpoints, and structured NEV. It deliberately targets symbolic
@@ -32,13 +32,37 @@ messages are intentionally excluded. Every malformed or illegal action is
 discarded individually, spends only its own action slot, and emits
 `illegal_action`; this is the reliability signal rather than a silent fallback.
 
-## Lite boundary and next artifacts
+## Gold layout and verification
 
-The initial gold implementation will add independent `gold_python/` and
-`gold_rust/` engines, three pinned scenarios (military win, nuclear win, illegal
-reliability), fixtures, checkpoint restore, and Python↔Rust parity. It will not
-wrap the private Age of LLM engine, add a runtime dependency, add free-text
-diplomacy, or edit the registry before dual gold is usable.
+Independent authorities live in `gold_python/` and `gold_rust/`; neither wraps
+or imports the private engine. The three deterministic scenario files are
+`fogwar_military_win_v0` (Tank victory), `fogwar_nuclear_win_v0` (one queued
+launch after both fixed-order half-turns), and `fogwar_illegal_reliability_v0`
+(a rejected stale unit reference). Fixtures include the canonical state, NEV,
+and action-boundary checkpoint restoration records.
+
+Run the task-local checks from this directory:
+
+```bash
+python3 scripts/verify_gold_fixtures.py
+python3 scripts/verify_python_rust_parity.py
+```
+
+The parity gate compares complete structured NEV envelopes/payloads and the
+authoritative state for every scenario, then restores the nonterminal illegal
+reliability checkpoint in Rust and replays the remaining half-turn.
+
+The JSON-lines Python service accepts `reset`, `step`, `observe`, `state`,
+`checkpoint`, and `restore` requests on stdin and emits one JSON response per
+line:
+
+```bash
+python3 scripts/run_service.py
+python3 scripts/run_policy.py --scenario fogwar_nuclear_win_v0
+```
+
+The Lite scope excludes deposit respawn, free-text diplomacy, a leaderboard
+harness, and all private-engine/runtime dependencies.
 
 The normative board, action, observation, NEV, and checkpoint contract is in
 [`shared/fog_duel_lite_v0.md`](shared/fog_duel_lite_v0.md).
