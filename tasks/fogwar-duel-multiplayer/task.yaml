@@ -58,6 +58,9 @@ python_service_entrypoint: scripts/run_service.py
 rust_crate: gold_rust
 rust_binary: fogwar_duel_gold
 policy_runner: scripts/run_policy.py
+hillclimb_runner: scripts/run_hillclimb.py
+policy_sweep: defaults/policy_sweep/policy_dev_v1.json
+deo_example: scripts/run_deo_example.py
 parity_verifier: scripts/verify_python_rust_parity.py
 fixture_generator: scripts/generate_gold_fixtures.py
 fixture_verifier: scripts/verify_gold_fixtures.py

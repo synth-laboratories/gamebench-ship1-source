@@ -38,8 +38,8 @@ candidate_subdir = "craftax_coop"
 
 [[task]]
 id = "fogwar-duel-multiplayer"
-policy_suite = "defaults/scenarios"
-policy_baseline = "policies/heuristic_baseline.py"
+policy_suite = "defaults/policy_sweep/policy_dev_v1.json"
+policy_baseline = "containers/codepolicy/heuristic_policy.py"
 candidate_subdir = "fogwar_duel"
 
 [[task]]
