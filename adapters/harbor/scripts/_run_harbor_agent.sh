@@ -38,13 +38,22 @@ MODEL="${GAMEBENCH_HARBOR_MODEL:-openai/gpt-5.4-mini}"
 EFFORT="${GAMEBENCH_HARBOR_EFFORT:-low}"
 # Tag images per task so SKIP_BUILD cannot reuse a sibling-task bake (e.g. rogue vs craftax).
 IMAGE="${GAMEBENCH_HARBOR_IMAGE:-gamebench-harbor-${BUNDLE}-${TASK_ID}:latest}"
-OUT_DIR="${GAMEBENCH_HARBOR_OUT:-/tmp/gamebench-harbor-${BUNDLE}-${AGENT}}"
+# Default OUT_DIR is minted fresh per run (panel-style UTC stamp + pid) so a
+# direct run can never score against a prior run's result.json.
+OUT_DIR="${GAMEBENCH_HARBOR_OUT:-/tmp/gamebench-harbor-${BUNDLE}-${AGENT}-$(date -u +%Y%m%dT%H%M%SZ)-$$}"
 DEPLOYMENT="gamebench_${BUNDLE}"
 TIMEOUT_SEC="${GAMEBENCH_HARBOR_TIMEOUT_SEC:-3600}"
 # Per-lane workspace under OUT_DIR so parallel panel replicas do not race.
 WORKSPACE="${GAMEBENCH_HARBOR_WORKSPACE:-$OUT_DIR/workspace}"
 
 mkdir -p "$OUT_DIR/logs/verifier"
+# Scoring integrity: purge any prior run's scoring artifacts so this run can
+# only report a result it wrote itself (a reused GAMEBENCH_HARBOR_OUT must not
+# seed result.json/reward.txt into the lane receipt).
+rm -f "$OUT_DIR/logs/verifier/result.json" \
+  "$OUT_DIR/logs/verifier/reward.txt" \
+  "$OUT_DIR/lane-receipt.json" \
+  "$OUT_DIR/rollout_result.json"
 rm -rf "$WORKSPACE"
 mkdir -p "$WORKSPACE"
 

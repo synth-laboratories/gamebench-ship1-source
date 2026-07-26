@@ -24,9 +24,14 @@ ensure_policy_sandbox_image
 BUNDLE="$(eval_registry harbor-bundle "$REG_FAMILY" "$TASK_ID")"
 TASK_ROOT="$(bundle_root "$BUNDLE")"
 IMAGE="${GAMEBENCH_HARBOR_IMAGE:-gamebench-harbor-${BUNDLE}:latest}"
-OUT_DIR="${GAMEBENCH_HARBOR_OUT:-/tmp/gamebench-harbor-${BUNDLE}-verify}"
+# Default OUT_DIR is minted fresh per run (panel-style UTC stamp + pid) so a
+# direct run can never report a prior run's result.json.
+OUT_DIR="${GAMEBENCH_HARBOR_OUT:-/tmp/gamebench-harbor-${BUNDLE}-verify-$(date -u +%Y%m%dT%H%M%SZ)-$$}"
 
 mkdir -p "$OUT_DIR/logs/verifier"
+# Scoring integrity: purge any prior run's scoring artifacts from a reused
+# GAMEBENCH_HARBOR_OUT before the verifier runs.
+rm -f "$OUT_DIR/logs/verifier/result.json" "$OUT_DIR/logs/verifier/reward.txt"
 
 BUILD_ARGS=(--build-arg "GAMEBENCH_TASK=$TASK_ID")
 if [[ "$REG_FAMILY" == code_policy_opt || "$REG_FAMILY" == cybernetic_opt ]]; then
