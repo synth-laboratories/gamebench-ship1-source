@@ -213,6 +213,19 @@ pub struct CraftaxWorld {
     pub(crate) entities: Vec<Entity>,
     pub(crate) player_projectiles: Vec<Projectile>,
     pub(crate) mob_projectiles: Vec<Projectile>,
+    // Survival intrinsics, matching MichaelTMatthews/Craftax
+    // `game_logic.py::update_player_intrinsics`. `#[serde(default)]` so
+    // checkpoint blobs written before these existed still deserialize.
+    #[serde(default)]
+    pub(crate) player_hunger: f64,
+    #[serde(default)]
+    pub(crate) player_thirst: f64,
+    #[serde(default)]
+    pub(crate) player_fatigue: f64,
+    #[serde(default)]
+    pub(crate) player_recover: f64,
+    #[serde(default)]
+    pub(crate) is_sleeping: bool,
 }
 
 impl CraftaxWorld {
@@ -500,6 +513,9 @@ impl CraftaxRustSession {
         self.set_private_i64("step_index", self.world.timestep)?;
         self.set_private_f64("reward_last", 0.0)?;
 
+        if action != "sleep" {
+            self.world.is_sleeping = false;
+        }
         match action.as_str() {
             "left" | "right" | "up" | "down" => self.apply_move(&action)?,
             "do" => self.apply_do()?,
@@ -526,6 +542,7 @@ impl CraftaxRustSession {
         self.update_player_projectiles(&action)?;
         self.spawn_mobs(&action)?;
         self.calculate_inventory_achievements()?;
+        self.update_player_intrinsics()?;
         self.apply_health_reward(before_health)?;
         self.world.light_level = calculate_light_level(self.world.timestep, self.day_length());
         self.public = self.world.public_value(false);
@@ -572,7 +589,14 @@ impl CraftaxRustSession {
                 payload: json!({"reward": reward_last, "total_reward": self.private_f64("total_reward")?}),
             });
         }
-        let done_reason = if self
+        // Death first: reaching 0 health ends the episode, as it does upstream
+        // (`game_logic.py::is_game_over` -> `state.player_health <= 0`). Without
+        // this branch a starved or beaten player kept playing at 0 health and
+        // the declared `death_penalty` was never paid.
+        let dead = self.inventory_f64("health").unwrap_or(1.0) <= 0.0;
+        let done_reason = if dead {
+            Some("death")
+        } else if self
             .world
             .achievements
             .get("defeat_necromancer")
@@ -586,11 +610,21 @@ impl CraftaxRustSession {
         } else {
             None
         };
+        if dead {
+            let penalty = self
+                .resolved
+                .rules
+                .get("death_penalty")
+                .and_then(Value::as_f64)
+                .unwrap_or(-1.0);
+            self.add_private_f64("reward_last", penalty)?;
+            self.add_private_f64("total_reward", penalty)?;
+        }
         if let Some(reason) = done_reason {
             set_key(
                 &mut self.private,
                 "terminated",
-                json!(reason == "boss_defeated"),
+                json!(reason == "boss_defeated" || reason == "death"),
             )?;
             set_key(&mut self.private, "truncated", json!(reason == "max_steps"))?;
             set_key(&mut self.private, "done_reason", json!(reason))?;
@@ -1115,6 +1149,10 @@ impl CraftaxRustSession {
     }
 
     fn apply_recover(&mut self, action: &str) -> Result<()> {
+        // Upstream `is_sleeping` gates the intrinsics maths for this tick:
+        // hunger and thirst accrue at half rate and fatigue walks DOWN, which is
+        // what makes sleeping recover energy rather than just costing a step.
+        self.world.is_sleeping = action == "sleep";
         let before_energy = self.inventory_i64("energy")?;
         let energy_gain = if action == "sleep" { 3 } else { 1 };
         self.set_inventory_number(
@@ -1505,12 +1543,12 @@ impl CraftaxRustSession {
             "local_map": self.local_map(None),
             "inventory": self.world.inventory,
             "intrinsics": {
-                "is_sleeping": false,
+                "is_sleeping": self.world.is_sleeping,
                 "is_resting": false,
-                "recover": 0.0,
-                "hunger": 0.0,
-                "thirst": 0.0,
-                "fatigue": 0.0,
+                "recover": self.world.player_recover,
+                "hunger": self.world.player_hunger,
+                "thirst": self.world.player_thirst,
+                "fatigue": self.world.player_fatigue,
                 "recover_mana": 0.0,
             },
             "potion_mapping": self.world.potion_mapping,
@@ -2478,6 +2516,94 @@ impl CraftaxRustSession {
         Ok(damage)
     }
 
+    /// Port of Craftax `game_logic.py::update_player_intrinsics`.
+    ///
+    /// Thresholds and rates are the reference's, not invented: hunger >25 costs
+    /// a food, thirst >20 a drink, fatigue >30 an energy; the recover counter
+    /// gains +1 (+2 asleep) while every necessity holds and -1 (-0.5 asleep)
+    /// when one does not, paying +1 health above 25 and -1 health below -15.
+    /// Accumulation scales with dexterity exactly as upstream does.
+    ///
+    /// Gated on `rules.homeostasis` so `symbolic_no_homeostasis` keeps its old
+    /// no-drain behaviour rather than silently changing under existing tasks.
+    fn update_player_intrinsics(&mut self) -> Result<()> {
+        if !self.homeostasis() {
+            return Ok(());
+        }
+        let not_boss = if self.in_boss_level() { 0.0 } else { 1.0 };
+        let dexterity = self.inventory_f64("dexterity").unwrap_or(1.0);
+        let decay = 1.0 - 0.125 * (dexterity - 1.0);
+        let sleeping = self.world.is_sleeping;
+
+        // Hunger -> food
+        let add = if sleeping { 0.5 } else { 1.0 } * decay;
+        self.world.player_hunger += add;
+        if self.world.player_hunger > 25.0 {
+            let food = (self.inventory_f64("food")? - not_boss).max(0.0);
+            self.set_inventory_number("food", food)?;
+            self.world.player_hunger = 0.0;
+        }
+
+        // Thirst -> drink
+        self.world.player_thirst += add;
+        if self.world.player_thirst > 20.0 {
+            let drink = (self.inventory_f64("drink")? - not_boss).max(0.0);
+            self.set_inventory_number("drink", drink)?;
+            self.world.player_thirst = 0.0;
+        }
+
+        // Fatigue -> energy. Sleeping walks it DOWN, which is what recovers energy.
+        self.world.player_fatigue = if sleeping {
+            (self.world.player_fatigue - 1.0).min(0.0)
+        } else {
+            self.world.player_fatigue + decay
+        };
+        if self.world.player_fatigue > 30.0 {
+            let energy = (self.inventory_f64("energy")? - not_boss).max(0.0);
+            self.set_inventory_number("energy", energy)?;
+            self.world.player_fatigue = 0.0;
+        }
+        if self.world.player_fatigue < -10.0 {
+            let ceiling = max_stat(&self.world, "energy")? as f64;
+            let energy = (self.inventory_f64("energy")? + 1.0).min(ceiling);
+            self.set_inventory_number("energy", energy)?;
+            self.world.player_fatigue = 0.0;
+        }
+
+        // Recovery -> health. Every necessity must hold, or health bleeds.
+        let all_necessities = self.inventory_f64("food")? > 0.0
+            && self.inventory_f64("drink")? > 0.0
+            && (self.inventory_f64("energy")? > 0.0 || sleeping);
+        self.world.player_recover += if all_necessities {
+            if sleeping { 2.0 } else { 1.0 }
+        } else {
+            (if sleeping { -0.5 } else { -1.0 }) * not_boss
+        };
+        if self.world.player_recover > 25.0 {
+            let ceiling = max_stat(&self.world, "health")? as f64;
+            let health = (self.inventory_f64("health")? + 1.0).min(ceiling);
+            self.set_inventory_number("health", health)?;
+            self.world.player_recover = 0.0;
+        } else if self.world.player_recover < -15.0 {
+            let health = self.inventory_f64("health")? - 1.0;
+            self.set_inventory_number("health", health)?;
+            self.world.player_recover = 0.0;
+        }
+        Ok(())
+    }
+
+    fn homeostasis(&self) -> bool {
+        self.resolved
+            .rules
+            .get("homeostasis")
+            .and_then(Value::as_bool)
+            .unwrap_or(true)
+    }
+
+    fn in_boss_level(&self) -> bool {
+        self.world.player_level >= self.world.levels - 1
+    }
+
     fn apply_health_reward(&mut self, before_health: f64) -> Result<()> {
         if before_health <= 0.0 {
             return Ok(());
@@ -3136,6 +3262,11 @@ fn make_world(resolved: &ResolvedTask, rng: &mut PythonRandom) -> Result<Craftax
     let mut potion_mapping = vec![0, 1, 2, 3, 4, 5];
     rng.shuffle(&mut potion_mapping);
     let mut world = CraftaxWorld {
+        player_hunger: 0.0,
+        player_thirst: 0.0,
+        player_fatigue: 0.0,
+        player_recover: 0.0,
+        is_sleeping: false,
         width,
         height,
         levels,
