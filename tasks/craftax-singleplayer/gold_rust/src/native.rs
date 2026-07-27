@@ -4953,7 +4953,15 @@ fn tile_char(tile: &str) -> char {
         "wall" => '#',
         "wall_moss" => '%',
         "darkness" => ' ',
-        "path" => '.',
+        // Distinct from grass. On the surface `path` occurs ONLY inside
+        // mountains (`inner_mountain_block`), and the one `ladder_down` per
+        // level is placed on a `path` tile — so a corridor is the only visible
+        // evidence that a descent exists nearby. Rendering it as '.' made the
+        // cave floor identical to a meadow and hid the route to the dungeon
+        // entirely: across 8,455 recorded agent decisions, a ladder was never
+        // once in view. Below ground `path` is the ordinary floor, where a
+        // distinct glyph is equally welcome.
+        "path" => '_',
         "sand" | "gravel" => ',',
         "tree" | "fire_tree" | "ice_shrub" => 'T',
         "lava" => 'L',
