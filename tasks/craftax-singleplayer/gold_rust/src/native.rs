@@ -1541,6 +1541,25 @@ impl CraftaxRustSession {
                 "front_item": if self.in_bounds(front) { self.item_at(front) } else { "none".to_string() },
             },
             "local_map": self.local_map(None),
+            // The descent gate, made observable. `apply_descend` refuses while
+            // fewer than 8 monsters have been killed on this floor and reports
+            // no reason to the player, so without this the game asks you to
+            // count to eight and shows you no counter. The overworld ships
+            // pre-cleared, which is why level 0 always reads as cleared.
+            "floor": {
+                "level": self.world.player_level,
+                "monsters_killed": self.world
+                    .monsters_killed
+                    .get(self.world.player_level as usize)
+                    .copied()
+                    .unwrap_or(0),
+                "kills_to_clear": 8,
+                "descent_unlocked": self.world
+                    .monsters_killed
+                    .get(self.world.player_level as usize)
+                    .copied()
+                    .unwrap_or(0) >= 8,
+            },
             "inventory": self.world.inventory,
             "intrinsics": {
                 "is_sleeping": self.world.is_sleeping,
@@ -5100,13 +5119,30 @@ fn observation_text(observation: &Value, valid_actions: &[&str]) -> String {
                 .join(", ")
         })
         .unwrap_or_default();
+    // Descent status on the SAME line as the level, because they are one fact:
+    // "which floor am I on, and can I leave it downward". Silence here is what
+    // makes a refused `descend` unattributable.
+    let killed = observation
+        .pointer("/floor/monsters_killed")
+        .and_then(Value::as_i64)
+        .unwrap_or(0);
+    let needed = observation
+        .pointer("/floor/kills_to_clear")
+        .and_then(Value::as_i64)
+        .unwrap_or(8);
+    let descent = if killed >= needed {
+        "descent UNLOCKED".to_string()
+    } else {
+        format!("descent LOCKED: {killed}/{needed} monsters killed on this floor")
+    };
     let mut lines = vec![
         format!(
-            "level: {}",
+            "level: {} ({})",
             observation
                 .pointer("/player/level")
                 .cloned()
-                .unwrap_or(Value::Null)
+                .unwrap_or(Value::Null),
+            descent
         ),
         format!(
             "position: {} direction={}",
