@@ -1541,6 +1541,22 @@ impl CraftaxRustSession {
                 "front_item": if self.in_bounds(front) { self.item_at(front) } else { "none".to_string() },
             },
             "local_map": self.local_map(None),
+            // Day/night, made observable. `light_level` scales melee spawn by
+            // (1 - light)^2, so darkness is when zombies arrive — and it was
+            // invisible. Agents could not know night was coming, so they did not
+            // arm or wall in for it, and combat became the leading cause of
+            // death while most of them were carrying no sword at all.
+            "light": {
+                "level": (self.world.light_level * 100.0).round() / 100.0,
+                "night": self.world.light_level < 0.3,
+                "phase": if self.world.light_level < 0.3 {
+                    "night"
+                } else if self.world.light_level < 0.6 {
+                    "dusk"
+                } else {
+                    "day"
+                },
+            },
             // The descent gate, made observable. `apply_descend` refuses while
             // fewer than 8 monsters have been killed on this floor and reports
             // no reason to the player, so without this the game asks you to
@@ -5135,7 +5151,23 @@ fn observation_text(observation: &Value, valid_actions: &[&str]) -> String {
     } else {
         format!("descent LOCKED: {killed}/{needed} monsters killed on this floor")
     };
+    let phase = observation
+        .pointer("/light/phase")
+        .and_then(Value::as_str)
+        .unwrap_or("day");
+    let light = observation
+        .pointer("/light/level")
+        .and_then(Value::as_f64)
+        .unwrap_or(1.0);
     let mut lines = vec![
+        format!(
+            "light: {light:.2} ({})",
+            match phase {
+                "night" => "NIGHT — zombies spawn in the dark",
+                "dusk" => "dusk — darkness coming, zombies soon",
+                _ => "day",
+            }
+        ),
         format!(
             "level: {} ({})",
             observation
