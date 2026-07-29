@@ -226,7 +226,7 @@ class DungeonGridSession:
             "step_index": self.step_index,
             "turn_index": self.turn_index,
             "active_agent": self.active_agent,
-            "turn_order": self.turn_order,
+            "turn_order": copy.deepcopy(self.turn_order),
             "done": self.done,
             "success": self.success,
             "terminal_reason": self.terminal_reason,
@@ -243,16 +243,16 @@ class DungeonGridSession:
                     for (x, y), terrain in sorted(self.terrain.items())
                 ],
             },
-            "heroes": self.heroes,
-            "message_inboxes": self.message_inboxes,
-            "doors": self.doors,
-            "traps": self.traps,
-            "chests": self.chests,
-            "monsters": self.monsters,
-            "objective": self._objective_state(),
-            "legal_actions": self._legal_actions(),
-            "coordination": self._coordination_state(),
-            "event_log_tail": self.event_log[-12:],
+            "heroes": copy.deepcopy(self.heroes),
+            "message_inboxes": copy.deepcopy(self.message_inboxes),
+            "doors": copy.deepcopy(self.doors),
+            "traps": copy.deepcopy(self.traps),
+            "chests": copy.deepcopy(self.chests),
+            "monsters": copy.deepcopy(self.monsters),
+            "objective": copy.deepcopy(self._objective_state()),
+            "legal_actions": copy.deepcopy(self._legal_actions()),
+            "coordination": copy.deepcopy(self._coordination_state()),
+            "event_log_tail": copy.deepcopy(self.event_log[-12:]),
         }
 
     def state_digest(self) -> str:
@@ -732,29 +732,51 @@ class DungeonGridSession:
 
     def _legal_actions(self) -> dict[str, Any]:
         hero = self.heroes[self.active_agent]
-        base = ["move", "inspect_tile", "search_traps", "guard", "cast", "use_item", "give_item", "end_turn"]
-        if self._observation_config()["communication_enabled"]:
-            base.insert(3, "message")
+        action_points = int(hero["ap"])
+        base = ["end_turn"]
+        if action_points >= 1:
+            base[:0] = ["move", "guard", "use_item", "give_item"]
+            if self._observation_config()["communication_enabled"]:
+                base.insert(1, "message")
+        if action_points >= 2:
+            base[:0] = ["inspect_tile", "search_traps", "cast"]
+        adjacent_doors = [
+            door_id
+            for door_id, door in self.doors.items()
+            if _dist(hero["pos"], door["pos"]) <= 1 and not door["open"]
+        ]
+        adjacent_chests = [
+            chest_id
+            for chest_id, chest in self.chests.items()
+            if _dist(hero["pos"], chest["pos"]) <= 1 and not chest["opened"]
+        ]
+        adjacent_monsters = [
+            monster_id
+            for monster_id, monster in self.monsters.items()
+            if _dist(hero["pos"], monster["pos"]) <= 1 and monster["hp"] > 0
+        ]
+        objective = self._objective_state()
+        can_interact_objective = _dist(hero["pos"], objective["pos"]) <= 1
+        can_escape = (
+            hero["pos"] == objective["escape_tile"]
+            and self.scenario["objective_item"] in hero["inventory"]
+        )
+        if adjacent_doors and action_points >= 1:
+            base.append("open_door")
+        if adjacent_monsters and action_points >= 2:
+            base.append("attack_melee")
+        if (
+            adjacent_chests or can_interact_objective or can_escape
+        ) and action_points >= 1:
+            base.append("interact")
         return {
             "agent_id": self.active_agent,
             "ap": hero["ap"],
             "base": base,
             "directions": sorted(DIRS),
-            "adjacent_doors": [
-                door_id
-                for door_id, door in self.doors.items()
-                if _dist(hero["pos"], door["pos"]) <= 1 and not door["open"]
-            ],
-            "adjacent_chests": [
-                chest_id
-                for chest_id, chest in self.chests.items()
-                if _dist(hero["pos"], chest["pos"]) <= 1 and not chest["opened"]
-            ],
-            "adjacent_monsters": [
-                monster_id
-                for monster_id, monster in self.monsters.items()
-                if _dist(hero["pos"], monster["pos"]) <= 1 and monster["hp"] > 0
-            ],
+            "adjacent_doors": adjacent_doors,
+            "adjacent_chests": adjacent_chests,
+            "adjacent_monsters": adjacent_monsters,
             "ranged_monsters": [
                 monster_id
                 for monster_id, monster in self.monsters.items()
@@ -769,9 +791,8 @@ class DungeonGridSession:
             ],
             "carried_items": hero["inventory"],
             "spells": [item for item in hero["inventory"] if item in {"spark_lance", "reveal_glyph", "ward_circle"}],
-            "can_interact_objective": _dist(hero["pos"], self._objective_state()["pos"]) <= 1,
-            "can_escape": hero["pos"] == self._objective_state()["escape_tile"]
-            and self.scenario["objective_item"] in hero["inventory"],
+            "can_interact_objective": can_interact_objective,
+            "can_escape": can_escape,
         }
 
     def _coordination_state(self) -> dict[str, Any]:
@@ -879,8 +900,12 @@ class DungeonGridSession:
 
     def _result(self, applied: bool) -> dict[str, Any]:
         local_mode = self._observation_config()["mode"] == "local"
+        action_feedback = None
+        if not applied and self.event_log and self.event_log[-1]["kind"] == "action_rejected":
+            action_feedback = copy.deepcopy(self.event_log[-1]["payload"])
         return {
             "applied": applied,
+            "action_feedback": action_feedback,
             "observation": self.observation_for(self.active_agent),
             "reward": self.reward_last,
             "done": self.done,
