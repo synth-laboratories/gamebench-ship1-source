@@ -188,6 +188,11 @@ class DungeonGridSession:
         if self.done:
             self._reject(action, "terminal", {})
             return self._result(False)
+        shape_error = _action_shape_error(action)
+        if shape_error is not None:
+            reason, details = shape_error
+            self._reject(action, reason, details)
+            return self._result(False)
         before = self._transition_snapshot()
         self.reward_last = 0.0
         cost = _action_cost(action)
@@ -970,6 +975,48 @@ def _action_cost(action: dict[str, Any]) -> int:
     if action["type"] in {"move", "open_door", "message", "guard", "interact", "use_item", "give_item"}:
         return 1
     return 2
+
+
+def _action_shape_error(
+    action: Any,
+) -> tuple[str, dict[str, Any]] | None:
+    if not isinstance(action, dict):
+        return ("malformed_action", {"expected": "object"})
+    kind = action.get("type")
+    if not isinstance(kind, str):
+        return ("malformed_action", {"expected": "string type"})
+    if kind == "move" and action.get("direction") not in DIRS:
+        return ("invalid_direction", {"direction": action.get("direction")})
+    string_targets = {
+        "open_door",
+        "interact",
+        "attack_melee",
+        "cast",
+        "use_item",
+        "give_item",
+    }
+    if kind in string_targets and not isinstance(action.get("target"), str):
+        return (
+            "malformed_target",
+            {"action_type": kind, "expected": "string"},
+        )
+    if kind == "inspect_tile":
+        target = action.get("target")
+        if not isinstance(target, dict) or not all(
+            isinstance(target.get(axis), int) for axis in ("x", "y")
+        ):
+            return (
+                "malformed_target",
+                {"action_type": kind, "expected": "integer {x, y}"},
+            )
+    if kind in {"cast", "give_item", "message"} and not isinstance(
+        action.get("payload"), dict
+    ):
+        return (
+            "malformed_payload",
+            {"action_type": kind, "expected": "object"},
+        )
+    return None
 
 
 def _hero_attack(role: str) -> int:
