@@ -208,6 +208,20 @@ pub struct CraftaxWorld {
     pub(crate) player_level: i64,
     pub(crate) timestep: i64,
     pub(crate) light_level: f64,
+    #[serde(default)]
+    pub(crate) is_sleeping: bool,
+    #[serde(default)]
+    pub(crate) is_resting: bool,
+    #[serde(default)]
+    pub(crate) player_recover: f64,
+    #[serde(default)]
+    pub(crate) player_hunger: f64,
+    #[serde(default)]
+    pub(crate) player_thirst: f64,
+    #[serde(default)]
+    pub(crate) player_fatigue: f64,
+    #[serde(default)]
+    pub(crate) player_recover_mana: f64,
     pub(crate) inventory: Value,
     pub(crate) achievements: Value,
     pub(crate) entities: Vec<Entity>,
@@ -488,7 +502,33 @@ impl CraftaxRustSession {
     }
 
     pub fn step(&mut self, raw_action: &Value) -> Result<()> {
-        let action = normalize_action_value(raw_action)?;
+        if self.is_done() {
+            bail!("cannot step a terminal Craftax episode");
+        }
+        let requested_action = normalize_action_value(raw_action)?;
+        let homeostasis = self
+            .resolved
+            .rules
+            .get("homeostasis")
+            .and_then(Value::as_bool)
+            .unwrap_or(false);
+        let continuing_sleep =
+            self.world.is_sleeping && matches!(requested_action.as_str(), "noop" | "sleep");
+        let continuing_rest =
+            self.world.is_resting && matches!(requested_action.as_str(), "noop" | "rest");
+        let waking = homeostasis
+            && (self.world.is_sleeping || self.world.is_resting)
+            && !continuing_sleep
+            && !continuing_rest;
+        let action = if homeostasis && (continuing_sleep || continuing_rest || waking) {
+            "noop".to_string()
+        } else {
+            requested_action.clone()
+        };
+        if waking {
+            self.world.is_sleeping = false;
+            self.world.is_resting = false;
+        }
         let before_inventory = self.world.inventory.clone();
         let before_achievements = self.world.achievements.clone();
         let before_health = self.inventory_f64("health")?;
@@ -503,6 +543,11 @@ impl CraftaxRustSession {
         match action.as_str() {
             "left" | "right" | "up" | "down" => self.apply_move(&action)?,
             "do" => self.apply_do()?,
+            "sleep" | "rest" if homeostasis => self.append_action(
+                &action,
+                "intrinsic_mode_request",
+                json!({"sleeping": self.world.is_sleeping, "resting": self.world.is_resting}),
+            ),
             "sleep" | "rest" => self.apply_recover(&action)?,
             "read_book" => self.apply_read_book()?,
             "cast_spell" => self.apply_cast_spell()?,
@@ -524,6 +569,9 @@ impl CraftaxRustSession {
         self.update_mobs(&action)?;
         self.update_player_projectiles(&action)?;
         self.spawn_mobs(&action)?;
+        if homeostasis {
+            self.update_intrinsics(&action)?;
+        }
         self.calculate_inventory_achievements()?;
         self.apply_health_reward(before_health)?;
         self.world.light_level = calculate_light_level(self.world.timestep, self.day_length());
@@ -571,7 +619,9 @@ impl CraftaxRustSession {
                 payload: json!({"reward": reward_last, "total_reward": self.private_f64("total_reward")?}),
             });
         }
-        let done_reason = if self
+        let done_reason = if self.inventory_f64("health")? <= 0.0 {
+            Some("death")
+        } else if self
             .world
             .achievements
             .get("defeat_necromancer")
@@ -589,12 +639,14 @@ impl CraftaxRustSession {
             set_key(
                 &mut self.private,
                 "terminated",
-                json!(reason == "boss_defeated"),
+                json!(matches!(reason, "death" | "boss_defeated")),
             )?;
             set_key(&mut self.private, "truncated", json!(reason == "max_steps"))?;
             set_key(&mut self.private, "done_reason", json!(reason))?;
             self.public = self.world.public_value(true);
-            if reason == "max_steps" {
+            if reason == "death" {
+                self.append_terminal_event("death", "Death(death)", reason);
+            } else if reason == "max_steps" {
                 self.append_terminal_event(
                     "episode_truncated",
                     "EpisodeTruncated(max_steps)",
@@ -1504,13 +1556,13 @@ impl CraftaxRustSession {
             "local_map": self.local_map(None),
             "inventory": self.world.inventory,
             "intrinsics": {
-                "is_sleeping": false,
-                "is_resting": false,
-                "recover": 0.0,
-                "hunger": 0.0,
-                "thirst": 0.0,
-                "fatigue": 0.0,
-                "recover_mana": 0.0,
+                "is_sleeping": self.world.is_sleeping,
+                "is_resting": self.world.is_resting,
+                "recover": self.world.player_recover,
+                "hunger": self.world.player_hunger,
+                "thirst": self.world.player_thirst,
+                "fatigue": self.world.player_fatigue,
+                "recover_mana": self.world.player_recover_mana,
             },
             "potion_mapping": self.world.potion_mapping,
             "floor_state": {
@@ -2358,6 +2410,113 @@ impl CraftaxRustSession {
         Ok(())
     }
 
+    /// Public JAX Craftax intrinsic equations, preserving their update order.
+    fn update_intrinsics(&mut self, action: &str) -> Result<()> {
+        let max_health = max_stat(&self.world, "health")? as f64;
+        let max_energy = max_stat(&self.world, "energy")? as f64;
+        let max_mana = max_stat(&self.world, "mana")? as f64;
+
+        if action == "sleep" && self.inventory_f64("energy")? < max_energy {
+            self.world.is_sleeping = true;
+        }
+        if self.world.is_sleeping && self.inventory_f64("energy")? >= max_energy {
+            self.world.is_sleeping = false;
+            self.unlock("wake_up")?;
+        }
+        if action == "rest" && self.inventory_f64("health")? < max_health {
+            self.world.is_resting = true;
+        }
+        if self.world.is_resting
+            && (self.inventory_f64("health")? >= max_health
+                || self.inventory_f64("food")? <= 0.0
+                || self.inventory_f64("drink")? <= 0.0)
+        {
+            self.world.is_resting = false;
+        }
+
+        let not_boss = self.world.player_level != self.world.levels - 1;
+        let decay_coeff = 1.0 - 0.125 * (self.inventory_i64("dexterity")? - 1) as f64;
+        let sleep_coeff = if self.world.is_sleeping { 0.5 } else { 1.0 };
+
+        self.world.player_hunger += sleep_coeff * decay_coeff;
+        if self.world.player_hunger > 25.0 {
+            if not_boss {
+                self.set_inventory_number("food", (self.inventory_f64("food")? - 1.0).max(0.0))?;
+            }
+            self.world.player_hunger = 0.0;
+        }
+
+        self.world.player_thirst += sleep_coeff * decay_coeff;
+        if self.world.player_thirst > 20.0 {
+            if not_boss {
+                self.set_inventory_number("drink", (self.inventory_f64("drink")? - 1.0).max(0.0))?;
+            }
+            self.world.player_thirst = 0.0;
+        }
+
+        self.world.player_fatigue = if self.world.is_sleeping {
+            (self.world.player_fatigue - 1.0).min(0.0)
+        } else {
+            self.world.player_fatigue + decay_coeff
+        };
+        if self.world.player_fatigue > 30.0 {
+            if not_boss {
+                self.set_inventory_number(
+                    "energy",
+                    (self.inventory_f64("energy")? - 1.0).max(0.0),
+                )?;
+            }
+            self.world.player_fatigue = 0.0;
+        }
+        if self.world.player_fatigue < -10.0 {
+            self.set_inventory_number(
+                "energy",
+                (self.inventory_f64("energy")? + 1.0).min(max_energy),
+            )?;
+            self.world.player_fatigue = 0.0;
+        }
+
+        let has_necessities = self.inventory_f64("food")? > 0.0
+            && self.inventory_f64("drink")? > 0.0
+            && (self.inventory_f64("energy")? > 0.0 || self.world.is_sleeping);
+        self.world.player_recover += if has_necessities {
+            if self.world.is_sleeping {
+                2.0
+            } else {
+                1.0
+            }
+        } else if not_boss {
+            if self.world.is_sleeping {
+                -0.5
+            } else {
+                -1.0
+            }
+        } else {
+            0.0
+        };
+        if self.world.player_recover > 25.0 {
+            self.set_inventory_number(
+                "health",
+                (self.inventory_f64("health")? + 1.0).min(max_health),
+            )?;
+            self.world.player_recover = 0.0;
+        }
+        if self.world.player_recover < -15.0 {
+            self.set_inventory_number("health", self.inventory_f64("health")? - 1.0)?;
+            self.world.player_recover = 0.0;
+        }
+
+        let mana_coeff = 1.0 + 0.25 * (self.inventory_i64("intelligence")? - 1) as f64;
+        self.world.player_recover_mana = (self.world.player_recover_mana
+            + if self.world.is_sleeping { 2.0 } else { 1.0 })
+            * mana_coeff;
+        if self.world.player_recover_mana > 30.0 {
+            self.set_inventory_number("mana", (self.inventory_f64("mana")? + 1.0).min(max_mana))?;
+            self.world.player_recover_mana = 0.0;
+        }
+        Ok(())
+    }
+
     fn newly_unlocked(&self, before: &Value) -> Vec<String> {
         let before_obj = before.as_object();
         let mut names: Vec<String> = self
@@ -3021,6 +3180,13 @@ fn make_world(resolved: &ResolvedTask, rng: &mut PythonRandom) -> Result<Craftax
         player_level: 0,
         timestep: 0,
         light_level: calculate_light_level(0, day_length_from_resolved(resolved)),
+        is_sleeping: false,
+        is_resting: false,
+        player_recover: 0.0,
+        player_hunger: 0.0,
+        player_thirst: 0.0,
+        player_fatigue: 0.0,
+        player_recover_mana: 0.0,
         inventory: default_inventory(),
         achievements: json!({}),
         entities: Vec::new(),
@@ -5023,5 +5189,64 @@ impl PythonRandom {
             let j = self.randbelow((i + 1) as i64) as usize;
             items.swap(i, j);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn survival_session() -> CraftaxRustSession {
+        CraftaxRustSession::reset_from_task(
+            &json!({
+                "schema": "gamebench.task.craftax.v1",
+                "task_id": "intrinsics-test",
+                "scenario_id": "intrinsics-test",
+                "seed": 0,
+                "world": {"use_default": "policy_dev_small", "max_steps": 1000},
+                "rules": {"base": "symbolic_survival"},
+                "readouts": {"profile": "symbolic_compact"}
+            }),
+            None,
+        )
+        .expect("reset survival session")
+    }
+
+    #[test]
+    fn jax_intrinsic_thresholds_deplete_food_drink_and_energy() {
+        let mut session = survival_session();
+        for _ in 0..26 {
+            session.update_intrinsics("noop").expect("intrinsic tick");
+        }
+        assert_eq!(session.inventory_f64("food").unwrap(), 8.0);
+        assert_eq!(session.inventory_f64("drink").unwrap(), 8.0);
+        assert_eq!(session.inventory_f64("energy").unwrap(), 9.0);
+        assert_eq!(session.world.player_hunger, 0.0);
+        assert_eq!(session.world.player_thirst, 5.0);
+        assert_eq!(session.world.player_fatigue, 26.0);
+
+        for _ in 0..5 {
+            session.update_intrinsics("noop").expect("intrinsic tick");
+        }
+        assert_eq!(session.inventory_f64("energy").unwrap(), 8.0);
+        assert_eq!(session.world.player_fatigue, 0.0);
+    }
+
+    #[test]
+    fn depleted_necessities_cause_terminal_death() {
+        let mut session = survival_session();
+        session.set_inventory_number("health", 1.0).unwrap();
+        session.set_inventory_number("food", 0.0).unwrap();
+        session.set_inventory_number("drink", 0.0).unwrap();
+        session.set_inventory_number("energy", 0.0).unwrap();
+        session.world.player_recover = -15.0;
+
+        session.step(&json!("noop")).expect("fatal step");
+
+        assert!(session.is_done());
+        assert_eq!(session.inventory_f64("health").unwrap(), 0.0);
+        assert_eq!(session.private["done_reason"], json!("death"));
+        assert_eq!(session.private["terminated"], json!(true));
+        assert_eq!(session.private["truncated"], json!(false));
     }
 }

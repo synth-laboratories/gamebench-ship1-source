@@ -2049,7 +2049,7 @@ class CraftaxEngine:
             recover_add = ( -0.5 if self.world.is_sleeping else -1.0) if not_boss else 0.0
         self.world.player_recover += recover_add
         if self.world.player_recover > 25:
-            inv["health"] = min(float(inv["health"]) + 2, _max_stat(self.world, "health"))
+            inv["health"] = min(float(inv["health"]) + 1, _max_stat(self.world, "health"))
             self.world.player_recover = 0.0
         if self.world.player_recover < -15:
             inv["health"] = float(inv["health"]) - 1
