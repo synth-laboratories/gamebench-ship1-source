@@ -97,6 +97,21 @@ def main() -> int:
             if source_text
             else None
         )
+        relocated_bundle = None
+        if source_bundle is not None and not source_bundle.is_dir():
+            try:
+                relative_to_logs = source_bundle.relative_to(
+                    (out_dir / "logs").resolve()
+                )
+            except ValueError:
+                relative_to_logs = None
+            if relative_to_logs is not None:
+                candidate = (harbor_dir / "logs" / relative_to_logs).resolve()
+                if candidate.is_dir():
+                    relocated_bundle = candidate
+        if relocated_bundle is not None:
+            trace["bundle"] = str(relocated_bundle)
+            receipt["trace_v5"] = trace
         if (
             source_bundle is not None
             and source_bundle.is_dir()
@@ -114,6 +129,11 @@ def main() -> int:
                 json.dumps(receipt, indent=2, sort_keys=True) + "\n",
                 encoding="utf-8",
             )
+        elif relocated_bundle is not None:
+            (harbor_dir / "lane-receipt.json").write_text(
+                json.dumps(receipt, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
     verifier = receipt.get("verifier")
     verifier = verifier if isinstance(verifier, dict) else {}
     reward = receipt.get("reward")
@@ -121,13 +141,23 @@ def main() -> int:
     verify_rc = receipt.get("verify_rc")
     passed = args.exit_code == 0 and verify_rc == 0 and scored
     trace = receipt.get("trace_v5")
-    trace_emitted = (
-        1
-        if isinstance(trace, dict)
-        and trace.get("passed") is True
-        and isinstance(trace.get("capture"), dict)
-        else 0
-    )
+    trace_emitted = 0
+    if isinstance(trace, dict) and trace.get("passed") is True:
+        if isinstance(trace.get("capture"), dict):
+            trace_emitted = 1
+        bundles = trace.get("bundles")
+        if isinstance(bundles, list):
+            trace_emitted = sum(
+                len(bundle.get("traces") or [])
+                for bundle in bundles
+                if isinstance(bundle, dict)
+            )
+        if trace_emitted == 0:
+            bundle_path = str(trace.get("bundle") or "").strip()
+            if bundle_path and (
+                Path(bundle_path).expanduser().resolve() / "manifest.json"
+            ).is_file():
+                trace_emitted = 1
     trace_mode = str(os.environ.get("SYNTH_TRACE_MODE") or "best_effort")
     result = {
         "status": "passed" if passed else "evaluated" if scored else "failed",
