@@ -121,7 +121,11 @@ if [[ ! -f "$INSTRUCTION_PATH" ]]; then
   exit 1
 fi
 AGENT_RC=0
+RUNNER_RC=0
+VERIFY_RC=125
 RESULT_JSON="$OUT_DIR/rollout_result.json"
+EXECUTION_STATUS_JSON="$OUT_DIR/execution-status.json"
+REWARD_PATH="$OUT_DIR/logs/verifier/reward.txt"
 
 if [[ "$AGENT" == "codex" ]]; then
   ROLLOUT_JSON="$OUT_DIR/rollout.json"
@@ -168,13 +172,53 @@ PY
   append_codex_auth_to_rollout "$ROLLOUT_JSON"
 
   echo "Running Codex Harbor family=$REG_FAMILY task=$TASK_ID model=$MODEL effort=$EFFORT"
+  AGENT_LOG_DIR="$OUT_DIR/logs/agent"
+  mkdir -p "$AGENT_LOG_DIR"
+  RUNNER_STDOUT="$AGENT_LOG_DIR/codex.runner.stdout.txt"
+  RUNNER_STDERR="$AGENT_LOG_DIR/codex.runner.stderr.txt"
   set +e
   python3 "$CODEX_RUNNER" \
     --input "$ROLLOUT_JSON" \
     --output "$RESULT_JSON" \
-    --task-root "$TASK_ROOT"
-  AGENT_RC=$?
+    --task-root "$TASK_ROOT" \
+    > >(tee "$RUNNER_STDOUT") \
+    2> >(tee "$RUNNER_STDERR" >&2)
+  RUNNER_RC=$?
   set -e
+  if [[ -f "$WORKSPACE/logs/agent/codex_stdout.log" ]]; then
+    cp "$WORKSPACE/logs/agent/codex_stdout.log" "$AGENT_LOG_DIR/codex.stdout.jsonl"
+  else
+    cp "$RUNNER_STDOUT" "$AGENT_LOG_DIR/codex.stdout.jsonl"
+  fi
+  if [[ -f "$WORKSPACE/logs/agent/codex_stderr.log" ]]; then
+    cp "$WORKSPACE/logs/agent/codex_stderr.log" "$AGENT_LOG_DIR/codex.stderr.txt"
+    if [[ -s "$RUNNER_STDERR" ]]; then
+      printf '\n=== runner stderr ===\n' >> "$AGENT_LOG_DIR/codex.stderr.txt"
+      sed -n '1,$p' "$RUNNER_STDERR" >> "$AGENT_LOG_DIR/codex.stderr.txt"
+    fi
+  else
+    cp "$RUNNER_STDERR" "$AGENT_LOG_DIR/codex.stderr.txt"
+  fi
+  # The evals Codex runner already executes the verifier. Its process code is
+  # aggregate; recover independent child codes from rollout-result metadata.
+  read -r AGENT_RC VERIFY_RC < <(
+    python3 "$SCRIPT_DIR/harbor_run_contract.py" inspect-codex \
+      --result "$RESULT_JSON" \
+      --runner-rc "$RUNNER_RC" \
+      --reward "$WORKSPACE/logs/verifier/reward.txt" \
+      --output "$EXECUTION_STATUS_JSON"
+  )
+  if [[ "$AGENT_RC" -ne 0 ]]; then
+    python3 - "$EXECUTION_STATUS_JSON" <<'PY' >&2
+import json
+import sys
+from pathlib import Path
+
+status = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+message = status.get("agent_error") or "agent exited without an error message"
+print(f"Codex Harbor agent failed: {message}")
+PY
+  fi
 else
   echo "Running host $AGENT Harbor family=$REG_FAMILY task=$TASK_ID model=$MODEL effort=$EFFORT"
   set +e
@@ -187,6 +231,7 @@ else
     --effort "$EFFORT" \
     --timeout-sec "$TIMEOUT_SEC"
   AGENT_RC=$?
+  RUNNER_RC=$AGENT_RC
   set -e
   python3 - "$RESULT_JSON" "$AGENT" "$MODEL" "$EFFORT" "$AGENT_RC" <<'PY'
 import json
@@ -212,22 +257,28 @@ Path(sys.argv[1]).write_text(
 PY
 fi
 
-echo ""
-echo "=== Verifier ($BUNDLE) agent_rc=$AGENT_RC ==="
-export HARBOR_LOG_DIR="$OUT_DIR/logs/verifier"
-export GAMEBENCH_WORKSPACE_ROOT="$WORKSPACE"
-export GAMEBENCH_ROOT="$WORKSPACE/gamebench"
-export GAMEBENCH_TASK="$TASK_ID"
-export GAMEBENCH_TASK_DIR="$WORKSPACE/gamebench/tasks/$TASK_ID"
-export GAMEBENCH_POLICY_SUITE="$GAMEBENCH_TASK_DIR/${GAMEBENCH_REGISTRY_policy_suite}"
-export GAMEBENCH_POLICY_BASELINE="$GAMEBENCH_TASK_DIR/${GAMEBENCH_REGISTRY_policy_baseline}"
-export CANDIDATE_SUBDIR="${CANDIDATE_SUBDIR:-}"
-# Also point verifier at OUT_DIR logs (score_hillclimb writes via HARBOR_LOG_DIR).
-mkdir -p "$HARBOR_LOG_DIR"
-set +e
-bash "$TASK_ROOT/tests/test.sh"
-VERIFY_RC=$?
-set -e
+if [[ "$AGENT" != "codex" ]]; then
+  echo ""
+  echo "=== Verifier ($BUNDLE) agent_rc=$AGENT_RC ==="
+  export HARBOR_LOG_DIR="$OUT_DIR/logs/verifier"
+  export GAMEBENCH_WORKSPACE_ROOT="$WORKSPACE"
+  export GAMEBENCH_ROOT="$WORKSPACE/gamebench"
+  export GAMEBENCH_TASK="$TASK_ID"
+  export GAMEBENCH_TASK_DIR="$WORKSPACE/gamebench/tasks/$TASK_ID"
+  export GAMEBENCH_POLICY_SUITE="$GAMEBENCH_TASK_DIR/${GAMEBENCH_REGISTRY_policy_suite}"
+  export GAMEBENCH_POLICY_BASELINE="$GAMEBENCH_TASK_DIR/${GAMEBENCH_REGISTRY_policy_baseline}"
+  export CANDIDATE_SUBDIR="${CANDIDATE_SUBDIR:-}"
+  mkdir -p "$HARBOR_LOG_DIR"
+  set +e
+  bash "$TASK_ROOT/tests/test.sh"
+  VERIFY_RC=$?
+  set -e
+  python3 "$SCRIPT_DIR/harbor_run_contract.py" record-host \
+    --agent-rc "$AGENT_RC" \
+    --verify-rc "$VERIFY_RC" \
+    --reward "$REWARD_PATH" \
+    --output "$EXECUTION_STATUS_JSON" >/dev/null
+fi
 
 # Copy verifier outputs into OUT_DIR if the script wrote under workspace.
 if [[ -f "$WORKSPACE/logs/verifier/result.json" && ! -f "$OUT_DIR/logs/verifier/result.json" ]]; then
@@ -247,62 +298,15 @@ echo "result: $OUT_DIR/logs/verifier/result.json"
 echo "rollout: $RESULT_JSON"
 echo "agent_rc=$AGENT_RC verify_rc=$VERIFY_RC"
 
-# Persist a compact lane receipt for the panel.
-python3 - "$OUT_DIR/lane-receipt.json" "$TASK_ID" "$AGENT" "$MODEL" "$EFFORT" "$AGENT_RC" "$VERIFY_RC" "$OUT_DIR" <<'PY'
-import json
-import sys
-from pathlib import Path
-
-receipt = Path(sys.argv[1])
-out = Path(sys.argv[8])
-result_path = out / "logs" / "verifier" / "result.json"
-reward_path = out / "logs" / "verifier" / "reward.txt"
-payload = {
-    "schema_version": "gamebench.harbor.lane_receipt.v1",
-    "task_id": sys.argv[2],
-    "agent": sys.argv[3],
-    "model": sys.argv[4],
-    "effort": sys.argv[5],
-    "agent_rc": int(sys.argv[6]),
-    "verify_rc": int(sys.argv[7]),
-    "out_dir": str(out),
-}
-if result_path.is_file():
-    try:
-        payload["verifier"] = json.loads(result_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        payload["verifier_error"] = "invalid result.json"
-if reward_path.is_file():
-    raw = reward_path.read_text(encoding="utf-8").strip()
-    try:
-        payload["reward"] = float(raw)
-    except ValueError:
-        payload["reward_raw"] = raw
-v = payload.get("verifier") or {}
-rollout_result = out / "rollout_result.json"
-if rollout_result.is_file():
-    try:
-        rollout = json.loads(rollout_result.read_text(encoding="utf-8"))
-        metadata = rollout.get("metadata") or {}
-        trace_v5 = metadata.get("trace_v5")
-        if isinstance(trace_v5, dict):
-            payload["trace_v5"] = trace_v5
-    except json.JSONDecodeError:
-        pass
-payload["baseline_score"] = v.get("baseline_score")
-payload["best_score"] = v.get("best_score")
-payload["delta_vs_baseline"] = v.get("delta_vs_baseline")
-payload["best_candidate_id"] = v.get("best_candidate_id")
-payload["score_metric"] = v.get("score_metric")
-payload["baseline_mean_scout_score"] = v.get("baseline_mean_scout_score")
-payload["best_mean_scout_score"] = v.get("best_mean_scout_score")
-payload["delta_mean_scout_score"] = v.get("delta_mean_scout_score")
-payload["best_scout_candidate_id"] = v.get("best_scout_candidate_id")
-if v.get("error"):
-    payload["verifier_error"] = v.get("error")
-receipt.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-print(f"receipt: {receipt}")
-PY
+# Persist a typed lane receipt for the panel and evals.
+python3 "$SCRIPT_DIR/harbor_run_contract.py" write-receipt \
+  --status "$EXECUTION_STATUS_JSON" \
+  --receipt "$OUT_DIR/lane-receipt.json" \
+  --task "$TASK_ID" \
+  --agent "$AGENT" \
+  --model "$MODEL" \
+  --effort "$EFFORT" \
+  --out-dir "$OUT_DIR"
 
 # Fail the lane if verifier failed. Agent non-zero still continues to verify
 # (candidates may exist), but overall exit is non-zero if either failed.
