@@ -1,0 +1,25 @@
+{
+  "id": "fogwar_nuclear_win_v0",
+  "seed": 2718,
+  "max_rounds": 80,
+  "passages": [[6, 3]],
+  "deposits": [
+    {"kind": "credit", "pos": [3, 1], "reserve": 24},
+    {"kind": "uranium", "pos": [3, 5], "reserve": 24},
+    {"kind": "credit", "pos": [9, 1], "reserve": 24},
+    {"kind": "uranium", "pos": [9, 5], "reserve": 24},
+    {"kind": "uranium", "pos": [6, 3], "reserve": 24, "central": true}
+  ],
+  "initial": {
+    "players": {
+      "agent_0": {"credits": 5, "uranium": 25, "enemy_base_discovered": true, "known_enemy_base_pos": [11, 3]},
+      "agent_1": {"credits": 5, "uranium": 0}
+    },
+    "units": [],
+    "buildings": [{"id": "agent_0_silo_1", "owner": "agent_0", "kind": "silo", "pos": [3, 3], "hp": 3, "under_construction": false, "ready_round": 1}]
+  },
+  "fixture_tape": [
+    {"actions": [{"kind": "launch"}]},
+    {"actions": [{"kind": "wait"}]}
+  ]
+}

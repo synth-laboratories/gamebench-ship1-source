@@ -1,0 +1,227 @@
+{
+  "schema": "gamebench.sokoban.nev_gold.v1",
+  "lane": "python",
+  "games": [
+    {
+      "scenario_id": "inline_01_corner_solve",
+      "events": [
+        "TaskResolved(lvl-01-corner,sha256:8bc5454d9a7bec3f36798388ff3596776b0a4c5c73b2c8e2d087c5628069ac17)",
+        "ActionApplied(right,step=1)",
+        "PushApplied(right,boxes_on_target=1)",
+        "AchievementUnlocked(first_push)",
+        "BoxOnTarget(1/1)",
+        "AchievementUnlocked(first_box_on_target)",
+        "RewardDelta(0.09,total=0.09)",
+        "LevelComplete(1)",
+        "AchievementUnlocked(level_complete)",
+        "Terminal(success)"
+      ]
+    },
+    {
+      "scenario_id": "inline_02_corridor_solve",
+      "events": [
+        "TaskResolved(lvl-02-corridor,sha256:f1ddae3003ba36ec94e26347a8f83dc6ab9e8007f15661246187695eddc9db9b)",
+        "ActionApplied(right,step=1)",
+        "PushApplied(right,boxes_on_target=1)",
+        "AchievementUnlocked(first_push)",
+        "BoxOnTarget(1/2)",
+        "AchievementUnlocked(first_box_on_target)",
+        "RewardDelta(0.09,total=0.09)"
+      ]
+    },
+    {
+      "scenario_id": "inline_03_t_walk_push",
+      "events": [
+        "TaskResolved(lvl-03-t,sha256:8080af87e93130e28ca3f0f8cd2b3425abb7871e8cf73758d505dd36af534589)",
+        "ActionApplied(right,step=1)",
+        "RewardDelta(-0.01,total=-0.01)",
+        "ActionApplied(down,step=2)",
+        "PushApplied(down,boxes_on_target=0)",
+        "AchievementUnlocked(first_push)",
+        "RewardDelta(-0.01,total=-0.02)",
+        "ActionApplied(right,step=3)",
+        "RewardDelta(-0.01,total=-0.03)",
+        "ActionApplied(down,step=4)",
+        "RewardDelta(-0.01,total=-0.04)"
+      ]
+    },
+    {
+      "scenario_id": "inline_04_walls_block",
+      "events": [
+        "TaskResolved(lvl-04-walls,sha256:52e607629afea7b0c9eecdc612c2e551e45dc1f51ca39f545ded0f7b4f8fa4c4)",
+        "ActionApplied(right,step=1)",
+        "RewardDelta(-0.01,total=-0.01)",
+        "PushBlocked(down,wall,step=2)",
+        "RewardDelta(-0.03,total=-0.04)",
+        "PushBlocked(down,wall,step=3)",
+        "RewardDelta(-0.03,total=-0.07)",
+        "ActionApplied(right,step=4)",
+        "RewardDelta(-0.01,total=-0.08)",
+        "ActionApplied(right,step=5)",
+        "RewardDelta(-0.01,total=-0.09)",
+        "PushBlocked(up,wall,step=6)",
+        "RewardDelta(-0.03,total=-0.12)"
+      ]
+    },
+    {
+      "scenario_id": "inline_05_double_progress",
+      "events": [
+        "TaskResolved(lvl-05-double,sha256:0f5e8ee51f2065a55328014469c74c2332b140cdc4dfe87aa48f09ab9ac76b40)",
+        "ActionApplied(right,step=1)",
+        "PushApplied(right,boxes_on_target=1)",
+        "AchievementUnlocked(first_push)",
+        "BoxOnTarget(1/2)",
+        "AchievementUnlocked(first_box_on_target)",
+        "RewardDelta(0.09,total=0.09)",
+        "ActionApplied(down,step=2)",
+        "RewardDelta(-0.01,total=0.08)",
+        "PushBlocked(down,box_blocked,step=3)",
+        "RewardDelta(-0.03,total=0.05)",
+        "ActionApplied(right,step=4)",
+        "RewardDelta(-0.01,total=0.04)"
+      ]
+    },
+    {
+      "scenario_id": "curriculum_seed_101",
+      "events": [
+        "TaskResolved(seed-107,sha256:d6a63ac70314fc1d29abf59c6e51ce3640119524e8c3a50dcfff8cf1b208818a)",
+        "ActionApplied(down,step=1)",
+        "RewardDelta(-0.01,total=-0.01)",
+        "PushBlocked(right,box_blocked,step=2)",
+        "RewardDelta(-0.03,total=-0.04)",
+        "ActionApplied(down,step=3)",
+        "RewardDelta(-0.01,total=-0.05)",
+        "PushBlocked(left,wall,step=4)",
+        "RewardDelta(-0.03,total=-0.08)",
+        "ActionApplied(up,step=5)",
+        "RewardDelta(-0.01,total=-0.09)",
+        "PushBlocked(right,box_blocked,step=6)",
+        "RewardDelta(-0.03,total=-0.12)"
+      ]
+    },
+    {
+      "scenario_id": "curriculum_seed_102",
+      "events": [
+        "TaskResolved(seed-108,sha256:67c61ce5997c4d248feebce72858eacacdaeb706cdf330d14d8664d6c2df9338)",
+        "ActionApplied(right,step=1)",
+        "RewardDelta(-0.01,total=-0.01)",
+        "PushBlocked(down,wall,step=2)",
+        "RewardDelta(-0.03,total=-0.04)",
+        "PushBlocked(down,wall,step=3)",
+        "RewardDelta(-0.03,total=-0.07)"
+      ]
+    },
+    {
+      "scenario_id": "curriculum_seed_103",
+      "events": [
+        "TaskResolved(seed-109,sha256:a200dc056efa62a2e74cebbf1ecbce8b355f33fe87a19f4f72bb99ad57f55612)",
+        "ActionApplied(right,step=1)",
+        "RewardDelta(-0.01,total=-0.01)",
+        "ActionApplied(right,step=2)",
+        "RewardDelta(-0.01,total=-0.02)",
+        "PushBlocked(right,wall,step=3)",
+        "RewardDelta(-0.03,total=-0.05)"
+      ]
+    },
+    {
+      "scenario_id": "curriculum_seed_104",
+      "events": [
+        "TaskResolved(seed-110,sha256:27e168d481e591cff6a64e73fce8af7e83ccd4e51212f916e215680b3d1957c9)",
+        "ActionApplied(right,step=1)",
+        "RewardDelta(-0.01,total=-0.01)",
+        "ActionApplied(right,step=2)",
+        "PushApplied(right,boxes_on_target=0)",
+        "AchievementUnlocked(first_push)",
+        "RewardDelta(-0.01,total=-0.02)"
+      ]
+    },
+    {
+      "scenario_id": "curriculum_seed_105",
+      "events": [
+        "TaskResolved(lvl-01-corner,sha256:64cf1b86b705c14781267d58b779d750f64b1d3176505638b33ba220d3e139d6)",
+        "PushBlocked(down,wall,step=1)",
+        "RewardDelta(-0.03,total=-0.03)",
+        "ActionApplied(right,step=2)",
+        "PushApplied(right,boxes_on_target=1)",
+        "AchievementUnlocked(first_push)",
+        "BoxOnTarget(1/1)",
+        "AchievementUnlocked(first_box_on_target)",
+        "RewardDelta(0.09,total=0.06)",
+        "LevelComplete(2)",
+        "AchievementUnlocked(level_complete)",
+        "Terminal(success)"
+      ]
+    },
+    {
+      "scenario_id": "curriculum_seed_106",
+      "events": [
+        "TaskResolved(lvl-02-corridor,sha256:152c34277e85476eb4f3a36c16f8123b35ed9886cdf66e2a6d85ea10824ca7ab)",
+        "ActionApplied(right,step=1)",
+        "PushApplied(right,boxes_on_target=1)",
+        "AchievementUnlocked(first_push)",
+        "BoxOnTarget(1/2)",
+        "AchievementUnlocked(first_box_on_target)",
+        "RewardDelta(0.09,total=0.09)",
+        "PushBlocked(down,wall,step=2)",
+        "RewardDelta(-0.03,total=0.06)",
+        "PushBlocked(down,wall,step=3)",
+        "RewardDelta(-0.03,total=0.03)",
+        "ActionApplied(right,step=4)",
+        "PushApplied(right,boxes_on_target=1)",
+        "RewardDelta(-0.01,total=0.02)"
+      ]
+    },
+    {
+      "scenario_id": "curriculum_seed_107",
+      "events": [
+        "TaskResolved(lvl-03-t,sha256:2e1ec0a494de3496ed62dd82a1a231bffcc0890c936c5c2606b66a33734cac5d)",
+        "ActionApplied(down,step=1)",
+        "RewardDelta(-0.01,total=-0.01)",
+        "ActionApplied(right,step=2)",
+        "PushApplied(right,boxes_on_target=0)",
+        "AchievementUnlocked(first_push)",
+        "RewardDelta(-0.01,total=-0.02)",
+        "ActionApplied(down,step=3)",
+        "RewardDelta(-0.01,total=-0.03)",
+        "ActionApplied(right,step=4)",
+        "RewardDelta(-0.01,total=-0.04)"
+      ]
+    },
+    {
+      "scenario_id": "curriculum_seed_108",
+      "events": [
+        "TaskResolved(lvl-04-walls,sha256:6b7155a43462c5aa3e37d7448dffdeb5c12ffeb19e42e233ca9b6106fe2ce2dc)",
+        "PushBlocked(left,wall,step=1)",
+        "RewardDelta(-0.03,total=-0.03)"
+      ]
+    },
+    {
+      "scenario_id": "curriculum_seed_109",
+      "events": [
+        "TaskResolved(lvl-05-double,sha256:7e79ab451b5da9ec5de04f06be89b3376be8713f26008ebf51ea6a8b18574c4b)",
+        "ActionApplied(down,step=1)",
+        "RewardDelta(-0.01,total=-0.01)",
+        "ActionApplied(down,step=2)",
+        "RewardDelta(-0.01,total=-0.02)",
+        "ActionApplied(up,step=3)",
+        "RewardDelta(-0.01,total=-0.03)",
+        "ActionApplied(right,step=4)",
+        "RewardDelta(-0.01,total=-0.04)"
+      ]
+    },
+    {
+      "scenario_id": "curriculum_seed_110",
+      "events": [
+        "TaskResolved(seed-101,sha256:2abe079dabb6cf94a1ec59ae9bbc2c6436e99477cf73357f115a366171e30518)",
+        "ActionApplied(right,step=1)",
+        "RewardDelta(-0.01,total=-0.01)",
+        "ActionApplied(right,step=2)",
+        "PushApplied(right,boxes_on_target=0)",
+        "AchievementUnlocked(first_push)",
+        "RewardDelta(-0.01,total=-0.02)",
+        "ActionApplied(down,step=3)",
+        "RewardDelta(-0.01,total=-0.03)"
+      ]
+    }
+  ]
+}

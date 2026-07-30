@@ -1,0 +1,13 @@
+{
+  "input_token_budget": 20000,
+  "max_steps": 120,
+  "schema": "gamebench.frogs.exotic_cybernetics_sweep.v1",
+  "seeds": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "suite_id": "frogs_exotic_cybernetics_dev_v10",
+  "task_template": "tasks/policy_dev_template.json"
+}

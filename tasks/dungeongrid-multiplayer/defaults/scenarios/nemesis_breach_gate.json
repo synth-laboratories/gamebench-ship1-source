@@ -1,0 +1,26 @@
+{
+  "task_id": "dg_nemesis_breach_gate_rust_smoke",
+  "scenario_id": "nemesis_breach_gate",
+  "quest_id": "gamebench:nemesis_breach_gate:lite",
+  "title": "Tusk Warlord Breach Gate",
+  "seed": 5,
+  "max_steps": 90,
+  "map_ascii": "#########\n#E.D.RI.#\n#..T.C..#\n#########",
+  "hero_roles": ["barbarian", "wizard"],
+  "objective_item": "breach_ward",
+  "metadata": {
+    "source_seed": {
+      "quest_id": "tusk_warlord_lair",
+      "title": "Tusk Warlord Lair",
+      "tier": "full",
+      "distillation": "compresses the full lair's boss-door commitment into a tiny breach where support must strip guard before entry"
+    },
+    "marl_axis": "door breach under nemesis pressure",
+    "coordination_type": "frontline breaches only after support ward and reveal",
+    "coordination_skills": [
+      "send a compact breach code before moving",
+      "hold the support turn until ward and reveal remove the nemesis guard",
+      "frontline opens the door, stages adjacent, and commits only after support counterplay"
+    ]
+  }
+}

@@ -1,0 +1,110 @@
+{
+  "schema": "gamebench.sokoban.gold_scenarios.v1",
+  "scenarios": [
+    {
+      "scenario_id": "inline_01_corner_solve",
+      "seed": 1,
+      "map": {"source": "inline", "puzzle_id": "lvl-01-corner", "grid": ["#####", "#@$.#", "#####"]},
+      "rules": {"base": "sparse_sokoban", "overrides": {"max_steps": 20}},
+      "actions": ["right"]
+    },
+    {
+      "scenario_id": "inline_02_corridor_solve",
+      "seed": 2,
+      "map": {"source": "inline", "puzzle_id": "lvl-02-corridor", "grid": ["#######", "#@$.. #", "#######"]},
+      "rules": {"base": "sparse_sokoban", "overrides": {"max_steps": 20}},
+      "actions": ["right"]
+    },
+    {
+      "scenario_id": "inline_03_t_walk_push",
+      "seed": 3,
+      "map": {"source": "inline", "puzzle_id": "lvl-03-t", "grid": ["#####", "#@  #", "# $ #", "#  .#", "#####"]},
+      "rules": {"base": "sparse_sokoban", "overrides": {"max_steps": 20}},
+      "actions": ["right", "down", "right", "down"]
+    },
+    {
+      "scenario_id": "inline_04_walls_block",
+      "seed": 4,
+      "map": {"source": "inline", "puzzle_id": "lvl-04-walls", "grid": ["######", "#@  .#", "# ## #", "# $  #", "######"]},
+      "rules": {"base": "sparse_sokoban", "overrides": {"max_steps": 20}},
+      "actions": ["right", "down", "down", "right", "right", "up"]
+    },
+    {
+      "scenario_id": "inline_05_double_progress",
+      "seed": 5,
+      "map": {"source": "inline", "puzzle_id": "lvl-05-double", "grid": ["#######", "#@$.  #", "#     #", "# $.  #", "#######"]},
+      "rules": {"base": "sparse_sokoban", "overrides": {"max_steps": 30}},
+      "actions": ["right", "down", "down", "right"]
+    },
+    {
+      "scenario_id": "curriculum_seed_101",
+      "seed": 101,
+      "map": {"use_default": "curriculum_easy", "seed": 101},
+      "rules": {"base": "sparse_sokoban", "overrides": {"max_steps": 40}},
+      "actions": ["down", "right", "down", "left", "up", "right"]
+    },
+    {
+      "scenario_id": "curriculum_seed_102",
+      "seed": 102,
+      "map": {"use_default": "curriculum_easy", "seed": 102},
+      "rules": {"base": "sparse_sokoban", "overrides": {"max_steps": 40}},
+      "actions": ["right", "down", "down"]
+    },
+    {
+      "scenario_id": "curriculum_seed_103",
+      "seed": 103,
+      "map": {"use_default": "curriculum_easy", "seed": 103},
+      "rules": {"base": "sparse_sokoban", "overrides": {"max_steps": 40}},
+      "actions": ["right", "right", "right"]
+    },
+    {
+      "scenario_id": "curriculum_seed_104",
+      "seed": 104,
+      "map": {"use_default": "curriculum_easy", "seed": 104},
+      "rules": {"base": "sparse_sokoban", "overrides": {"max_steps": 40}},
+      "actions": ["right", "right"]
+    },
+    {
+      "scenario_id": "curriculum_seed_105",
+      "seed": 105,
+      "map": {"use_default": "curriculum_easy", "seed": 105},
+      "rules": {"base": "sparse_sokoban", "overrides": {"max_steps": 40}},
+      "actions": ["down", "right", "right", "up"]
+    },
+    {
+      "scenario_id": "curriculum_seed_106",
+      "seed": 106,
+      "map": {"use_default": "curriculum_easy", "seed": 106},
+      "rules": {"base": "sparse_sokoban", "overrides": {"max_steps": 40}},
+      "actions": ["right", "down", "down", "right"]
+    },
+    {
+      "scenario_id": "curriculum_seed_107",
+      "seed": 107,
+      "map": {"use_default": "curriculum_easy", "seed": 107},
+      "rules": {"base": "sparse_sokoban", "overrides": {"max_steps": 40}},
+      "actions": ["down", "right", "down", "right"]
+    },
+    {
+      "scenario_id": "curriculum_seed_108",
+      "seed": 108,
+      "map": {"use_default": "curriculum_easy", "seed": 108},
+      "rules": {"base": "sparse_sokoban", "overrides": {"max_steps": 40}},
+      "actions": ["left"]
+    },
+    {
+      "scenario_id": "curriculum_seed_109",
+      "seed": 109,
+      "map": {"use_default": "curriculum_easy", "seed": 109},
+      "rules": {"base": "sparse_sokoban", "overrides": {"max_steps": 40}},
+      "actions": ["down", "down", "up", "right"]
+    },
+    {
+      "scenario_id": "curriculum_seed_110",
+      "seed": 110,
+      "map": {"use_default": "curriculum_easy", "seed": 110},
+      "rules": {"base": "sparse_sokoban", "overrides": {"max_steps": 40}},
+      "actions": ["right", "right", "down"]
+    }
+  ]
+}

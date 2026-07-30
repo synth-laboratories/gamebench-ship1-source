@@ -1,0 +1,6 @@
+{
+  "distinguishing_experiment": "Present a state where corner is salient and compare against a policy that handles it correctly.",
+  "evidence": "Trace actions show: X plays corner square index 0; X plays edge square index 1; X plays edge square index 3; center square never chosen by candidate.",
+  "flaw_id": "corner_fixated_opener",
+  "summary": "The hidden policy always opens the same corner regardless of opponent replies or center availability."
+}

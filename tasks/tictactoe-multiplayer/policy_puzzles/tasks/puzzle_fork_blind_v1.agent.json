@@ -1,0 +1,6 @@
+{
+  "gamebench_task": "tictactoe-multiplayer",
+  "prompt": "Diagnose the hidden multiplayer Tic-Tac-Toe policy flaw for agent_0 from black-box traces.",
+  "puzzle_id": "puzzle_fork_blind_v1",
+  "schema_version": "gamebench.policy_puzzle.task.v1"
+}

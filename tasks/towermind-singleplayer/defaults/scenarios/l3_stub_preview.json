@@ -1,0 +1,7 @@
+{
+  "schema": "gamebench.towermind.scenario.v1",
+  "id": "l3_stub_preview",
+  "level": "L3",
+  "seed": 404,
+  "actions": []
+}

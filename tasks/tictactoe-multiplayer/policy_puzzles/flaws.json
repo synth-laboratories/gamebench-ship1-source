@@ -1,0 +1,61 @@
+{
+  "flaws": [
+    {
+      "flaw_id": "center_blind_opener",
+      "keywords": [
+        "center",
+        "edge",
+        "corner",
+        "opening"
+      ],
+      "summary": "The hidden policy undervalues the center square and opens from edges or corners even when center control is available.",
+      "title": "Tic-Tac-Toe center blind"
+    },
+    {
+      "flaw_id": "fork_blind_defender",
+      "keywords": [
+        "fork",
+        "threat",
+        "winning",
+        "block"
+      ],
+      "summary": "The hidden policy fails to recognize fork threats and allows the opponent to create dual winning lines.",
+      "title": "Fork blind defender"
+    },
+    {
+      "flaw_id": "block_miss_defender",
+      "keywords": [
+        "block",
+        "winning",
+        "line",
+        "immediate"
+      ],
+      "summary": "The hidden policy misses mandatory blocking moves when the opponent has an immediate winning line.",
+      "title": "Block miss defender"
+    },
+    {
+      "flaw_id": "corner_fixated_opener",
+      "keywords": [
+        "corner",
+        "opening",
+        "fixated",
+        "center"
+      ],
+      "summary": "The hidden policy always opens the same corner regardless of opponent replies or center availability.",
+      "title": "Corner fixated opener"
+    },
+    {
+      "flaw_id": "win_line_blind_attacker",
+      "keywords": [
+        "win",
+        "line",
+        "immediate",
+        "finish"
+      ],
+      "summary": "The hidden policy misses immediate winning moves when a three-in-a-row is one action away.",
+      "title": "Win line blind attacker"
+    }
+  ],
+  "gamebench_task": "tictactoe-multiplayer",
+  "schema_version": "gamebench.policy_puzzles.flaws.v1"
+}

@@ -1,0 +1,6 @@
+{
+  "distinguishing_experiment": "Present a state where row is salient and compare against a policy that handles it correctly.",
+  "evidence": "Trace actions show: {'action': {'kind': 'place_frog', 'row': 3, 'col': 0}, 'invalid_parse': False, 'repaired': False, 'error': None} (row order skip); {'action': {'kind': 'submit'}, 'invalid_parse': True, 'repaired': True, 'error': 'no_valid_action_found'} (row order skip).",
+  "flaw_id": "row_order_skip",
+  "summary": "The hidden policy fills rows out of order, causing color and column conflicts later."
+}

@@ -1,0 +1,19 @@
+{
+  "max_steps": 120,
+  "push_semantics": "standard",
+  "rewards": {
+    "step": -0.01,
+    "push": 0.0,
+    "box_on_target": 0.1,
+    "goal": 1.0,
+    "blocked": -0.02
+  },
+  "errors": {
+    "mode": "silent"
+  },
+  "achievements": {
+    "first_push": true,
+    "first_box_on_target": true,
+    "level_complete": true
+  }
+}

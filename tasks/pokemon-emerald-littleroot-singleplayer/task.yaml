@@ -1,0 +1,22 @@
+id: pokemon-emerald-littleroot-singleplayer
+name: Pokemon Emerald — Littleroot Town
+kind: gamebench_gold_reference
+game: pokemon_emerald
+visibility: private
+oracle:
+  type: pixel_frame_hash
+  reference: reference_emerald/
+  gold_frames: fixtures/gold/frames/manifest.json
+upstream:
+  source: ../../../pokeagent-speedrun/Emerald-GBAdvance/rom.gba
+  note: Local Pokémon Emerald reference ROM exercised through the existing mGBA-backed PokeAgent environment.
+status:
+  reference_engine_rust: tasks/pokemon-emerald-littleroot-singleplayer/gold_rust/
+  implementation: capture_backed_rust_bootstrap
+  one_to_one_required: true
+  one_to_one_plan: Rust owns all emulation-facing state, input timing, tile composition, palette conversion, and 240x160 RGB output. The mGBA reference is an oracle only; no emulator or ROM is loaded by the Rust runtime.
+  verification:
+    frame_size: [240, 160]
+    frame_format: rgb8
+    lanes: [rust]
+    required: [input_replay, frame_sha256, pixel_diff]

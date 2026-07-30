@@ -1,0 +1,11 @@
+{
+  "schema": "gamebench.sokoban.task_suite.v1",
+  "suite_id": "gpt_oss_difficulty_spectrum",
+  "tasks": [
+    {"band": "trivial", "path": "tasks/difficulty/band_01_trivial_one_push.json"},
+    {"band": "easy", "path": "tasks/difficulty/band_02_easy_turn_push.json"},
+    {"band": "medium", "path": "tasks/difficulty/band_03_medium_two_box.json"},
+    {"band": "hard", "path": "tasks/difficulty/band_04_hard_vertical_pair.json"},
+    {"band": "strict_error", "path": "tasks/difficulty/band_05_strict_error_one_push.json"}
+  ]
+}

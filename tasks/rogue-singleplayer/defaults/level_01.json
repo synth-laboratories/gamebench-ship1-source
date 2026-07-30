@@ -1,0 +1,17 @@
+{
+  "schema": "gamebench.task.rogue.v1",
+  "task_id": "rogue_level_01",
+  "seed": 1,
+  "grid": [
+    "                    ",
+    "  ------------      ",
+    "  |@...*....%|      ",
+    "  |....:.....|      ",
+    "  ------------      ",
+    "                    "
+  ],
+  "rules": {"base": "modern_rogue_core", "overrides": {"max_steps": 40}},
+  "objective": "descend",
+  "readouts": {"symbolic": "ascii", "visual": true},
+  "checkpoint_every_n_steps": 1
+}

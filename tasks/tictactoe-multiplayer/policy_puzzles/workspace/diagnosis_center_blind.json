@@ -1,0 +1,6 @@
+{
+  "distinguishing_experiment": "Present a state where center is salient and compare against a policy that handles it correctly.",
+  "evidence": "Trace actions show: X plays corner square index 0; X plays corner square index 2; X plays corner square index 6; X plays corner square index 8; center square never chosen by candidate; opening favors corner squares only.",
+  "flaw_id": "center_blind_opener",
+  "summary": "The hidden policy undervalues the center square and opens from edges or corners even when center control is available."
+}

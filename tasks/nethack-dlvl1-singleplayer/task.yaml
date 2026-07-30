@@ -1,0 +1,41 @@
+id: nethack-dlvl1-singleplayer
+name: NetHack — Main Dungeon dlvl 1
+kind: gamebench_gold_reference
+game: nethack
+visibility: private
+oracle:
+  type: capture_backed_nle_discrepancy
+  reference: fixtures/nle_oracle/
+  comparator: scripts/compare_nle_discrepancies.py
+  gold_eventlogs: fixtures/gold/eventlogs/eventlogs.json
+  note: Frozen NLE 0.9.0 / NetHack 3.6.6 captures are the discrepancy oracle. Gold runtime never imports, links, shells to, or wraps NLE.
+upstream:
+  source: https://github.com/facebookresearch/nle/tree/v0.9.0
+  nethack_version: 3.6.6
+  note: NLE is a discrepancy and fixture-capture authority only; the Python and Rust engines own the GameBench runtime.
+status:
+  reference_engine_python: tasks/nethack-dlvl1-singleplayer/gold_python/
+  reference_engine_rust: tasks/nethack-dlvl1-singleplayer/gold_rust/
+  implementation: capture_backed_own_dlvl1_emulator
+  one_to_one_required: true
+  one_to_one_plan: Both engines load frozen dlvl-1 level dumps and replay NLE action-space tapes. NLE map-generation parity is not claimed for open play; fixture-backed dynamics, public observations, prompt modes, NEV, and terminal boundaries are compared instead.
+  geography:
+    allowed: [main_dungeon_dlvl_1]
+    terminal_on_down_stair: descended
+    prohibited: [dlvl_2, gnomish_mines, sokoban, quest, vlad, endgame]
+  action_surface:
+    map: tasks/nethack-dlvl1-singleplayer/shared/nle_action_map.json
+    id_semantics: ordered_nle_actions_index
+    auto_more: raw_explicit_misc_action_more
+  verification:
+    lanes: [python, rust]
+    owned_gold_fixtures: scripts/verify_gold_fixtures.py
+    python_rust_parity: scripts/verify_python_rust_parity.py
+    frozen_nle_discrepancy: scripts/compare_nle_discrepancies.py
+    live_nle_differential_fuzz: scripts/fuzz_nle_differential.py
+    live_nle_dev_requirements: requirements-nle-fuzz.txt
+    property_invariants: tests/test_hypothesis_properties.py
+    property_test_requirements: requirements-property-tests.txt
+    live_nle_twin_step: optional_dev_extra
+    required_oracle_tapes_v0: 33
+    current_oracle_tapes: 12

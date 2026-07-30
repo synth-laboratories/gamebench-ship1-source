@@ -1,0 +1,10 @@
+{
+  "schema": "gamebench.overcooked_v2.policy_sweep.v1",
+  "suite_id": "mapo_overcooked_v2_p1_soft96_diag2_20260707",
+  "purpose": "First soften-step diagnostic for MAPO Overcooked v2 P0: max_steps 64 -> 96 on fast strict layouts.",
+  "max_steps": 96,
+  "scenarios": [
+    {"scenario_id": "mapo_ocv2_p1_forced_coord_seed_12", "layout_id": "forced_coord", "seed": 12, "rules": {"base": "grounded_communication", "recipe_id": "mixed_soup", "overrides": {"max_steps": 96, "target_deliveries": 2, "view_radius": 2, "recipe_pool": ["mixed_soup", "tomato_trio"], "wrong_delivery_penalty": 1.0, "cook_time": 3}}},
+    {"scenario_id": "mapo_ocv2_p1_counter_circuit_seed_13", "layout_id": "counter_circuit", "seed": 13, "rules": {"base": "grounded_communication", "recipe_id": "mixed_soup", "overrides": {"max_steps": 96, "target_deliveries": 2, "view_radius": 2, "recipe_pool": ["mixed_soup", "tomato_trio"], "wrong_delivery_penalty": 1.0, "cook_time": 3}}}
+  ]
+}

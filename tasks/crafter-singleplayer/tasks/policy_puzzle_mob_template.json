@@ -1,0 +1,31 @@
+{
+  "schema": "gamebench.task.crafter.v1",
+  "task_id": "crafter_policy_puzzle_mob",
+  "env_family": "crafter-singleplayer",
+  "scenario_id": "crafter_policy_puzzle_mob",
+  "world": {
+    "use_default": "policy_dev_small",
+    "initial_state": {
+      "player": {
+        "pos": [16, 16],
+        "facing": [1, 0]
+      },
+      "entities": [
+        {"kind": "zombie", "pos": [18, 16]}
+      ]
+    }
+  },
+  "rules": {
+    "base": "policy_puzzle_mobs"
+  },
+  "readouts": {
+    "symbolic": "symbolic_compact",
+    "visual": false
+  },
+  "stream": {
+    "enabled": false,
+    "every_n_steps": 1,
+    "persist_frames": false
+  },
+  "checkpoint_every_n_steps": 10
+}

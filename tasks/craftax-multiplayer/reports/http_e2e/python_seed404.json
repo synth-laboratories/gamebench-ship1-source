@@ -1,0 +1,3718 @@
+{
+  "achievements": [
+    "cast_spell",
+    "collect_coal",
+    "collect_diamond",
+    "collect_iron",
+    "collect_ruby",
+    "collect_sapphire",
+    "collect_wood",
+    "craft_pickaxe",
+    "craft_sword",
+    "drink_potion",
+    "drink_water",
+    "open_chest",
+    "trade"
+  ],
+  "health": {
+    "env_family": "craftax-multiplayer",
+    "ok": true,
+    "runtime": "python"
+  },
+  "lane": "shared_http_heuristic",
+  "legacy_event_count": 686,
+  "observation_contract": {
+    "agents": [
+      "agent_0",
+      "agent_1",
+      "agent_2"
+    ],
+    "ascii": true,
+    "last_joint_event": true
+  },
+  "runtime": "python",
+  "seed": 404,
+  "steps": 245,
+  "structured_event_count": 686,
+  "terminated": true,
+  "termination_reason": "death",
+  "total_shared_reward": 13.0,
+  "trace": [
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "up"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 1.0,
+      "step": 1
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "down"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "reward": 1.0,
+      "step": 2
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "right"
+        },
+        "agent_2": {
+          "kind": "make_wood_sword"
+        }
+      },
+      "reward": 1.0,
+      "step": 3
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "down"
+        },
+        "agent_2": {
+          "kind": "up"
+        }
+      },
+      "reward": 0.0,
+      "step": 4
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "reward": 2.0,
+      "step": 5
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 6
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 7
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 8
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "down"
+        }
+      },
+      "reward": 0.0,
+      "step": 9
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "reward": 1.0,
+      "step": 10
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 11
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 12
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "reward": 1.0,
+      "step": 13
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 14
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "down"
+        }
+      },
+      "reward": 0.0,
+      "step": 15
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "reward": 0.0,
+      "step": 16
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 17
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "down"
+        }
+      },
+      "reward": 0.0,
+      "step": 18
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "reward": 1.0,
+      "step": 19
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "make_iron_pickaxe"
+        }
+      },
+      "reward": 1.0,
+      "step": 20
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 21
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "down"
+        }
+      },
+      "reward": 0.0,
+      "step": 22
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "reward": 0.0,
+      "step": 23
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 24
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 25
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 26
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "up"
+        }
+      },
+      "reward": 0.0,
+      "step": 27
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "reward": 0.0,
+      "step": 28
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 29
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 30
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 31
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 32
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "reward": 0.0,
+      "step": 33
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "down"
+        }
+      },
+      "reward": 0.0,
+      "step": 34
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "reward": 1.0,
+      "step": 35
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "make_diamond_pickaxe"
+        }
+      },
+      "reward": 0.0,
+      "step": 36
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 37
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 38
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 39
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 40
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "reward": 1.0,
+      "step": 41
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 42
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 43
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "up"
+        }
+      },
+      "reward": 0.0,
+      "step": 44
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "reward": 0.0,
+      "step": 45
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 46
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "reward": 0.0,
+      "step": 47
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "up"
+        }
+      },
+      "reward": 0.0,
+      "step": 48
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "reward": 0.0,
+      "step": 49
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 50
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 51
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "reward": 0.0,
+      "step": 52
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 53
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "reward": 0.0,
+      "step": 54
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 55
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 56
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "down"
+        }
+      },
+      "reward": 0.0,
+      "step": 57
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "reward": 0.0,
+      "step": 58
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 59
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 60
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "up"
+        }
+      },
+      "reward": 0.0,
+      "step": 61
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "reward": 0.0,
+      "step": 62
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 63
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 64
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 65
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 66
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 67
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 68
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "reward": 0.0,
+      "step": 69
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "up"
+        }
+      },
+      "reward": 0.0,
+      "step": 70
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "reward": 0.0,
+      "step": 71
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 72
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 73
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 74
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "down"
+        }
+      },
+      "reward": 0.0,
+      "step": 75
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 76
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "do"
+        }
+      },
+      "reward": 0.0,
+      "step": 77
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "down"
+        }
+      },
+      "reward": 0.0,
+      "step": 78
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "down"
+        }
+      },
+      "reward": 0.0,
+      "step": 79
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "down"
+        }
+      },
+      "reward": 0.0,
+      "step": 80
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "down"
+        }
+      },
+      "reward": 0.0,
+      "step": 81
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "down"
+        }
+      },
+      "reward": 0.0,
+      "step": 82
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "down"
+        }
+      },
+      "reward": 0.0,
+      "step": 83
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "down"
+        }
+      },
+      "reward": 0.0,
+      "step": 84
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 85
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 86
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 87
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 88
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 89
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 90
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 91
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 92
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 93
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 94
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 95
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 96
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 97
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 98
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 99
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 100
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 101
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 102
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 103
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 104
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 105
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 106
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 107
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 108
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 109
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 110
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 111
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 112
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 113
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 114
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 115
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 116
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 117
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 118
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 119
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 120
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 121
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 122
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 123
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 124
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 125
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 126
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 127
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 128
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 129
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 130
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 131
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 132
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 133
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 134
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 135
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 136
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 137
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 138
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 139
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 140
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 141
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 142
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 143
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 144
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 145
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 146
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 147
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 148
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 149
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 150
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 151
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 152
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 153
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 154
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 155
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 156
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 157
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 158
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 159
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 160
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 161
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 162
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 163
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 164
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 165
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 166
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 167
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 168
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 169
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 170
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 171
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 172
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 173
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 174
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "up"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 175
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 176
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "give_food_to_agent_0"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_0"
+        }
+      },
+      "reward": 1.0,
+      "step": 177
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_2"
+        },
+        "agent_1": {
+          "kind": "give_food_to_agent_2"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 178
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 179
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "give_food_to_agent_0"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_0"
+        }
+      },
+      "reward": 0.0,
+      "step": 180
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 181
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "give_food_to_agent_0"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_0"
+        }
+      },
+      "reward": 0.0,
+      "step": 182
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 183
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "give_food_to_agent_0"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_0"
+        }
+      },
+      "reward": 0.0,
+      "step": 184
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 185
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "give_food_to_agent_0"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_0"
+        }
+      },
+      "reward": 0.0,
+      "step": 186
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 187
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "give_food_to_agent_0"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_0"
+        }
+      },
+      "reward": 0.0,
+      "step": 188
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 189
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "give_food_to_agent_0"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_0"
+        }
+      },
+      "reward": 0.0,
+      "step": 190
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 191
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "give_food_to_agent_0"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_0"
+        }
+      },
+      "reward": 0.0,
+      "step": 192
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 193
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "give_food_to_agent_0"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_0"
+        }
+      },
+      "reward": 0.0,
+      "step": 194
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 195
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "give_food_to_agent_0"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_0"
+        }
+      },
+      "reward": 0.0,
+      "step": 196
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "reward": 0.0,
+      "step": 197
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "give_food_to_agent_0"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_0"
+        }
+      },
+      "reward": 0.0,
+      "step": 198
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "reward": 0.0,
+      "step": 199
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "give_food_to_agent_0"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_0"
+        }
+      },
+      "reward": 0.0,
+      "step": 200
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 201
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "give_food_to_agent_0"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_0"
+        }
+      },
+      "reward": 0.0,
+      "step": 202
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_1"
+        }
+      },
+      "reward": 0.0,
+      "step": 203
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "give_food_to_agent_2"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 204
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "cast_spell"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_0"
+        }
+      },
+      "reward": 1.0,
+      "step": 205
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 206
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_0"
+        }
+      },
+      "reward": 0.0,
+      "step": 207
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_2"
+        },
+        "agent_1": {
+          "kind": "give_food_to_agent_2"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 208
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 209
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "give_food_to_agent_0"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_0"
+        }
+      },
+      "reward": 0.0,
+      "step": 210
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "cast_spell"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_1"
+        }
+      },
+      "reward": 0.0,
+      "step": 211
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "give_food_to_agent_2"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 212
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "cast_spell"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_0"
+        }
+      },
+      "reward": 0.0,
+      "step": 213
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 214
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_0"
+        }
+      },
+      "reward": 0.0,
+      "step": 215
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_2"
+        },
+        "agent_1": {
+          "kind": "give_food_to_agent_2"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 216
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 217
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "give_food_to_agent_0"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_0"
+        }
+      },
+      "reward": 0.0,
+      "step": 218
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "cast_spell"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_1"
+        }
+      },
+      "reward": 0.0,
+      "step": 219
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "give_food_to_agent_2"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 220
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_0"
+        }
+      },
+      "reward": 0.0,
+      "step": 221
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_1"
+        }
+      },
+      "reward": 0.0,
+      "step": 222
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 223
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "give_food_to_agent_0"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_0"
+        }
+      },
+      "reward": 0.0,
+      "step": 224
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_1"
+        }
+      },
+      "reward": 0.0,
+      "step": 225
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 226
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "request_food"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "give_food_to_agent_0"
+        }
+      },
+      "reward": -1.0,
+      "step": 227
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 228
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 229
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 230
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 231
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 232
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "drink_potion_red"
+        }
+      },
+      "reward": 1.0,
+      "step": 233
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 234
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 235
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 236
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 237
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "drink_potion_red"
+        }
+      },
+      "reward": 0.0,
+      "step": 238
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 239
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 240
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 241
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 242
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 243
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 244
+    },
+    {
+      "actions": {
+        "agent_0": {
+          "kind": "give_food_to_agent_1"
+        },
+        "agent_1": {
+          "kind": "request_food"
+        },
+        "agent_2": {
+          "kind": "request_food"
+        }
+      },
+      "reward": 0.0,
+      "step": 245
+    }
+  ],
+  "trade_count": 47
+}

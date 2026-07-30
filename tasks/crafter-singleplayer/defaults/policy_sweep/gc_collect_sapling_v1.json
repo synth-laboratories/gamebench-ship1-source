@@ -1,0 +1,12 @@
+{
+  "schema": "gamebench.crafter.policy_sweep.v1",
+  "suite_id": "gc_collect_sapling_v1",
+  "task_template": "tasks/gc_collect_sapling.json",
+  "reward_mode": "goal_binary",
+  "objective": "collect_sapling",
+  "seeds": [101, 102, 103, 104, 105, 106, 107, 108, 109, 110],
+  "world_default": "policy_dev_small",
+  "rules_default": "no_homeostasis",
+  "max_steps": 120,
+  "engine_lane": "rust"
+}

@@ -1,0 +1,235 @@
+{
+  "env_family": "settlers-multiplayer",
+  "scenarios": [
+    {
+      "actions": [
+        {
+          "kind": "build_city",
+          "vertex": 0
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "kind": "end_turn"
+        }
+      ],
+      "checkpoint_after": 1,
+      "env_family": "settlers-multiplayer",
+      "max_turns": 24,
+      "scenario_id": "city_upgrade_victory_point",
+      "schema_version": "gamebench.task.v1",
+      "seed": 8,
+      "source_file": "city_upgrade.json"
+    },
+    {
+      "actions": [
+        {
+          "kind": "buy_dev"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "kind": "move_robber",
+          "tile": 1,
+          "victim": "agent_0"
+        },
+        {
+          "card": "knight",
+          "kind": "play_dev",
+          "tile": 2,
+          "victim": "agent_1"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "kind": "buy_dev"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "card": "knight",
+          "kind": "play_dev",
+          "tile": 3,
+          "victim": "agent_2"
+        },
+        {
+          "kind": "move_robber",
+          "tile": 4,
+          "victim": "agent_0"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "kind": "buy_dev"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "card": "knight",
+          "kind": "play_dev",
+          "tile": 5,
+          "victim": "agent_3"
+        }
+      ],
+      "checkpoint_after": 12,
+      "env_family": "settlers-multiplayer",
+      "max_turns": 80,
+      "scenario_id": "largest_army_development_race",
+      "schema_version": "gamebench.task.v1",
+      "seed": 1,
+      "source_file": "development_award.json"
+    },
+    {
+      "actions": [
+        {
+          "edge": 1,
+          "kind": "build_road"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "kind": "move_robber",
+          "tile": 1,
+          "victim": "agent_1"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "edge": 2,
+          "kind": "build_road"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "edge": 23,
+          "kind": "build_road"
+        }
+      ],
+      "checkpoint_after": 8,
+      "env_family": "settlers-multiplayer",
+      "max_turns": 48,
+      "scenario_id": "longest_road_network_race",
+      "schema_version": "gamebench.task.v1",
+      "seed": 2,
+      "source_file": "longest_road.json"
+    },
+    {
+      "actions": [
+        {
+          "edge": 1,
+          "kind": "build_road"
+        },
+        {
+          "give": "wood",
+          "kind": "trade_propose",
+          "to": "agent_2",
+          "want": "ore"
+        },
+        {
+          "kind": "trade_accept"
+        },
+        {
+          "kind": "buy_dev"
+        },
+        {
+          "kind": "move_robber",
+          "tile": 2,
+          "victim": "agent_1"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "kind": "build_city",
+          "vertex": 12
+        },
+        {
+          "kind": "end_turn"
+        }
+      ],
+      "checkpoint_after": 4,
+      "env_family": "settlers-multiplayer",
+      "max_turns": 80,
+      "scenario_id": "four_player_opening_trade_city",
+      "schema_version": "gamebench.task.v1",
+      "seed": 0,
+      "source_file": "opening_trade_city.json"
+    },
+    {
+      "actions": [
+        {
+          "edge": 1,
+          "kind": "build_road"
+        },
+        {
+          "kind": "move_robber",
+          "tile": 3,
+          "victim": "agent_1"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "kind": "end_turn"
+        },
+        {
+          "kind": "build_settlement",
+          "vertex": 2
+        }
+      ],
+      "checkpoint_after": 2,
+      "env_family": "settlers-multiplayer",
+      "max_turns": 40,
+      "scenario_id": "robber_and_illegal_action_reliability",
+      "schema_version": "gamebench.task.v1",
+      "seed": 4,
+      "source_file": "robber_reliability.json"
+    }
+  ],
+  "schema_version": "gamebench.scenarios.v1"
+}

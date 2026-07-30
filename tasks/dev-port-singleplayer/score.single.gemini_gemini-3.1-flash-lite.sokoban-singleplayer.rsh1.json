@@ -1,0 +1,87 @@
+{
+  "schema": "gamebench.dev_port.score.v1",
+  "source_task": "sokoban-singleplayer",
+  "build_ok": true,
+  "build_detail": "ok",
+  "passed": 0,
+  "total": 15,
+  "score": 0.0,
+  "per_scenario": [
+    {
+      "scenario_id": "inline_01_corner_solve",
+      "ok": false,
+      "reason": "scenario bin exited 1: Error: Os { code: 2, kind: NotFound, message: \"No such file or directory\" }\n"
+    },
+    {
+      "scenario_id": "inline_02_corridor_solve",
+      "ok": false,
+      "reason": "scenario bin exited 1: Error: Os { code: 2, kind: NotFound, message: \"No such file or directory\" }\n"
+    },
+    {
+      "scenario_id": "inline_03_t_walk_push",
+      "ok": false,
+      "reason": "scenario bin exited 1: Error: Os { code: 2, kind: NotFound, message: \"No such file or directory\" }\n"
+    },
+    {
+      "scenario_id": "inline_04_walls_block",
+      "ok": false,
+      "reason": "scenario bin exited 1: Error: Os { code: 2, kind: NotFound, message: \"No such file or directory\" }\n"
+    },
+    {
+      "scenario_id": "inline_05_double_progress",
+      "ok": false,
+      "reason": "scenario bin exited 1: Error: Os { code: 2, kind: NotFound, message: \"No such file or directory\" }\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_101",
+      "ok": false,
+      "reason": "scenario bin exited 1: Error: Os { code: 2, kind: NotFound, message: \"No such file or directory\" }\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_102",
+      "ok": false,
+      "reason": "scenario bin exited 1: Error: Os { code: 2, kind: NotFound, message: \"No such file or directory\" }\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_103",
+      "ok": false,
+      "reason": "scenario bin exited 1: Error: Os { code: 2, kind: NotFound, message: \"No such file or directory\" }\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_104",
+      "ok": false,
+      "reason": "scenario bin exited 1: Error: Os { code: 2, kind: NotFound, message: \"No such file or directory\" }\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_105",
+      "ok": false,
+      "reason": "scenario bin exited 1: Error: Os { code: 2, kind: NotFound, message: \"No such file or directory\" }\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_106",
+      "ok": false,
+      "reason": "scenario bin exited 1: Error: Os { code: 2, kind: NotFound, message: \"No such file or directory\" }\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_107",
+      "ok": false,
+      "reason": "scenario bin exited 1: Error: Os { code: 2, kind: NotFound, message: \"No such file or directory\" }\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_108",
+      "ok": false,
+      "reason": "scenario bin exited 1: Error: Os { code: 2, kind: NotFound, message: \"No such file or directory\" }\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_109",
+      "ok": false,
+      "reason": "scenario bin exited 1: Error: Os { code: 2, kind: NotFound, message: \"No such file or directory\" }\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_110",
+      "ok": false,
+      "reason": "scenario bin exited 1: Error: Os { code: 2, kind: NotFound, message: \"No such file or directory\" }\n"
+    }
+  ],
+  "crate_files": 36
+}

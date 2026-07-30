@@ -1,0 +1,25 @@
+{
+  "expected_flaw_id": "center_blind_opener",
+  "gamebench_task": "tictactoe-multiplayer",
+  "gold_summary": "The hidden policy undervalues the center square and opens from edges or corners even when center control is available.",
+  "hidden_policy_id": "center_blind_opener",
+  "keywords": [
+    "center",
+    "edge",
+    "corner",
+    "opening"
+  ],
+  "prompt": "Diagnose the hidden multiplayer Tic-Tac-Toe policy flaw for agent_0 from black-box traces.",
+  "puzzle_id": "puzzle_center_blind_v1",
+  "rollout": {
+    "expected_outcome": "loss",
+    "min_failure_seeds": 2,
+    "opponent_policy_id": "block_win_center_v1",
+    "seeds": [
+      101,
+      102,
+      103
+    ]
+  },
+  "schema_version": "gamebench.policy_puzzle.task.v1"
+}

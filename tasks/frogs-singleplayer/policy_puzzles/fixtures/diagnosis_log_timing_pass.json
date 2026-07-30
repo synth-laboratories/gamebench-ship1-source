@@ -1,0 +1,6 @@
+{
+  "distinguishing_experiment": "Present a state where log is salient and compare against a policy that handles it correctly.",
+  "evidence": "Trace actions show: log gap approaching; policy jumps early; lands in water; crossing failed.",
+  "flaw_id": "log_timing_blind",
+  "summary": "The hidden policy mistimes log crossings and lands in water between moving logs."
+}

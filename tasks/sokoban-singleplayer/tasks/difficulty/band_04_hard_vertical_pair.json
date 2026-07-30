@@ -1,0 +1,9 @@
+{
+  "schema": "gamebench.task.sokoban.v1",
+  "task_id": "difficulty_band_04_hard_vertical_pair",
+  "difficulty_band": "hard",
+  "map": {"source": "inline", "puzzle_id": "band-04-hard-vertical-pair", "grid": ["#####", "#@  #", "# $ #", "# $ #", "# . #", "# . #", "#####"]},
+  "rules": {"base": "sparse_sokoban", "overrides": {"max_steps": 45, "errors": {"mode": "silent"}}},
+  "readouts": {"symbolic": "ascii_annotated", "visual": true},
+  "checkpoint_every_n_steps": 1
+}

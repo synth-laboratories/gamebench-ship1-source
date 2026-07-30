@@ -1,0 +1,10 @@
+{
+  "schema": "gamebench.task.sokoban.v1",
+  "task_id": "gold_03_easy_down_push",
+  "difficulty_band": "gold_3_calls",
+  "gold_actions": ["up", "right", "right"],
+  "map": {"source": "inline", "puzzle_id": "gold-03-easy-down-push", "grid": ["#######", "#  $. #", "#@    #", "#######"]},
+  "rules": {"base": "sparse_sokoban", "overrides": {"max_steps": 20, "errors": {"mode": "silent"}}},
+  "readouts": {"symbolic": "ascii_annotated", "visual": true},
+  "checkpoint_every_n_steps": 1
+}

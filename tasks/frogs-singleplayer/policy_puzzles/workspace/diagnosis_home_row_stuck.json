@@ -1,0 +1,6 @@
+{
+  "distinguishing_experiment": "Present a state where home is salient and compare against a policy that handles it correctly.",
+  "evidence": "Trace actions show: safe forward window; policy waits on home row; window closes; progress lost.",
+  "flaw_id": "home_row_stuck",
+  "summary": "The hidden policy stays on the home row too long and misses forward progress windows."
+}

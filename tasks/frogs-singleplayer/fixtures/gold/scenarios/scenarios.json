@@ -1,0 +1,79 @@
+{
+  "schema": "gamebench.frogs.gold_scenarios.v1",
+  "scenarios": [
+    {
+      "scenario_id": "classic_01_valid_submit",
+      "seed": 1,
+      "board": [
+        ["blue", "red", "green", "yellow"],
+        ["green", "yellow", "red", "blue"],
+        ["green", "blue", "yellow", "red"],
+        ["red", "green", "yellow", "blue"]
+      ],
+      "rules": {"base": "classic_frogs", "overrides": {"max_steps": 16}},
+      "actions": [
+        {"kind": "place_frog", "row": 0, "col": 1},
+        {"kind": "place_frog", "row": 1, "col": 3},
+        {"kind": "place_frog", "row": 2, "col": 0},
+        {"kind": "place_frog", "row": 3, "col": 2},
+        {"kind": "submit"}
+      ]
+    },
+    {
+      "scenario_id": "classic_02_adjacency_reject",
+      "seed": 2,
+      "board": [
+        ["blue", "red", "green", "yellow"],
+        ["green", "yellow", "red", "blue"],
+        ["green", "blue", "yellow", "red"],
+        ["red", "green", "yellow", "blue"]
+      ],
+      "rules": {"base": "classic_frogs", "overrides": {"max_steps": 16}},
+      "actions": [
+        {"kind": "place_frog", "row": 0, "col": 0},
+        {"kind": "place_frog", "row": 1, "col": 1},
+        {"kind": "submit"}
+      ]
+    },
+    {
+      "scenario_id": "classic_03_row_reject_then_solve",
+      "seed": 3,
+      "board": [
+        ["blue", "red", "green", "yellow"],
+        ["green", "yellow", "red", "blue"],
+        ["green", "blue", "yellow", "red"],
+        ["red", "green", "yellow", "blue"]
+      ],
+      "rules": {"base": "classic_frogs", "overrides": {"max_steps": 16}},
+      "actions": [
+        {"kind": "place_frog", "row": 0, "col": 1},
+        {"kind": "place_frog", "row": 0, "col": 3},
+        {"kind": "place_frog", "row": 1, "col": 3},
+        {"kind": "place_frog", "row": 2, "col": 0},
+        {"kind": "place_frog", "row": 3, "col": 2},
+        {"kind": "submit"}
+      ]
+    },
+    {
+      "scenario_id": "classic_04_remove_reset_flow",
+      "seed": 4,
+      "board": [
+        ["blue", "red", "green", "yellow"],
+        ["green", "yellow", "red", "blue"],
+        ["green", "blue", "yellow", "red"],
+        ["red", "green", "yellow", "blue"]
+      ],
+      "rules": {"base": "classic_frogs", "overrides": {"max_steps": 20}},
+      "actions": [
+        {"kind": "place_frog", "row": 0, "col": 1},
+        {"kind": "remove_frog", "row": 0, "col": 1},
+        {"kind": "reset"},
+        {"kind": "place_frog", "row": 0, "col": 1},
+        {"kind": "place_frog", "row": 1, "col": 3},
+        {"kind": "place_frog", "row": 2, "col": 0},
+        {"kind": "place_frog", "row": 3, "col": 2},
+        {"kind": "submit"}
+      ]
+    }
+  ]
+}

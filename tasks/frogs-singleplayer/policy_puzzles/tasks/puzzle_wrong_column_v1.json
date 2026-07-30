@@ -1,0 +1,26 @@
+{
+  "expected_flaw_id": "wrong_column_picker",
+  "gamebench_task": "frogs-singleplayer",
+  "gold_summary": "The hidden policy places frogs in an adjacent wrong column even when the correct column is available.",
+  "hidden_policy_id": "wrong_column_picker",
+  "keywords": [
+    "column",
+    "placement",
+    "wrong",
+    "adjacent"
+  ],
+  "prompt": "Diagnose the hidden Frogs placement policy flaw from the provided state-action traces.",
+  "puzzle_id": "puzzle_wrong_column_v1",
+  "rollout": {
+    "expected_outcome": "failure",
+    "max_steps": 120,
+    "min_failure_seeds": 2,
+    "seeds": [
+      101,
+      102,
+      103
+    ],
+    "task_path": "tasks/policy_dev_template.json"
+  },
+  "schema_version": "gamebench.policy_puzzle.task.v1"
+}

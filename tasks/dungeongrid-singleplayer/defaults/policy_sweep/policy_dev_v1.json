@@ -1,0 +1,22 @@
+{
+  "schema": "gamebench.dungeongrid.policy_sweep.v1",
+  "suite_id": "dungeongrid_singleplayer_policy_dev_v1",
+  "score_metric": "mean_objective_score",
+  "max_actions": 80,
+  "player_assignment": {
+    "agent_id": "hero_0",
+    "role": "barbarian",
+    "control": "exclusive"
+  },
+  "scenarios": [
+    {
+      "scenario_id": "lantern_crypt_lite",
+      "source": "defaults/scenarios/lantern_crypt_lite.json",
+      "min_reward": 1.0,
+      "require_code_protocol": false,
+      "target_achievements": [
+        "movement.first_step"
+      ]
+    }
+  ]
+}

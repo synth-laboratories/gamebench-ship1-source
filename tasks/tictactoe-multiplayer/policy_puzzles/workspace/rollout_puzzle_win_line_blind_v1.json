@@ -1,0 +1,23 @@
+{
+  "episodes": [
+    {
+      "outcome": "failure_reproduced",
+      "seed": 101,
+      "trace_path": "traces/puzzle_win_line_blind_v1/seed_101.json"
+    },
+    {
+      "outcome": "failure_reproduced",
+      "seed": 102,
+      "trace_path": "traces/puzzle_win_line_blind_v1/seed_102.json"
+    },
+    {
+      "outcome": "failure_reproduced",
+      "seed": 103,
+      "trace_path": "traces/puzzle_win_line_blind_v1/seed_103.json"
+    }
+  ],
+  "failure_seed_count": 3,
+  "gamebench_task": "tictactoe-multiplayer",
+  "puzzle_id": "puzzle_win_line_blind_v1",
+  "schema_version": "gamebench.policy_puzzle.rollout.v1"
+}

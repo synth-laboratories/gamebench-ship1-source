@@ -1,0 +1,16 @@
+{
+  "schema": "gamebench.nethack.gold_state_expectations.v1",
+  "scenarios": {
+    "bootstrap_descend": {
+      "public": {"done": true, "terminal_reason": "descended", "blstats_named": {"x": 4, "y": 2, "dungeon_level": 1}}
+    },
+    "bootstrap_inventory_prompt": {
+      "public": {"done": false, "input_mode": {"kind": "normal"}, "inventory": {"items": []}},
+      "private": {"hunger": 1497}
+    },
+    "bootstrap_trap_death": {
+      "public": {"done": true, "terminal_reason": "death"},
+      "private": {"hp": 0}
+    }
+  }
+}

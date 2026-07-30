@@ -1,0 +1,20 @@
+{
+  "task_id": "dg_relay_handoff_rust_smoke",
+  "scenario_id": "relay_handoff",
+  "quest_id": "gamebench:relay_handoff:lite",
+  "title": "Relay Handoff",
+  "seed": 3,
+  "max_steps": 80,
+  "map_ascii": "#########\n#E..D.I.#\n#..C....#\n#...R...#\n#########",
+  "hero_roles": ["barbarian", "wizard"],
+  "objective_item": "relay_sigils",
+  "metadata": {
+    "marl_axis": "role-specific inventory handoff",
+    "coordination_type": "carrier gives item to adjacent operator before interaction",
+    "coordination_skills": [
+      "identify which role can use the carried item",
+      "move adjacent before giving the item",
+      "interact only after ownership is correct"
+    ]
+  }
+}

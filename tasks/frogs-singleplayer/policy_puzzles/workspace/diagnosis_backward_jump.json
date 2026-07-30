@@ -1,0 +1,6 @@
+{
+  "distinguishing_experiment": "Present a state where backward is salient and compare against a policy that handles it correctly.",
+  "evidence": "Trace actions show: forward pad safe; policy jumps backward; enters hazard; unnecessary retreat.",
+  "flaw_id": "backward_jump_panic",
+  "summary": "The hidden policy jumps backward into danger when forward movement is available."
+}

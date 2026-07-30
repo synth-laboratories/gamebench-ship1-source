@@ -1,0 +1,26 @@
+{
+  "task_id": "dg_trap_breach_rescue_rust_smoke",
+  "scenario_id": "trap_breach_rescue",
+  "quest_id": "gamebench:trap_breach_rescue:lite",
+  "title": "Iron Captive Trap Breach",
+  "seed": 7,
+  "max_steps": 100,
+  "map_ascii": "#########\n#E.TDRI.#\n#..C....#\n#########",
+  "hero_roles": ["barbarian", "wizard"],
+  "objective_item": "rescue_glyph",
+  "metadata": {
+    "source_seed": {
+      "quest_id": "iron_captive",
+      "title": "The Iron Captive",
+      "tier": "full",
+      "distillation": "compresses the full rescue seed into a trap-marked door approach and guarded extraction objective"
+    },
+    "marl_axis": "trap-aware door breach under nemesis pressure",
+    "coordination_type": "support identifies the trap before the frontline opens the breach door",
+    "coordination_skills": [
+      "communicate trap-first breach order",
+      "search or reveal before crossing the trapped approach",
+      "combine guarded frontline pressure with support damage to finish the nemesis"
+    ]
+  }
+}

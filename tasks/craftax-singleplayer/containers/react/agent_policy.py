@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import re
+import uuid
 from dataclasses import dataclass, field
 from typing import Any
 
 import httpx
+
+from containers.react.trace_emitter import CraftaxTrace
 
 try:
     from parity import CRAFTAX_ACTIONS
@@ -60,6 +64,10 @@ class AgentPolicyConfig:
     api_key: str = ""
     model: str = DEFAULT_MODEL
     temperature: float = 0.0
+    # 512 is measured adequate for the providers this policy defaults to: Groq
+    # gpt-oss-120b answers in ~180-230 tokens and Gemini flash-lite in ~11. Qwen3.5
+    # instead reasons in prose on this plain-JSON prompt and truncates at 512 and at
+    # 2048 alike, so it needs the tool-calling policy variant, not a larger budget.
     max_tokens: int = 512
     system_prompt: str = DEFAULT_SYSTEM_PROMPT
     use_lm: bool = True
@@ -135,10 +143,19 @@ class AgentTurnResult:
     usage: dict[str, Any] = field(default_factory=dict)
     request_id: str | None = None
     model: str | None = None
+    finish_reason: str | None = None
+    request_event_id: str | None = None
+    response_event_id: str | None = None
+    proposal_event_id: str | None = None
 
     @property
     def action(self) -> str:
         return self.actions[0] if self.actions else "noop"
+
+    @property
+    def truncated(self) -> bool:
+        """The provider stopped at the token budget, so no action batch was emitted."""
+        return self.finish_reason == "length"
 
 
 @dataclass(frozen=True)
@@ -272,10 +289,18 @@ def parse_action_text(
     return ParsedAction(valid[0], True, True, "no_action_found")
 
 
-async def chat_completion(config: AgentPolicyConfig, prompt: str) -> dict[str, Any]:
+async def chat_completion(
+    config: AgentPolicyConfig,
+    prompt: str,
+    *,
+    trace: CraftaxTrace | None = None,
+    llm_call: int | None = None,
+) -> dict[str, Any]:
+    call_correlation_id = f"craftax-call-{llm_call or 0}-{uuid.uuid4().hex}"
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {config.api_key}",
+        "x-synth-call-correlation-id": call_correlation_id,
     }
     body: dict[str, Any] = {
         "model": config.model,
@@ -288,27 +313,68 @@ async def chat_completion(config: AgentPolicyConfig, prompt: str) -> dict[str, A
     }
     if config.provider == "deepseek":
         body["thinking"] = {"type": "disabled"}
+    request_event_id = (
+        trace.event(
+            "agent.model_call_intent",
+            {
+                "provider": config.provider,
+                "model": config.model,
+                "call_correlation_id": call_correlation_id,
+                "prompt_digest": "sha256:"
+                + hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
+                "llm_call": llm_call,
+            },
+            structural={"llm_call": llm_call},
+        )
+        if trace is not None
+        else None
+    )
     async with httpx.AsyncClient(timeout=120.0) as client:
         response = await client.post(config.inference_url, headers=headers, json=body)
         response.raise_for_status()
         payload = response.json()
-    content = payload["choices"][0]["message"].get("content", "")
+    choice = payload["choices"][0]
+    content = choice["message"].get("content", "")
     if isinstance(content, list):
         content = "".join(
             part.get("text", "") for part in content if isinstance(part, dict)
         )
+    response_event_id = (
+        trace.event(
+            "agent.model_call_observed",
+            {
+                "provider": config.provider,
+                "model": config.model,
+                "call_correlation_id": call_correlation_id,
+                "provider_request_id": payload.get("id"),
+                "finish_reason": str(choice.get("finish_reason") or "") or None,
+                "usage": payload.get("usage", {}),
+                "llm_call": llm_call,
+            },
+            caused_by=tuple(item for item in (request_event_id,) if item),
+            structural={"llm_call": llm_call},
+        )
+        if trace is not None
+        else None
+    )
     return {
         "assistant_text": str(content),
         "usage": payload.get("usage", {}),
         "request_id": payload.get("id"),
+        # A response cut off at max_tokens cannot carry an action batch. Without
+        # this the caller sees only invalid_parse and blames the prompt.
+        "finish_reason": str(choice.get("finish_reason") or "") or None,
+        "request_event_id": request_event_id,
+        "response_event_id": response_event_id,
     }
 
 
 class AgentPolicy:
     ACTOR = "craftax_agent"
 
-    def __init__(self, config: AgentPolicyConfig) -> None:
+    def __init__(self, config: AgentPolicyConfig, *, trace: CraftaxTrace | None = None) -> None:
         self.config = config
+        self.trace = trace
 
     async def choose_action(
         self,
@@ -318,6 +384,7 @@ class AgentPolicy:
         action_history: list[str],
         steps_remaining: int,
         llm_calls_remaining: int,
+        llm_call: int | None = None,
     ) -> AgentTurnResult:
         if steps_remaining <= 0 or llm_calls_remaining <= 0:
             raise RuntimeError(
@@ -349,13 +416,46 @@ class AgentPolicy:
             raise RuntimeError(
                 f"missing_api_key provider={self.config.provider} policy={self.config.policy_id}"
             )
-        inference = await chat_completion(self.config, prompt)
+        if self.trace is not None and len(action_history) > 16:
+            self.trace.event(
+                "agent.context_compacted",
+                {
+                    "strategy": "tail_window",
+                    "retained_action_count": 16,
+                    "dropped_action_count": len(action_history) - 16,
+                    "replacement": "last_actions",
+                },
+                structural={"llm_call": llm_call},
+            )
+        inference = await chat_completion(
+            self.config,
+            prompt,
+            trace=self.trace,
+            llm_call=llm_call,
+        )
         parsed = parse_actions_text(
             inference["assistant_text"],
             valid_actions,
             min_actions=batch_floor,
             max_actions=batch_cap,
             steps_remaining=steps_remaining,
+        )
+        proposal_event_id = (
+            self.trace.event(
+                "agent.action_proposed",
+                {
+                    "actions": list(parsed.actions),
+                    "assistant_text": inference["assistant_text"],
+                    "invalid_parse": parsed.invalid_parse,
+                    "repaired": parsed.repaired,
+                    "parse_error": parsed.error,
+                },
+                caused_by=tuple(
+                    item for item in (inference.get("response_event_id"),) if item
+                ),
+            )
+            if self.trace is not None
+            else None
         )
         return AgentTurnResult(
             actions=list(parsed.actions),
@@ -365,4 +465,8 @@ class AgentPolicy:
             usage=dict(inference.get("usage", {})),
             request_id=inference.get("request_id"),
             model=self.config.model,
+            finish_reason=inference.get("finish_reason"),
+            request_event_id=inference.get("request_event_id"),
+            response_event_id=inference.get("response_event_id"),
+            proposal_event_id=proposal_event_id,
         )

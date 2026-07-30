@@ -1,0 +1,1 @@
+"""Shared MiniHack GameBench helpers."""

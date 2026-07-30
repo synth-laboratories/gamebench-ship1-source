@@ -1,0 +1,43 @@
+{
+  "parity": {
+    "agent_io_surface_match": true,
+    "ascent_surface_match": true,
+    "attack_surface_match": true,
+    "bolt_surface_match": true,
+    "chase_surface_match": true,
+    "checkpoint_semantics_match": true,
+    "checkpoint_source_projection_match": true,
+    "combat_surface_match": true,
+    "command_dispatch_match": true,
+    "command_dispatch_mismatches": [],
+    "command_surface_match": true,
+    "daemon_surface_match": true,
+    "directional_item_selection_surface_match": true,
+    "do_chase_surface_match": true,
+    "drop_surface_match": true,
+    "eat_surface_match": true,
+    "equipment_surface_match": true,
+    "nev_match": true,
+    "nev_mismatches": [],
+    "new_level_surface_match": true,
+    "no_turn_surface_match": true,
+    "pickup_surface_match": true,
+    "relocation_surface_match": true,
+    "save_surface_match": true,
+    "search_surface_match": true,
+    "selection_surface_match": true,
+    "source_projection_mismatches": [],
+    "stick_target_surface_match": true,
+    "symbolic_match": true,
+    "symbolic_mismatches": [],
+    "throw_surface_match": true,
+    "trap_surface_match": true
+  },
+  "scenarios": [
+    "core_01_descend",
+    "core_02_wall_bump",
+    "core_03_food_pickup",
+    "core_04_rest_search"
+  ],
+  "schema": "gamebench.rogue.lane_compare.v1"
+}

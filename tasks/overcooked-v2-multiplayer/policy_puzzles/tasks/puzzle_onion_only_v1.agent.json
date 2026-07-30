@@ -1,0 +1,6 @@
+{
+  "gamebench_task": "overcooked-v2-multiplayer",
+  "prompt": "Diagnose the hidden Overcooked v2 policy flaw from the provided state-action traces.",
+  "puzzle_id": "puzzle_onion_only_v1",
+  "schema_version": "gamebench.policy_puzzle.task.v1"
+}

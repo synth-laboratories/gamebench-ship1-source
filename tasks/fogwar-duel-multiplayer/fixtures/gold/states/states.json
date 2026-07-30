@@ -1,0 +1,520 @@
+{
+  "scenarios": {
+    "fogwar_illegal_reliability_v0": {
+      "action_flags": {},
+      "active_agent": "agent_0",
+      "board": {
+        "deposits": [
+          {
+            "kind": "credit",
+            "pos": [
+              3,
+              1
+            ],
+            "reserve": 24
+          },
+          {
+            "kind": "uranium",
+            "pos": [
+              3,
+              5
+            ],
+            "reserve": 24
+          },
+          {
+            "kind": "credit",
+            "pos": [
+              9,
+              1
+            ],
+            "reserve": 24
+          },
+          {
+            "kind": "uranium",
+            "pos": [
+              9,
+              5
+            ],
+            "reserve": 24
+          },
+          {
+            "central": true,
+            "kind": "uranium",
+            "pos": [
+              6,
+              3
+            ],
+            "reserve": 24
+          }
+        ],
+        "mountains": [
+          [
+            6,
+            0
+          ],
+          [
+            6,
+            1
+          ],
+          [
+            6,
+            2
+          ],
+          [
+            6,
+            4
+          ],
+          [
+            6,
+            6
+          ]
+        ],
+        "passages": [
+          [
+            6,
+            3
+          ],
+          [
+            6,
+            5
+          ]
+        ],
+        "size": [
+          13,
+          7
+        ]
+      },
+      "buildings": [
+        {
+          "hp": 4,
+          "id": "agent_0_base",
+          "kind": "base",
+          "owner": "agent_0",
+          "pos": [
+            1,
+            3
+          ],
+          "ready_round": 1,
+          "under_construction": false
+        },
+        {
+          "hp": 4,
+          "id": "agent_1_base",
+          "kind": "base",
+          "owner": "agent_1",
+          "pos": [
+            11,
+            3
+          ],
+          "ready_round": 1,
+          "under_construction": false
+        }
+      ],
+      "diplomacy": {
+        "ceasefire_remaining": 0,
+        "next_proposal_id": 1,
+        "pending": []
+      },
+      "half_turn": 0,
+      "max_rounds": 80,
+      "next_entity_id": 1,
+      "players": {
+        "agent_0": {
+          "credits": 6,
+          "enemy_base_discovered": false,
+          "known_enemy_base_pos": null,
+          "last_turn_results": [
+            {
+              "action_index": 0,
+              "ok": false,
+              "reason_code": "unit_not_found"
+            },
+            {
+              "action_index": 1,
+              "ok": true,
+              "transition": "wait"
+            }
+          ],
+          "remembered_enemy_buildings": [],
+          "remembered_enemy_deposits": [],
+          "score": 0.0,
+          "uranium": 0
+        },
+        "agent_1": {
+          "credits": 6,
+          "enemy_base_discovered": false,
+          "known_enemy_base_pos": null,
+          "last_turn_results": [
+            {
+              "action_index": 0,
+              "ok": true,
+              "transition": "wait"
+            }
+          ],
+          "remembered_enemy_buildings": [],
+          "remembered_enemy_deposits": [],
+          "score": 0.0,
+          "uranium": 0
+        }
+      },
+      "queued_launches": [],
+      "rng_state": 4242,
+      "round": 2,
+      "scenario_id": "fogwar_illegal_reliability_v0",
+      "schema_version": "gamebench.fog_duel_lite.state.v0",
+      "seed": 4242,
+      "terminal": null,
+      "units": []
+    },
+    "fogwar_military_win_v0": {
+      "action_flags": {
+        "attacked": [
+          "agent_0_tank_1"
+        ]
+      },
+      "active_agent": "agent_0",
+      "board": {
+        "deposits": [
+          {
+            "kind": "credit",
+            "pos": [
+              3,
+              1
+            ],
+            "reserve": 24
+          },
+          {
+            "kind": "uranium",
+            "pos": [
+              3,
+              5
+            ],
+            "reserve": 24
+          },
+          {
+            "kind": "credit",
+            "pos": [
+              9,
+              1
+            ],
+            "reserve": 24
+          },
+          {
+            "kind": "uranium",
+            "pos": [
+              9,
+              5
+            ],
+            "reserve": 24
+          },
+          {
+            "central": true,
+            "kind": "uranium",
+            "pos": [
+              6,
+              3
+            ],
+            "reserve": 24
+          }
+        ],
+        "mountains": [
+          [
+            6,
+            0
+          ],
+          [
+            6,
+            2
+          ],
+          [
+            6,
+            4
+          ],
+          [
+            6,
+            5
+          ],
+          [
+            6,
+            6
+          ]
+        ],
+        "passages": [
+          [
+            6,
+            1
+          ],
+          [
+            6,
+            3
+          ]
+        ],
+        "size": [
+          13,
+          7
+        ]
+      },
+      "buildings": [
+        {
+          "hp": 4,
+          "id": "agent_0_base",
+          "kind": "base",
+          "owner": "agent_0",
+          "pos": [
+            1,
+            3
+          ],
+          "ready_round": 1,
+          "under_construction": false
+        }
+      ],
+      "diplomacy": {
+        "ceasefire_remaining": 0,
+        "next_proposal_id": 1,
+        "pending": []
+      },
+      "half_turn": 0,
+      "max_rounds": 80,
+      "next_entity_id": 1,
+      "players": {
+        "agent_0": {
+          "credits": 5,
+          "enemy_base_discovered": false,
+          "known_enemy_base_pos": null,
+          "last_turn_results": [
+            {
+              "action_index": 0,
+              "ok": true,
+              "transition": "attack"
+            }
+          ],
+          "remembered_enemy_buildings": [],
+          "remembered_enemy_deposits": [],
+          "score": 3.0,
+          "uranium": 0
+        },
+        "agent_1": {
+          "credits": 5,
+          "enemy_base_discovered": false,
+          "known_enemy_base_pos": null,
+          "last_turn_results": [],
+          "remembered_enemy_buildings": [],
+          "remembered_enemy_deposits": [],
+          "score": 0.0,
+          "uranium": 0
+        }
+      },
+      "queued_launches": [],
+      "rng_state": 1307,
+      "round": 1,
+      "scenario_id": "fogwar_military_win_v0",
+      "schema_version": "gamebench.fog_duel_lite.state.v0",
+      "seed": 1307,
+      "terminal": {
+        "reason": "military",
+        "scores": {
+          "agent_0": 3.0,
+          "agent_1": 0.0
+        },
+        "winner": "agent_0"
+      },
+      "units": [
+        {
+          "id": "agent_0_tank_1",
+          "kind": "tank",
+          "owner": "agent_0",
+          "pos": [
+            10,
+            3
+          ]
+        }
+      ]
+    },
+    "fogwar_nuclear_win_v0": {
+      "action_flags": {},
+      "active_agent": "agent_1",
+      "board": {
+        "deposits": [
+          {
+            "kind": "credit",
+            "pos": [
+              3,
+              1
+            ],
+            "reserve": 24
+          },
+          {
+            "kind": "uranium",
+            "pos": [
+              3,
+              5
+            ],
+            "reserve": 24
+          },
+          {
+            "kind": "credit",
+            "pos": [
+              9,
+              1
+            ],
+            "reserve": 24
+          },
+          {
+            "kind": "uranium",
+            "pos": [
+              9,
+              5
+            ],
+            "reserve": 24
+          },
+          {
+            "central": true,
+            "kind": "uranium",
+            "pos": [
+              6,
+              3
+            ],
+            "reserve": 24
+          }
+        ],
+        "mountains": [
+          [
+            6,
+            0
+          ],
+          [
+            6,
+            1
+          ],
+          [
+            6,
+            2
+          ],
+          [
+            6,
+            4
+          ],
+          [
+            6,
+            5
+          ],
+          [
+            6,
+            6
+          ]
+        ],
+        "passages": [
+          [
+            6,
+            3
+          ]
+        ],
+        "size": [
+          13,
+          7
+        ]
+      },
+      "buildings": [
+        {
+          "hp": 4,
+          "id": "agent_0_base",
+          "kind": "base",
+          "owner": "agent_0",
+          "pos": [
+            1,
+            3
+          ],
+          "ready_round": 1,
+          "under_construction": false
+        },
+        {
+          "hp": 4,
+          "id": "agent_1_base",
+          "kind": "base",
+          "owner": "agent_1",
+          "pos": [
+            11,
+            3
+          ],
+          "ready_round": 1,
+          "under_construction": false
+        },
+        {
+          "hp": 3,
+          "id": "agent_0_silo_1",
+          "kind": "silo",
+          "owner": "agent_0",
+          "pos": [
+            3,
+            3
+          ],
+          "ready_round": 1,
+          "under_construction": false
+        }
+      ],
+      "diplomacy": {
+        "ceasefire_remaining": 0,
+        "next_proposal_id": 1,
+        "pending": []
+      },
+      "half_turn": 1,
+      "max_rounds": 80,
+      "next_entity_id": 1,
+      "players": {
+        "agent_0": {
+          "credits": 5,
+          "enemy_base_discovered": true,
+          "known_enemy_base_pos": [
+            11,
+            3
+          ],
+          "last_turn_results": [
+            {
+              "action_index": 0,
+              "ok": true,
+              "transition": "launch"
+            }
+          ],
+          "remembered_enemy_buildings": [],
+          "remembered_enemy_deposits": [],
+          "score": 3.0,
+          "uranium": 0
+        },
+        "agent_1": {
+          "credits": 5,
+          "enemy_base_discovered": false,
+          "known_enemy_base_pos": null,
+          "last_turn_results": [
+            {
+              "action_index": 0,
+              "ok": true,
+              "transition": "wait"
+            }
+          ],
+          "remembered_enemy_buildings": [],
+          "remembered_enemy_deposits": [],
+          "score": 0.0,
+          "uranium": 0
+        }
+      },
+      "queued_launches": [
+        "agent_0"
+      ],
+      "rng_state": 2718,
+      "round": 1,
+      "scenario_id": "fogwar_nuclear_win_v0",
+      "schema_version": "gamebench.fog_duel_lite.state.v0",
+      "seed": 2718,
+      "terminal": {
+        "reason": "nuclear",
+        "scores": {
+          "agent_0": 3.0,
+          "agent_1": 0.0
+        },
+        "winner": "agent_0"
+      },
+      "units": []
+    }
+  },
+  "schema_version": "gamebench.fog_duel_lite.fixture_states.v0"
+}

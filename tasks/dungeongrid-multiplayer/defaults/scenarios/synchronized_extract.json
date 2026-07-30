@@ -1,0 +1,20 @@
+{
+  "task_id": "dg_synchronized_extract_rust_smoke",
+  "scenario_id": "synchronized_extract",
+  "quest_id": "gamebench:synchronized_extract:lite",
+  "title": "Synchronized Extract",
+  "seed": 4,
+  "max_steps": 80,
+  "map_ascii": "###########\n#E...D..I.#\n#....R....#\n#..C......#\n###########",
+  "hero_roles": ["barbarian", "wizard"],
+  "objective_item": "ember_idol_fragment",
+  "metadata": {
+    "marl_axis": "synchronized extraction",
+    "coordination_type": "route cleared before objective holder returns",
+    "coordination_skills": [
+      "clear the return route before holder movement",
+      "avoid occupying the escape tile while the holder extracts",
+      "message when the extraction route is safe"
+    ]
+  }
+}

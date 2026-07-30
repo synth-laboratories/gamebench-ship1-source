@@ -1,0 +1,18 @@
+id: frogs-singleplayer
+name: FrogsGame Single-Player Lane
+kind: gamebench_gold_reference
+game: frogs
+visibility: private
+oracle:
+  type: canonical_nev_log
+  reference: gold/
+  gold_eventlogs: fixtures/gold/eventlogs/eventlogs.json
+status:
+  reference_engine_python: tasks/frogs-singleplayer/gold_python/
+  reference_engine_rust: tasks/frogs-singleplayer/gold_rust/
+  implementation: gold_v0_dual_lane_open
+  verification:
+    nev_scenarios: 4
+    lanes: [python, rust]
+    policy_sweep: tasks/frogs-singleplayer/containers/codepolicy/run_policy_sweep.py
+    react_policy: tasks/frogs-singleplayer/containers/react/rollout_policy.py

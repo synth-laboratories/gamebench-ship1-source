@@ -1,0 +1,30 @@
+{
+  "ascii": [
+    "###2R2###",
+    "# #",
+    "# ##L## #",
+    "2 0 D 2",
+    "RASAP S R",
+    "2 1 D 2",
+    "# ##L## #",
+    "# #",
+    "###2R2###"
+  ],
+  "layout_id": "grounded_coord_ring",
+  "possible_recipes": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      1,
+      1,
+      1
+    ]
+  ],
+  "recipe_pool": [
+    "trio_soup",
+    "tomato_trio"
+  ]
+}

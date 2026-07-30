@@ -1,0 +1,15 @@
+{
+  "action_summary": [
+    "safe forward window",
+    "policy waits on home row",
+    "window closes",
+    "progress lost"
+  ],
+  "episode_outcome": "failure_reproduced",
+  "failure_signal": "home",
+  "gamebench_task": "frogs-singleplayer",
+  "observation_summary": "Frogs trace 3: The hidden policy stays on the home row too long and misses forward progress windows.",
+  "puzzle_id": "puzzle_home_row_stuck_v1",
+  "schema_version": "gamebench.policy_puzzle.trace.v1",
+  "seed": 103
+}

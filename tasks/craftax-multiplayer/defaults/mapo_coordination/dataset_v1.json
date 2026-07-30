@@ -1,0 +1,26 @@
+{
+  "schema": "gamebench.mapo_coordination_dataset.v1",
+  "dataset_id": "craftax_coop_rust_coordination_v1",
+  "agent_count": 3,
+  "max_timesteps": 32,
+  "probes": [
+    "iron_handoff",
+    "food_rescue",
+    "miner_craft_pipeline",
+    "expiring_request_repair"
+  ],
+  "splits": {
+    "train": {
+      "start": 1001,
+      "count": 64
+    },
+    "selection": {
+      "start": 2001,
+      "count": 24
+    },
+    "heldout": {
+      "start": 3001,
+      "count": 40
+    }
+  }
+}

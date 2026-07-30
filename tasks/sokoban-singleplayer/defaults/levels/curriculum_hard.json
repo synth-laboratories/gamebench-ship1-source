@@ -1,0 +1,11 @@
+{
+  "schema": "gamebench.sokoban.level_bank.v1",
+  "tier": "hard",
+  "levels": [
+    {"id": "hard-01-room", "name": "Three box room", "grid": ["#########", "#@      #", "# $ $ $ #", "#   . . #", "#########"], "optimal_steps": 14, "num_boxes": 3},
+    {"id": "hard-02-corridor2", "name": "Long corridor", "grid": ["##########", "#@ $     #", "# #### $ #", "# #    . #", "# #  .   #", "##########"], "optimal_steps": 16, "num_boxes": 2},
+    {"id": "hard-03-islands", "name": "Islands", "grid": ["#########", "# @  .  #", "# ### # #", "# $   $ #", "#   .   #", "#########"], "optimal_steps": 18, "num_boxes": 2},
+    {"id": "hard-04-pinwheel", "name": "Pinwheel", "grid": ["#######", "#  .  #", "# $ @ #", "#  $  #", "# .   #", "#######"], "optimal_steps": 15, "num_boxes": 2},
+    {"id": "hard-05-deadlock", "name": "Tight corners", "grid": ["########", "#@  .  #", "## $$  #", "#  ..  #", "########"], "optimal_steps": 17, "num_boxes": 2}
+  ]
+}

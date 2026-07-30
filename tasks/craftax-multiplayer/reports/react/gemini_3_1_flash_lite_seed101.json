@@ -1,0 +1,364 @@
+{
+  "achievements": [
+    "all_roles_alive",
+    "drink_water"
+  ],
+  "env_family": "craftax-multiplayer",
+  "lane": "python",
+  "model": "gemini-3.1-flash-lite",
+  "policy_kind": "react",
+  "provider": "gemini",
+  "schema_version": "gamebench.rollout.v1",
+  "seed": 101,
+  "shared_reward": 2.0,
+  "state_hash": "4dc54996ca8d3e0644b92dcb4299e27f2e6d570532f8a8c7c5abce5f631bc828",
+  "steps": 12,
+  "termination_reason": null,
+  "trace": [
+    {
+      "events": [
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 0,
+          "x": 6,
+          "y": 3
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "right"
+        },
+        "agent_2": {
+          "kind": "right"
+        }
+      },
+      "ply": 0,
+      "responses": {
+        "agent_0": "{\"action\":\"right\",\"reason\":\"Moving towards the miner to coordinate resource gathering and equipment crafting.\"}",
+        "agent_1": "{\"action\":\"right\",\"reason\":\"Moving towards the plant at [9, 5] to gather food for the team.\"}",
+        "agent_2": "{\"action\":\"right\",\"reason\":\"Moving towards the diamond at (6,1) to begin mining operations as the team's miner.\"}"
+      },
+      "reward": 1.0
+    },
+    {
+      "events": [
+        {
+          "agent_id": "agent_1",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 1,
+          "x": 4,
+          "y": 4
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 1,
+          "x": 6,
+          "y": 4
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "down"
+        },
+        "agent_2": {
+          "kind": "down"
+        }
+      },
+      "ply": 1,
+      "responses": {
+        "agent_0": "{\"action\":\"right\",\"reason\":\"Moving towards the center to coordinate with the team and prepare for resource gathering.\"}",
+        "agent_1": "{\"action\":\"down\",\"reason\":\"Moving towards the iron and fountain resources to gather supplies for the team.\"}",
+        "agent_2": "{\"action\":\"down\",\"reason\":\"Moving towards the iron deposit at [6,6] to begin mining operations.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [
+        {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 2,
+          "x": 4,
+          "y": 3
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 2,
+          "x": 6,
+          "y": 3
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "down"
+        },
+        "agent_2": {
+          "kind": "up"
+        }
+      },
+      "ply": 2,
+      "responses": {
+        "agent_0": "{\"action\":\"right\",\"reason\":\"Moving towards the center to coordinate with the forager and miner for resource gathering.\"}",
+        "agent_1": "{\"action\":\"down\",\"reason\":\"Moving towards the fountain at [5,5] to secure water/resources for the team.\"}",
+        "agent_2": "{\"action\":\"up\",\"reason\":\"Moving towards the iron deposit at (6, 6) to begin mining operations.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "down"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 3,
+      "responses": {
+        "agent_0": "{\"action\":\"right\",\"reason\":\"Moving towards the center to coordinate with the miner and forager for resource gathering.\"}",
+        "agent_1": "{\"action\":\"down\",\"reason\":\"Moving towards the fountain at [5,5] to secure water/resources for the team.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the diamond at [6,1] to begin mining operations.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [
+        {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 4,
+          "x": 5,
+          "y": 3
+        },
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 4,
+          "x": 6,
+          "y": 4
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "right"
+        },
+        "agent_1": {
+          "kind": "down"
+        },
+        "agent_2": {
+          "kind": "down"
+        }
+      },
+      "ply": 4,
+      "responses": {
+        "agent_0": "{\"action\":\"right\",\"reason\":\"Moving towards the diamond at [6,1] to secure resources for the team.\"}",
+        "agent_1": "{\"action\":\"down\",\"reason\":\"Moving towards the fountain at [5,5] to secure water/resources for the team.\"}",
+        "agent_2": "{\"action\":\"down\",\"reason\":\"Moving towards the iron deposit at [6,6] to begin mining operations.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "down"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 5,
+      "responses": {
+        "agent_0": "{\"action\":\"down\",\"reason\":\"Moving towards the miner and forager to coordinate resource gathering and prepare for descent.\"}",
+        "agent_1": "{\"action\":\"down\",\"reason\":\"Moving towards the fountain at [5,5] to replenish drink stats.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the iron deposit at (4, 6) to begin mining resources for the team.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "noop"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 6,
+      "responses": {
+        "agent_0": "{\"action\":\"down\",\"reason\":\"Moving towards the center to coordinate with the team and prepare for resource gathering.\"}",
+        "agent_1": "{\"action\":\"noop\",\"reason\":\"I am a forager and currently have no resources to gather or trade. I will wait for the miner to gather resources or the warrior to move.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the iron deposit at (4, 5) to begin mining operations.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [],
+      "joint_action": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "down"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 7,
+      "responses": {
+        "agent_0": "{\"action\":\"down\",\"reason\":\"Moving towards the miner and forager to coordinate resource gathering and equipment crafting.\"}",
+        "agent_1": "{\"action\":\"down\",\"reason\":\"Moving towards the fountain at [5,5] to gather resources and prepare for team support.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the iron deposit at [6,6] to begin mining operations.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [
+        {
+          "agent_id": "agent_0",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 8,
+          "x": 5,
+          "y": 4
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "down"
+        },
+        "agent_2": {
+          "kind": "make_wood_pickaxe"
+        }
+      },
+      "ply": 8,
+      "responses": {
+        "agent_0": "{\"action\":\"down\",\"reason\":\"Moving towards the center to coordinate with the forager and miner for resource gathering.\"}",
+        "agent_1": "{\"action\":\"down\",\"reason\":\"Moving towards the plant at (9,6) to gather food for the team.\"}",
+        "agent_2": "{\"action\":\"make_wood_pickaxe\",\"reason\":\"Need a pickaxe to start mining resources for the team.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [
+        {
+          "agent_id": "agent_2",
+          "kind": "move_applied",
+          "level": 0,
+          "timestep": 9,
+          "x": 6,
+          "y": 5
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "down"
+        },
+        "agent_1": {
+          "kind": "down"
+        },
+        "agent_2": {
+          "kind": "down"
+        }
+      },
+      "ply": 9,
+      "responses": {
+        "agent_0": "{\"action\":\"down\",\"reason\":\"Moving towards the fountain at [5,5] to restore health/energy before starting resource gathering.\"}",
+        "agent_1": "{\"action\":\"down\",\"reason\":\"Moving towards the fountain at [5,5] to replenish drink levels for the team.\"}",
+        "agent_2": "{\"action\":\"down\",\"reason\":\"Moving towards the iron deposit at [6,6] to begin mining operations for the team.\"}"
+      },
+      "reward": 0.0
+    },
+    {
+      "events": [
+        {
+          "agent_id": "agent_0",
+          "kind": "fountain_used",
+          "timestep": 10
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "do"
+        },
+        "agent_1": {
+          "kind": "do"
+        },
+        "agent_2": {
+          "kind": "down"
+        }
+      },
+      "ply": 10,
+      "responses": {
+        "agent_0": "{\"action\":\"do\",\"reason\":\"I am a warrior and need to start gathering resources or preparing for combat; interacting with the environment to begin.\"}",
+        "agent_1": "{\"action\":\"do\",\"reason\":\"Foraging for food to sustain the team as per my role.\"}",
+        "agent_2": "{\"action\":\"down\",\"reason\":\"Moving towards the iron deposit at (6,6) to begin mining operations.\"}"
+      },
+      "reward": 1.0
+    },
+    {
+      "events": [
+        {
+          "agent_id": "agent_0",
+          "duration": 10,
+          "kind": "request_made",
+          "resource": "wood",
+          "timestep": 11
+        }
+      ],
+      "joint_action": {
+        "agent_0": {
+          "kind": "request_wood"
+        },
+        "agent_1": {
+          "kind": "down"
+        },
+        "agent_2": {
+          "kind": "left"
+        }
+      },
+      "ply": 11,
+      "responses": {
+        "agent_0": "{\"action\":\"request_wood\",\"reason\":\"Need wood to craft a sword for combat preparation.\"}",
+        "agent_1": "{\"action\":\"down\",\"reason\":\"Moving towards the tree at [4,7] to gather wood for the team.\"}",
+        "agent_2": "{\"action\":\"left\",\"reason\":\"Moving towards the iron deposit at [4, 6] to begin mining operations.\"}"
+      },
+      "reward": 0.0
+    }
+  ],
+  "trades": 0
+}

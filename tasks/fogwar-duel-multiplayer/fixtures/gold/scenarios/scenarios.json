@@ -1,0 +1,71 @@
+{
+  "scenarios": [
+    {
+      "id": "fogwar_illegal_reliability_v0",
+      "seed": 4242,
+      "tape": [
+        {
+          "actions": [
+            {
+              "kind": "move",
+              "to": [
+                2,
+                2
+              ],
+              "unit_id": "agent_0_missing"
+            },
+            {
+              "kind": "wait"
+            }
+          ]
+        },
+        {
+          "actions": [
+            {
+              "kind": "wait"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fogwar_military_win_v0",
+      "seed": 1307,
+      "tape": [
+        {
+          "actions": [
+            {
+              "kind": "attack",
+              "target_pos": [
+                11,
+                3
+              ],
+              "unit_id": "agent_0_tank_1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fogwar_nuclear_win_v0",
+      "seed": 2718,
+      "tape": [
+        {
+          "actions": [
+            {
+              "kind": "launch"
+            }
+          ]
+        },
+        {
+          "actions": [
+            {
+              "kind": "wait"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "schema_version": "gamebench.fog_duel_lite.fixture_scenarios.v0"
+}

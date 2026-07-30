@@ -1,0 +1,10 @@
+{
+  "schema": "gamebench.overcooked_v2.rules.v1",
+  "base": "partial_obs_v1",
+  "partial_obs": true,
+  "view_radius": 2,
+  "hidden_recipe": false,
+  "overrides": {
+    "max_steps": 64
+  }
+}

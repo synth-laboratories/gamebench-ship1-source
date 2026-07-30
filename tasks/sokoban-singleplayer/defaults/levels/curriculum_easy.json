@@ -1,0 +1,20 @@
+{
+  "schema": "gamebench.sokoban.level_bank.v1",
+  "levels": [
+    {"id": "lvl-01-corner", "name": "Corner pocket", "grid": ["#####", "#@$.#", "#####"], "optimal_steps": 2},
+    {"id": "lvl-02-corridor", "name": "Corridor push", "grid": ["#######", "#@$.. #", "#######"], "optimal_steps": 4},
+    {"id": "lvl-03-t", "name": "T junction", "grid": ["#####", "#@  #", "# $ #", "#  .#", "#####"], "optimal_steps": 5},
+    {"id": "lvl-04-walls", "name": "Walled garden", "grid": ["######", "#@  .#", "# ## #", "# $  #", "######"], "optimal_steps": 6},
+    {"id": "lvl-05-double", "name": "Two box room", "grid": ["#######", "#@$.  #", "#     #", "# $.  #", "#######"], "optimal_steps": 8},
+    {"id": "seed-101", "name": "Right shove", "grid": ["######", "#@ $ #", "#   .#", "######"], "optimal_steps": 5},
+    {"id": "seed-102", "name": "Down shove", "grid": ["#####", "#@  #", "# $ #", "# . #", "#####"], "optimal_steps": 3},
+    {"id": "seed-103", "name": "Around box", "grid": ["######", "#@   #", "# $$ #", "# .. #", "######"], "optimal_steps": 7},
+    {"id": "seed-104", "name": "Short hall", "grid": ["########", "#@ $  .#", "########"], "optimal_steps": 4},
+    {"id": "seed-105", "name": "Two targets", "grid": ["#######", "#@ $  #", "#  $ .#", "#    .#", "#######"], "optimal_steps": 9},
+    {"id": "seed-106", "name": "Hook", "grid": ["######", "#@   #", "###$ #", "#  . #", "######"], "optimal_steps": 7},
+    {"id": "seed-107", "name": "Open square", "grid": ["#######", "#@    #", "# $$  #", "# ..  #", "#######"], "optimal_steps": 8},
+    {"id": "seed-108", "name": "Left pocket", "grid": ["######", "# .  #", "# $@ #", "######"], "optimal_steps": 2},
+    {"id": "seed-109", "name": "Vertical pair", "grid": ["#####", "#@  #", "# $ #", "# $ #", "# . #", "# . #", "#####"], "optimal_steps": 6},
+    {"id": "seed-110", "name": "Tiny choice", "grid": ["######", "#@ $ #", "# .  #", "######"], "optimal_steps": 4}
+  ]
+}

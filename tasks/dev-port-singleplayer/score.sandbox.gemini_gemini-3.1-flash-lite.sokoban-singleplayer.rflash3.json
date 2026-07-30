@@ -1,0 +1,92 @@
+{
+  "schema": "gamebench.dev_port.score.v1",
+  "source_task": "sokoban-singleplayer",
+  "build_ok": true,
+  "build_detail": "ok",
+  "passed": 4,
+  "total": 15,
+  "score": 0.2667,
+  "per_scenario": [
+    {
+      "scenario_id": "inline_01_corner_solve",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "inline_02_corridor_solve",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "inline_03_t_walk_push",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "inline_04_walls_block",
+      "ok": true,
+      "reason": "match"
+    },
+    {
+      "scenario_id": "inline_05_double_progress",
+      "ok": false,
+      "reason": "event_mismatch",
+      "first_diff": {
+        "index": 0,
+        "expected": "TaskResolved(lvl-05-double,sha256:0f5e8ee51f2065a55328014469c74c2332b140cdc4dfe87aa48f09ab9ac76b40)",
+        "actual": "TaskResolved(lvl-05-double,unknown)"
+      }
+    },
+    {
+      "scenario_id": "curriculum_seed_101",
+      "ok": false,
+      "reason": "scenario bin exited 101:  |     let mut grid: Vec<Vec<char>> = scenario.map.grid.iter().map(|s| s.chars().collect()).collect();\n   |         ----^^^^\n   |         |\n   |         help: remove this `mut`\n   |\n   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default\n\n\nthread 'main' (19622719) panicked at src/bin/scenario.rs:37:67:\ncalled `Result::unwrap()` on an `Err` value: Error(\"missing field `source`\", line: 1, column: 106)\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_102",
+      "ok": false,
+      "reason": "scenario bin exited 101:  |     let mut grid: Vec<Vec<char>> = scenario.map.grid.iter().map(|s| s.chars().collect()).collect();\n   |         ----^^^^\n   |         |\n   |         help: remove this `mut`\n   |\n   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default\n\n\nthread 'main' (19622864) panicked at src/bin/scenario.rs:37:67:\ncalled `Result::unwrap()` on an `Err` value: Error(\"missing field `source`\", line: 1, column: 106)\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_103",
+      "ok": false,
+      "reason": "scenario bin exited 101:  |     let mut grid: Vec<Vec<char>> = scenario.map.grid.iter().map(|s| s.chars().collect()).collect();\n   |         ----^^^^\n   |         |\n   |         help: remove this `mut`\n   |\n   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default\n\n\nthread 'main' (19622970) panicked at src/bin/scenario.rs:37:67:\ncalled `Result::unwrap()` on an `Err` value: Error(\"missing field `source`\", line: 1, column: 106)\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_104",
+      "ok": false,
+      "reason": "scenario bin exited 101:  |     let mut grid: Vec<Vec<char>> = scenario.map.grid.iter().map(|s| s.chars().collect()).collect();\n   |         ----^^^^\n   |         |\n   |         help: remove this `mut`\n   |\n   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default\n\n\nthread 'main' (19623049) panicked at src/bin/scenario.rs:37:67:\ncalled `Result::unwrap()` on an `Err` value: Error(\"missing field `source`\", line: 1, column: 106)\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_105",
+      "ok": false,
+      "reason": "scenario bin exited 101:  |     let mut grid: Vec<Vec<char>> = scenario.map.grid.iter().map(|s| s.chars().collect()).collect();\n   |         ----^^^^\n   |         |\n   |         help: remove this `mut`\n   |\n   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default\n\n\nthread 'main' (19623308) panicked at src/bin/scenario.rs:37:67:\ncalled `Result::unwrap()` on an `Err` value: Error(\"missing field `source`\", line: 1, column: 106)\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_106",
+      "ok": false,
+      "reason": "scenario bin exited 101:  |     let mut grid: Vec<Vec<char>> = scenario.map.grid.iter().map(|s| s.chars().collect()).collect();\n   |         ----^^^^\n   |         |\n   |         help: remove this `mut`\n   |\n   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default\n\n\nthread 'main' (19623407) panicked at src/bin/scenario.rs:37:67:\ncalled `Result::unwrap()` on an `Err` value: Error(\"missing field `source`\", line: 1, column: 106)\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_107",
+      "ok": false,
+      "reason": "scenario bin exited 101:  |     let mut grid: Vec<Vec<char>> = scenario.map.grid.iter().map(|s| s.chars().collect()).collect();\n   |         ----^^^^\n   |         |\n   |         help: remove this `mut`\n   |\n   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default\n\n\nthread 'main' (19623458) panicked at src/bin/scenario.rs:37:67:\ncalled `Result::unwrap()` on an `Err` value: Error(\"missing field `source`\", line: 1, column: 106)\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_108",
+      "ok": false,
+      "reason": "scenario bin exited 101:  |     let mut grid: Vec<Vec<char>> = scenario.map.grid.iter().map(|s| s.chars().collect()).collect();\n   |         ----^^^^\n   |         |\n   |         help: remove this `mut`\n   |\n   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default\n\n\nthread 'main' (19623637) panicked at src/bin/scenario.rs:37:67:\ncalled `Result::unwrap()` on an `Err` value: Error(\"missing field `source`\", line: 1, column: 106)\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_109",
+      "ok": false,
+      "reason": "scenario bin exited 101:  |     let mut grid: Vec<Vec<char>> = scenario.map.grid.iter().map(|s| s.chars().collect()).collect();\n   |         ----^^^^\n   |         |\n   |         help: remove this `mut`\n   |\n   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default\n\n\nthread 'main' (19623788) panicked at src/bin/scenario.rs:37:67:\ncalled `Result::unwrap()` on an `Err` value: Error(\"missing field `source`\", line: 1, column: 106)\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    },
+    {
+      "scenario_id": "curriculum_seed_110",
+      "ok": false,
+      "reason": "scenario bin exited 101:  |     let mut grid: Vec<Vec<char>> = scenario.map.grid.iter().map(|s| s.chars().collect()).collect();\n   |         ----^^^^\n   |         |\n   |         help: remove this `mut`\n   |\n   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default\n\n\nthread 'main' (19623860) panicked at src/bin/scenario.rs:37:67:\ncalled `Result::unwrap()` on an `Err` value: Error(\"missing field `source`\", line: 1, column: 106)\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    }
+  ],
+  "crate_files": 3
+}

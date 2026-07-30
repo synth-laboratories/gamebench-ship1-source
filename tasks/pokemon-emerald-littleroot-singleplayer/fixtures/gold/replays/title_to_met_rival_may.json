@@ -1,0 +1,187 @@
+{
+  "schema": "gamebench.pokemon_emerald.replay.v1",
+  "id": "title-to-met-rival-may",
+  "checkpoint": "title_menu",
+  "description": "Continuous opening replay from title through the selected-May new-game flow, truck/home/clock sequence, television scene, town traversal, rival-house Poké Ball trigger, and scripted rival arrival.",
+  "program": [
+    { "action": "a", "frames": 120 },
+    { "action": "noop", "frames": 480 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    {
+      "repeat": 14,
+      "steps": [
+        { "action": "noop", "frames": 120 },
+        { "action": "a", "frames": 1 }
+      ]
+    },
+    { "action": "noop", "frames": 120 },
+    { "action": "down", "frames": 1 },
+    { "action": "noop", "frames": 1 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 120 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 2 },
+    { "action": "noop", "frames": 1 },
+    {
+      "repeat": 3,
+      "steps": [
+        { "action": "down", "frames": 1 },
+        { "action": "noop", "frames": 1 }
+      ]
+    },
+    {
+      "repeat": 8,
+      "steps": [
+        { "action": "right", "frames": 1 },
+        { "action": "noop", "frames": 1 }
+      ]
+    },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 120 },
+    { "action": "a", "frames": 1 },
+    {
+      "repeat": 10,
+      "steps": [
+        { "action": "noop", "frames": 120 },
+        { "action": "a", "frames": 1 }
+      ]
+    },
+    { "action": "noop", "frames": 600 },
+    { "action": "up", "frames": 48 },
+    { "action": "noop", "frames": 600 },
+    { "action": "right", "frames": 48 },
+    { "action": "noop", "frames": 600 },
+    {
+      "repeat": 12,
+      "steps": [
+        { "action": "noop", "frames": 240 },
+        { "action": "a", "frames": 1 }
+      ]
+    },
+    { "action": "noop", "frames": 240 },
+    { "action": "up", "frames": 96 },
+    { "action": "noop", "frames": 32 },
+    { "action": "down", "frames": 32 },
+    { "action": "right", "frames": 48 },
+    { "action": "left", "frames": 16 },
+    { "action": "up", "frames": 16 },
+    { "action": "a", "frames": 1 },
+    { "action": "a", "frames": 1 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 72 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "up", "frames": 1 },
+    { "action": "noop", "frames": 1 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    {
+      "repeat": 5,
+      "steps": [
+        { "action": "noop", "frames": 240 },
+        { "action": "a", "frames": 1 }
+      ]
+    },
+    { "action": "noop", "frames": 240 },
+    { "action": "left", "frames": 32 },
+    { "action": "up", "frames": 16 },
+    { "action": "noop", "frames": 360 },
+    {
+      "repeat": 9,
+      "steps": [
+        { "action": "noop", "frames": 240 },
+        { "action": "a", "frames": 1 }
+      ]
+    },
+    { "action": "noop", "frames": 240 },
+    { "action": "down", "frames": 112 },
+    { "action": "noop", "frames": 120 },
+    { "action": "down", "frames": 32 },
+    { "action": "left", "frames": 160 },
+    { "action": "up", "frames": 32 },
+    { "action": "right", "frames": 16 },
+    { "action": "up", "frames": 16 },
+    { "action": "noop", "frames": 600 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 240 },
+    { "action": "down", "frames": 80 },
+    { "action": "down", "frames": 16 },
+    { "action": "noop", "frames": 240 },
+    { "action": "left", "frames": 112 },
+    { "action": "up", "frames": 32 },
+    { "action": "noop", "frames": 240 },
+    { "action": "up", "frames": 16 },
+    { "action": "noop", "frames": 1 },
+    { "action": "left", "frames": 16 },
+    { "action": "noop", "frames": 1 },
+    { "action": "left", "frames": 16 },
+    { "action": "up", "frames": 16 },
+    { "action": "noop", "frames": 120 },
+    { "action": "up", "frames": 96 },
+    { "action": "noop", "frames": 240 },
+    {
+      "repeat": 6,
+      "steps": [
+        { "action": "noop", "frames": 240 },
+        { "action": "a", "frames": 1 }
+      ]
+    },
+    { "action": "noop", "frames": 240 },
+    { "action": "up", "frames": 96 },
+    { "action": "noop", "frames": 240 },
+    { "action": "down", "frames": 64 },
+    { "action": "left", "frames": 64 },
+    { "action": "up", "frames": 16 },
+    { "action": "noop", "frames": 1 },
+    { "action": "a", "frames": 1 },
+    { "action": "noop", "frames": 1200 },
+    {
+      "repeat": 14,
+      "steps": [
+        { "action": "noop", "frames": 240 },
+        { "action": "a", "frames": 1 }
+      ]
+    },
+    { "action": "noop", "frames": 600 }
+  ],
+  "expected": {
+    "input_count": 264,
+    "frame_index": 27270,
+    "world": {
+      "phase": "met_rival",
+      "map": "brendans_house2_f",
+      "player": { "x": 3, "y": 5 },
+      "player_gender": "may",
+      "player_name": "A",
+      "facing": "left",
+      "rival_arrival_frames": null,
+      "title_intro_step": 0
+    }
+  }
+}

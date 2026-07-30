@@ -1,0 +1,7 @@
+{
+  "schema": "gamebench.tictactoe_mp.policy_sweep.v1",
+  "suite_id": "tictactoe_mp_policy_dev_v1",
+  "seeds": [101, 102, 103, 104, 105, 106, 107, 108, 109, 110],
+  "opponent_policy_id": "block_win_center_v1",
+  "max_plies": 9
+}

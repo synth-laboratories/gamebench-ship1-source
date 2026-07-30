@@ -1,0 +1,31 @@
+{
+  "schema_version": "gamebench.eventlogs.v1",
+  "env_family": "tictactoe-multiplayer",
+  "games": [
+    {
+      "scenario_id": "ttt_mp_001_empty_win_vs_block",
+      "events": [
+        "GameStarted(ttt_mp_001_empty_win_vs_block)",
+        "JointTurn(agent_0)",
+        "MoveApplied(agent_0,4)",
+        "JointTurn(agent_1)",
+        "MoveApplied(agent_1,0)",
+        "JointTurn(agent_0)",
+        "MoveApplied(agent_0,2)",
+        "JointTurn(agent_1)",
+        "MoveApplied(agent_1,6)",
+        "JointTurn(agent_0)",
+        "MoveApplied(agent_0,3)",
+        "JointTurn(agent_1)",
+        "MoveApplied(agent_1,5)",
+        "JointTurn(agent_0)",
+        "MoveApplied(agent_0,8)",
+        "JointTurn(agent_1)",
+        "MoveApplied(agent_1,1)",
+        "JointTurn(agent_0)",
+        "MoveApplied(agent_0,7)",
+        "GameEnded(draw,draw)"
+      ]
+    }
+  ]
+}

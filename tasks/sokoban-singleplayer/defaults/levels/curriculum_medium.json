@@ -1,0 +1,16 @@
+{
+  "schema": "gamebench.sokoban.level_bank.v1",
+  "tier": "medium",
+  "levels": [
+    {"id": "med-01-t", "name": "T junction", "grid": ["#####", "#@  #", "# $ #", "#  .#", "#####"], "optimal_steps": 5, "num_boxes": 1},
+    {"id": "med-02-walls", "name": "Walled garden", "grid": ["######", "#@  .#", "# ## #", "# $  #", "######"], "optimal_steps": 6, "num_boxes": 1},
+    {"id": "med-03-around", "name": "Around box", "grid": ["######", "#@   #", "# $$ #", "# .. #", "######"], "optimal_steps": 7, "num_boxes": 2},
+    {"id": "med-04-hook", "name": "Hook", "grid": ["######", "#@   #", "###$ #", "#  . #", "######"], "optimal_steps": 7, "num_boxes": 1},
+    {"id": "med-05-open", "name": "Open square", "grid": ["#######", "#@    #", "# $$  #", "# ..  #", "#######"], "optimal_steps": 8, "num_boxes": 2},
+    {"id": "med-06-double", "name": "Two box room", "grid": ["#######", "#@$.  #", "#     #", "# $.  #", "#######"], "optimal_steps": 8, "num_boxes": 2},
+    {"id": "med-07-two-targets", "name": "Two targets", "grid": ["#######", "#@ $  #", "#  $ .#", "#    .#", "#######"], "optimal_steps": 9, "num_boxes": 2},
+    {"id": "med-08-vertical", "name": "Vertical pair", "grid": ["#####", "#@  #", "# $ #", "# $ #", "# . #", "# . #", "#####"], "optimal_steps": 6, "num_boxes": 2},
+    {"id": "med-09-snake", "name": "Snake corridor", "grid": ["########", "#@     #", "# ###$ #", "# #  . #", "# #    #", "########"], "optimal_steps": 10, "num_boxes": 1},
+    {"id": "med-10-split", "name": "Split targets", "grid": ["########", "# @    #", "# $ $  #", "# . .  #", "########"], "optimal_steps": 11, "num_boxes": 2}
+  ]
+}

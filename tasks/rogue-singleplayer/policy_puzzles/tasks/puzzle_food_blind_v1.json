@@ -1,0 +1,26 @@
+{
+  "expected_flaw_id": "food_blind_scavenger",
+  "gamebench_task": "rogue-singleplayer",
+  "gold_summary": "The hidden policy ignores nearby food when hit points are low and keeps exploring.",
+  "hidden_policy_id": "food_blind_scavenger",
+  "keywords": [
+    "food",
+    "hp",
+    "hunger",
+    "heal"
+  ],
+  "prompt": "Diagnose the hidden Rogue policy flaw from the provided state-action traces.",
+  "puzzle_id": "puzzle_food_blind_v1",
+  "rollout": {
+    "expected_outcome": "failure",
+    "max_steps": 300,
+    "min_failure_seeds": 2,
+    "seeds": [
+      101,
+      102,
+      103
+    ],
+    "task_path": "tasks/policy_dev_template.json"
+  },
+  "schema_version": "gamebench.policy_puzzle.task.v1"
+}

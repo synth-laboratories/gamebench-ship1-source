@@ -1,0 +1,15 @@
+{
+  "action_summary": [
+    "observe safe pad",
+    "jump sideways",
+    "miss goal lane",
+    "repeat wrong jump"
+  ],
+  "episode_outcome": "failure_reproduced",
+  "failure_signal": "jump",
+  "gamebench_task": "frogs-singleplayer",
+  "observation_summary": "Frogs trace 3: The hidden policy chooses jumps in the wrong direction when a safe forward lily pad is visible.",
+  "puzzle_id": "puzzle_wrong_jump_v1",
+  "schema_version": "gamebench.policy_puzzle.trace.v1",
+  "seed": 103
+}

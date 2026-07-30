@@ -1,0 +1,80 @@
+{
+  "schema": "gamebench.mapo_coordination_candidates.v1",
+  "candidates": [
+    {
+      "id": "no_coordination",
+      "executor_profile": "no_coordination",
+      "shared_prompt": "Do not request or transfer resources. Each role acts independently.",
+      "role_prompts": {
+        "warrior": "Wait for independent progress.",
+        "forager": "Wait for independent progress.",
+        "miner": "Wait for independent progress."
+      },
+      "protocol": {
+        "speak_gate": "never",
+        "message_format": "grounded_button"
+      }
+    },
+    {
+      "id": "request_only",
+      "executor_profile": "request_only",
+      "shared_prompt": "Issue the correct grounded request, but do not alter the resource-holder's action policy.",
+      "role_prompts": {
+        "warrior": "Request a missing survival resource.",
+        "forager": "Request only for yourself.",
+        "miner": "Request advanced ore when needed."
+      },
+      "protocol": {
+        "speak_gate": "on_blocker",
+        "message_format": "grounded_button",
+        "max_messages_per_round": 1
+      }
+    },
+    {
+      "id": "silent_action_only",
+      "executor_profile": "silent_action_only",
+      "shared_prompt": "Attempt the anticipated handoff without waiting for a grounded request.",
+      "role_prompts": {
+        "warrior": "Give resources proactively.",
+        "forager": "Give survival resources proactively.",
+        "miner": "Craft if resources arrive."
+      },
+      "protocol": {
+        "speak_gate": "never",
+        "message_format": "grounded_button"
+      }
+    },
+    {
+      "id": "conflicting_signals",
+      "executor_profile": "conflicting_signals",
+      "shared_prompt": "Keep every role broadcasting current and anticipated needs so the shared dashboard remains busy.",
+      "role_prompts": {
+        "warrior": "Request a resource every round.",
+        "forager": "Request a resource every round.",
+        "miner": "Revise requests whenever another resource may become useful."
+      },
+      "protocol": {
+        "speak_gate": "always",
+        "message_format": "grounded_button",
+        "max_messages_per_round": 3
+      }
+    },
+    {
+      "id": "event_triggered_compact",
+      "executor_profile": "event_triggered_compact",
+      "shared_prompt": "Use one grounded request only when a role lacks a load-bearing resource. The holder fulfills that exact request on the next joint step. Reissue only after fulfillment or expiry. Craft immediately when the required handoffs complete.",
+      "role_prompts": {
+        "warrior": "Fulfill exact food or ore requests when you hold the resource.",
+        "forager": "Fulfill exact survival-resource requests.",
+        "miner": "Request only the ore needed for the next craft, then craft as soon as inventory is sufficient."
+      },
+      "protocol": {
+        "speak_gate": "on_blocker",
+        "message_format": "grounded_button",
+        "authority_policy": "decentralized",
+        "confirmation_policy": "none",
+        "max_messages_per_round": 1
+      }
+    }
+  ]
+}

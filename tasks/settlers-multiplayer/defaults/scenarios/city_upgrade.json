@@ -1,0 +1,14 @@
+{
+  "schema_version": "gamebench.task.v1",
+  "env_family": "settlers-multiplayer",
+  "scenario_id": "city_upgrade_victory_point",
+  "seed": 8,
+  "max_turns": 24,
+  "checkpoint_after": 1,
+  "actions": [
+    {"kind": "build_city", "vertex": 0},
+    {"kind": "end_turn"},
+    {"kind": "end_turn"},
+    {"kind": "end_turn"}
+  ]
+}

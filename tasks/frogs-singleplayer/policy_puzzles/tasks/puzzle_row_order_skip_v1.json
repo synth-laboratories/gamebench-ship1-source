@@ -1,0 +1,26 @@
+{
+  "expected_flaw_id": "row_order_skip",
+  "gamebench_task": "frogs-singleplayer",
+  "gold_summary": "The hidden policy fills rows out of order, causing color and column conflicts later.",
+  "hidden_policy_id": "row_order_skip",
+  "keywords": [
+    "row",
+    "order",
+    "skip",
+    "conflict"
+  ],
+  "prompt": "Diagnose the hidden Frogs placement policy flaw from the provided state-action traces.",
+  "puzzle_id": "puzzle_row_order_skip_v1",
+  "rollout": {
+    "expected_outcome": "failure",
+    "max_steps": 120,
+    "min_failure_seeds": 2,
+    "seeds": [
+      101,
+      102,
+      103
+    ],
+    "task_path": "tasks/policy_dev_template.json"
+  },
+  "schema_version": "gamebench.policy_puzzle.task.v1"
+}

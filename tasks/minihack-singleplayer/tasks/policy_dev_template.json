@@ -1,0 +1,7 @@
+{
+  "schema": "gamebench.task.minihack.v1",
+  "task_id": "minihack_policy_dev",
+  "profile": "corridor_straight",
+  "seed": 0,
+  "rules": {"base": "navigation", "overrides": {"max_steps": 40}}
+}

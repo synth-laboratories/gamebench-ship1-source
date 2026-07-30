@@ -1,0 +1,1828 @@
+{
+  "schema": "gamebench.towermind.states.v1",
+  "states": [
+    {
+      "checkpoint": "{\"events\":[{\"kind\":\"state_transition\",\"message\":\"Reset(level=L1,seed=303)\",\"payload\":{\"level\":\"L1\",\"seed\":303},\"severity\":\"info\",\"step_index\":0,\"tick\":0,\"transition\":\"reset\"},{\"kind\":\"coin_spawned\",\"message\":\"CoinSpawned(l1_coin_a)\",\"payload\":{\"at\":[1,2],\"coin\":\"l1_coin_a\",\"value\":3},\"severity\":\"info\",\"step_index\":0,\"tick\":0,\"transition\":\"spawn\"},{\"kind\":\"illegal_action\",\"message\":\"IllegalAction(unknown_slot)\",\"payload\":{\"action\":{\"kind\":\"build\",\"target\":\"not_a_slot\",\"tower\":\"archer\"},\"code\":\"unknown_slot\",\"hallucination\":true,\"message\":\"unknown build slot not_a_slot\"},\"severity\":\"warning\",\"step_index\":0,\"tick\":0,\"transition\":\"rejected\"},{\"kind\":\"enemy_spawned\",\"message\":\"EnemySpawned(enemy_0)\",\"payload\":{\"enemy\":\"enemy_0\",\"kind\":\"scout\"},\"severity\":\"info\",\"step_index\":1,\"tick\":1,\"transition\":\"spawn\"},{\"kind\":\"illegal_action\",\"message\":\"IllegalAction(unknown_actor)\",\"payload\":{\"action\":{\"actor\":\"knight_99\",\"kind\":\"collect\",\"target\":[1,2]},\"code\":\"unknown_actor\",\"hallucination\":true,\"message\":\"unknown friendly knight_99\"},\"severity\":\"warning\",\"step_index\":1,\"tick\":1,\"transition\":\"rejected\"},{\"kind\":\"coin_spawned\",\"message\":\"CoinSpawned(l1_coin_b)\",\"payload\":{\"at\":[2,2],\"coin\":\"l1_coin_b\",\"value\":2},\"severity\":\"info\",\"step_index\":2,\"tick\":2,\"transition\":\"spawn\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":2,\"tick\":2,\"transition\":\"wait\"}],\"state\":{\"availability\":\"implemented\",\"base_hp\":3,\"coins\":[{\"at\":[1,2],\"id\":\"l1_coin_a\",\"value\":3},{\"at\":[2,2],\"id\":\"l1_coin_b\",\"value\":2}],\"enemies\":[{\"hp\":2,\"id\":\"enemy_0\",\"kind\":\"scout\",\"path_index\":3,\"pos\":[3,3]}],\"gold\":0,\"hero\":{\"hp\":5,\"id\":\"hero\",\"pos\":[1,2]},\"illegal_actions\":2,\"knights\":[],\"level\":\"L1\",\"seed\":303,\"terminated\":false,\"termination_reason\":null,\"tick\":3,\"total_reward\":0.0,\"towers\":[]},\"version\":1}",
+      "id": "illegal_action",
+      "projection": {
+        "events": [
+          {
+            "kind": "state_transition",
+            "message": "Reset(level=L1,seed=303)",
+            "payload": {
+              "level": "L1",
+              "seed": 303
+            },
+            "severity": "info",
+            "step_index": 0,
+            "tick": 0,
+            "transition": "reset"
+          },
+          {
+            "kind": "coin_spawned",
+            "message": "CoinSpawned(l1_coin_a)",
+            "payload": {
+              "at": [
+                1,
+                2
+              ],
+              "coin": "l1_coin_a",
+              "value": 3
+            },
+            "severity": "info",
+            "step_index": 0,
+            "tick": 0,
+            "transition": "spawn"
+          },
+          {
+            "kind": "illegal_action",
+            "message": "IllegalAction(unknown_slot)",
+            "payload": {
+              "action": {
+                "kind": "build",
+                "target": "not_a_slot",
+                "tower": "archer"
+              },
+              "code": "unknown_slot",
+              "hallucination": true,
+              "message": "unknown build slot not_a_slot"
+            },
+            "severity": "warning",
+            "step_index": 0,
+            "tick": 0,
+            "transition": "rejected"
+          },
+          {
+            "kind": "enemy_spawned",
+            "message": "EnemySpawned(enemy_0)",
+            "payload": {
+              "enemy": "enemy_0",
+              "kind": "scout"
+            },
+            "severity": "info",
+            "step_index": 1,
+            "tick": 1,
+            "transition": "spawn"
+          },
+          {
+            "kind": "illegal_action",
+            "message": "IllegalAction(unknown_actor)",
+            "payload": {
+              "action": {
+                "actor": "knight_99",
+                "kind": "collect",
+                "target": [
+                  1,
+                  2
+                ]
+              },
+              "code": "unknown_actor",
+              "hallucination": true,
+              "message": "unknown friendly knight_99"
+            },
+            "severity": "warning",
+            "step_index": 1,
+            "tick": 1,
+            "transition": "rejected"
+          },
+          {
+            "kind": "coin_spawned",
+            "message": "CoinSpawned(l1_coin_b)",
+            "payload": {
+              "at": [
+                2,
+                2
+              ],
+              "coin": "l1_coin_b",
+              "value": 2
+            },
+            "severity": "info",
+            "step_index": 2,
+            "tick": 2,
+            "transition": "spawn"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 2,
+            "tick": 2,
+            "transition": "wait"
+          }
+        ],
+        "observation": {
+          "structured": {
+            "availability": "implemented",
+            "base_hp": 3,
+            "build_slots": {
+              "crossroad": [
+                5,
+                2
+              ],
+              "far_bait": [
+                8,
+                6
+              ],
+              "gate_archer": [
+                3,
+                2
+              ]
+            },
+            "coins": [
+              {
+                "at": [
+                  1,
+                  2
+                ],
+                "id": "l1_coin_a",
+                "value": 3
+              },
+              {
+                "at": [
+                  2,
+                  2
+                ],
+                "id": "l1_coin_b",
+                "value": 2
+              }
+            ],
+            "enemies": [
+              {
+                "hp": 2,
+                "id": "enemy_0",
+                "kind": "scout",
+                "path_index": 3,
+                "pos": [
+                  3,
+                  3
+                ]
+              }
+            ],
+            "fog_cells": [
+              [
+                7,
+                5
+              ]
+            ],
+            "friendlies": [
+              {
+                "disabled": false,
+                "hp": 5,
+                "id": "hero",
+                "occluded": false,
+                "pos": [
+                  1,
+                  2
+                ]
+              }
+            ],
+            "gold": 0,
+            "illegal_actions": 2,
+            "level": "L1",
+            "terminated": false,
+            "termination_reason": null,
+            "tick": 3,
+            "towers": []
+          },
+          "text": "{\"availability\":\"implemented\",\"base_hp\":3,\"build_slots\":{\"crossroad\":[5,2],\"far_bait\":[8,6],\"gate_archer\":[3,2]},\"coins\":[{\"at\":[1,2],\"id\":\"l1_coin_a\",\"value\":3},{\"at\":[2,2],\"id\":\"l1_coin_b\",\"value\":2}],\"enemies\":[{\"hp\":2,\"id\":\"enemy_0\",\"kind\":\"scout\",\"path_index\":3,\"pos\":[3,3]}],\"fog_cells\":[[7,5]],\"friendlies\":[{\"disabled\":false,\"hp\":5,\"id\":\"hero\",\"occluded\":false,\"pos\":[1,2]}],\"gold\":0,\"illegal_actions\":2,\"level\":\"L1\",\"terminated\":false,\"termination_reason\":null,\"tick\":3,\"towers\":[]}"
+        },
+        "state": {
+          "availability": "implemented",
+          "base_hp": 3,
+          "coins": [
+            {
+              "at": [
+                1,
+                2
+              ],
+              "id": "l1_coin_a",
+              "value": 3
+            },
+            {
+              "at": [
+                2,
+                2
+              ],
+              "id": "l1_coin_b",
+              "value": 2
+            }
+          ],
+          "enemies": [
+            {
+              "hp": 2,
+              "id": "enemy_0",
+              "kind": "scout",
+              "path_index": 3,
+              "pos": [
+                3,
+                3
+              ]
+            }
+          ],
+          "gold": 0,
+          "hero": {
+            "hp": 5,
+            "id": "hero",
+            "pos": [
+              1,
+              2
+            ]
+          },
+          "illegal_actions": 2,
+          "knights": [],
+          "level": "L1",
+          "seed": 303,
+          "terminated": false,
+          "termination_reason": null,
+          "tick": 3,
+          "total_reward": 0.0,
+          "towers": []
+        }
+      }
+    },
+    {
+      "checkpoint": "{\"events\":[{\"kind\":\"state_transition\",\"message\":\"Reset(level=L1,seed=505)\",\"payload\":{\"level\":\"L1\",\"seed\":505},\"severity\":\"info\",\"step_index\":0,\"tick\":0,\"transition\":\"reset\"},{\"kind\":\"coin_spawned\",\"message\":\"CoinSpawned(l1_coin_a)\",\"payload\":{\"at\":[1,2],\"coin\":\"l1_coin_a\",\"value\":3},\"severity\":\"info\",\"step_index\":0,\"tick\":0,\"transition\":\"spawn\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":0,\"tick\":0,\"transition\":\"wait\"},{\"kind\":\"enemy_spawned\",\"message\":\"EnemySpawned(enemy_0)\",\"payload\":{\"enemy\":\"enemy_0\",\"kind\":\"scout\"},\"severity\":\"info\",\"step_index\":1,\"tick\":1,\"transition\":\"spawn\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":1,\"tick\":1,\"transition\":\"wait\"},{\"kind\":\"coin_spawned\",\"message\":\"CoinSpawned(l1_coin_b)\",\"payload\":{\"at\":[2,2],\"coin\":\"l1_coin_b\",\"value\":2},\"severity\":\"info\",\"step_index\":2,\"tick\":2,\"transition\":\"spawn\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":2,\"tick\":2,\"transition\":\"wait\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":3,\"tick\":3,\"transition\":\"wait\"},{\"kind\":\"enemy_spawned\",\"message\":\"EnemySpawned(enemy_1)\",\"payload\":{\"enemy\":\"enemy_1\",\"kind\":\"scout\"},\"severity\":\"info\",\"step_index\":4,\"tick\":4,\"transition\":\"spawn\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":4,\"tick\":4,\"transition\":\"wait\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":5,\"tick\":5,\"transition\":\"wait\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":6,\"tick\":6,\"transition\":\"wait\"},{\"kind\":\"enemy_spawned\",\"message\":\"EnemySpawned(enemy_2)\",\"payload\":{\"enemy\":\"enemy_2\",\"kind\":\"brute\"},\"severity\":\"info\",\"step_index\":7,\"tick\":7,\"transition\":\"spawn\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":7,\"tick\":7,\"transition\":\"wait\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":8,\"tick\":8,\"transition\":\"wait\"},{\"kind\":\"enemy_leaked\",\"message\":\"EnemyLeaked(enemy_0)\",\"payload\":{\"base_hp\":2,\"enemy\":\"enemy_0\",\"reward_delta\":-1.0},\"severity\":\"info\",\"step_index\":9,\"tick\":9,\"transition\":\"leak\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":9,\"tick\":9,\"transition\":\"wait\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":10,\"tick\":10,\"transition\":\"wait\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":11,\"tick\":11,\"transition\":\"wait\"},{\"kind\":\"enemy_leaked\",\"message\":\"EnemyLeaked(enemy_1)\",\"payload\":{\"base_hp\":1,\"enemy\":\"enemy_1\",\"reward_delta\":-1.0},\"severity\":\"info\",\"step_index\":12,\"tick\":12,\"transition\":\"leak\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":12,\"tick\":12,\"transition\":\"wait\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":13,\"tick\":13,\"transition\":\"wait\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":14,\"tick\":14,\"transition\":\"wait\"},{\"kind\":\"enemy_leaked\",\"message\":\"EnemyLeaked(enemy_2)\",\"payload\":{\"base_hp\":0,\"enemy\":\"enemy_2\",\"reward_delta\":-1.0},\"severity\":\"info\",\"step_index\":15,\"tick\":15,\"transition\":\"leak\"},{\"kind\":\"terminal\",\"message\":\"Terminal(base_destroyed)\",\"payload\":{\"base_hp\":0},\"severity\":\"info\",\"step_index\":15,\"tick\":15,\"transition\":\"base_destroyed\"}],\"state\":{\"availability\":\"implemented\",\"base_hp\":0,\"coins\":[{\"at\":[1,2],\"id\":\"l1_coin_a\",\"value\":3},{\"at\":[2,2],\"id\":\"l1_coin_b\",\"value\":2}],\"enemies\":[],\"gold\":0,\"hero\":{\"hp\":5,\"id\":\"hero\",\"pos\":[1,2]},\"illegal_actions\":0,\"knights\":[],\"level\":\"L1\",\"seed\":505,\"terminated\":true,\"termination_reason\":\"base_destroyed\",\"tick\":15,\"total_reward\":-3.0,\"towers\":[]},\"version\":1}",
+      "id": "l1_base_destruction",
+      "projection": {
+        "events": [
+          {
+            "kind": "state_transition",
+            "message": "Reset(level=L1,seed=505)",
+            "payload": {
+              "level": "L1",
+              "seed": 505
+            },
+            "severity": "info",
+            "step_index": 0,
+            "tick": 0,
+            "transition": "reset"
+          },
+          {
+            "kind": "coin_spawned",
+            "message": "CoinSpawned(l1_coin_a)",
+            "payload": {
+              "at": [
+                1,
+                2
+              ],
+              "coin": "l1_coin_a",
+              "value": 3
+            },
+            "severity": "info",
+            "step_index": 0,
+            "tick": 0,
+            "transition": "spawn"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 0,
+            "tick": 0,
+            "transition": "wait"
+          },
+          {
+            "kind": "enemy_spawned",
+            "message": "EnemySpawned(enemy_0)",
+            "payload": {
+              "enemy": "enemy_0",
+              "kind": "scout"
+            },
+            "severity": "info",
+            "step_index": 1,
+            "tick": 1,
+            "transition": "spawn"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 1,
+            "tick": 1,
+            "transition": "wait"
+          },
+          {
+            "kind": "coin_spawned",
+            "message": "CoinSpawned(l1_coin_b)",
+            "payload": {
+              "at": [
+                2,
+                2
+              ],
+              "coin": "l1_coin_b",
+              "value": 2
+            },
+            "severity": "info",
+            "step_index": 2,
+            "tick": 2,
+            "transition": "spawn"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 2,
+            "tick": 2,
+            "transition": "wait"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 3,
+            "tick": 3,
+            "transition": "wait"
+          },
+          {
+            "kind": "enemy_spawned",
+            "message": "EnemySpawned(enemy_1)",
+            "payload": {
+              "enemy": "enemy_1",
+              "kind": "scout"
+            },
+            "severity": "info",
+            "step_index": 4,
+            "tick": 4,
+            "transition": "spawn"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 4,
+            "tick": 4,
+            "transition": "wait"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 5,
+            "tick": 5,
+            "transition": "wait"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 6,
+            "tick": 6,
+            "transition": "wait"
+          },
+          {
+            "kind": "enemy_spawned",
+            "message": "EnemySpawned(enemy_2)",
+            "payload": {
+              "enemy": "enemy_2",
+              "kind": "brute"
+            },
+            "severity": "info",
+            "step_index": 7,
+            "tick": 7,
+            "transition": "spawn"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 7,
+            "tick": 7,
+            "transition": "wait"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 8,
+            "tick": 8,
+            "transition": "wait"
+          },
+          {
+            "kind": "enemy_leaked",
+            "message": "EnemyLeaked(enemy_0)",
+            "payload": {
+              "base_hp": 2,
+              "enemy": "enemy_0",
+              "reward_delta": -1.0
+            },
+            "severity": "info",
+            "step_index": 9,
+            "tick": 9,
+            "transition": "leak"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 9,
+            "tick": 9,
+            "transition": "wait"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 10,
+            "tick": 10,
+            "transition": "wait"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 11,
+            "tick": 11,
+            "transition": "wait"
+          },
+          {
+            "kind": "enemy_leaked",
+            "message": "EnemyLeaked(enemy_1)",
+            "payload": {
+              "base_hp": 1,
+              "enemy": "enemy_1",
+              "reward_delta": -1.0
+            },
+            "severity": "info",
+            "step_index": 12,
+            "tick": 12,
+            "transition": "leak"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 12,
+            "tick": 12,
+            "transition": "wait"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 13,
+            "tick": 13,
+            "transition": "wait"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 14,
+            "tick": 14,
+            "transition": "wait"
+          },
+          {
+            "kind": "enemy_leaked",
+            "message": "EnemyLeaked(enemy_2)",
+            "payload": {
+              "base_hp": 0,
+              "enemy": "enemy_2",
+              "reward_delta": -1.0
+            },
+            "severity": "info",
+            "step_index": 15,
+            "tick": 15,
+            "transition": "leak"
+          },
+          {
+            "kind": "terminal",
+            "message": "Terminal(base_destroyed)",
+            "payload": {
+              "base_hp": 0
+            },
+            "severity": "info",
+            "step_index": 15,
+            "tick": 15,
+            "transition": "base_destroyed"
+          }
+        ],
+        "observation": {
+          "structured": {
+            "availability": "implemented",
+            "base_hp": 0,
+            "build_slots": {
+              "crossroad": [
+                5,
+                2
+              ],
+              "far_bait": [
+                8,
+                6
+              ],
+              "gate_archer": [
+                3,
+                2
+              ]
+            },
+            "coins": [
+              {
+                "at": [
+                  1,
+                  2
+                ],
+                "id": "l1_coin_a",
+                "value": 3
+              },
+              {
+                "at": [
+                  2,
+                  2
+                ],
+                "id": "l1_coin_b",
+                "value": 2
+              }
+            ],
+            "enemies": [],
+            "fog_cells": [
+              [
+                7,
+                5
+              ]
+            ],
+            "friendlies": [
+              {
+                "disabled": false,
+                "hp": 5,
+                "id": "hero",
+                "occluded": false,
+                "pos": [
+                  1,
+                  2
+                ]
+              }
+            ],
+            "gold": 0,
+            "illegal_actions": 0,
+            "level": "L1",
+            "terminated": true,
+            "termination_reason": "base_destroyed",
+            "tick": 15,
+            "towers": []
+          },
+          "text": "{\"availability\":\"implemented\",\"base_hp\":0,\"build_slots\":{\"crossroad\":[5,2],\"far_bait\":[8,6],\"gate_archer\":[3,2]},\"coins\":[{\"at\":[1,2],\"id\":\"l1_coin_a\",\"value\":3},{\"at\":[2,2],\"id\":\"l1_coin_b\",\"value\":2}],\"enemies\":[],\"fog_cells\":[[7,5]],\"friendlies\":[{\"disabled\":false,\"hp\":5,\"id\":\"hero\",\"occluded\":false,\"pos\":[1,2]}],\"gold\":0,\"illegal_actions\":0,\"level\":\"L1\",\"terminated\":true,\"termination_reason\":\"base_destroyed\",\"tick\":15,\"towers\":[]}"
+        },
+        "state": {
+          "availability": "implemented",
+          "base_hp": 0,
+          "coins": [
+            {
+              "at": [
+                1,
+                2
+              ],
+              "id": "l1_coin_a",
+              "value": 3
+            },
+            {
+              "at": [
+                2,
+                2
+              ],
+              "id": "l1_coin_b",
+              "value": 2
+            }
+          ],
+          "enemies": [],
+          "gold": 0,
+          "hero": {
+            "hp": 5,
+            "id": "hero",
+            "pos": [
+              1,
+              2
+            ]
+          },
+          "illegal_actions": 0,
+          "knights": [],
+          "level": "L1",
+          "seed": 505,
+          "terminated": true,
+          "termination_reason": "base_destroyed",
+          "tick": 15,
+          "total_reward": -3.0,
+          "towers": []
+        }
+      }
+    },
+    {
+      "checkpoint": "{\"events\":[{\"kind\":\"state_transition\",\"message\":\"Reset(level=L1,seed=101)\",\"payload\":{\"level\":\"L1\",\"seed\":101},\"severity\":\"info\",\"step_index\":0,\"tick\":0,\"transition\":\"reset\"},{\"kind\":\"coin_spawned\",\"message\":\"CoinSpawned(l1_coin_a)\",\"payload\":{\"at\":[1,2],\"coin\":\"l1_coin_a\",\"value\":3},\"severity\":\"info\",\"step_index\":0,\"tick\":0,\"transition\":\"spawn\"},{\"kind\":\"coin_collected\",\"message\":\"CoinCollected(l1_coin_a)\",\"payload\":{\"actor\":\"hero\",\"coin\":\"l1_coin_a\",\"gold\":3,\"value\":3},\"severity\":\"info\",\"step_index\":0,\"tick\":0,\"transition\":\"collect\"},{\"kind\":\"enemy_spawned\",\"message\":\"EnemySpawned(enemy_0)\",\"payload\":{\"enemy\":\"enemy_0\",\"kind\":\"scout\"},\"severity\":\"info\",\"step_index\":1,\"tick\":1,\"transition\":\"spawn\"},{\"kind\":\"tower_built\",\"message\":\"TowerBuilt(archer,gate_archer)\",\"payload\":{\"gold\":0,\"slot\":\"gate_archer\",\"tower\":\"archer\"},\"severity\":\"info\",\"step_index\":1,\"tick\":1,\"transition\":\"build\"},{\"kind\":\"coin_spawned\",\"message\":\"CoinSpawned(l1_coin_b)\",\"payload\":{\"at\":[2,2],\"coin\":\"l1_coin_b\",\"value\":2},\"severity\":\"info\",\"step_index\":2,\"tick\":2,\"transition\":\"spawn\"},{\"kind\":\"enemy_damaged\",\"message\":\"EnemyDamaged(enemy_0,2)\",\"payload\":{\"damage\":2,\"enemy\":\"enemy_0\",\"hp\":0,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":2,\"tick\":2,\"transition\":\"archer_attack\"},{\"kind\":\"enemy_defeated\",\"message\":\"EnemyDefeated(enemy_0)\",\"payload\":{\"enemy\":\"enemy_0\",\"gold_awarded\":0,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":2,\"tick\":2,\"transition\":\"defeat\"},{\"kind\":\"friendly_moved\",\"message\":\"FriendlyMoved(hero)\",\"payload\":{\"actor\":\"hero\",\"to\":[2,2]},\"severity\":\"info\",\"step_index\":2,\"tick\":2,\"transition\":\"move\"},{\"kind\":\"coin_collected\",\"message\":\"CoinCollected(l1_coin_b)\",\"payload\":{\"actor\":\"hero\",\"coin\":\"l1_coin_b\",\"gold\":2,\"value\":2},\"severity\":\"info\",\"step_index\":3,\"tick\":3,\"transition\":\"collect\"},{\"kind\":\"enemy_spawned\",\"message\":\"EnemySpawned(enemy_1)\",\"payload\":{\"enemy\":\"enemy_1\",\"kind\":\"scout\"},\"severity\":\"info\",\"step_index\":4,\"tick\":4,\"transition\":\"spawn\"},{\"kind\":\"enemy_damaged\",\"message\":\"EnemyDamaged(enemy_1,2)\",\"payload\":{\"damage\":2,\"enemy\":\"enemy_1\",\"hp\":0,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":4,\"tick\":4,\"transition\":\"archer_attack\"},{\"kind\":\"enemy_defeated\",\"message\":\"EnemyDefeated(enemy_1)\",\"payload\":{\"enemy\":\"enemy_1\",\"gold_awarded\":0,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":4,\"tick\":4,\"transition\":\"defeat\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":4,\"tick\":4,\"transition\":\"wait\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":5,\"tick\":5,\"transition\":\"wait\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":6,\"tick\":6,\"transition\":\"wait\"},{\"kind\":\"enemy_spawned\",\"message\":\"EnemySpawned(enemy_2)\",\"payload\":{\"enemy\":\"enemy_2\",\"kind\":\"brute\"},\"severity\":\"info\",\"step_index\":7,\"tick\":7,\"transition\":\"spawn\"},{\"kind\":\"enemy_damaged\",\"message\":\"EnemyDamaged(enemy_2,2)\",\"payload\":{\"damage\":2,\"enemy\":\"enemy_2\",\"hp\":2,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":7,\"tick\":7,\"transition\":\"archer_attack\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":7,\"tick\":7,\"transition\":\"wait\"},{\"kind\":\"enemy_damaged\",\"message\":\"EnemyDamaged(enemy_2,2)\",\"payload\":{\"damage\":2,\"enemy\":\"enemy_2\",\"hp\":0,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":8,\"tick\":8,\"transition\":\"archer_attack\"},{\"kind\":\"enemy_defeated\",\"message\":\"EnemyDefeated(enemy_2)\",\"payload\":{\"enemy\":\"enemy_2\",\"gold_awarded\":0,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":8,\"tick\":8,\"transition\":\"defeat\"},{\"kind\":\"terminal\",\"message\":\"Terminal(waves_cleared)\",\"payload\":{\"base_hp\":3},\"severity\":\"info\",\"step_index\":8,\"tick\":8,\"transition\":\"waves_cleared\"}],\"state\":{\"availability\":\"implemented\",\"base_hp\":3,\"coins\":[],\"enemies\":[],\"gold\":2,\"hero\":{\"hp\":5,\"id\":\"hero\",\"pos\":[2,2]},\"illegal_actions\":0,\"knights\":[],\"level\":\"L1\",\"seed\":101,\"terminated\":true,\"termination_reason\":\"waves_cleared\",\"tick\":8,\"total_reward\":0.0,\"towers\":[{\"id\":\"tower_0\",\"kind\":\"archer\",\"pos\":[3,2],\"slot\":\"gate_archer\"}]},\"version\":1}",
+      "id": "l1_build_collect",
+      "projection": {
+        "events": [
+          {
+            "kind": "state_transition",
+            "message": "Reset(level=L1,seed=101)",
+            "payload": {
+              "level": "L1",
+              "seed": 101
+            },
+            "severity": "info",
+            "step_index": 0,
+            "tick": 0,
+            "transition": "reset"
+          },
+          {
+            "kind": "coin_spawned",
+            "message": "CoinSpawned(l1_coin_a)",
+            "payload": {
+              "at": [
+                1,
+                2
+              ],
+              "coin": "l1_coin_a",
+              "value": 3
+            },
+            "severity": "info",
+            "step_index": 0,
+            "tick": 0,
+            "transition": "spawn"
+          },
+          {
+            "kind": "coin_collected",
+            "message": "CoinCollected(l1_coin_a)",
+            "payload": {
+              "actor": "hero",
+              "coin": "l1_coin_a",
+              "gold": 3,
+              "value": 3
+            },
+            "severity": "info",
+            "step_index": 0,
+            "tick": 0,
+            "transition": "collect"
+          },
+          {
+            "kind": "enemy_spawned",
+            "message": "EnemySpawned(enemy_0)",
+            "payload": {
+              "enemy": "enemy_0",
+              "kind": "scout"
+            },
+            "severity": "info",
+            "step_index": 1,
+            "tick": 1,
+            "transition": "spawn"
+          },
+          {
+            "kind": "tower_built",
+            "message": "TowerBuilt(archer,gate_archer)",
+            "payload": {
+              "gold": 0,
+              "slot": "gate_archer",
+              "tower": "archer"
+            },
+            "severity": "info",
+            "step_index": 1,
+            "tick": 1,
+            "transition": "build"
+          },
+          {
+            "kind": "coin_spawned",
+            "message": "CoinSpawned(l1_coin_b)",
+            "payload": {
+              "at": [
+                2,
+                2
+              ],
+              "coin": "l1_coin_b",
+              "value": 2
+            },
+            "severity": "info",
+            "step_index": 2,
+            "tick": 2,
+            "transition": "spawn"
+          },
+          {
+            "kind": "enemy_damaged",
+            "message": "EnemyDamaged(enemy_0,2)",
+            "payload": {
+              "damage": 2,
+              "enemy": "enemy_0",
+              "hp": 0,
+              "source": "tower_0"
+            },
+            "severity": "info",
+            "step_index": 2,
+            "tick": 2,
+            "transition": "archer_attack"
+          },
+          {
+            "kind": "enemy_defeated",
+            "message": "EnemyDefeated(enemy_0)",
+            "payload": {
+              "enemy": "enemy_0",
+              "gold_awarded": 0,
+              "source": "tower_0"
+            },
+            "severity": "info",
+            "step_index": 2,
+            "tick": 2,
+            "transition": "defeat"
+          },
+          {
+            "kind": "friendly_moved",
+            "message": "FriendlyMoved(hero)",
+            "payload": {
+              "actor": "hero",
+              "to": [
+                2,
+                2
+              ]
+            },
+            "severity": "info",
+            "step_index": 2,
+            "tick": 2,
+            "transition": "move"
+          },
+          {
+            "kind": "coin_collected",
+            "message": "CoinCollected(l1_coin_b)",
+            "payload": {
+              "actor": "hero",
+              "coin": "l1_coin_b",
+              "gold": 2,
+              "value": 2
+            },
+            "severity": "info",
+            "step_index": 3,
+            "tick": 3,
+            "transition": "collect"
+          },
+          {
+            "kind": "enemy_spawned",
+            "message": "EnemySpawned(enemy_1)",
+            "payload": {
+              "enemy": "enemy_1",
+              "kind": "scout"
+            },
+            "severity": "info",
+            "step_index": 4,
+            "tick": 4,
+            "transition": "spawn"
+          },
+          {
+            "kind": "enemy_damaged",
+            "message": "EnemyDamaged(enemy_1,2)",
+            "payload": {
+              "damage": 2,
+              "enemy": "enemy_1",
+              "hp": 0,
+              "source": "tower_0"
+            },
+            "severity": "info",
+            "step_index": 4,
+            "tick": 4,
+            "transition": "archer_attack"
+          },
+          {
+            "kind": "enemy_defeated",
+            "message": "EnemyDefeated(enemy_1)",
+            "payload": {
+              "enemy": "enemy_1",
+              "gold_awarded": 0,
+              "source": "tower_0"
+            },
+            "severity": "info",
+            "step_index": 4,
+            "tick": 4,
+            "transition": "defeat"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 4,
+            "tick": 4,
+            "transition": "wait"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 5,
+            "tick": 5,
+            "transition": "wait"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 6,
+            "tick": 6,
+            "transition": "wait"
+          },
+          {
+            "kind": "enemy_spawned",
+            "message": "EnemySpawned(enemy_2)",
+            "payload": {
+              "enemy": "enemy_2",
+              "kind": "brute"
+            },
+            "severity": "info",
+            "step_index": 7,
+            "tick": 7,
+            "transition": "spawn"
+          },
+          {
+            "kind": "enemy_damaged",
+            "message": "EnemyDamaged(enemy_2,2)",
+            "payload": {
+              "damage": 2,
+              "enemy": "enemy_2",
+              "hp": 2,
+              "source": "tower_0"
+            },
+            "severity": "info",
+            "step_index": 7,
+            "tick": 7,
+            "transition": "archer_attack"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 7,
+            "tick": 7,
+            "transition": "wait"
+          },
+          {
+            "kind": "enemy_damaged",
+            "message": "EnemyDamaged(enemy_2,2)",
+            "payload": {
+              "damage": 2,
+              "enemy": "enemy_2",
+              "hp": 0,
+              "source": "tower_0"
+            },
+            "severity": "info",
+            "step_index": 8,
+            "tick": 8,
+            "transition": "archer_attack"
+          },
+          {
+            "kind": "enemy_defeated",
+            "message": "EnemyDefeated(enemy_2)",
+            "payload": {
+              "enemy": "enemy_2",
+              "gold_awarded": 0,
+              "source": "tower_0"
+            },
+            "severity": "info",
+            "step_index": 8,
+            "tick": 8,
+            "transition": "defeat"
+          },
+          {
+            "kind": "terminal",
+            "message": "Terminal(waves_cleared)",
+            "payload": {
+              "base_hp": 3
+            },
+            "severity": "info",
+            "step_index": 8,
+            "tick": 8,
+            "transition": "waves_cleared"
+          }
+        ],
+        "observation": {
+          "structured": {
+            "availability": "implemented",
+            "base_hp": 3,
+            "build_slots": {
+              "crossroad": [
+                5,
+                2
+              ],
+              "far_bait": [
+                8,
+                6
+              ],
+              "gate_archer": [
+                3,
+                2
+              ]
+            },
+            "coins": [],
+            "enemies": [],
+            "fog_cells": [
+              [
+                7,
+                5
+              ]
+            ],
+            "friendlies": [
+              {
+                "disabled": false,
+                "hp": 5,
+                "id": "hero",
+                "occluded": false,
+                "pos": [
+                  2,
+                  2
+                ]
+              }
+            ],
+            "gold": 2,
+            "illegal_actions": 0,
+            "level": "L1",
+            "terminated": true,
+            "termination_reason": "waves_cleared",
+            "tick": 8,
+            "towers": [
+              {
+                "disabled": false,
+                "id": "tower_0",
+                "kind": "archer",
+                "occluded": false,
+                "pos": [
+                  3,
+                  2
+                ],
+                "slot": "gate_archer"
+              }
+            ]
+          },
+          "text": "{\"availability\":\"implemented\",\"base_hp\":3,\"build_slots\":{\"crossroad\":[5,2],\"far_bait\":[8,6],\"gate_archer\":[3,2]},\"coins\":[],\"enemies\":[],\"fog_cells\":[[7,5]],\"friendlies\":[{\"disabled\":false,\"hp\":5,\"id\":\"hero\",\"occluded\":false,\"pos\":[2,2]}],\"gold\":2,\"illegal_actions\":0,\"level\":\"L1\",\"terminated\":true,\"termination_reason\":\"waves_cleared\",\"tick\":8,\"towers\":[{\"disabled\":false,\"id\":\"tower_0\",\"kind\":\"archer\",\"occluded\":false,\"pos\":[3,2],\"slot\":\"gate_archer\"}]}"
+        },
+        "state": {
+          "availability": "implemented",
+          "base_hp": 3,
+          "coins": [],
+          "enemies": [],
+          "gold": 2,
+          "hero": {
+            "hp": 5,
+            "id": "hero",
+            "pos": [
+              2,
+              2
+            ]
+          },
+          "illegal_actions": 0,
+          "knights": [],
+          "level": "L1",
+          "seed": 101,
+          "terminated": true,
+          "termination_reason": "waves_cleared",
+          "tick": 8,
+          "total_reward": 0.0,
+          "towers": [
+            {
+              "id": "tower_0",
+              "kind": "archer",
+              "pos": [
+                3,
+                2
+              ],
+              "slot": "gate_archer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "checkpoint": "{\"events\":[{\"kind\":\"state_transition\",\"message\":\"Reset(level=L2,seed=202)\",\"payload\":{\"level\":\"L2\",\"seed\":202},\"severity\":\"info\",\"step_index\":0,\"tick\":0,\"transition\":\"reset\"},{\"kind\":\"coin_spawned\",\"message\":\"CoinSpawned(l2_coin_a)\",\"payload\":{\"at\":[1,2],\"coin\":\"l2_coin_a\",\"value\":5},\"severity\":\"info\",\"step_index\":0,\"tick\":0,\"transition\":\"spawn\"},{\"kind\":\"coin_collected\",\"message\":\"CoinCollected(l2_coin_a)\",\"payload\":{\"actor\":\"hero\",\"coin\":\"l2_coin_a\",\"gold\":5,\"value\":5},\"severity\":\"info\",\"step_index\":0,\"tick\":0,\"transition\":\"collect\"},{\"kind\":\"enemy_spawned\",\"message\":\"EnemySpawned(enemy_0)\",\"payload\":{\"enemy\":\"enemy_0\",\"kind\":\"scout\"},\"severity\":\"info\",\"step_index\":1,\"tick\":1,\"transition\":\"spawn\"},{\"kind\":\"tower_built\",\"message\":\"TowerBuilt(magician,aoe_gate)\",\"payload\":{\"gold\":1,\"slot\":\"aoe_gate\",\"tower\":\"magician\"},\"severity\":\"info\",\"step_index\":1,\"tick\":1,\"transition\":\"build\"},{\"kind\":\"coin_spawned\",\"message\":\"CoinSpawned(l2_coin_b)\",\"payload\":{\"at\":[2,2],\"coin\":\"l2_coin_b\",\"value\":5},\"severity\":\"info\",\"step_index\":2,\"tick\":2,\"transition\":\"spawn\"},{\"kind\":\"enemy_damaged\",\"message\":\"EnemyDamaged(enemy_0,1)\",\"payload\":{\"damage\":1,\"enemy\":\"enemy_0\",\"hp\":1,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":2,\"tick\":2,\"transition\":\"magician_aoe\"},{\"kind\":\"friendly_moved\",\"message\":\"FriendlyMoved(hero)\",\"payload\":{\"actor\":\"hero\",\"to\":[2,2]},\"severity\":\"info\",\"step_index\":2,\"tick\":2,\"transition\":\"move\"},{\"kind\":\"enemy_spawned\",\"message\":\"EnemySpawned(enemy_1)\",\"payload\":{\"enemy\":\"enemy_1\",\"kind\":\"scout\"},\"severity\":\"info\",\"step_index\":3,\"tick\":3,\"transition\":\"spawn\"},{\"kind\":\"enemy_damaged\",\"message\":\"EnemyDamaged(enemy_0,1)\",\"payload\":{\"damage\":1,\"enemy\":\"enemy_0\",\"hp\":0,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":3,\"tick\":3,\"transition\":\"magician_aoe\"},{\"kind\":\"enemy_defeated\",\"message\":\"EnemyDefeated(enemy_0)\",\"payload\":{\"enemy\":\"enemy_0\",\"gold_awarded\":0,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":3,\"tick\":3,\"transition\":\"defeat\"},{\"kind\":\"coin_collected\",\"message\":\"CoinCollected(l2_coin_b)\",\"payload\":{\"actor\":\"hero\",\"coin\":\"l2_coin_b\",\"gold\":6,\"value\":5},\"severity\":\"info\",\"step_index\":3,\"tick\":3,\"transition\":\"collect\"},{\"kind\":\"enemy_damaged\",\"message\":\"EnemyDamaged(enemy_1,1)\",\"payload\":{\"damage\":1,\"enemy\":\"enemy_1\",\"hp\":1,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":4,\"tick\":4,\"transition\":\"magician_aoe\"},{\"kind\":\"tower_built\",\"message\":\"TowerBuilt(knight,knight_post)\",\"payload\":{\"gold\":1,\"slot\":\"knight_post\",\"tower\":\"knight\"},\"severity\":\"info\",\"step_index\":4,\"tick\":4,\"transition\":\"build\"},{\"kind\":\"knight_summoned\",\"message\":\"KnightSummoned(knight_0)\",\"payload\":{\"at\":[6,2],\"knight\":\"knight_0\",\"source\":\"tower_1\"},\"severity\":\"info\",\"step_index\":4,\"tick\":4,\"transition\":\"summon\"},{\"kind\":\"enemy_spawned\",\"message\":\"EnemySpawned(enemy_2)\",\"payload\":{\"enemy\":\"enemy_2\",\"kind\":\"scout\"},\"severity\":\"info\",\"step_index\":5,\"tick\":5,\"transition\":\"spawn\"},{\"kind\":\"enemy_damaged\",\"message\":\"EnemyDamaged(enemy_1,1)\",\"payload\":{\"damage\":1,\"enemy\":\"enemy_1\",\"hp\":0,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":5,\"tick\":5,\"transition\":\"magician_aoe\"},{\"kind\":\"enemy_defeated\",\"message\":\"EnemyDefeated(enemy_1)\",\"payload\":{\"enemy\":\"enemy_1\",\"gold_awarded\":0,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":5,\"tick\":5,\"transition\":\"defeat\"},{\"kind\":\"friendly_moved\",\"message\":\"FriendlyMoved(knight_0)\",\"payload\":{\"actor\":\"knight_0\",\"to\":[5,2]},\"severity\":\"info\",\"step_index\":5,\"tick\":5,\"transition\":\"move\"},{\"kind\":\"enemy_damaged\",\"message\":\"EnemyDamaged(enemy_2,1)\",\"payload\":{\"damage\":1,\"enemy\":\"enemy_2\",\"hp\":1,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":6,\"tick\":6,\"transition\":\"magician_aoe\"},{\"kind\":\"illegal_action\",\"message\":\"IllegalAction(friendly_disabled_by_fog)\",\"payload\":{\"action\":{\"actor\":\"knight_0\",\"kind\":\"move\",\"target\":[4,2]},\"code\":\"friendly_disabled_by_fog\",\"hallucination\":true,\"message\":\"knight_0 is disabled in fog\"},\"severity\":\"warning\",\"step_index\":6,\"tick\":6,\"transition\":\"rejected\"},{\"kind\":\"coin_spawned\",\"message\":\"CoinSpawned(l2_coin_c)\",\"payload\":{\"at\":[6,2],\"coin\":\"l2_coin_c\",\"value\":2},\"severity\":\"info\",\"step_index\":7,\"tick\":7,\"transition\":\"spawn\"},{\"kind\":\"enemy_damaged\",\"message\":\"EnemyDamaged(enemy_2,1)\",\"payload\":{\"damage\":1,\"enemy\":\"enemy_2\",\"hp\":0,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":7,\"tick\":7,\"transition\":\"magician_aoe\"},{\"kind\":\"enemy_defeated\",\"message\":\"EnemyDefeated(enemy_2)\",\"payload\":{\"enemy\":\"enemy_2\",\"gold_awarded\":0,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":7,\"tick\":7,\"transition\":\"defeat\"},{\"kind\":\"illegal_action\",\"message\":\"IllegalAction(friendly_disabled_by_fog)\",\"payload\":{\"action\":{\"actor\":\"knight_0\",\"kind\":\"attack\",\"target\":\"enemy_0\"},\"code\":\"friendly_disabled_by_fog\",\"hallucination\":true,\"message\":\"knight_0 is disabled in fog\"},\"severity\":\"warning\",\"step_index\":7,\"tick\":7,\"transition\":\"rejected\"},{\"kind\":\"enemy_spawned\",\"message\":\"EnemySpawned(enemy_3)\",\"payload\":{\"enemy\":\"enemy_3\",\"kind\":\"brute\"},\"severity\":\"info\",\"step_index\":8,\"tick\":8,\"transition\":\"spawn\"},{\"kind\":\"enemy_damaged\",\"message\":\"EnemyDamaged(enemy_3,1)\",\"payload\":{\"damage\":1,\"enemy\":\"enemy_3\",\"hp\":4,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":8,\"tick\":8,\"transition\":\"magician_aoe\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":8,\"tick\":8,\"transition\":\"wait\"},{\"kind\":\"enemy_damaged\",\"message\":\"EnemyDamaged(enemy_3,1)\",\"payload\":{\"damage\":1,\"enemy\":\"enemy_3\",\"hp\":3,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":9,\"tick\":9,\"transition\":\"magician_aoe\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":9,\"tick\":9,\"transition\":\"wait\"},{\"kind\":\"enemy_damaged\",\"message\":\"EnemyDamaged(enemy_3,1)\",\"payload\":{\"damage\":1,\"enemy\":\"enemy_3\",\"hp\":2,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":10,\"tick\":10,\"transition\":\"magician_aoe\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":10,\"tick\":10,\"transition\":\"wait\"},{\"kind\":\"enemy_damaged\",\"message\":\"EnemyDamaged(enemy_3,1)\",\"payload\":{\"damage\":1,\"enemy\":\"enemy_3\",\"hp\":1,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":11,\"tick\":11,\"transition\":\"magician_aoe\"},{\"kind\":\"action_applied\",\"message\":\"Wait()\",\"payload\":{\"action\":{\"kind\":\"wait\"}},\"severity\":\"info\",\"step_index\":11,\"tick\":11,\"transition\":\"wait\"},{\"kind\":\"enemy_damaged\",\"message\":\"EnemyDamaged(enemy_3,1)\",\"payload\":{\"damage\":1,\"enemy\":\"enemy_3\",\"hp\":0,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":12,\"tick\":12,\"transition\":\"magician_aoe\"},{\"kind\":\"enemy_defeated\",\"message\":\"EnemyDefeated(enemy_3)\",\"payload\":{\"enemy\":\"enemy_3\",\"gold_awarded\":0,\"source\":\"tower_0\"},\"severity\":\"info\",\"step_index\":12,\"tick\":12,\"transition\":\"defeat\"},{\"kind\":\"terminal\",\"message\":\"Terminal(waves_cleared)\",\"payload\":{\"base_hp\":4},\"severity\":\"info\",\"step_index\":12,\"tick\":12,\"transition\":\"waves_cleared\"}],\"state\":{\"availability\":\"implemented\",\"base_hp\":4,\"coins\":[{\"at\":[6,2],\"id\":\"l2_coin_c\",\"value\":2}],\"enemies\":[],\"gold\":1,\"hero\":{\"hp\":5,\"id\":\"hero\",\"pos\":[2,2]},\"illegal_actions\":2,\"knights\":[{\"hp\":3,\"id\":\"knight_0\",\"pos\":[5,2],\"source\":\"tower_1\"}],\"level\":\"L2\",\"seed\":202,\"terminated\":true,\"termination_reason\":\"waves_cleared\",\"tick\":12,\"total_reward\":0.0,\"towers\":[{\"id\":\"tower_0\",\"kind\":\"magician\",\"pos\":[3,2],\"slot\":\"aoe_gate\"},{\"id\":\"tower_1\",\"kind\":\"knight\",\"pos\":[6,2],\"slot\":\"knight_post\"}]},\"version\":1}",
+      "id": "l2_fog_knight_micro",
+      "projection": {
+        "events": [
+          {
+            "kind": "state_transition",
+            "message": "Reset(level=L2,seed=202)",
+            "payload": {
+              "level": "L2",
+              "seed": 202
+            },
+            "severity": "info",
+            "step_index": 0,
+            "tick": 0,
+            "transition": "reset"
+          },
+          {
+            "kind": "coin_spawned",
+            "message": "CoinSpawned(l2_coin_a)",
+            "payload": {
+              "at": [
+                1,
+                2
+              ],
+              "coin": "l2_coin_a",
+              "value": 5
+            },
+            "severity": "info",
+            "step_index": 0,
+            "tick": 0,
+            "transition": "spawn"
+          },
+          {
+            "kind": "coin_collected",
+            "message": "CoinCollected(l2_coin_a)",
+            "payload": {
+              "actor": "hero",
+              "coin": "l2_coin_a",
+              "gold": 5,
+              "value": 5
+            },
+            "severity": "info",
+            "step_index": 0,
+            "tick": 0,
+            "transition": "collect"
+          },
+          {
+            "kind": "enemy_spawned",
+            "message": "EnemySpawned(enemy_0)",
+            "payload": {
+              "enemy": "enemy_0",
+              "kind": "scout"
+            },
+            "severity": "info",
+            "step_index": 1,
+            "tick": 1,
+            "transition": "spawn"
+          },
+          {
+            "kind": "tower_built",
+            "message": "TowerBuilt(magician,aoe_gate)",
+            "payload": {
+              "gold": 1,
+              "slot": "aoe_gate",
+              "tower": "magician"
+            },
+            "severity": "info",
+            "step_index": 1,
+            "tick": 1,
+            "transition": "build"
+          },
+          {
+            "kind": "coin_spawned",
+            "message": "CoinSpawned(l2_coin_b)",
+            "payload": {
+              "at": [
+                2,
+                2
+              ],
+              "coin": "l2_coin_b",
+              "value": 5
+            },
+            "severity": "info",
+            "step_index": 2,
+            "tick": 2,
+            "transition": "spawn"
+          },
+          {
+            "kind": "enemy_damaged",
+            "message": "EnemyDamaged(enemy_0,1)",
+            "payload": {
+              "damage": 1,
+              "enemy": "enemy_0",
+              "hp": 1,
+              "source": "tower_0"
+            },
+            "severity": "info",
+            "step_index": 2,
+            "tick": 2,
+            "transition": "magician_aoe"
+          },
+          {
+            "kind": "friendly_moved",
+            "message": "FriendlyMoved(hero)",
+            "payload": {
+              "actor": "hero",
+              "to": [
+                2,
+                2
+              ]
+            },
+            "severity": "info",
+            "step_index": 2,
+            "tick": 2,
+            "transition": "move"
+          },
+          {
+            "kind": "enemy_spawned",
+            "message": "EnemySpawned(enemy_1)",
+            "payload": {
+              "enemy": "enemy_1",
+              "kind": "scout"
+            },
+            "severity": "info",
+            "step_index": 3,
+            "tick": 3,
+            "transition": "spawn"
+          },
+          {
+            "kind": "enemy_damaged",
+            "message": "EnemyDamaged(enemy_0,1)",
+            "payload": {
+              "damage": 1,
+              "enemy": "enemy_0",
+              "hp": 0,
+              "source": "tower_0"
+            },
+            "severity": "info",
+            "step_index": 3,
+            "tick": 3,
+            "transition": "magician_aoe"
+          },
+          {
+            "kind": "enemy_defeated",
+            "message": "EnemyDefeated(enemy_0)",
+            "payload": {
+              "enemy": "enemy_0",
+              "gold_awarded": 0,
+              "source": "tower_0"
+            },
+            "severity": "info",
+            "step_index": 3,
+            "tick": 3,
+            "transition": "defeat"
+          },
+          {
+            "kind": "coin_collected",
+            "message": "CoinCollected(l2_coin_b)",
+            "payload": {
+              "actor": "hero",
+              "coin": "l2_coin_b",
+              "gold": 6,
+              "value": 5
+            },
+            "severity": "info",
+            "step_index": 3,
+            "tick": 3,
+            "transition": "collect"
+          },
+          {
+            "kind": "enemy_damaged",
+            "message": "EnemyDamaged(enemy_1,1)",
+            "payload": {
+              "damage": 1,
+              "enemy": "enemy_1",
+              "hp": 1,
+              "source": "tower_0"
+            },
+            "severity": "info",
+            "step_index": 4,
+            "tick": 4,
+            "transition": "magician_aoe"
+          },
+          {
+            "kind": "tower_built",
+            "message": "TowerBuilt(knight,knight_post)",
+            "payload": {
+              "gold": 1,
+              "slot": "knight_post",
+              "tower": "knight"
+            },
+            "severity": "info",
+            "step_index": 4,
+            "tick": 4,
+            "transition": "build"
+          },
+          {
+            "kind": "knight_summoned",
+            "message": "KnightSummoned(knight_0)",
+            "payload": {
+              "at": [
+                6,
+                2
+              ],
+              "knight": "knight_0",
+              "source": "tower_1"
+            },
+            "severity": "info",
+            "step_index": 4,
+            "tick": 4,
+            "transition": "summon"
+          },
+          {
+            "kind": "enemy_spawned",
+            "message": "EnemySpawned(enemy_2)",
+            "payload": {
+              "enemy": "enemy_2",
+              "kind": "scout"
+            },
+            "severity": "info",
+            "step_index": 5,
+            "tick": 5,
+            "transition": "spawn"
+          },
+          {
+            "kind": "enemy_damaged",
+            "message": "EnemyDamaged(enemy_1,1)",
+            "payload": {
+              "damage": 1,
+              "enemy": "enemy_1",
+              "hp": 0,
+              "source": "tower_0"
+            },
+            "severity": "info",
+            "step_index": 5,
+            "tick": 5,
+            "transition": "magician_aoe"
+          },
+          {
+            "kind": "enemy_defeated",
+            "message": "EnemyDefeated(enemy_1)",
+            "payload": {
+              "enemy": "enemy_1",
+              "gold_awarded": 0,
+              "source": "tower_0"
+            },
+            "severity": "info",
+            "step_index": 5,
+            "tick": 5,
+            "transition": "defeat"
+          },
+          {
+            "kind": "friendly_moved",
+            "message": "FriendlyMoved(knight_0)",
+            "payload": {
+              "actor": "knight_0",
+              "to": [
+                5,
+                2
+              ]
+            },
+            "severity": "info",
+            "step_index": 5,
+            "tick": 5,
+            "transition": "move"
+          },
+          {
+            "kind": "enemy_damaged",
+            "message": "EnemyDamaged(enemy_2,1)",
+            "payload": {
+              "damage": 1,
+              "enemy": "enemy_2",
+              "hp": 1,
+              "source": "tower_0"
+            },
+            "severity": "info",
+            "step_index": 6,
+            "tick": 6,
+            "transition": "magician_aoe"
+          },
+          {
+            "kind": "illegal_action",
+            "message": "IllegalAction(friendly_disabled_by_fog)",
+            "payload": {
+              "action": {
+                "actor": "knight_0",
+                "kind": "move",
+                "target": [
+                  4,
+                  2
+                ]
+              },
+              "code": "friendly_disabled_by_fog",
+              "hallucination": true,
+              "message": "knight_0 is disabled in fog"
+            },
+            "severity": "warning",
+            "step_index": 6,
+            "tick": 6,
+            "transition": "rejected"
+          },
+          {
+            "kind": "coin_spawned",
+            "message": "CoinSpawned(l2_coin_c)",
+            "payload": {
+              "at": [
+                6,
+                2
+              ],
+              "coin": "l2_coin_c",
+              "value": 2
+            },
+            "severity": "info",
+            "step_index": 7,
+            "tick": 7,
+            "transition": "spawn"
+          },
+          {
+            "kind": "enemy_damaged",
+            "message": "EnemyDamaged(enemy_2,1)",
+            "payload": {
+              "damage": 1,
+              "enemy": "enemy_2",
+              "hp": 0,
+              "source": "tower_0"
+            },
+            "severity": "info",
+            "step_index": 7,
+            "tick": 7,
+            "transition": "magician_aoe"
+          },
+          {
+            "kind": "enemy_defeated",
+            "message": "EnemyDefeated(enemy_2)",
+            "payload": {
+              "enemy": "enemy_2",
+              "gold_awarded": 0,
+              "source": "tower_0"
+            },
+            "severity": "info",
+            "step_index": 7,
+            "tick": 7,
+            "transition": "defeat"
+          },
+          {
+            "kind": "illegal_action",
+            "message": "IllegalAction(friendly_disabled_by_fog)",
+            "payload": {
+              "action": {
+                "actor": "knight_0",
+                "kind": "attack",
+                "target": "enemy_0"
+              },
+              "code": "friendly_disabled_by_fog",
+              "hallucination": true,
+              "message": "knight_0 is disabled in fog"
+            },
+            "severity": "warning",
+            "step_index": 7,
+            "tick": 7,
+            "transition": "rejected"
+          },
+          {
+            "kind": "enemy_spawned",
+            "message": "EnemySpawned(enemy_3)",
+            "payload": {
+              "enemy": "enemy_3",
+              "kind": "brute"
+            },
+            "severity": "info",
+            "step_index": 8,
+            "tick": 8,
+            "transition": "spawn"
+          },
+          {
+            "kind": "enemy_damaged",
+            "message": "EnemyDamaged(enemy_3,1)",
+            "payload": {
+              "damage": 1,
+              "enemy": "enemy_3",
+              "hp": 4,
+              "source": "tower_0"
+            },
+            "severity": "info",
+            "step_index": 8,
+            "tick": 8,
+            "transition": "magician_aoe"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 8,
+            "tick": 8,
+            "transition": "wait"
+          },
+          {
+            "kind": "enemy_damaged",
+            "message": "EnemyDamaged(enemy_3,1)",
+            "payload": {
+              "damage": 1,
+              "enemy": "enemy_3",
+              "hp": 3,
+              "source": "tower_0"
+            },
+            "severity": "info",
+            "step_index": 9,
+            "tick": 9,
+            "transition": "magician_aoe"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 9,
+            "tick": 9,
+            "transition": "wait"
+          },
+          {
+            "kind": "enemy_damaged",
+            "message": "EnemyDamaged(enemy_3,1)",
+            "payload": {
+              "damage": 1,
+              "enemy": "enemy_3",
+              "hp": 2,
+              "source": "tower_0"
+            },
+            "severity": "info",
+            "step_index": 10,
+            "tick": 10,
+            "transition": "magician_aoe"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 10,
+            "tick": 10,
+            "transition": "wait"
+          },
+          {
+            "kind": "enemy_damaged",
+            "message": "EnemyDamaged(enemy_3,1)",
+            "payload": {
+              "damage": 1,
+              "enemy": "enemy_3",
+              "hp": 1,
+              "source": "tower_0"
+            },
+            "severity": "info",
+            "step_index": 11,
+            "tick": 11,
+            "transition": "magician_aoe"
+          },
+          {
+            "kind": "action_applied",
+            "message": "Wait()",
+            "payload": {
+              "action": {
+                "kind": "wait"
+              }
+            },
+            "severity": "info",
+            "step_index": 11,
+            "tick": 11,
+            "transition": "wait"
+          },
+          {
+            "kind": "enemy_damaged",
+            "message": "EnemyDamaged(enemy_3,1)",
+            "payload": {
+              "damage": 1,
+              "enemy": "enemy_3",
+              "hp": 0,
+              "source": "tower_0"
+            },
+            "severity": "info",
+            "step_index": 12,
+            "tick": 12,
+            "transition": "magician_aoe"
+          },
+          {
+            "kind": "enemy_defeated",
+            "message": "EnemyDefeated(enemy_3)",
+            "payload": {
+              "enemy": "enemy_3",
+              "gold_awarded": 0,
+              "source": "tower_0"
+            },
+            "severity": "info",
+            "step_index": 12,
+            "tick": 12,
+            "transition": "defeat"
+          },
+          {
+            "kind": "terminal",
+            "message": "Terminal(waves_cleared)",
+            "payload": {
+              "base_hp": 4
+            },
+            "severity": "info",
+            "step_index": 12,
+            "tick": 12,
+            "transition": "waves_cleared"
+          }
+        ],
+        "observation": {
+          "structured": {
+            "availability": "implemented",
+            "base_hp": 4,
+            "build_slots": {
+              "aoe_gate": [
+                3,
+                2
+              ],
+              "far_bait": [
+                8,
+                6
+              ],
+              "fog_bait": [
+                4,
+                2
+              ],
+              "knight_post": [
+                6,
+                2
+              ]
+            },
+            "coins": [
+              {
+                "at": [
+                  6,
+                  2
+                ],
+                "id": "l2_coin_c",
+                "value": 2
+              }
+            ],
+            "enemies": [],
+            "fog_cells": [
+              [
+                4,
+                1
+              ],
+              [
+                5,
+                1
+              ],
+              [
+                4,
+                2
+              ],
+              [
+                5,
+                2
+              ]
+            ],
+            "friendlies": [
+              {
+                "disabled": false,
+                "hp": 5,
+                "id": "hero",
+                "occluded": false,
+                "pos": [
+                  2,
+                  2
+                ]
+              },
+              {
+                "disabled": true,
+                "hp": 3,
+                "id": "knight_0",
+                "occluded": true,
+                "pos": null
+              }
+            ],
+            "gold": 1,
+            "illegal_actions": 2,
+            "level": "L2",
+            "terminated": true,
+            "termination_reason": "waves_cleared",
+            "tick": 12,
+            "towers": [
+              {
+                "disabled": false,
+                "id": "tower_0",
+                "kind": "magician",
+                "occluded": false,
+                "pos": [
+                  3,
+                  2
+                ],
+                "slot": "aoe_gate"
+              },
+              {
+                "disabled": false,
+                "id": "tower_1",
+                "kind": "knight",
+                "occluded": false,
+                "pos": [
+                  6,
+                  2
+                ],
+                "slot": "knight_post"
+              }
+            ]
+          },
+          "text": "{\"availability\":\"implemented\",\"base_hp\":4,\"build_slots\":{\"aoe_gate\":[3,2],\"far_bait\":[8,6],\"fog_bait\":[4,2],\"knight_post\":[6,2]},\"coins\":[{\"at\":[6,2],\"id\":\"l2_coin_c\",\"value\":2}],\"enemies\":[],\"fog_cells\":[[4,1],[5,1],[4,2],[5,2]],\"friendlies\":[{\"disabled\":false,\"hp\":5,\"id\":\"hero\",\"occluded\":false,\"pos\":[2,2]},{\"disabled\":true,\"hp\":3,\"id\":\"knight_0\",\"occluded\":true,\"pos\":null}],\"gold\":1,\"illegal_actions\":2,\"level\":\"L2\",\"terminated\":true,\"termination_reason\":\"waves_cleared\",\"tick\":12,\"towers\":[{\"disabled\":false,\"id\":\"tower_0\",\"kind\":\"magician\",\"occluded\":false,\"pos\":[3,2],\"slot\":\"aoe_gate\"},{\"disabled\":false,\"id\":\"tower_1\",\"kind\":\"knight\",\"occluded\":false,\"pos\":[6,2],\"slot\":\"knight_post\"}]}"
+        },
+        "state": {
+          "availability": "implemented",
+          "base_hp": 4,
+          "coins": [
+            {
+              "at": [
+                6,
+                2
+              ],
+              "id": "l2_coin_c",
+              "value": 2
+            }
+          ],
+          "enemies": [],
+          "gold": 1,
+          "hero": {
+            "hp": 5,
+            "id": "hero",
+            "pos": [
+              2,
+              2
+            ]
+          },
+          "illegal_actions": 2,
+          "knights": [
+            {
+              "hp": 3,
+              "id": "knight_0",
+              "pos": [
+                5,
+                2
+              ],
+              "source": "tower_1"
+            }
+          ],
+          "level": "L2",
+          "seed": 202,
+          "terminated": true,
+          "termination_reason": "waves_cleared",
+          "tick": 12,
+          "total_reward": 0.0,
+          "towers": [
+            {
+              "id": "tower_0",
+              "kind": "magician",
+              "pos": [
+                3,
+                2
+              ],
+              "slot": "aoe_gate"
+            },
+            {
+              "id": "tower_1",
+              "kind": "knight",
+              "pos": [
+                6,
+                2
+              ],
+              "slot": "knight_post"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "checkpoint": "{\"events\":[{\"kind\":\"level_stub\",\"message\":\"LevelStub(L3)\",\"payload\":{\"note\":\"L3 adds split paths and armored enemies after L1-L2 local parity is stable.\"},\"severity\":\"info\",\"step_index\":0,\"tick\":0,\"transition\":\"preview\"}],\"state\":{\"availability\":\"stub\",\"base_hp\":null,\"coins\":[],\"enemies\":[],\"gold\":0,\"hero\":null,\"illegal_actions\":0,\"knights\":[],\"level\":\"L3\",\"seed\":404,\"terminated\":false,\"termination_reason\":null,\"tick\":0,\"total_reward\":0.0,\"towers\":[]},\"version\":1}",
+      "id": "l3_stub_preview",
+      "projection": {
+        "events": [
+          {
+            "kind": "level_stub",
+            "message": "LevelStub(L3)",
+            "payload": {
+              "note": "L3 adds split paths and armored enemies after L1-L2 local parity is stable."
+            },
+            "severity": "info",
+            "step_index": 0,
+            "tick": 0,
+            "transition": "preview"
+          }
+        ],
+        "observation": {
+          "structured": {
+            "availability": "stub",
+            "base_hp": null,
+            "build_slots": {},
+            "coins": [],
+            "enemies": [],
+            "fog_cells": [],
+            "friendlies": [],
+            "gold": 0,
+            "illegal_actions": 0,
+            "level": "L3",
+            "terminated": false,
+            "termination_reason": null,
+            "tick": 0,
+            "towers": []
+          },
+          "text": "{\"availability\":\"stub\",\"base_hp\":null,\"build_slots\":{},\"coins\":[],\"enemies\":[],\"fog_cells\":[],\"friendlies\":[],\"gold\":0,\"illegal_actions\":0,\"level\":\"L3\",\"terminated\":false,\"termination_reason\":null,\"tick\":0,\"towers\":[]}"
+        },
+        "state": {
+          "availability": "stub",
+          "base_hp": null,
+          "coins": [],
+          "enemies": [],
+          "gold": 0,
+          "hero": null,
+          "illegal_actions": 0,
+          "knights": [],
+          "level": "L3",
+          "seed": 404,
+          "terminated": false,
+          "termination_reason": null,
+          "tick": 0,
+          "total_reward": 0.0,
+          "towers": []
+        }
+      }
+    }
+  ]
+}

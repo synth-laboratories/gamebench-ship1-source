@@ -1,0 +1,13 @@
+{
+  "schema": "gamebench.frogs.policy_sweep.v2",
+  "suite_id": "frogs_policy_dev_v2",
+  "score_metric": "mean_layout_quality",
+  "tasks": [
+    {"task_path": "tasks/policy_dev_v2_001.json", "seed": 201, "max_steps": 24},
+    {"task_path": "tasks/policy_dev_v2_002.json", "seed": 202, "max_steps": 24},
+    {"task_path": "tasks/policy_dev_v2_003.json", "seed": 203, "max_steps": 24},
+    {"task_path": "tasks/policy_dev_v2_004.json", "seed": 204, "max_steps": 24},
+    {"task_path": "tasks/policy_dev_v2_005.json", "seed": 205, "max_steps": 24},
+    {"task_path": "tasks/policy_dev_v2_006.json", "seed": 206, "max_steps": 24}
+  ]
+}

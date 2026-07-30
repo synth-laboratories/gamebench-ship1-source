@@ -1,0 +1,1 @@
+"""FrogsGame script helpers."""

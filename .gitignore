@@ -11,3 +11,12 @@ tasks/craftax-singleplayer/configs/reports/
 tasks/craftax-singleplayer/.out/
 .idea/
 .vscode/
+
+# Panel and harbor lane output. `run_codepolicy_harbor2_smr2_panel.py` writes
+# lane working directories under `submissions/_panel/`, and every harbor lane
+# writes a `rollout.json` carrying base64'd `~/.codex/auth.json` — Codex OAuth
+# access AND refresh tokens — or a raw OPENAI_API_KEY (`adapters/harbor/scripts/_lib.sh:96-100`).
+# Nothing expires, revokes, or deletes those files, so an untracked-but-not-ignored
+# tree is one `git add -A` away from committing live credentials.
+submissions/
+rollout.json

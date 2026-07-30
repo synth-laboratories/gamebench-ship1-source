@@ -1,0 +1,16 @@
+{
+  "arm": "workflow",
+  "model": "gpt-5.6-luna",
+  "reasoning_effort": "low",
+  "source_task": "sokoban-singleplayer",
+  "wall_seconds": 107,
+  "cap_seconds": 600,
+  "capped": false,
+  "jesterky_exit_code": 0,
+  "runner_revision": "7e421e1",
+  "jesterky_bin": "/Users/joshpurtell/Documents/GitHub/jesterky/target/debug/jesterky",
+  "manifest_sha256": "12ba0b62642688ddd1a0fd4a8b4793407f0d0d3022f8af35610866fc98231db0",
+  "score_sha256": "efe358ce7d06e298819fafc16b5e64d62a811eb5a28302be4ab2f2f5a0e41cf3",
+  "passed": 4,
+  "total": 15
+}

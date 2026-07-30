@@ -1,0 +1,10 @@
+{
+  "schema": "gamebench.frogs.nev_kinds.v1",
+  "kinds": [
+    "action_applied",
+    "state_transition",
+    "rule_violation",
+    "resource_delta",
+    "terminal"
+  ]
+}

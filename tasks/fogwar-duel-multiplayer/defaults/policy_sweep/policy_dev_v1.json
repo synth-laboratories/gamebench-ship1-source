@@ -1,0 +1,28 @@
+{
+  "schema": "gamebench.fogwar_duel.policy_sweep.v1",
+  "suite_id": "fogwar_duel_policy_dev_v1",
+  "candidate_agent": "agent_0",
+  "opponent_policy": "passive_wait_v1",
+  "max_half_turns": 160,
+  "scenarios": [
+    {
+      "scenario_id": "fogwar_military_win_v0",
+      "purpose": "win immediately with a visible Tank attack on the enemy base"
+    },
+    {
+      "scenario_id": "fogwar_nuclear_win_v0",
+      "purpose": "queue a discovered-base nuclear launch, then let agent_1 complete the round"
+    },
+    {
+      "scenario_id": "fogwar_illegal_reliability_v0",
+      "purpose": "avoid speculative stale-unit actions on an empty, fogged opening"
+    }
+  ],
+  "score": {
+    "metric": "mean_terminal_reliability_score",
+    "formula": "mean(0.80 * (agent_0_terminal_reward / 3.0) + 0.20 * (1 - invalid_policy_actions / max(1, submitted_policy_actions)))",
+    "terminal_reward_source": "terminal.scores.agent_0",
+    "reliability_source": "agent_0 NEV illegal_action events divided by submitted candidate actions",
+    "higher_is_better": true
+  }
+}

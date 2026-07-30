@@ -1,0 +1,24 @@
+{
+  "schema": "gamebench.nethack.dlvl1.nev_kinds.v1",
+  "kinds": [
+    "task_resolved",
+    "action_applied",
+    "move",
+    "fight",
+    "kill",
+    "pickup",
+    "eat",
+    "wear",
+    "inventory",
+    "message",
+    "mode_enter",
+    "mode_exit",
+    "stairs_descend",
+    "death",
+    "episode_truncated",
+    "terminal",
+    "rule_violation",
+    "out_of_scope",
+    "discrepancy_anchor"
+  ]
+}

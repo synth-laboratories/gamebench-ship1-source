@@ -1,0 +1,181 @@
+{
+  "schema_version": "goex_rollout_queue.v1",
+  "run_id": "rogue_smoke_20260617_183643",
+  "items": [
+    {
+      "queue_item_id": "goex_queue_core_candidate_full_resume_goex_prompt_e65cc22f57db_goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_goex_rollout_rogu_11bfdda3d78f49c5",
+      "dispatch_kind": "resume_rollout",
+      "lane": "core_candidate_full",
+      "status": "planned_search",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+      "parent_candidate_id": null,
+      "checkpoint_id": "goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_goex_rollout_rogue_smoke_20260617_183643_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+      "seed": 2,
+      "split": "train",
+      "theme_id": null,
+      "segment_steps": 40,
+      "reason": "full-scope baseline resume rollout manufactures unlabelled checkpoints for data mining",
+      "metadata": {
+        "checkpoint_source_candidate_id": "goex_prompt_e65cc22f57db",
+        "checkpoint_trace": {
+          "checkpoint_id": "goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_goex_rollout_rogue_smoke_20260617_183643_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+          "checkpoint_metadata": {
+            "created_at": "2026-06-17T22:37:11.121024Z",
+            "evidence_id": "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+            "observed_labels": [
+              "dungeon_level:1",
+              "objective:descend",
+              "scout_score:9.0",
+              "synth_shaped_reward:9.0"
+            ],
+            "observed_objective_labels": [
+              "dungeon_level:1",
+              "objective:descend",
+              "scout_score:9.0",
+              "synth_shaped_reward:9.0"
+            ],
+            "reward": 0.0,
+            "rollout_id": "goex_rollout_rogue_smoke_20260617_183643_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+            "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+          },
+          "observed_objective_labels": [
+            "dungeon_level:1",
+            "objective:descend",
+            "scout_score:9.0",
+            "synth_shaped_reward:9.0"
+          ],
+          "policy_llm_call_index": null,
+          "reward": 0.0,
+          "schema_version": "goex_checkpoint_trace.v1",
+          "seed": 2,
+          "source": "search_rollout_evidence",
+          "source_candidate_id": "goex_prompt_e65cc22f57db",
+          "source_evidence_id": "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+          "source_rollout_id": "goex_rollout_rogue_smoke_20260617_183643_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+          "source_sensor_frame_id": null,
+          "source_trace_ref": null,
+          "status": "available_for_resume",
+          "step": null,
+          "theme_id": null
+        },
+        "created_at": "2026-06-17T22:37:11.121024Z",
+        "evidence_id": "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "goex_lane": "core_candidate_full",
+        "observed_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "observed_objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "parent_kind": "baseline",
+        "resume_candidate_id": "goex_prompt_e65cc22f57db",
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke_20260617_183643_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      }
+    },
+    {
+      "queue_item_id": "goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1",
+      "dispatch_kind": "fresh_rollout",
+      "lane": "core_candidate_full",
+      "status": "planned_search",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+      "parent_candidate_id": null,
+      "checkpoint_id": null,
+      "seed": 1,
+      "split": "train",
+      "theme_id": null,
+      "segment_steps": 40,
+      "reason": "full-scope baseline rollout manufactures unlabelled checkpoints for data mining",
+      "metadata": {
+        "goex_lane": "core_candidate_full",
+        "parent_kind": "baseline"
+      }
+    },
+    {
+      "queue_item_id": "goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2",
+      "dispatch_kind": "fresh_rollout",
+      "lane": "core_candidate_full",
+      "status": "planned_search",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+      "parent_candidate_id": null,
+      "checkpoint_id": null,
+      "seed": 2,
+      "split": "train",
+      "theme_id": null,
+      "segment_steps": 40,
+      "reason": "full-scope baseline rollout manufactures unlabelled checkpoints for data mining",
+      "metadata": {
+        "goex_lane": "core_candidate_full",
+        "parent_kind": "baseline"
+      }
+    },
+    {
+      "queue_item_id": "goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3",
+      "dispatch_kind": "fresh_rollout",
+      "lane": "core_candidate_full",
+      "status": "planned_search",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+      "parent_candidate_id": null,
+      "checkpoint_id": null,
+      "seed": 3,
+      "split": "train",
+      "theme_id": null,
+      "segment_steps": 40,
+      "reason": "full-scope baseline rollout manufactures unlabelled checkpoints for data mining",
+      "metadata": {
+        "goex_lane": "core_candidate_full",
+        "parent_kind": "baseline"
+      }
+    },
+    {
+      "queue_item_id": "goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4",
+      "dispatch_kind": "fresh_rollout",
+      "lane": "core_candidate_full",
+      "status": "planned_search",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+      "parent_candidate_id": null,
+      "checkpoint_id": null,
+      "seed": 4,
+      "split": "train",
+      "theme_id": null,
+      "segment_steps": 40,
+      "reason": "full-scope baseline rollout manufactures unlabelled checkpoints for data mining",
+      "metadata": {
+        "goex_lane": "core_candidate_full",
+        "parent_kind": "baseline"
+      }
+    },
+    {
+      "queue_item_id": "goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1",
+      "dispatch_kind": "fresh_rollout",
+      "lane": "core_candidate_full",
+      "status": "planned_search",
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "treatment_id": "goex_treatment_prompt_e6905a63405b5596",
+      "parent_candidate_id": null,
+      "checkpoint_id": null,
+      "seed": 1,
+      "split": "train",
+      "theme_id": null,
+      "segment_steps": 40,
+      "reason": "full-scope baseline rollout manufactures unlabelled checkpoints for data mining",
+      "metadata": {
+        "goex_lane": "core_candidate_full",
+        "parent_kind": "baseline"
+      }
+    }
+  ],
+  "planning_events": []
+}

@@ -1,0 +1,26 @@
+{
+  "expected_flaw_id": "gold_treasure_chaser",
+  "gamebench_task": "rogue-singleplayer",
+  "gold_summary": "The hidden policy chases distant gold rooms and ignores safer nearby exploration paths.",
+  "hidden_policy_id": "gold_treasure_chaser",
+  "keywords": [
+    "gold",
+    "treasure",
+    "chase",
+    "safe"
+  ],
+  "prompt": "Diagnose the hidden Rogue policy flaw from the provided state-action traces.",
+  "puzzle_id": "puzzle_gold_hallucination_v1",
+  "rollout": {
+    "expected_outcome": "failure",
+    "max_steps": 300,
+    "min_failure_seeds": 2,
+    "seeds": [
+      101,
+      102,
+      103
+    ],
+    "task_path": "tasks/policy_dev_template.json"
+  },
+  "schema_version": "gamebench.policy_puzzle.task.v1"
+}

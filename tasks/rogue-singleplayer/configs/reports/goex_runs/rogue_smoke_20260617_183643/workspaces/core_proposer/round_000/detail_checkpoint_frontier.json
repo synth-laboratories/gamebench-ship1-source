@@ -1,0 +1,58 @@
+{
+  "checkpoints": [
+    {
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "checkpoint_id": "goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1_goex_rollout_rogue_smoke_20260617_183643_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1",
+      "metadata": {
+        "created_at": "2026-06-17T22:37:11.121018Z",
+        "evidence_id": "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+        "observed_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "observed_objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke_20260617_183643_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      },
+      "seed": 1,
+      "source": "search_rollout_evidence",
+      "status": "available_for_resume",
+      "theme_id": null
+    },
+    {
+      "candidate_id": "goex_prompt_e65cc22f57db",
+      "checkpoint_id": "goex_ckpt_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_goex_rollout_rogue_smoke_20260617_183643_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+      "metadata": {
+        "created_at": "2026-06-17T22:37:11.121024Z",
+        "evidence_id": "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+        "observed_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "observed_objective_labels": [
+          "dungeon_level:1",
+          "objective:descend",
+          "scout_score:9.0",
+          "synth_shaped_reward:9.0"
+        ],
+        "reward": 0.0,
+        "rollout_id": "goex_rollout_rogue_smoke_20260617_183643_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2",
+        "treatment_id": "goex_treatment_prompt_e6905a63405b5596"
+      },
+      "seed": 2,
+      "source": "search_rollout_evidence",
+      "status": "available_for_resume",
+      "theme_id": null
+    }
+  ]
+}

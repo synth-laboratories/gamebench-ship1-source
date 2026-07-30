@@ -1,0 +1,7 @@
+{
+  "schema": "gamebench.crafter.hillclimb_config.v1",
+  "score_epsilon": 0.000001,
+  "no_regress_achievements": ["collect_wood", "place_table", "make_wood_pickaxe"],
+  "promote_best_policy": true
+}
+

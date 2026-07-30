@@ -1,0 +1,29 @@
+{
+  "schema_version": "goex_best_base_state.v1",
+  "run_id": "rogue_smoke2_20260617_184300",
+  "candidate_id": "goex_prompt_e65cc22f57db",
+  "fresh_reward_mean": 0.0,
+  "promotion_evidence_refs": [
+    "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+    "goex_evidence_goex_queue_fresh_rollout_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+    "goex_evidence_goex_queue_core_candidate_full_resume_goex_prompt_e65cc22f57db_goex_ckpt_goex_q_4a6337b2acc8533b_sensor_74b5b2941030",
+    "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r0_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4",
+    "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r1_goex_prompt_e65cc22f57db_2_sensor_214928039173",
+    "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r2_goex_prompt_e65cc22f57db_3_sensor_60c6f2af2453",
+    "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r3_goex_prompt_e65cc22f57db_4_sensor_b6f1f19a17c3",
+    "goex_evidence_goex_queue_core_candidate_full_fresh_round0_r4_goex_prompt_e65cc22f57db_1_sensor_b71aa91131a4"
+  ],
+  "promotion_reason": "seed_base",
+  "updated_at": "2026-06-17T22:44:33.840626Z",
+  "promotion_history": [],
+  "last_promotion_decision": {
+    "best_base_candidate_id": "goex_prompt_e65cc22f57db",
+    "best_base_fresh_reward_mean": 0.0,
+    "best_rejected": null,
+    "promotion_margin": 0.05,
+    "promotion_min_seeds": 2,
+    "reason": "no_consolidated_candidate_passed_paired_promotion_gate",
+    "status": "skipped"
+  },
+  "consolidation_failed_themesets": []
+}

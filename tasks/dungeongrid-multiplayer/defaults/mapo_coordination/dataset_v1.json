@@ -1,0 +1,50 @@
+{
+  "schema": "gamebench.mapo_coordination_dataset.v1",
+  "dataset_id": "dungeongrid_rust_coordination_v1",
+  "party_roles": [
+    "barbarian",
+    "wizard",
+    "rogue",
+    "cleric"
+  ],
+  "observation": {
+    "mode": "local",
+    "visibility_radius": 3,
+    "communication_enabled": true
+  },
+  "transforms": [
+    "identity",
+    "mirror_x",
+    "mirror_y",
+    "rotate_180"
+  ],
+  "role_orders": [
+    "original",
+    "swapped"
+  ],
+  "probes": [
+    "pre_breach",
+    "carrier_assignment",
+    "extraction_handoff"
+  ],
+  "splits": {
+    "train": [
+      "blackwater_bell_breach",
+      "cinder_mage_threshold",
+      "double_breach_nemesis",
+      "lantern_crypt_lite",
+      "moonblade_vault_breach",
+      "relay_handoff",
+      "trap_breach_rescue"
+    ],
+    "selection": [
+      "chokepoint_passage",
+      "hourglass_escape_breach"
+    ],
+    "heldout": [
+      "frost_mirror_crossfire",
+      "nemesis_breach_gate",
+      "synchronized_extract"
+    ]
+  }
+}

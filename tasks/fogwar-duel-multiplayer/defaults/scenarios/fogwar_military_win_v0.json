@@ -1,0 +1,21 @@
+{
+  "id": "fogwar_military_win_v0",
+  "seed": 1307,
+  "max_rounds": 80,
+  "passages": [[6, 1], [6, 3]],
+  "deposits": [
+    {"kind": "credit", "pos": [3, 1], "reserve": 24},
+    {"kind": "uranium", "pos": [3, 5], "reserve": 24},
+    {"kind": "credit", "pos": [9, 1], "reserve": 24},
+    {"kind": "uranium", "pos": [9, 5], "reserve": 24},
+    {"kind": "uranium", "pos": [6, 3], "reserve": 24, "central": true}
+  ],
+  "initial": {
+    "players": {"agent_0": {"credits": 5, "uranium": 0}, "agent_1": {"credits": 5, "uranium": 0}},
+    "units": [{"id": "agent_0_tank_1", "owner": "agent_0", "kind": "tank", "pos": [10, 3]}],
+    "buildings": [{"id": "agent_1_base", "hp": 2}]
+  },
+  "fixture_tape": [
+    {"actions": [{"kind": "attack", "unit_id": "agent_0_tank_1", "target_pos": [11, 3]}]}
+  ]
+}

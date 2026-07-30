@@ -1,0 +1,14 @@
+id: tictactoe-multiplayer
+name: Tic-Tac-Toe Multiplayer
+kind: gamebench_gold_reference
+game: tictactoe
+visibility: private
+oracle:
+  type: canonical_nev_log
+  reference: gold/
+  gold_eventlogs: fixtures/gold/eventlogs/eventlogs.json
+status:
+  reference_engine: tasks/tictactoe-multiplayer/gold/
+  shown_scenarios: 1
+  policies: policies/
+  marl_contract: spec/marl_env_standards.md

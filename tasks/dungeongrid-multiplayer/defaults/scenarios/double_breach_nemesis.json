@@ -1,0 +1,26 @@
+{
+  "task_id": "dg_double_breach_nemesis_rust_smoke",
+  "scenario_id": "double_breach_nemesis",
+  "quest_id": "gamebench:double_breach_nemesis:lite",
+  "title": "Low Shrine Double Breach",
+  "seed": 6,
+  "max_steps": 100,
+  "map_ascii": "##########\n#E.D.RDI.#\n#..T.C...#\n##########",
+  "hero_roles": ["barbarian", "wizard"],
+  "objective_item": "inner_gate_relic",
+  "metadata": {
+    "source_seed": {
+      "quest_id": "low_shrine_locks",
+      "title": "Three Locks of the Low Shrine",
+      "tier": "full",
+      "distillation": "compresses the full shrine's lock sequencing into two breach doors separated by a live defender"
+    },
+    "marl_axis": "sequential door breach with nemesis in the kill zone",
+    "coordination_type": "clear the nemesis before opening the inner objective door",
+    "coordination_skills": [
+      "sequence outer breach, reveal, and strike without wasting the support turn",
+      "avoid overcommitting the frontline into a blocked second door",
+      "open the inner door only after the nemesis is removed"
+    ]
+  }
+}

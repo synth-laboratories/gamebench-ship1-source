@@ -1,0 +1,399 @@
+{
+  "scenarios": {
+    "fogwar_illegal_reliability_v0": [
+      {
+        "actor": null,
+        "half_turn": 0,
+        "kind": "match_started",
+        "payload": {
+          "scenario_id": "fogwar_illegal_reliability_v0",
+          "seed": 4242
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 0
+      },
+      {
+        "actor": "agent_0",
+        "half_turn": 0,
+        "kind": "half_turn_started",
+        "payload": {
+          "order": 0
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 1
+      },
+      {
+        "actor": "agent_0",
+        "half_turn": 0,
+        "kind": "illegal_action",
+        "payload": {
+          "action_index": 0,
+          "reason_code": "unit_not_found",
+          "submitted_kind": "move"
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 2
+      },
+      {
+        "actor": "agent_0",
+        "half_turn": 0,
+        "kind": "action_applied",
+        "payload": {
+          "action": {
+            "kind": "wait"
+          },
+          "action_index": 1,
+          "transition": "wait"
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 3
+      },
+      {
+        "actor": "agent_0",
+        "half_turn": 0,
+        "kind": "half_turn_completed",
+        "payload": {
+          "actions_submitted": 2
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 4
+      },
+      {
+        "actor": "agent_1",
+        "half_turn": 1,
+        "kind": "half_turn_started",
+        "payload": {
+          "order": 1
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 5
+      },
+      {
+        "actor": "agent_1",
+        "half_turn": 1,
+        "kind": "action_applied",
+        "payload": {
+          "action": {
+            "kind": "wait"
+          },
+          "action_index": 0,
+          "transition": "wait"
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 6
+      },
+      {
+        "actor": "agent_1",
+        "half_turn": 1,
+        "kind": "half_turn_completed",
+        "payload": {
+          "actions_submitted": 1
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 7
+      },
+      {
+        "actor": "agent_0",
+        "half_turn": 1,
+        "kind": "fog_memory_updated",
+        "payload": {
+          "remembered_buildings": 0,
+          "visible_cell_count": 20
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 8
+      },
+      {
+        "actor": "agent_1",
+        "half_turn": 1,
+        "kind": "fog_memory_updated",
+        "payload": {
+          "remembered_buildings": 0,
+          "visible_cell_count": 20
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 9
+      },
+      {
+        "actor": "agent_0",
+        "half_turn": 1,
+        "kind": "income_collected",
+        "payload": {
+          "credits": 1,
+          "uranium": 0
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 10
+      },
+      {
+        "actor": "agent_1",
+        "half_turn": 1,
+        "kind": "income_collected",
+        "payload": {
+          "credits": 1,
+          "uranium": 0
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 11
+      },
+      {
+        "actor": "agent_0",
+        "half_turn": 0,
+        "kind": "half_turn_started",
+        "payload": {
+          "order": 0
+        },
+        "round": 2,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 12
+      }
+    ],
+    "fogwar_military_win_v0": [
+      {
+        "actor": null,
+        "half_turn": 0,
+        "kind": "match_started",
+        "payload": {
+          "scenario_id": "fogwar_military_win_v0",
+          "seed": 1307
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 0
+      },
+      {
+        "actor": "agent_0",
+        "half_turn": 0,
+        "kind": "half_turn_started",
+        "payload": {
+          "order": 0
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 1
+      },
+      {
+        "actor": "agent_0",
+        "half_turn": 0,
+        "kind": "action_applied",
+        "payload": {
+          "action": {
+            "kind": "attack",
+            "target_pos": [
+              11,
+              3
+            ],
+            "unit_id": "agent_0_tank_1"
+          },
+          "action_index": 0,
+          "attacker": "agent_0_tank_1",
+          "damage": 2,
+          "destroyed": true,
+          "target": "agent_1_base",
+          "target_kind": "base",
+          "transition": "attack"
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 2
+      },
+      {
+        "actor": "agent_0",
+        "half_turn": 0,
+        "kind": "combat_resolved",
+        "payload": {
+          "attacker": "agent_0_tank_1",
+          "damage": 2,
+          "destroyed": true,
+          "target": "agent_1_base",
+          "target_kind": "base"
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 3
+      },
+      {
+        "actor": "agent_0",
+        "half_turn": 0,
+        "kind": "building_destroyed",
+        "payload": {
+          "building_id": "agent_1_base",
+          "kind": "base"
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 4
+      },
+      {
+        "actor": "agent_0",
+        "half_turn": 0,
+        "kind": "terminal",
+        "payload": {
+          "reason": "military",
+          "scores": {
+            "agent_0": 3.0,
+            "agent_1": 0.0
+          },
+          "winner": "agent_0"
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 5
+      },
+      {
+        "actor": "agent_0",
+        "half_turn": 0,
+        "kind": "half_turn_completed",
+        "payload": {
+          "actions_submitted": 1
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 6
+      }
+    ],
+    "fogwar_nuclear_win_v0": [
+      {
+        "actor": null,
+        "half_turn": 0,
+        "kind": "match_started",
+        "payload": {
+          "scenario_id": "fogwar_nuclear_win_v0",
+          "seed": 2718
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 0
+      },
+      {
+        "actor": "agent_0",
+        "half_turn": 0,
+        "kind": "half_turn_started",
+        "payload": {
+          "order": 0
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 1
+      },
+      {
+        "actor": "agent_0",
+        "half_turn": 0,
+        "kind": "action_applied",
+        "payload": {
+          "action": {
+            "kind": "launch"
+          },
+          "action_index": 0,
+          "bomb_cost": 25,
+          "transition": "launch"
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 2
+      },
+      {
+        "actor": "agent_0",
+        "half_turn": 0,
+        "kind": "launch_queued",
+        "payload": {
+          "bomb_cost": 25
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 3
+      },
+      {
+        "actor": "agent_0",
+        "half_turn": 0,
+        "kind": "half_turn_completed",
+        "payload": {
+          "actions_submitted": 1
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 4
+      },
+      {
+        "actor": "agent_1",
+        "half_turn": 1,
+        "kind": "half_turn_started",
+        "payload": {
+          "order": 1
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 5
+      },
+      {
+        "actor": "agent_1",
+        "half_turn": 1,
+        "kind": "action_applied",
+        "payload": {
+          "action": {
+            "kind": "wait"
+          },
+          "action_index": 0,
+          "transition": "wait"
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 6
+      },
+      {
+        "actor": "agent_1",
+        "half_turn": 1,
+        "kind": "half_turn_completed",
+        "payload": {
+          "actions_submitted": 1
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 7
+      },
+      {
+        "actor": "agent_0",
+        "half_turn": 1,
+        "kind": "launch_resolved",
+        "payload": {
+          "launchers": [
+            "agent_0"
+          ],
+          "outcome": "nuclear"
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 8
+      },
+      {
+        "actor": "agent_0",
+        "half_turn": 1,
+        "kind": "terminal",
+        "payload": {
+          "reason": "nuclear",
+          "scores": {
+            "agent_0": 3.0,
+            "agent_1": 0.0
+          },
+          "winner": "agent_0"
+        },
+        "round": 1,
+        "schema_version": "gamebench.nev.v1",
+        "seq": 9
+      }
+    ]
+  },
+  "schema_version": "gamebench.fog_duel_lite.fixture_eventlogs.v0"
+}

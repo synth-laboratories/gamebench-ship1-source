@@ -1,0 +1,16 @@
+{
+  "schema_version": "gamebench.task.v1",
+  "env_family": "settlers-multiplayer",
+  "scenario_id": "largest_army_development_race",
+  "seed": 1,
+  "max_turns": 80,
+  "checkpoint_after": 12,
+  "actions": [
+    {"kind": "buy_dev"}, {"kind": "end_turn"}, {"kind": "end_turn"}, {"kind": "move_robber", "tile": 1, "victim": "agent_0"},
+    {"kind": "play_dev", "card": "knight", "tile": 2, "victim": "agent_1"}, {"kind": "end_turn"}, {"kind": "end_turn"}, {"kind": "end_turn"},
+    {"kind": "buy_dev"}, {"kind": "end_turn"}, {"kind": "end_turn"}, {"kind": "end_turn"},
+    {"kind": "play_dev", "card": "knight", "tile": 3, "victim": "agent_2"}, {"kind": "move_robber", "tile": 4, "victim": "agent_0"}, {"kind": "end_turn"}, {"kind": "end_turn"},
+    {"kind": "buy_dev"}, {"kind": "end_turn"}, {"kind": "end_turn"}, {"kind": "end_turn"},
+    {"kind": "play_dev", "card": "knight", "tile": 5, "victim": "agent_3"}
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "schema_version": "gamebench.scenarios.v1",
+  "env_family": "tictactoe-multiplayer",
+  "scenarios": [
+    {
+      "scenario_id": "ttt_mp_001_empty_win_vs_block",
+      "seed": 101,
+      "max_plies": 9,
+      "opening_moves": [],
+      "agent_0_policy_id": "win_block_center_v1",
+      "agent_1_policy_id": "block_win_center_v1"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "action_summary": [
+    "{'action': {'kind': 'place_frog', 'row': 0, 'col': 0}, 'invalid_parse': False, 'repaired': False, 'error': None} (diagonal seed placement)",
+    "{'action': {'kind': 'submit'}, 'invalid_parse': True, 'repaired': True, 'error': 'no_valid_action_found'} (diagonal adjacency blind)"
+  ],
+  "episode_outcome": "failure_reproduced",
+  "failure_signal": "diagonal",
+  "gamebench_task": "frogs-singleplayer",
+  "observation_summary": "frogs-singleplayer seed 102 black-box rollout (policy hidden)",
+  "puzzle_id": "puzzle_diagonal_blind_v1",
+  "schema_version": "gamebench.policy_puzzle.trace.v1",
+  "seed": 102
+}
