@@ -8,7 +8,7 @@ keywords = ["gamebench", "code_policy", "hillclimb", "harbor"]
 
 [metadata]
 category = "agent-evals"
-benchmark_family = "runbench.gamebench.code_policy_deo_hillclimb"
+benchmark_family = "gamebench.code_policy_deo_hillclimb"
 difficulty_explanation = "Write heuristic_policy.py candidates that lift score vs baseline on pinned seeds."
 
 [agent]

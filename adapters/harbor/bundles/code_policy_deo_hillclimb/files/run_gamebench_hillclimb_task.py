@@ -117,18 +117,20 @@ def cmd_run(args: argparse.Namespace) -> int:
     materialize_workproduct(output_root, leaderboard, lane)
     best_score = float(leaderboard.get("best_score", 0.0))
     baseline_score = float(leaderboard.get("baseline_score", 0.0))
-    write_json(
-        output_root / "artifacts" / "reportbench_output.json",
-        {
-            "task_id": f"harbor/gamebench/{gamebench_task()}",
-            "benchmark_family": f"runbench.gamebench.{gamebench_task().replace('-', '_')}_code_policy",
-            "reward": {"primary_metric": "task_score", "value": max(best_score, 0.0)},
-            "best_candidate_id": leaderboard.get("best_candidate_id"),
-            "baseline_score": baseline_score,
-            "best_score": best_score,
-            "delta_vs_baseline": best_score - baseline_score,
-        },
-    )
+    family = f"gamebench.{gamebench_task().replace('-', '_')}_code_policy"
+    result = {
+        "schema_version": "gamebench.harbor.result.v1",
+        "task_id": f"harbor/gamebench/{gamebench_task()}",
+        "benchmark_family": family,
+        "reward": {"primary_metric": "task_score", "value": max(best_score, 0.0)},
+        "best_candidate_id": leaderboard.get("best_candidate_id"),
+        "baseline_score": baseline_score,
+        "best_score": best_score,
+        "delta_vs_baseline": best_score - baseline_score,
+    }
+    write_json(output_root / "artifacts" / "gamebench_harbor_result.json", result)
+    # Archival alias for older Harbor scorers/panels; not authority.
+    write_json(output_root / "artifacts" / "reportbench_output.json", result)
     print(json.dumps(leaderboard, indent=2, sort_keys=True))
     return 0
 

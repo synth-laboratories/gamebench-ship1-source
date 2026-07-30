@@ -6,7 +6,7 @@ HARBOR_ADAPTER_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 HARBOR_BUNDLE_ROOT="$HARBOR_ADAPTER_ROOT/bundles"
 HARBOR_SCRIPTS="$HARBOR_ADAPTER_ROOT/scripts"
 EVALS_ROOT="${GAMEBENCH_EVALS_ROOT:-$HOME/Documents/GitHub/evals}"
-CODEX_RUNNER="$EVALS_ROOT/containers/harbor/codex_harbor_runner.py"
+CODEX_RUNNER="$EVALS_ROOT/core/harbor/runner/codex_harbor_runner.py"
 EVAL_REGISTRY="$GAMEBENCH_ROOT/adapters/scripts/eval_registry.py"
 
 bundle_root() {

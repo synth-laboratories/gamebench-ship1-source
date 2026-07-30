@@ -87,7 +87,7 @@ def main() -> int:
         if isinstance(r, dict) and r.get("mean_scout_score") is not None
     ]
     payload = {
-        "benchmark_family": "runbench.gamebench.code_policy_deo_hillclimb",
+        "benchmark_family": "gamebench.code_policy_deo_hillclimb",
         "score_metric": leaderboard.get("score_metric"),
         "baseline_score": baseline_score,
         "best_score": best_score,

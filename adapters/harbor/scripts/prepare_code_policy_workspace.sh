@@ -18,13 +18,14 @@ if [[ -z "$CANDIDATE_SUBDIR" || "$CANDIDATE_SUBDIR" == "$TASK_ID" ]]; then
   exit 2
 fi
 
-mkdir -p "$WORKSPACE/candidates/$CANDIDATE_SUBDIR/starter" "$WORKSPACE/workspace"
+mkdir -p "$WORKSPACE/candidates/$CANDIDATE_SUBDIR" "$WORKSPACE/workspace"
 
 cp "$BUNDLE_ROOT/files/run_gamebench_hillclimb_task.py" "$WORKSPACE/workspace/"
 
 BASELINE="$WORKSPACE/gamebench/tasks/$TASK_ID/$BASELINE_REL"
-if [[ -f "$BASELINE" ]]; then
-  cp "$BASELINE" "$WORKSPACE/candidates/$CANDIDATE_SUBDIR/starter/heuristic_policy.py"
+if [[ ! -f "$BASELINE" ]]; then
+  echo "prepare_code_policy_workspace: baseline missing at $BASELINE" >&2
+  exit 2
 fi
 
 cat > "$WORKSPACE/AGENTS.md" <<EOF
