@@ -41,10 +41,31 @@ IMAGE="${GAMEBENCH_HARBOR_IMAGE:-gamebench-harbor-${BUNDLE}-${TASK_ID}:latest}"
 # Default OUT_DIR is minted fresh per run (panel-style UTC stamp + pid) so a
 # direct run can never score against a prior run's result.json.
 OUT_DIR="${GAMEBENCH_HARBOR_OUT:-/tmp/gamebench-harbor-${BUNDLE}-${AGENT}-$(date -u +%Y%m%dT%H%M%SZ)-$$}"
+RUN_STARTED_AT="$(date -u +%Y%m%dT%H%M%SZ)"
 DEPLOYMENT="gamebench_${BUNDLE}"
 TIMEOUT_SEC="${GAMEBENCH_HARBOR_TIMEOUT_SEC:-3600}"
 # Per-lane workspace under OUT_DIR so parallel panel replicas do not race.
 WORKSPACE="${GAMEBENCH_HARBOR_WORKSPACE:-$OUT_DIR/workspace}"
+
+emit_standard_results() {
+  local run_rc=$?
+  trap - EXIT
+  python3 "$SCRIPT_DIR/emit_standard_results.py" \
+    --evals-root "$EVALS_ROOT" \
+    --out-dir "$OUT_DIR" \
+    --family "$REG_FAMILY" \
+    --task "$TASK_ID" \
+    --agent "$AGENT" \
+    --model "$MODEL" \
+    --effort "$EFFORT" \
+    --exit-code "$run_rc" \
+    --started-at "$RUN_STARTED_AT" || {
+      local emit_rc=$?
+      if [[ "$run_rc" -eq 0 ]]; then run_rc="$emit_rc"; fi
+    }
+  exit "$run_rc"
+}
+trap emit_standard_results EXIT
 
 mkdir -p "$OUT_DIR/logs/verifier"
 # Scoring integrity: purge any prior run's scoring artifacts so this run can
@@ -258,6 +279,16 @@ if reward_path.is_file():
     except ValueError:
         payload["reward_raw"] = raw
 v = payload.get("verifier") or {}
+rollout_result = out / "rollout_result.json"
+if rollout_result.is_file():
+    try:
+        rollout = json.loads(rollout_result.read_text(encoding="utf-8"))
+        metadata = rollout.get("metadata") or {}
+        trace_v5 = metadata.get("trace_v5")
+        if isinstance(trace_v5, dict):
+            payload["trace_v5"] = trace_v5
+    except json.JSONDecodeError:
+        pass
 payload["baseline_score"] = v.get("baseline_score")
 payload["best_score"] = v.get("best_score")
 payload["delta_vs_baseline"] = v.get("delta_vs_baseline")
