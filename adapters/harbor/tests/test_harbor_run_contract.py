@@ -90,24 +90,68 @@ def test_codex_provider_failure_preserves_agent_error(tmp_path: Path) -> None:
     assert status.agent_error == "provider_error: Selected model is at capacity."
 
 
-def test_missing_codex_child_codes_is_a_runner_contract_failure(
+def test_required_trace_failure_forces_agent_fault_when_child_codes_are_zero(
     tmp_path: Path,
 ) -> None:
     contract = _load_module()
     result = tmp_path / "rollout_result.json"
-    _write_json(result, {"success": False, "error": "launch exploded"})
+    reward = tmp_path / "logs" / "verifier" / "reward.txt"
+    reward.parent.mkdir(parents=True)
+    reward.write_text("0.0455\n", encoding="utf-8")
+    _write_json(
+        result,
+        {
+            "success": False,
+            "error": "required Harbor Responses capture is incomplete",
+            "metadata": {
+                "codex_returncode": 0,
+                "verifier_returncode": 0,
+                "trace_v5": {
+                    "required_trace_failed": True,
+                    "failure": "RuntimeError: incomplete capture",
+                },
+            },
+        },
+    )
 
     status = contract.interpret_codex_result(
         result,
         runner_rc=1,
-        reward_path=tmp_path / "missing-reward.txt",
+        reward_path=reward,
     )
 
     assert status.agent_rc == 1
+    assert status.verify_rc == 0
+    assert status.agent_status is contract.AgentStatus.FAILED
+    assert status.failure_kind is contract.FailureKind.AGENT
+    assert "incomplete" in (status.agent_error or "")
+
+
+def test_missing_codex_child_codes_still_reads_reward(
+    tmp_path: Path,
+) -> None:
+    contract = _load_module()
+    result = tmp_path / "rollout_result.json"
+    reward = tmp_path / "logs" / "verifier" / "reward.txt"
+    reward.parent.mkdir(parents=True)
+    reward.write_text("0.1\n", encoding="utf-8")
+    _write_json(result, {"success": False, "error": "capture exploded", "metadata": {}})
+
+    status = contract.interpret_codex_result(
+        result,
+        runner_rc=1,
+        reward_path=reward,
+    )
+
     assert status.verify_rc == 125
     assert status.failure_kind is contract.FailureKind.RUNNER
-    assert status.agent_error == "launch exploded"
-    assert "metadata must be an object" in status.contract_error
+    assert status.benchmark_status is contract.BenchmarkStatus.FAILED
+    assert status.agent_error == "capture exploded"
+
+
+def test_wrapper_prefers_agent_rc_over_verify_rc_125_sentinel() -> None:
+    wrapper = WRAPPER_SCRIPT.read_text(encoding="utf-8")
+    assert 'VERIFY_RC" -eq 125 && "$AGENT_RC" -ne 0' in wrapper
 
 
 def test_receipt_reports_raw_best_score_for_rejected_benchmark(

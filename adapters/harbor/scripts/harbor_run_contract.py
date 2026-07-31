@@ -158,20 +158,34 @@ def interpret_codex_result(
             metadata.get("verifier_returncode"),
             field="metadata.verifier_returncode",
         )
+        agent_error = _error_text(result.get("error"))
+        trace_v5 = metadata.get("trace_v5")
+        # Required Responses capture is part of Harbor agent completion. When
+        # Codex/verifier codes are present but the sealed capture failed, treat
+        # the lane as an agent fault instead of inventing verify_rc=125.
+        if (
+            isinstance(trace_v5, Mapping)
+            and trace_v5.get("required_trace_failed") is True
+            and agent_rc == 0
+        ):
+            agent_rc = runner_rc or 1
+            agent_error = agent_error or _error_text(trace_v5.get("failure"))
         return _classify(
             runner_rc=runner_rc,
             agent_rc=agent_rc,
             verify_rc=verify_rc,
             reward=_read_reward(reward_path),
-            agent_error=_error_text(result.get("error")),
+            agent_error=agent_error,
         )
     except ContractError as exc:
         fallback_rc = runner_rc or 1
+        # Prefer a recorded agent/capture error over wiping the reward path.
+        # verify_rc=125 remains the sentinel only when child metadata is absent.
         return _classify(
             runner_rc=runner_rc,
             agent_rc=fallback_rc,
             verify_rc=125,
-            reward=None,
+            reward=_read_reward(reward_path),
             agent_error=_error_text(result.get("error")) or str(exc),
             contract_error=str(exc),
         )

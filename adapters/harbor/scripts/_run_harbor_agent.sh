@@ -310,6 +310,11 @@ python3 "$SCRIPT_DIR/harbor_run_contract.py" write-receipt \
 
 # Fail the lane if verifier failed. Agent non-zero still continues to verify
 # (candidates may exist), but overall exit is non-zero if either failed.
+# verify_rc=125 is the Harbor contract sentinel for missing child metadata —
+# prefer the real agent_rc so matrices do not report opaque launcher_exit_125.
+if [[ "$VERIFY_RC" -eq 125 && "$AGENT_RC" -ne 0 ]]; then
+  exit "$AGENT_RC"
+fi
 if [[ "$VERIFY_RC" -ne 0 ]]; then
   exit "$VERIFY_RC"
 fi
