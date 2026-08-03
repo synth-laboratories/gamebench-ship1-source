@@ -5,8 +5,8 @@ use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use craftax_gamebench_gold::render::{
-    encode_gif_via_ffmpeg, encode_png_rgb, frame_sha256, render_rgb_frame_from_world,
-    RenderMode, RgbFrame, DEFAULT_RENDER_TILE_SIZE,
+    encode_gif_via_ffmpeg, encode_png_rgb, frame_sha256, render_rgb_frame_from_world, RenderMode,
+    RgbFrame, DEFAULT_RENDER_TILE_SIZE,
 };
 use craftax_gamebench_gold::{run_entry, CraftaxRustSession};
 use serde::Deserialize;
@@ -26,6 +26,9 @@ struct AppState {
     sessions: Arc<Mutex<HashMap<String, RolloutSession>>>,
     replay: ReplaySettings,
 }
+
+/// Matches the `env_family` reported by `/health` and `/info`.
+const TASK_FAMILY: &str = "craftax-singleplayer";
 
 const DEFAULT_TASK: &str = r#"{
   "schema": "gamebench.task.craftax.v1",
@@ -69,6 +72,54 @@ impl IntoResponse for ApiError {
 #[derive(Deserialize)]
 struct ScenarioRequest {
     task: Value,
+}
+
+/// The pool-facing shape of `POST /rollout`.
+///
+/// Two callers post here with two different bodies. The native lane sends
+/// `{"task": {...}}`. The container pool sends its own rollout request, in
+/// which the scenario lives at `env.config.task` and the seed at `env.seed` —
+/// the same convention the Python `react` container already reads. Accepting
+/// both here means neither the pool nor the engine needs a translation shim.
+#[derive(Deserialize)]
+struct RolloutEntryRequest {
+    #[serde(default)]
+    task: Option<Value>,
+    #[serde(default)]
+    env: Option<Value>,
+    #[serde(default)]
+    seed: Option<i64>,
+}
+
+impl RolloutEntryRequest {
+    fn resolve_entry(&self) -> Value {
+        let env_config = self.env.as_ref().and_then(|env| env.get("config"));
+        let mut entry = self
+            .task
+            .clone()
+            .or_else(|| env_config.and_then(|config| config.get("task").cloned()))
+            .unwrap_or_else(default_task);
+        let seed = self
+            .seed
+            .or_else(|| {
+                self.env
+                    .as_ref()
+                    .and_then(|env| env.get("seed"))
+                    .and_then(Value::as_i64)
+            })
+            .or_else(|| {
+                env_config
+                    .and_then(|config| config.get("seed"))
+                    .and_then(Value::as_i64)
+            });
+        // `reset_from_entry` takes its seed override from `entry.seed`. Only
+        // fill it when the entry does not already carry one, so an explicit
+        // scenario always wins over an ambient pool seed.
+        if let (Some(seed), Some(object)) = (seed, entry.as_object_mut()) {
+            object.entry("seed").or_insert(json!(seed));
+        }
+        entry
+    }
 }
 
 #[derive(Deserialize)]
@@ -128,8 +179,10 @@ async fn main() {
     let app = Router::new()
         .route("/health", get(health))
         .route("/info", get(info))
+        .route("/metadata", get(metadata))
+        .route("/task_info", get(task_info))
         .route("/run_scenario", post(run_scenario_route))
-        .route("/rollout", post(run_scenario_route))
+        .route("/rollout", post(rollout_entry_route))
         .route("/rollouts", post(create_rollout))
         .route("/reset", post(create_rollout))
         .route("/rollouts/:rollout_id/step", post(step))
@@ -144,7 +197,10 @@ async fn main() {
         .route("/rollouts/:rollout_id/simulate", post(simulate))
         .route("/rollouts/:rollout_id/render.svg", get(render_svg))
         .route("/rollouts/:rollout_id/render.png", get(render_png_route))
-        .route("/rollouts/:rollout_id/frames/manifest", get(frame_manifest_route))
+        .route(
+            "/rollouts/:rollout_id/frames/manifest",
+            get(frame_manifest_route),
+        )
         .route("/rollouts/:rollout_id/frames/:step", get(frame_png_route))
         .route("/rollouts/:rollout_id/replay.gif", get(replay_gif_route))
         .with_state(state);
@@ -187,8 +243,63 @@ async fn info(State(app): State<AppState>) -> Json<Value> {
     }))
 }
 
+/// Container-pool probe. The pool fetches `/metadata` once per task
+/// materialization to learn what the runtime is and what it can do; it is the
+/// companion to `/info`, which reports live service state.
+async fn metadata(State(app): State<AppState>) -> Json<Value> {
+    Json(json!({
+        "status": "ok",
+        "runtime_id": "gamebench.craftax_singleplayer.gold_rust",
+        "name": "GameBench Craftax single-player Rust gold service",
+        "task_family": TASK_FAMILY,
+        "lane": "rust",
+        "schema": "gamebench.task.craftax.v1",
+        // The engine is a sealed binary: no model, no egress, and no
+        // synth-containers wheel. Trace emission is the caller's job.
+        "emits_trace_v5": false,
+        "capabilities": {
+            "async_rollout": false,
+            "checkpoint_resume": true,
+            "scheduled_checkpoints": false,
+            "replay": app.replay.enabled,
+        },
+        "features": ["checkpoint_resume", "one_shot_rollout", "stepwise_rollout"],
+    }))
+}
+
+#[derive(Deserialize)]
+struct TaskInfoQuery {
+    seed: Option<i64>,
+}
+
+/// Container-pool probe. The pool issues one request per seed and expects a
+/// single object back each time, so this deliberately does not accept a seed
+/// list — `fetch_service_task_info` fans out on the caller's side.
+async fn task_info(Query(query): Query<TaskInfoQuery>) -> Json<Value> {
+    let task = default_task();
+    let seed = query.seed.unwrap_or(0);
+    Json(json!({
+        "seed": seed,
+        "task_family": TASK_FAMILY,
+        "task_id": task.get("task_id").cloned().unwrap_or(Value::Null),
+        "scenario_id": task.get("scenario_id").cloned().unwrap_or(Value::Null),
+        "schema": task.get("schema").cloned().unwrap_or(Value::Null),
+        "reward_mode": "progress",
+        "lane": "rust",
+    }))
+}
+
+/// The native scenario lane. Deliberately strict: a missing `task` is an error
+/// here, not a silent default, because fixture parity runs post this route.
 async fn run_scenario_route(Json(body): Json<ScenarioRequest>) -> Result<Json<Value>, ApiError> {
     Ok(Json(run_entry(&body.task).map_err(bad_request)?))
+}
+
+/// The container-pool lane. Tolerant of the pool's rollout-request shape.
+async fn rollout_entry_route(
+    Json(body): Json<RolloutEntryRequest>,
+) -> Result<Json<Value>, ApiError> {
+    Ok(Json(run_entry(&body.resolve_entry()).map_err(bad_request)?))
 }
 
 async fn create_rollout(
