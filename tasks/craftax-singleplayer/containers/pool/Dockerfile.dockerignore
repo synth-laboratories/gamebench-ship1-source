@@ -1,0 +1,29 @@
+# Build context for containers/pool/Dockerfile.
+#
+# The context is the whole task directory, because the Rust binary resolves
+# `defaults/` relative to its compile-time task_dir. That makes exclusions
+# load-bearing rather than cosmetic: a local `cargo build` in this checkout
+# leaves a ~162 MB `target/` tree that would otherwise ship into the context on
+# every build.
+#
+# Note that `defaults/`, `gold_rust/src`, and `containers/` must NOT be
+# excluded — see the Dockerfile header for why.
+
+**/target/
+**/.venv/
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+.git/
+**/.DS_Store
+
+# Run outputs and captured fixtures: large, and never needed to build.
+runs/
+**/runs/
+data/results/
+
+# The Python gold lane is the authority/debug path and is not used by this
+# image; the policy service talks to the Rust engine over HTTP.
+gold_python/**/__pycache__/
