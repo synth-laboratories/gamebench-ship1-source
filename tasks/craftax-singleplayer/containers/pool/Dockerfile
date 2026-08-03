@@ -32,8 +32,8 @@ ARG CRAFTAX_POLICY_IMAGE=python:3.11-slim
 # `synth-containers` is the Trace V5 authority and is supplied as the
 # release-approved wheel from a named context — never a registry fallback.
 # Bump both together; the sha is what makes the pin real.
-ARG SYNTH_CONTAINERS_VERSION=0.4.0.20260726
-ARG SYNTH_CONTAINERS_WHEEL_SHA256=20d94aed79c00fb42892f4d06adc816e67c624ffe20c92218617a093d15352a9
+ARG SYNTH_CONTAINERS_VERSION=0.4.0.20260730
+ARG SYNTH_CONTAINERS_WHEEL_SHA256=b201f57d99ee3df7a92042b230d140d13f185a8fb83c982db09ccebf6a2d5764
 
 FROM ${CRAFTAX_BUILDER_IMAGE} AS rust-builder
 
@@ -60,12 +60,12 @@ WORKDIR /app
 COPY containers/react/requirements.txt /tmp/requirements.txt
 RUN python -m pip install --no-cache-dir -r /tmp/requirements.txt
 
-COPY --from=synth_containers /synth_containers-${SYNTH_CONTAINERS_VERSION}-py3-none-any.whl /tmp/wheel.whl
-RUN echo "${SYNTH_CONTAINERS_WHEEL_SHA256}  /tmp/wheel.whl" | sha256sum --check --strict - \
-    && python -m pip install --no-cache-dir /tmp/wheel.whl \
+COPY --from=synth_containers /synth_containers-${SYNTH_CONTAINERS_VERSION}-py3-none-any.whl /tmp/synth_containers-${SYNTH_CONTAINERS_VERSION}-py3-none-any.whl
+RUN echo "${SYNTH_CONTAINERS_WHEEL_SHA256}  /tmp/synth_containers-${SYNTH_CONTAINERS_VERSION}-py3-none-any.whl" | sha256sum --check --strict - \
+    && python -m pip install --no-cache-dir /tmp/synth_containers-${SYNTH_CONTAINERS_VERSION}-py3-none-any.whl \
     && python -c "from importlib.metadata import version; \
 assert version('synth-containers') == '${SYNTH_CONTAINERS_VERSION}', version('synth-containers')" \
-    && rm /tmp/wheel.whl
+    && rm /tmp/synth_containers-${SYNTH_CONTAINERS_VERSION}-py3-none-any.whl
 
 # The engine binary, plus the runtime data it resolves relative to its
 # compile-time task_dir. Both paths are load-bearing; see the header.
@@ -79,7 +79,6 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 LABEL ai.synth.containers.version="${SYNTH_CONTAINERS_VERSION}"
 LABEL ai.synth.containers.wheel_sha256="${SYNTH_CONTAINERS_WHEEL_SHA256}"
 LABEL ai.synth.pool.task_family="craftax-singleplayer"
-LABEL ai.synth.pool.interface_mode="synth_http"
 LABEL ai.synth.pool.source_repo="gamebench"
 LABEL ai.synth.pool.source_commit="${CRAFTAX_SOURCE_COMMIT}"
 LABEL ai.synth.pool.source_subpath="${CRAFTAX_SOURCE_SUBPATH}"
