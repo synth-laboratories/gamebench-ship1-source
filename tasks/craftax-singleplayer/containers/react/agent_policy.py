@@ -1,18 +1,44 @@
-"""OpenAI-compatible Craftax ReAct policy."""
+"""OpenAI-compatible Craftax ReAct policy.
+
+Harness knobs (all candidate-tunable via ``AgentPolicyConfig`` or a nested
+``harness`` mapping in the raw policy config):
+
+- ``max_actions_per_call`` / ``min_actions_per_call``: action batch bounds.
+- ``context_window``: how many trailing actions are shown verbatim as
+  ``last_actions`` in the decision prompt.
+- ``enable_compact_history`` + ``compact_after_turns``: when enabled and the
+  action history exceeds ``compact_after_turns``, actions older than the
+  context window are folded into an ``earlier_action_counts`` summary line
+  instead of being dropped silently.
+- ``enable_todo`` / ``enable_scratch`` / ``enable_rules_search``: optional
+  local tools (``todo_list``, ``scratch``, ``search_game_rules``). Tool state
+  persists across decisions within one episode and is surfaced in the prompt.
+- ``max_tool_turns_per_decision``: how many ``{"tool": ...}`` replies are
+  honored per decision before an actions reply is required. Tool sub-calls
+  share the decision's LLM turn budget slot; their token usage is aggregated
+  into the returned ``AgentTurnResult.usage``.
+"""
 
 from __future__ import annotations
 
-import json
 import hashlib
+import json
 import os
 import re
 import uuid
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
 import httpx
 
-from containers.react.trace_emitter import CraftaxTrace
+try:
+    from containers.react.trace_emitter import CraftaxTrace
+except Exception:  # pragma: no cover - trace emission needs the container build
+    # Outside the container build context (e.g. heldout grading from a sealed
+    # checkout) synth-containers is not installed. Tracing is optional there:
+    # callers pass trace=None and no trace events are emitted.
+    CraftaxTrace = None  # type: ignore[assignment, misc]
 
 try:
     from parity import CRAFTAX_ACTIONS
@@ -55,6 +81,21 @@ DEFAULT_SYSTEM_PROMPT = (
 )
 DEFAULT_MIN_ACTIONS_PER_CALL = 5
 DEFAULT_MAX_ACTIONS_PER_CALL = 15
+DEFAULT_CONTEXT_WINDOW = 16
+DEFAULT_COMPACT_AFTER_TURNS = 8
+
+# Facts below are verified against gold_python/engine.py (movement, _do,
+# _craft recipes, achievement rewards). Keep them in sync with the engine.
+GAME_RULES_LINES = (
+    "valid_actions: " + ", ".join(str(action) for action in CRAFTAX_ACTIONS),
+    "movement: left/right/up/down turn the player toward, then move in, that direction on the grid.",
+    "do: interacts with the tile the player is facing (front_tile): tree gives wood, stone gives stone, coal gives coal, iron gives iron (higher tiers need a better pickaxe).",
+    "crafting: every make_* action requires standing next to a crafting_table; make_iron_* additionally requires a nearby furnace.",
+    "recipes: make_wood_pickaxe costs 1 wood; make_stone_pickaxe costs 1 wood + 1 stone; make_iron_pickaxe costs 1 wood + 1 stone + 1 iron + 1 coal; swords cost the same as the matching pickaxe.",
+    "placing: place_table places a crafting table and place_furnace places a furnace on a nearby tile when resources allow.",
+    "reward: each first-time achievement (for example collect_wood, make_wood_pickaxe, collect_stone) grants +1 reward; repeats grant nothing.",
+    "waste: noop, rest, and invalid actions never unlock achievements on their own.",
+)
 
 
 @dataclass
@@ -74,9 +115,16 @@ class AgentPolicyConfig:
     provider: str = "groq"
     min_actions_per_call: int = DEFAULT_MIN_ACTIONS_PER_CALL
     max_actions_per_call: int = DEFAULT_MAX_ACTIONS_PER_CALL
+    context_window: int = DEFAULT_CONTEXT_WINDOW
+    enable_compact_history: bool = False
+    compact_after_turns: int = DEFAULT_COMPACT_AFTER_TURNS
+    enable_todo: bool = False
+    enable_scratch: bool = False
+    enable_rules_search: bool = False
+    max_tool_turns_per_decision: int = 0
 
     @classmethod
-    def from_mapping(cls, raw: dict[str, Any]) -> "AgentPolicyConfig":
+    def from_mapping(cls, raw: dict[str, Any]) -> AgentPolicyConfig:
         provider = str(raw.get("provider", "groq")).strip().lower()
         default_url = DEFAULT_URL
         if provider == "deepseek":
@@ -113,6 +161,12 @@ class AgentPolicyConfig:
             default_model = "deepseek-v4-flash"
         elif provider == "gemini":
             default_model = "gemini-3.1-flash-lite"
+        # Harness knobs may arrive flat or nested under a "harness" mapping
+        # (the factorybench.craftax_harness_prompt.v1 candidate shape).
+        harness = raw.get("harness")
+        knobs: dict[str, Any] = (
+            {**raw, **harness} if isinstance(harness, Mapping) else dict(raw)
+        )
         return cls(
             policy_id=str(raw.get("policy_id", "craftax_react_groq_v1")),
             inference_url=str(
@@ -126,10 +180,23 @@ class AgentPolicyConfig:
             use_lm=bool(raw.get("use_lm", True)),
             provider=provider,
             min_actions_per_call=max(
-                int(raw.get("min_actions_per_call", DEFAULT_MIN_ACTIONS_PER_CALL)), 1
+                int(knobs.get("min_actions_per_call", DEFAULT_MIN_ACTIONS_PER_CALL)), 1
             ),
             max_actions_per_call=max(
-                int(raw.get("max_actions_per_call", DEFAULT_MAX_ACTIONS_PER_CALL)), 1
+                int(knobs.get("max_actions_per_call", DEFAULT_MAX_ACTIONS_PER_CALL)), 1
+            ),
+            context_window=max(
+                int(knobs.get("context_window", DEFAULT_CONTEXT_WINDOW)), 1
+            ),
+            enable_compact_history=bool(knobs.get("enable_compact_history", False)),
+            compact_after_turns=max(
+                int(knobs.get("compact_after_turns", DEFAULT_COMPACT_AFTER_TURNS)), 1
+            ),
+            enable_todo=bool(knobs.get("enable_todo", False)),
+            enable_scratch=bool(knobs.get("enable_scratch", False)),
+            enable_rules_search=bool(knobs.get("enable_rules_search", False)),
+            max_tool_turns_per_decision=max(
+                int(knobs.get("max_tool_turns_per_decision", 0)), 0
             ),
         )
 
@@ -147,6 +214,7 @@ class AgentTurnResult:
     request_event_id: str | None = None
     response_event_id: str | None = None
     proposal_event_id: str | None = None
+    tool_turns: int = 0
 
     @property
     def action(self) -> str:
@@ -291,11 +359,17 @@ def parse_action_text(
 
 async def chat_completion(
     config: AgentPolicyConfig,
-    prompt: str,
+    prompt: str | None = None,
     *,
+    messages: list[dict[str, Any]] | None = None,
     trace: CraftaxTrace | None = None,
     llm_call: int | None = None,
 ) -> dict[str, Any]:
+    if messages is None:
+        messages = [
+            {"role": "system", "content": config.system_prompt},
+            {"role": "user", "content": str(prompt or "")},
+        ]
     call_correlation_id = f"craftax-call-{llm_call or 0}-{uuid.uuid4().hex}"
     headers = {
         "Content-Type": "application/json",
@@ -304,15 +378,13 @@ async def chat_completion(
     }
     body: dict[str, Any] = {
         "model": config.model,
-        "messages": [
-            {"role": "system", "content": config.system_prompt},
-            {"role": "user", "content": prompt},
-        ],
+        "messages": list(messages),
         "temperature": config.temperature,
         "max_tokens": config.max_tokens,
     }
     if config.provider == "deepseek":
         body["thinking"] = {"type": "disabled"}
+    digest_source = json.dumps(messages, sort_keys=True, separators=(",", ":"))
     request_event_id = (
         trace.event(
             "agent.model_call_intent",
@@ -321,7 +393,7 @@ async def chat_completion(
                 "model": config.model,
                 "call_correlation_id": call_correlation_id,
                 "prompt_digest": "sha256:"
-                + hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
+                + hashlib.sha256(digest_source.encode("utf-8")).hexdigest(),
                 "llm_call": llm_call,
             },
             structural={"llm_call": llm_call},
@@ -369,12 +441,169 @@ async def chat_completion(
     }
 
 
+def _parse_tool_call(raw_text: Any) -> tuple[str, dict[str, Any]] | None:
+    """Parse a {"tool": name, "args": {...}} reply; None when it is not one."""
+    try:
+        parsed = json.loads(str(raw_text or "").strip())
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(parsed, dict) or "actions" in parsed:
+        return None
+    name = parsed.get("tool")
+    if not isinstance(name, str) or not name.strip():
+        return None
+    args = parsed.get("args")
+    return name.strip(), dict(args) if isinstance(args, Mapping) else {}
+
+
+def _accumulate_usage(totals: dict[str, int], usage: Mapping[str, Any]) -> None:
+    if not isinstance(usage, Mapping) or not usage:
+        return
+    prompt_tokens = 0
+    for key in ("prompt_tokens", "input_tokens", "prompt_token_count"):
+        if usage.get(key) is not None:
+            prompt_tokens = int(usage[key])
+            break
+    completion_tokens = 0
+    for key in ("completion_tokens", "output_tokens", "candidates_token_count"):
+        if usage.get(key) is not None:
+            completion_tokens = int(usage[key])
+            break
+    totals["prompt_tokens"] += prompt_tokens
+    totals["completion_tokens"] += completion_tokens
+    totals["total_tokens"] += prompt_tokens + completion_tokens
+    totals["llm_sub_calls"] += 1
+
+
 class AgentPolicy:
     ACTOR = "craftax_agent"
 
-    def __init__(self, config: AgentPolicyConfig, *, trace: CraftaxTrace | None = None) -> None:
+    def __init__(
+        self,
+        config: AgentPolicyConfig,
+        *,
+        trace: CraftaxTrace | None = None,
+        completer: Any | None = None,
+    ) -> None:
+        """``completer`` is an injectable async replacement for chat_completion
+        with the same signature; when provided, no API key is required (used by
+        offline grading tests)."""
         self.config = config
         self.trace = trace
+        self._completer = completer or chat_completion
+        self._requires_api_key = completer is None
+        self._todo: list[str] = []
+        self._scratch_note: str = ""
+
+    def _enabled_tools(self) -> dict[str, str]:
+        tools: dict[str, str] = {}
+        if self.config.enable_todo:
+            tools["todo_list"] = 'set or read a short todo list; args {"items":["..."]}'
+        if self.config.enable_scratch:
+            tools["scratch"] = 'save or read a scratch note; args {"note":"..."}'
+        if self.config.enable_rules_search:
+            tools["search_game_rules"] = 'search the game rules; args {"query":"..."}'
+        return tools
+
+    def _run_tool(self, name: str, args: Mapping[str, Any]) -> dict[str, Any]:
+        if name not in self._enabled_tools():
+            return {"error": f"tool_unavailable:{name}"}
+        if name == "todo_list":
+            items = args.get("items")
+            if isinstance(items, list):
+                self._todo = [str(item) for item in items if str(item).strip()][:12]
+            return {"todo_list": list(self._todo)}
+        if name == "scratch":
+            note = args.get("note")
+            if isinstance(note, str) and note.strip():
+                self._scratch_note = note.strip()[:2000]
+            return {"scratch": self._scratch_note}
+        query = str(args.get("query") or "").strip().lower()
+        matches = [
+            line
+            for line in GAME_RULES_LINES
+            if not query or query in line.lower()
+        ][:12]
+        return {"matches": matches}
+
+    def _decision_prompt(
+        self,
+        *,
+        objective: str,
+        observation_text: str,
+        action_history: list[str],
+        steps_remaining: int,
+        llm_calls_remaining: int,
+        valid_actions: list[str],
+        batch_floor: int,
+        batch_cap: int,
+        llm_call: int | None,
+    ) -> str:
+        context_window = max(1, int(self.config.context_window))
+        tail = action_history[-context_window:]
+        lines = [
+            objective,
+            "",
+            observation_text,
+            "",
+            f"last_actions={json.dumps(tail)}",
+        ]
+        dropped = len(action_history) - len(tail)
+        compacted = (
+            dropped > 0
+            and self.config.enable_compact_history
+            and len(action_history) > max(1, int(self.config.compact_after_turns))
+        )
+        if compacted:
+            counts: dict[str, int] = {}
+            for action in action_history[:-context_window]:
+                counts[action] = counts.get(action, 0) + 1
+            lines.append(
+                "earlier_action_counts="
+                + json.dumps(dict(sorted(counts.items())), separators=(",", ":"))
+            )
+        if self.trace is not None and dropped > 0:
+            self.trace.event(
+                "agent.context_compacted",
+                {
+                    "strategy": "tail_window_with_counts"
+                    if compacted
+                    else "tail_window",
+                    "retained_action_count": len(tail),
+                    "dropped_action_count": dropped,
+                    "replacement": "last_actions+earlier_action_counts"
+                    if compacted
+                    else "last_actions",
+                },
+                structural={"llm_call": llm_call},
+            )
+        if self.config.enable_todo and self._todo:
+            lines.append(f"todo_list={json.dumps(self._todo)}")
+        if self.config.enable_scratch and self._scratch_note:
+            lines.append(f"scratch_note={json.dumps(self._scratch_note)}")
+        lines.extend(
+            [
+                f"steps_remaining={steps_remaining}",
+                f"llm_calls_remaining={llm_calls_remaining}",
+                f"valid_actions={', '.join(valid_actions)}",
+            ]
+        )
+        tools = self._enabled_tools()
+        tool_budget = int(self.config.max_tool_turns_per_decision)
+        if tools and tool_budget > 0:
+            listing = "; ".join(f"{name}: {desc}" for name, desc in tools.items())
+            lines.append(
+                f"Optional tools ({listing}). Call one with "
+                '{"tool":"<name>","args":{...}} '
+                f"(at most {tool_budget} tool call(s) this turn), then answer with actions."
+            )
+        lines.extend(
+            [
+                f"Plan {batch_floor}-{batch_cap} valid actions to execute sequentially before the next observation.",
+                'Reply with JSON only, for example {"actions":["do","right","do","left","do"]}.',
+            ]
+        )
+        return "\n".join(lines)
 
     async def choose_action(
         self,
@@ -394,47 +623,82 @@ class AgentPolicy:
         batch_cap = max(1, min(self.config.max_actions_per_call, steps_remaining))
         batch_floor = max(1, min(self.config.min_actions_per_call, batch_cap))
         observation_text = str(readout.get("observation_text") or "")
-        prompt = "\n".join(
-            [
-                objective,
-                "",
-                observation_text,
-                "",
-                f"last_actions={json.dumps(action_history[-16:])}",
-                f"steps_remaining={steps_remaining}",
-                f"llm_calls_remaining={llm_calls_remaining}",
-                f"valid_actions={', '.join(valid_actions)}",
-                f"Plan {batch_floor}-{batch_cap} valid actions to execute sequentially before the next observation.",
-                'Reply with JSON only, for example {"actions":["do","right","do","left","do"]}.',
-            ]
-        )
         if not self.config.use_lm:
             raise RuntimeError(
                 "craftax react policy requires use_lm=true for GELO validation"
             )
-        if not self.config.api_key:
+        if self._requires_api_key and not self.config.api_key:
             raise RuntimeError(
                 f"missing_api_key provider={self.config.provider} policy={self.config.policy_id}"
             )
-        if self.trace is not None and len(action_history) > 16:
-            self.trace.event(
-                "agent.context_compacted",
-                {
-                    "strategy": "tail_window",
-                    "retained_action_count": 16,
-                    "dropped_action_count": len(action_history) - 16,
-                    "replacement": "last_actions",
-                },
-                structural={"llm_call": llm_call},
-            )
-        inference = await chat_completion(
-            self.config,
-            prompt,
-            trace=self.trace,
+        prompt = self._decision_prompt(
+            objective=objective,
+            observation_text=observation_text,
+            action_history=action_history,
+            steps_remaining=steps_remaining,
+            llm_calls_remaining=llm_calls_remaining,
+            valid_actions=valid_actions,
+            batch_floor=batch_floor,
+            batch_cap=batch_cap,
             llm_call=llm_call,
         )
+        messages: list[dict[str, Any]] = [
+            {"role": "system", "content": self.config.system_prompt},
+            {"role": "user", "content": prompt},
+        ]
+        tool_budget = (
+            int(self.config.max_tool_turns_per_decision)
+            if self._enabled_tools()
+            else 0
+        )
+        tool_turns = 0
+        usage_totals = {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0,
+            "llm_sub_calls": 0,
+        }
+        while True:
+            inference = await self._completer(
+                self.config,
+                None,
+                messages=messages,
+                trace=self.trace,
+                llm_call=llm_call,
+            )
+            _accumulate_usage(usage_totals, inference.get("usage", {}))
+            assistant_text = str(inference.get("assistant_text") or "")
+            tool_call = _parse_tool_call(assistant_text)
+            if tool_call is None or tool_turns >= tool_budget:
+                break
+            tool_name, tool_args = tool_call
+            tool_result = self._run_tool(tool_name, tool_args)
+            tool_turns += 1
+            if self.trace is not None:
+                self.trace.event(
+                    "agent.tool_executed",
+                    {
+                        "tool": tool_name,
+                        "args": dict(tool_args),
+                        "result": tool_result,
+                        "tool_turn": tool_turns,
+                    },
+                    structural={"llm_call": llm_call, "tool_turn": tool_turns},
+                )
+            messages.append({"role": "assistant", "content": assistant_text})
+            messages.append(
+                {
+                    "role": "user",
+                    "content": json.dumps(
+                        {"tool_result": {"tool": tool_name, **tool_result}},
+                        sort_keys=True,
+                        separators=(",", ":"),
+                    )
+                    + f"\nNow reply with the actions JSON ({batch_floor}-{batch_cap} actions).",
+                }
+            )
         parsed = parse_actions_text(
-            inference["assistant_text"],
+            assistant_text,
             valid_actions,
             min_actions=batch_floor,
             max_actions=batch_cap,
@@ -445,10 +709,11 @@ class AgentPolicy:
                 "agent.action_proposed",
                 {
                     "actions": list(parsed.actions),
-                    "assistant_text": inference["assistant_text"],
+                    "assistant_text": assistant_text,
                     "invalid_parse": parsed.invalid_parse,
                     "repaired": parsed.repaired,
                     "parse_error": parsed.error,
+                    "tool_turns": tool_turns,
                 },
                 caused_by=tuple(
                     item for item in (inference.get("response_event_id"),) if item
@@ -459,14 +724,15 @@ class AgentPolicy:
         )
         return AgentTurnResult(
             actions=list(parsed.actions),
-            assistant_text=inference["assistant_text"],
+            assistant_text=assistant_text,
             invalid_parse=parsed.invalid_parse,
             repaired=parsed.repaired,
-            usage=dict(inference.get("usage", {})),
+            usage=usage_totals,
             request_id=inference.get("request_id"),
             model=self.config.model,
             finish_reason=inference.get("finish_reason"),
             request_event_id=inference.get("request_event_id"),
             response_event_id=inference.get("response_event_id"),
             proposal_event_id=proposal_event_id,
+            tool_turns=tool_turns,
         )
