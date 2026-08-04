@@ -24,7 +24,7 @@ RUST_DIR = TASK_ROOT / "gold_rust"
 REPL_BINARY = RUST_DIR / "target" / "release" / "craftax_repl"
 PREBUILT_SCHEMA = "gamebench.prebuilt_binary.v1"
 PREBUILT_CANONICAL_REPOSITORY = "https://github.com/JoshuaPurtell/gamebench.git"
-PREBUILT_CANONICAL_COMMIT = "80c630db6ab35e7c9ae2b79eda51ac2bfc16ad6b"
+PREBUILT_CANONICAL_COMMIT = "9017a876e939e9e6c91daa90dbe69e993648181c"
 PREBUILT_BUILDER_IMAGE = (
     "rust@sha256:8fa55b2f3ddf97471ab6a767bfa3f37e6bad0986ba823e75fea57e2a2a5c3073"
 )
