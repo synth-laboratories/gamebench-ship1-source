@@ -1,5 +1,0 @@
-approval_policy = "never"
-openai_base_url = "http://127.0.0.1:57016/v1"
-
-[projects."/Users/joshuapurtell/Documents/GitHub/evals"]
-trust_level = "trusted"

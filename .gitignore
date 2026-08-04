@@ -20,3 +20,17 @@ tasks/craftax-singleplayer/.out/
 # tree is one `git add -A` away from committing live credentials.
 submissions/
 rollout.json
+
+# Codex run residue inside Harbor task bundles. A `codex exec` run with
+# CODEX_HOME pointed at the bundle leaves `.codex/auth.json` behind — the same
+# OAuth access and refresh tokens as above. One such credential was tracked in
+# `adapters/harbor/bundles/code_policy_deo_hillclimb/` and is now revoked.
+# `.cache/` is uv's archive tree from the same runs (~120MB of noise).
+# These directories are run output, never bundle source: the Rhodes container
+# pool packaging step tars a bundle wholesale, so anything left here ships to a
+# container image and to S3.
+.codex/
+adapters/harbor/bundles/*/.cache/
+
+# User-supplied proprietary game ROMs used only as local research oracles.
+roms/
