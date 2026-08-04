@@ -1455,6 +1455,7 @@ class CraftaxEngine:
         if self._spawn_player_projectile("arrow2", "shoot_arrow"):
             self.world.inventory["arrows"] -= 1
             self._unlock("fire_bow")
+            self._append_action("shoot_arrow", "projectile_spawn", {"projectile": "arrow2"})
 
     def _cast_spell(self) -> None:
         assert self.world is not None
@@ -1465,6 +1466,7 @@ class CraftaxEngine:
         if self._spawn_player_projectile("fireball", "cast_spell"):
             self.world.inventory["mana"] -= 2
             self._unlock("cast_spell")
+            self._append_action("cast_spell", "projectile_spawn", {"projectile": "fireball"})
 
     def _drink_potion(self, color: str) -> None:
         assert self.world is not None
@@ -1563,6 +1565,10 @@ class CraftaxEngine:
 
     def _melee(self, entity: Entity, action: str) -> None:
         assert self.world is not None
+        # Entity transitions describe the combat result, not the submitted
+        # action. Keep a primary action event so an action_applied-only replay
+        # tape preserves this world-advancing step.
+        self._append_action(action, "melee", {"target": list(entity.pos), "entity": entity.to_dict()})
         if entity.kind in PASSIVE_MOBS:
             damage = self._damage_against_entity(entity, self._player_damage_vector())
             entity.health -= damage

@@ -898,6 +898,15 @@ impl CraftaxRustSession {
     }
 
     fn apply_melee(&mut self, entity_index: usize, action: &str) -> Result<()> {
+        // Entity transitions describe the combat result, not the submitted
+        // action. Keep a primary action event so an action_applied-only replay
+        // tape preserves this world-advancing step.
+        let entity_before = self.world.entities[entity_index].clone();
+        self.append_action(
+            action,
+            "melee",
+            json!({"target": [entity_before.pos.0, entity_before.pos.1], "entity": entity_before.to_value()}),
+        );
         if mob_class(&self.world.entities[entity_index].kind) == "passive" {
             let damage = self.player_damage()?;
             self.world.entities[entity_index].health -= damage;
@@ -1246,6 +1255,11 @@ impl CraftaxRustSession {
         if self.spawn_player_projectile("fireball", "cast_spell")? {
             self.set_inventory_number("mana", self.inventory_f64("mana")? - 2.0)?;
             self.unlock("cast_spell")?;
+            self.append_action(
+                "cast_spell",
+                "projectile_spawn",
+                json!({"projectile": "fireball"}),
+            );
         }
         Ok(())
     }
@@ -1262,6 +1276,11 @@ impl CraftaxRustSession {
         if self.spawn_player_projectile("arrow2", "shoot_arrow")? {
             self.add_inventory_i64("arrows", -1)?;
             self.unlock("fire_bow")?;
+            self.append_action(
+                "shoot_arrow",
+                "projectile_spawn",
+                json!({"projectile": "arrow2"}),
+            );
         }
         Ok(())
     }
@@ -5248,5 +5267,55 @@ mod tests {
         assert_eq!(session.private["done_reason"], json!("death"));
         assert_eq!(session.private["terminated"], json!(true));
         assert_eq!(session.private["truncated"], json!(false));
+    }
+
+    #[test]
+    fn world_advancing_combat_actions_replay_from_action_events() {
+        let task = json!({
+            "schema": "gamebench.task.craftax.v1",
+            "task_id": "action-applied-replay",
+            "scenario_id": "action-applied-replay",
+            "seed": 0,
+            "world": {
+                "use_default": "fixture_room",
+                "seed": 0,
+                "max_passive_mobs": 0,
+                "max_melee_mobs": 0,
+                "max_ranged_mobs": 0,
+                "initial_state": {
+                    "player": {"pos": [4, 4], "direction": [1, 0], "level": 0},
+                    "inventory": {
+                        "sword": 1,
+                        "mana": 2,
+                        "bow": 1,
+                        "arrows": 1,
+                        "learned_spells": ["fireball"]
+                    },
+                    "entities": [
+                        {"kind": "zombie", "pos": [5, 4], "level": 0, "health": 5}
+                    ]
+                }
+            },
+            "rules": {"base": "symbolic_no_homeostasis"}
+        });
+        let submitted_actions = vec![json!("do"), json!("shoot_arrow"), json!("cast_spell")];
+        let mut original = CraftaxRustSession::reset_from_task(&task, None).unwrap();
+        for action in &submitted_actions {
+            original.step(action).unwrap();
+        }
+        let replay_tape: Vec<Value> = original
+            .events
+            .iter()
+            .filter(|event| event.kind == "action_applied")
+            .filter_map(|event| event.action.clone())
+            .collect();
+        assert_eq!(replay_tape, submitted_actions);
+
+        let original_readout = original.readout();
+        let mut replay = CraftaxRustSession::reset_from_task(&task, None).unwrap();
+        for action in &replay_tape {
+            replay.step(action).unwrap();
+        }
+        assert_eq!(replay.readout(), original_readout);
     }
 }
