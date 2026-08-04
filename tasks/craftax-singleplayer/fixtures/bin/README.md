@@ -26,6 +26,16 @@ The earlier runtime-only Linux/AArch64 binary with SHA-256
 is non-authoritative lineage. It was intentionally replaced because its source
 snapshot was not reachable from canonical GameBench history.
 
+The Linux/AArch64 binary with SHA-256
+`de85d645a3d2c72e9680795c5606974b7f5f105169c9df1172aeaf02bd5fe8af`
+(source snapshot `80c630db6ab35e7c9ae2b79eda51ac2bfc16ad6b`, verified
+2026-07-16) is superseded lineage. Engine feature work on `src/native.rs`
+(ranged hostile projectiles, survival homeostasis and death, day/night and
+descent-gate observability, the `path` glyph) landed without republishing the
+fixture, so its source closure no longer matched the tree and startup
+validation failed closed. The current fixture was rebuilt from the tree at the
+manifest's `canonical_commit` with the same pinned builder image and command.
+
 To publish a replacement, rebuild from the exact manifest source closure with
 the manifest's pinned image and command, then update the binary and every
 affected manifest identity together. Reviewers must prove the rebuilt bytes

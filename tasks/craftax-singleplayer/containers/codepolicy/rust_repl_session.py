@@ -23,8 +23,10 @@ TASK_ROOT = Path(__file__).resolve().parents[2]
 RUST_DIR = TASK_ROOT / "gold_rust"
 REPL_BINARY = RUST_DIR / "target" / "release" / "craftax_repl"
 PREBUILT_SCHEMA = "gamebench.prebuilt_binary.v1"
-PREBUILT_CANONICAL_REPOSITORY = "https://github.com/JoshuaPurtell/gamebench.git"
-PREBUILT_CANONICAL_COMMIT = "9017a876e939e9e6c91daa90dbe69e993648181c"
+PREBUILT_CANONICAL_REPOSITORY = (
+    "https://github.com/synth-laboratories/gamebench-ship1-source.git"
+)
+PREBUILT_CANONICAL_COMMIT = "e3b44d75cc87bfccb20b77ce8437141dea7b25df"
 PREBUILT_BUILDER_IMAGE = (
     "rust@sha256:8fa55b2f3ddf97471ab6a767bfa3f37e6bad0986ba823e75fea57e2a2a5c3073"
 )
