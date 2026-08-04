@@ -3,11 +3,11 @@
   "artifact": {
     "name": "craftax_repl",
     "path": "craftax_repl",
-    "sha256": "15fc4ae57694bb3b1f757abb1fe81c4001c85c2726a4d8d86d4fca7dbdbc334b",
-    "git_blob_sha1": "a2f73a9905d157949a162afac654b3fdb84ec06c",
-    "size_bytes": 1614944,
+    "sha256": "26db701e1cbc5985acffc51d90bdf26e25d21f0bb3dff8f0939673f8cd7854fd",
+    "git_blob_sha1": "8dd6fcbdbf3b4b45953e537f1abd67cce206da52",
+    "size_bytes": 1615000,
     "mode": "0755",
-    "gnu_build_id_sha1": "53418af9e024e192e796b3689d34354ac90821b5",
+    "gnu_build_id_sha1": "1be07bcd2cc331cdf1c5532d7a64efc9d67f728d",
     "executable": true
   },
   "target": {
@@ -19,8 +19,8 @@
     "minimum_glibc": "2.34"
   },
   "source": {
-    "repository": "https://github.com/JoshuaPurtell/gamebench.git",
-    "canonical_commit": "9017a876e939e9e6c91daa90dbe69e993648181c",
+    "repository": "https://github.com/synth-laboratories/gamebench-ship1-source.git",
+    "canonical_commit": "e3b44d75cc87bfccb20b77ce8437141dea7b25df",
     "root": "tasks/craftax-singleplayer/gold_rust",
     "files": {
       "Cargo.lock": "e1f0658310b1d3bb023874538007300031a015e359d5de1092186e20e4d4bd59",
@@ -45,9 +45,9 @@
     ],
     "rustc": "rustc version 1.97.0 (2d8144b78 2026-07-07)",
     "reproducibility": {
-      "verified_at": "2026-08-04T04:52:42Z",
-      "canonical_rebuild_sha256": "15fc4ae57694bb3b1f757abb1fe81c4001c85c2726a4d8d86d4fca7dbdbc334b",
-      "independent_rebuild_sha256": "15fc4ae57694bb3b1f757abb1fe81c4001c85c2726a4d8d86d4fca7dbdbc334b",
+      "verified_at": "2026-08-04T04:56:11Z",
+      "canonical_rebuild_sha256": "26db701e1cbc5985acffc51d90bdf26e25d21f0bb3dff8f0939673f8cd7854fd",
+      "independent_rebuild_sha256": "26db701e1cbc5985acffc51d90bdf26e25d21f0bb3dff8f0939673f8cd7854fd",
       "byte_identical": true
     }
   }
