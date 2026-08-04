@@ -34,3 +34,8 @@ adapters/harbor/bundles/*/.cache/
 
 # User-supplied proprietary game ROMs used only as local research oracles.
 roms/
+
+# Container-pool build staging. `pool/sync_vendor.sh` copies tracked engine
+# trees here so the pool build context (the Dockerfile's own directory) has
+# what it needs. The repo stays the source of truth; nothing is duplicated in git.
+adapters/harbor/bundles/*/vendor/
