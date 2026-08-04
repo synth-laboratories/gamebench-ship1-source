@@ -268,4 +268,24 @@ class ClaimAuthorityClient:
         return token
 
 
-__all__ = ["ClaimAuthorityClient", "ClaimAuthorityError", "ClaimProjection"]
+class StandaloneClaimAuthority:
+    """Claim-authority stand-in for GAMEBENCH_STANDALONE=1 substrates.
+
+    Managed sandboxes (Modal/Daytona) have no CloudDeployment, no fenced
+    claim, and no reachable slotctl backend, so there is no claim state to
+    verify: ``assert_current`` succeeds unconditionally and never performs a
+    network read. Health reporting in standalone mode does NOT use this as
+    proof of anything — the service substitutes a real local readiness check
+    of its own processes instead (see ``ScoreJobManager.health``).
+    """
+
+    def assert_current(self) -> None:
+        return None
+
+
+__all__ = [
+    "ClaimAuthorityClient",
+    "ClaimAuthorityError",
+    "ClaimProjection",
+    "StandaloneClaimAuthority",
+]

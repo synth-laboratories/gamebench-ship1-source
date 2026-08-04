@@ -18,6 +18,10 @@ from typing import Any
 
 
 _POLICY_ENV_ALLOWLIST: frozenset[str] = frozenset()
+# Mirrors containers/scorer_service/standalone.py. This file is loaded by
+# absolute path with spec_from_file_location and executed standalone inside
+# the sandbox, so it cannot import that module; keep the contract identical.
+_STANDALONE_ENV_VAR = "GAMEBENCH_STANDALONE"
 _MAX_IPC_LINE_CHARS = 2 * 1024 * 1024
 _LINUX_SANDBOX_UID = 65534
 _LINUX_SANDBOX_GID = 65534
@@ -39,6 +43,28 @@ class CandidatePolicyFailure(RuntimeError):
 
     def __init__(self, _code: str = _CANDIDATE_FAILURE_CODE) -> None:
         super().__init__(_CANDIDATE_FAILURE_CODE)
+
+
+def _standalone_mode() -> bool:
+    """Whether GAMEBENCH_STANDALONE=1 selected direct (no-bubblewrap) execution.
+
+    The scorer service resolves the runtime mode once at startup
+    (auto-detected from the slot-chain service auth file, or forced with
+    GAMEBENCH_STANDALONE=1) and forwards the decision to episode workers by
+    setting this variable to "1" in their scrubbed environment. Here the
+    variable is therefore the decision itself: only "1" enables direct
+    execution; unset, "", and "0" keep the bubblewrap sandbox. Any other
+    value is an error rather than a silent default, because the two modes
+    have different isolation semantics.
+    """
+    raw = os.environ.get(_STANDALONE_ENV_VAR)
+    if raw is None or raw in {"", "0"}:
+        return False
+    if raw == "1":
+        return True
+    raise RuntimeError(
+        f"{_STANDALONE_ENV_VAR} must be unset, '', '0', or '1'; got {raw!r}"
+    )
 
 
 def _candidate_environment(*, home: str, path: str) -> dict[str, str]:
@@ -118,6 +144,35 @@ def _linux_sandbox_command(*, root: Path, executable: Path) -> tuple[list[str], 
     )
     return command, _candidate_environment(
         home="/home/candidate",
+        path=f"{base_prefix / 'bin'}:/usr/bin:/bin",
+    )
+
+
+def _linux_standalone_command(
+    *, root: Path, executable: Path
+) -> tuple[list[str], dict[str, str]]:
+    """Run the candidate policy server directly, without a bubblewrap layer.
+
+    Used only under GAMEBENCH_STANDALONE=1, which declares that the whole
+    container is already sandboxed by a managed single-tenant substrate
+    (Modal, Daytona, gVisor-style) running this trusted first-party image —
+    nested user/mount/net namespaces are unavailable there, so bwrap cannot
+    run at all. The candidate still gets a scrubbed environment (empty
+    allowlist), a read-only staged workspace containing only policy.py and
+    this server, a read-only empty HOME, and the in-process resource limits
+    from _apply_candidate_resource_limits (including RLIMIT_NPROC=1 on
+    Linux, which denies forking). What it does NOT get, by declaration, is
+    namespace isolation from the rest of this container.
+    """
+    command = [
+        str(executable),
+        str(root / "policy_subprocess.py"),
+        "--serve",
+        str(root / "policy.py"),
+    ]
+    base_prefix = Path(sys.base_prefix).resolve()
+    return command, _candidate_environment(
+        home=str(root / "empty"),
         path=f"{base_prefix / 'bin'}:/usr/bin:/bin",
     )
 
@@ -290,6 +345,8 @@ def _sandbox_command(
         executable = Path(
             str(getattr(sys, "_base_executable", "") or sys.executable)
         ).resolve()
+        if _standalone_mode():
+            return _linux_standalone_command(root=root, executable=executable)
         return _linux_sandbox_command(root=root, executable=executable)
     if sys.platform == "darwin":
         if not container_name:
@@ -528,13 +585,23 @@ class IsolatedPolicyProcess:
             finally:
                 self._sandbox.cleanup()
             raise
+        # The receipt states what actually happened; a standalone run must
+        # never claim bubblewrap isolation it did not have.
+        linux = sys.platform.startswith("linux")
+        standalone = linux and _standalone_mode()
         self.isolation_receipt = {
             "contract": "os_sandbox_observation_action.v2",
             "platform": sys.platform,
-            "sandbox": "bubblewrap" if sys.platform.startswith("linux") else "docker",
-            "network": "unshared" if sys.platform.startswith("linux") else "denied",
+            "sandbox": (
+                ("container_standalone" if standalone else "bubblewrap")
+                if linux
+                else "docker"
+            ),
+            "network": (
+                ("container" if standalone else "unshared") if linux else "denied"
+            ),
             "filesystem": "policy_only_read_only",
-            "policy_uid": _LINUX_SANDBOX_UID,
+            "policy_uid": os.getuid() if standalone else _LINUX_SANDBOX_UID,
             "suite_visible": False,
             "output_visible": False,
             "evaluator_visible": False,

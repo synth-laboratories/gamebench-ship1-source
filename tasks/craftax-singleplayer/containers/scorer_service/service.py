@@ -29,10 +29,16 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import model_validator
 
+from containers.codepolicy.rust_repl_session import ensure_rust_repl_binary
 from containers.scorer_service.authority import ScorerAuthority, ScoringProfile
 from containers.scorer_service.claim_authority import (
     ClaimAuthorityClient,
     ClaimAuthorityError,
+    StandaloneClaimAuthority,
+)
+from containers.scorer_service.standalone import (
+    STANDALONE_ENV_VAR,
+    resolve_standalone_mode,
 )
 from containers.scorer_service.contract import (
     CandidateScoreCancellation,
@@ -92,6 +98,52 @@ class ScoreServiceError(RuntimeError):
         super().__init__(code)
         self.status_code = status_code
         self.code = code
+
+
+def expected_isolation_receipt(*, standalone: bool) -> dict[str, str]:
+    """Sandbox/network values a trusted episode receipt must carry per mode.
+
+    Slot-VM mode re-sandboxes candidate code with bubblewrap inside the
+    container; standalone mode runs it directly because the container itself
+    is the provider's sandbox. The receipt must state which one actually
+    happened — a standalone run claiming "bubblewrap" (or vice versa) is a
+    scorer defect, not a candidate failure.
+    """
+    if standalone:
+        return {"sandbox": "container_standalone", "network": "container"}
+    return {"sandbox": "bubblewrap", "network": "unshared"}
+
+
+def standalone_readiness_checks(
+    *,
+    closed: bool,
+    scorer_binary: Path | None,
+    state_directory: Path,
+    workspace_directory: Path,
+) -> dict[str, bool]:
+    """Real local readiness of this container's own services.
+
+    Standalone mode has no CloudDeployment claim to attest, so health is the
+    truth about what this process can actually do right now: accept jobs
+    (executor not shut down), execute episodes (Rust REPL binary present and
+    executable), and persist job state (both authority directories writable).
+    Nothing here is fabricated from configuration alone.
+    """
+    return {
+        "job_executor_open": not closed,
+        "rust_repl_binary_executable": (
+            scorer_binary is not None
+            and scorer_binary.is_file()
+            and os.access(scorer_binary, os.X_OK)
+        ),
+        "state_directory_writable": (
+            state_directory.is_dir() and os.access(state_directory, os.W_OK | os.X_OK)
+        ),
+        "workspace_directory_writable": (
+            workspace_directory.is_dir()
+            and os.access(workspace_directory, os.W_OK | os.X_OK)
+        ),
+    }
 
 
 class PersistedProcessIdentity(StrictModel):
@@ -209,16 +261,29 @@ class ScoreJobManager:
         self.authority = authority
         self._state_directory = Path(authority.state_directory)
         self._workspace_directory = Path(authority.workspace_directory)
-        self._claim_authority = ClaimAuthorityClient(
-            backend_api_base_url=authority.backend_api_base_url,
-            service_auth_file=Path(authority.service_auth_file),
-            timeout_seconds=authority.backend_claim_read_timeout_seconds,
-            environment=authority.environment,
-            cloud_slot=authority.cloud_slot,
-            deployment_id=authority.deployment_id,
-            claim_id=authority.claim_id,
-            fencing_token=authority.fencing_token,
-        )
+        self._standalone = resolve_standalone_mode(
+            service_auth_file=Path(authority.service_auth_file)
+        ).enabled
+        self._closed = False
+        self._claim_authority: ClaimAuthorityClient | StandaloneClaimAuthority
+        if self._standalone:
+            # Standalone substrates have no fenced CloudDeployment claim and
+            # no reachable slotctl backend; the service_auth_file is not read.
+            # Health substitutes a real local readiness check (see health()).
+            self._claim_authority = StandaloneClaimAuthority()
+            self._standalone_binary: Path | None = ensure_rust_repl_binary()
+        else:
+            self._claim_authority = ClaimAuthorityClient(
+                backend_api_base_url=authority.backend_api_base_url,
+                service_auth_file=Path(authority.service_auth_file),
+                timeout_seconds=authority.backend_claim_read_timeout_seconds,
+                environment=authority.environment,
+                cloud_slot=authority.cloud_slot,
+                deployment_id=authority.deployment_id,
+                claim_id=authority.claim_id,
+                fencing_token=authority.fencing_token,
+            )
+            self._standalone_binary = None
         self._claim_authority.assert_current()
         self._lock = threading.RLock()
         self._jobs: dict[str, _Job] = {}
@@ -235,6 +300,7 @@ class ScoreJobManager:
     def close(self) -> None:
         """Terminate only scorer-owned worker process groups, then stop dispatch."""
         with self._lock:
+            self._closed = True
             processes = [job.process for job in self._jobs.values() if job.process]
         for process in processes:
             if process is not None and process.poll() is None:
@@ -417,6 +483,8 @@ class ScoreJobManager:
             return receipt
 
     def health(self) -> dict[str, Any]:
+        if self._standalone:
+            return self._standalone_health()
         try:
             self._claim_authority.assert_current()
             claim_current = True
@@ -446,6 +514,48 @@ class ScoreJobManager:
             "terminal_jobs_awaiting_cleanup": residue,
         }
 
+    def _standalone_health(self) -> dict[str, Any]:
+        """Health for GAMEBENCH_STANDALONE=1: readiness of local services.
+
+        There is no fenced CloudDeployment claim on a managed sandbox, so
+        ``claim_current`` is reported as None (not fabricated as True) and
+        the healthy/unhealthy verdict comes from probing what this container
+        can actually do right now.
+        """
+        with self._lock:
+            closed = self._closed
+            active = sum(
+                job.result is None and job.process is not None and job.process.poll() is None
+                for job in self._jobs.values()
+            )
+            queued = sum(job.result is None and job.process is None for job in self._jobs.values())
+            residue = sum(job.result is not None and job.cleanup is None for job in self._jobs.values())
+        checks = standalone_readiness_checks(
+            closed=closed,
+            scorer_binary=self._standalone_binary,
+            state_directory=self._state_directory,
+            workspace_directory=self._workspace_directory,
+        )
+        healthy = all(checks.values())
+        return {
+            "schema_version": "gamebench.craftax.scorer_health.v1",
+            "status": "healthy" if healthy else "unhealthy",
+            "mode": "standalone",
+            "claim_current": None,
+            "standalone_checks": checks,
+            "environment": self.authority.environment,
+            "cloud_slot": self.authority.cloud_slot,
+            "deployment_id": self.authority.deployment_id,
+            "claim_id": self.authority.claim_id,
+            "fencing_token": self.authority.fencing_token,
+            "gamebench_source_sha": self.authority.gamebench_source_sha,
+            "scorer_source_sha": self.authority.scorer_source_sha,
+            "scorer_image_digest": self.authority.scorer_image_digest,
+            "active_jobs": active,
+            "queued_jobs": queued,
+            "terminal_jobs_awaiting_cleanup": residue,
+        }
+
     def info(self) -> dict[str, Any]:
         profile_authority = [
             profile.model_dump(mode="json") for profile in self.authority.profiles
@@ -454,7 +564,11 @@ class ScoreJobManager:
             "schema_version": "gamebench.craftax.scorer_info.v1",
             "service": "craftax_candidate_scorer",
             "lane": "rust",
-            "candidate_execution": "linux_bwrap_no_network",
+            "candidate_execution": (
+                "container_standalone_direct"
+                if self._standalone
+                else "linux_bwrap_no_network"
+            ),
             "environment_allowlist": [],
             "profile_authority_sha256": canonical_json_sha256(profile_authority),
             "profile_count": len(profile_authority),
@@ -529,6 +643,13 @@ class ScoreJobManager:
                     "PYTHONNOUSERSITE": "1",
                     "TMPDIR": str(worker_tmp),
                 }
+                if self._standalone:
+                    # The worker env is scrubbed, so the resolved mode
+                    # decision must be forwarded explicitly for the episode
+                    # runner to skip its bubblewrap layer (see the shared
+                    # policy_subprocess). Slot mode forwards nothing, which
+                    # the runner reads as "use bubblewrap" — unchanged.
+                    worker_env[STANDALONE_ENV_VAR] = "1"
                 start_gate_read_fd, start_gate_write_fd = os.pipe()
                 process = subprocess.Popen(
                     [
@@ -580,8 +701,14 @@ class ScoreJobManager:
                         with contextlib.suppress(OSError):
                             os.close(descriptor)
             self._persist(job)
+            # The request contract carries no episode_parallelism field; the
+            # scorer's own validated authority (pinned to 1 for process-group
+            # fencing) is the execution parallelism, exactly as passed to the
+            # worker input above. Reading it off the request raised
+            # AttributeError in this executor thread, leaving the job
+            # "accepted" forever with an unreaped worker.
             episode_batches = math.ceil(
-                len(job.request.seeds) / job.request.episode_parallelism
+                len(job.request.seeds) / self.authority.episode_parallelism
             )
             timeout_seconds = (
                 job.request.timeout_seconds * episode_batches
@@ -744,12 +871,13 @@ class ScoreJobManager:
             if not isinstance(summary, dict) or summary.get("seed") != expected_seed:
                 raise ValueError("score report changed seed order")
             isolation = summary.get("policy_isolation")
+            expected_isolation = expected_isolation_receipt(standalone=self._standalone)
             if (
                 not isinstance(isolation, dict)
                 or isolation.get("contract") != "os_sandbox_observation_action.v2"
                 or isolation.get("platform") != "linux"
-                or isolation.get("sandbox") != "bubblewrap"
-                or isolation.get("network") != "unshared"
+                or isolation.get("sandbox") != expected_isolation["sandbox"]
+                or isolation.get("network") != expected_isolation["network"]
                 or isolation.get("suite_visible") is not False
                 or isolation.get("output_visible") is not False
                 or isolation.get("evaluator_visible") is not False
@@ -1063,6 +1191,14 @@ class ScoreJobManager:
 
 def create_app(authority: ScorerAuthority) -> FastAPI:
     """Construct the service only after exact runtime authority verification."""
+    resolution = resolve_standalone_mode(
+        service_auth_file=Path(authority.service_auth_file)
+    )
+    print(
+        f"gamebench scorer mode={resolution.mode}: {resolution.reason}",
+        file=sys.stderr,
+        flush=True,
+    )
     authority.validate_runtime()
     manager = ScoreJobManager(authority)
     app = FastAPI(
@@ -1129,7 +1265,11 @@ def create_app(authority: ScorerAuthority) -> FastAPI:
                 detail={"error_code": exc.code},
             ) from exc
 
-    @app.get("/health")
+    # response_model=None is required: with the pinned fastapi (0.115.x) a
+    # union return annotation containing JSONResponse is not a valid response
+    # field and create_app would raise at route registration, so the service
+    # could never boot at all.
+    @app.get("/health", response_model=None)
     def health() -> dict[str, Any] | JSONResponse:
         payload = manager.health()
         if payload["status"] != "healthy":

@@ -29,6 +29,7 @@ from containers.scorer_service.contract import (
     require_sha1,
     require_sha256,
 )
+from containers.scorer_service.standalone import resolve_standalone_mode
 
 _MAX_REQUEST_METADATA_BYTES = 64 * 1024
 
@@ -115,7 +116,9 @@ class ScorerAuthority(StrictModel):
     request_bearer_token_sha256: str
     backend_claim_read_timeout_seconds: float
     expected_platform_system: Literal["Linux"]
-    expected_platform_machine: Literal["x86_64"]
+    # x86_64 is the Cloud Slot chain; aarch64 is admitted for standalone
+    # substrates (and local arm64 proof builds) via the prebuilt fixture lane.
+    expected_platform_machine: Literal["x86_64", "aarch64"]
     state_directory: str
     workspace_directory: str
     max_candidate_bytes: int
@@ -265,50 +268,65 @@ class ScorerAuthority(StrictModel):
                 "scorer runtime architecture mismatch: "
                 f"expected={self.expected_platform_machine}, actual={platform.machine()}"
             )
-        status_fields = {
-            key.strip(): value.strip()
-            for key, value in (
-                line.split(":", 1)
-                for line in Path("/proc/self/status").read_text(encoding="utf-8").splitlines()
-                if ":" in line
-            )
-        }
-        if status_fields.get("Seccomp") != "0":
-            raise RuntimeError(
-                "scorer runtime must use the declared seccomp=unconfined security context"
-            )
-        bwrap = shutil.which("bwrap")
-        if not bwrap:
-            raise RuntimeError("scorer runtime requires bubblewrap")
-        sandbox_probe_command = [
-            bwrap,
-            "--unshare-all",
-            "--die-with-parent",
-            "--new-session",
-            "--ro-bind",
-            "/usr",
-            "/usr",
-        ]
-        for system_path in (Path("/bin"), Path("/lib"), Path("/lib64")):
-            if system_path.is_symlink():
-                sandbox_probe_command.extend(
-                    ("--symlink", os.readlink(system_path), str(system_path))
+        if not resolve_standalone_mode(
+            service_auth_file=Path(self.service_auth_file)
+        ).enabled:
+            # Slot-VM mode: candidate code is re-sandboxed inside this
+            # container with bubblewrap, which needs seccomp=unconfined and
+            # nested-namespace privileges. Prove both before serving.
+            #
+            # In standalone mode (auto-detected when the slot-chain service
+            # auth file is absent, or forced with GAMEBENCH_STANDALONE=1)
+            # this whole block is skipped: managed sandboxes (Modal/Daytona,
+            # gVisor-style) cannot grant nested namespace or seccomp
+            # privileges, and skipping the inner bubblewrap layer is safe
+            # there because the container itself is the provider's sandbox —
+            # single-tenant, running only this trusted first-party image.
+            # See standalone.py.
+            status_fields = {
+                key.strip(): value.strip()
+                for key, value in (
+                    line.split(":", 1)
+                    for line in Path("/proc/self/status").read_text(encoding="utf-8").splitlines()
+                    if ":" in line
                 )
-            elif system_path.exists():
-                sandbox_probe_command.extend(
-                    ("--ro-bind", str(system_path), str(system_path))
+            }
+            if status_fields.get("Seccomp") != "0":
+                raise RuntimeError(
+                    "scorer runtime must use the declared seccomp=unconfined security context"
                 )
-        sandbox_probe_command.extend(
-            ("--proc", "/proc", "--dev", "/dev", "/usr/bin/true")
-        )
-        sandbox_probe = subprocess.run(
-            sandbox_probe_command,
-            check=False,
-            capture_output=True,
-            timeout=5,
-        )
-        if sandbox_probe.returncode != 0:
-            raise RuntimeError("scorer runtime bubblewrap isolation preflight failed")
+            bwrap = shutil.which("bwrap")
+            if not bwrap:
+                raise RuntimeError("scorer runtime requires bubblewrap")
+            sandbox_probe_command = [
+                bwrap,
+                "--unshare-all",
+                "--die-with-parent",
+                "--new-session",
+                "--ro-bind",
+                "/usr",
+                "/usr",
+            ]
+            for system_path in (Path("/bin"), Path("/lib"), Path("/lib64")):
+                if system_path.is_symlink():
+                    sandbox_probe_command.extend(
+                        ("--symlink", os.readlink(system_path), str(system_path))
+                    )
+                elif system_path.exists():
+                    sandbox_probe_command.extend(
+                        ("--ro-bind", str(system_path), str(system_path))
+                    )
+            sandbox_probe_command.extend(
+                ("--proc", "/proc", "--dev", "/dev", "/usr/bin/true")
+            )
+            sandbox_probe = subprocess.run(
+                sandbox_probe_command,
+                check=False,
+                capture_output=True,
+                timeout=5,
+            )
+            if sandbox_probe.returncode != 0:
+                raise RuntimeError("scorer runtime bubblewrap isolation preflight failed")
         manifest_bytes = PREBUILT_MANIFEST.read_bytes()
         if hashlib.sha256(manifest_bytes).hexdigest() != self.scorer_fixture_manifest_sha256:
             raise RuntimeError("scorer fixture manifest SHA mismatch")
