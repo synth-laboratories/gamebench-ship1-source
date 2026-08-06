@@ -90,16 +90,65 @@ from pathlib import Path
 
 path = Path(sys.argv[1])
 rollout = json.loads(path.read_text(encoding="utf-8"))
+agent = rollout.get("harbor_agent") or {}
+model = str(agent.get("model_name") or "").strip()
+if model == "muse-spark-1.2" or model.endswith("/muse-spark-1.2"):
+    api_key = (
+        os.environ.get("META_MODEL_API_KEY", "").strip()
+        or os.environ.get("MODEL_API_KEY", "").strip()
+    )
+    if not api_key:
+        print(
+            "Meta Model API auth unavailable: set META_MODEL_API_KEY",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    # Prefer the canonical name in the child env so Codex Harbor reads one key.
+    os.environ["META_MODEL_API_KEY"] = api_key
+    rollout["codex_provider"] = {
+        "provider_id": "meta",
+        "auth_mode": "provider_api_key",
+        "api_key_env": "META_MODEL_API_KEY",
+        "base_url": "https://api.meta.ai/v1",
+        "wire_api": "responses",
+    }
+    rollout["codex_auth_source"] = "meta_model_api_key"
+    path.write_text(json.dumps(rollout, indent=2) + "\n", encoding="utf-8")
+    raise SystemExit(0)
+if model.startswith("openrouter/"):
+    if not os.environ.get("OPENROUTER_API_KEY", "").strip():
+        print("OpenRouter auth unavailable: set OPENROUTER_API_KEY", file=sys.stderr)
+        sys.exit(1)
+    rollout["codex_provider"] = {
+        "provider_id": "openrouter",
+        "auth_mode": "provider_api_key",
+        "api_key_env": "OPENROUTER_API_KEY",
+        "base_url": "https://openrouter.ai/api/v1",
+        "wire_api": "responses",
+    }
+    rollout["codex_auth_source"] = "openrouter_api_key"
+    path.write_text(json.dumps(rollout, indent=2) + "\n", encoding="utf-8")
+    raise SystemExit(0)
+if model == "deepseek-v4-flash" or model.endswith("/deepseek-v4-flash"):
+    if not os.environ.get("DEEPSEEK_API_KEY", "").strip():
+        print("DeepSeek auth unavailable: set DEEPSEEK_API_KEY", file=sys.stderr)
+        sys.exit(1)
+    rollout["codex_provider"] = {
+        "provider_id": "deepseek",
+        "auth_mode": "provider_api_key",
+        "api_key_env": "DEEPSEEK_API_KEY",
+        "base_url": "https://api.deepseek.com/",
+        "wire_api": "responses",
+    }
+    rollout["codex_auth_source"] = "deepseek_api_key"
+    path.write_text(json.dumps(rollout, indent=2) + "\n", encoding="utf-8")
+    raise SystemExit(0)
 auth_path = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex")) / "auth.json"
-api_key = os.environ.get("OPENAI_API_KEY", "").strip()
-if api_key:
-    rollout["openai_api_key"] = api_key
-    rollout["codex_auth_source"] = "openai_api_key"
-elif auth_path.is_file():
+if auth_path.is_file():
     rollout["codex_auth_json_b64"] = base64.b64encode(auth_path.read_bytes()).decode("ascii")
     rollout["codex_auth_source"] = "host_codex_auth_json"
 else:
-    print("Codex auth unavailable: set OPENAI_API_KEY or run `codex login`", file=sys.stderr)
+    print("Codex auth unavailable: run `codex login`", file=sys.stderr)
     sys.exit(1)
 path.write_text(json.dumps(rollout, indent=2) + "\n", encoding="utf-8")
 PY
