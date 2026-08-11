@@ -90,6 +90,44 @@ from pathlib import Path
 
 path = Path(sys.argv[1])
 rollout = json.loads(path.read_text(encoding="utf-8"))
+agent = rollout.get("harbor_agent") or {}
+model = str(agent.get("model_name") or "").strip()
+if model.startswith("synth-cloud/") or model.startswith("synth_cloud/"):
+    api_key = os.environ.get("SYNTH_API_KEY", "").strip()
+    if not api_key:
+        print(
+            "Synth cloud auth unavailable: set SYNTH_API_KEY",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    base_url = (
+        os.environ.get("SYNTH_RESPONSES_GATEWAY_OPENAI_BASE_URL", "").strip()
+        or os.environ.get("OPENAI_BASE_URL", "").strip()
+    )
+    if not base_url:
+        gateway_root = os.environ.get("SYNTH_RESPONSES_GATEWAY_URL", "").strip().rstrip(
+            "/"
+        )
+        if gateway_root:
+            base_url = f"{gateway_root}/api/v1"
+    if not base_url:
+        print(
+            "Synth cloud base URL unavailable: set "
+            "SYNTH_RESPONSES_GATEWAY_OPENAI_BASE_URL "
+            "(or SYNTH_RESPONSES_GATEWAY_URL / OPENAI_BASE_URL)",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    rollout["codex_provider"] = {
+        "provider_id": "synth_cloud",
+        "auth_mode": "provider_api_key",
+        "api_key_env": "SYNTH_API_KEY",
+        "base_url": base_url.rstrip("/"),
+        "wire_api": "responses",
+    }
+    rollout["codex_auth_source"] = "synth_cloud_api_key"
+    path.write_text(json.dumps(rollout, indent=2) + "\n", encoding="utf-8")
+    raise SystemExit(0)
 auth_path = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex")) / "auth.json"
 api_key = os.environ.get("OPENAI_API_KEY", "").strip()
 if api_key:
