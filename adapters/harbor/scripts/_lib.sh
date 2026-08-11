@@ -92,6 +92,30 @@ path = Path(sys.argv[1])
 rollout = json.loads(path.read_text(encoding="utf-8"))
 agent = rollout.get("harbor_agent") or {}
 model = str(agent.get("model_name") or "").strip()
+if model.startswith("laguna-local/"):
+    api_key = os.environ.get("SYNTH_LAGUNA_API_KEY", "").strip()
+    if not api_key:
+        print(
+            "Local Laguna auth unavailable: set SYNTH_LAGUNA_API_KEY",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    base_url = os.environ.get(
+        "SYNTH_LAGUNA_BASE_URL", "http://127.0.0.1:7333/v1"
+    ).strip().rstrip("/")
+    if not base_url:
+        print("Local Laguna base URL is empty", file=sys.stderr)
+        sys.exit(1)
+    rollout["codex_provider"] = {
+        "provider_id": "laguna_local",
+        "auth_mode": "provider_api_key",
+        "api_key_env": "SYNTH_LAGUNA_API_KEY",
+        "base_url": base_url,
+        "wire_api": "responses",
+    }
+    rollout["codex_auth_source"] = "laguna_local_api_key"
+    path.write_text(json.dumps(rollout, indent=2) + "\n", encoding="utf-8")
+    raise SystemExit(0)
 if model == "muse-spark-1.2" or model.endswith("/muse-spark-1.2"):
     api_key = (
         os.environ.get("META_MODEL_API_KEY", "").strip()
@@ -113,6 +137,42 @@ if model == "muse-spark-1.2" or model.endswith("/muse-spark-1.2"):
         "wire_api": "responses",
     }
     rollout["codex_auth_source"] = "meta_model_api_key"
+    path.write_text(json.dumps(rollout, indent=2) + "\n", encoding="utf-8")
+    raise SystemExit(0)
+if model.startswith("synth-cloud/") or model.startswith("synth_cloud/"):
+    api_key = os.environ.get("SYNTH_API_KEY", "").strip()
+    if not api_key:
+        print(
+            "Synth cloud auth unavailable: set SYNTH_API_KEY",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    base_url = (
+        os.environ.get("SYNTH_RESPONSES_GATEWAY_OPENAI_BASE_URL", "").strip()
+        or os.environ.get("OPENAI_BASE_URL", "").strip()
+    )
+    if not base_url:
+        gateway_root = os.environ.get("SYNTH_RESPONSES_GATEWAY_URL", "").strip().rstrip(
+            "/"
+        )
+        if gateway_root:
+            base_url = f"{gateway_root}/api/v1"
+    if not base_url:
+        print(
+            "Synth cloud base URL unavailable: set "
+            "SYNTH_RESPONSES_GATEWAY_OPENAI_BASE_URL "
+            "(or SYNTH_RESPONSES_GATEWAY_URL / OPENAI_BASE_URL)",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    rollout["codex_provider"] = {
+        "provider_id": "synth_cloud",
+        "auth_mode": "provider_api_key",
+        "api_key_env": "SYNTH_API_KEY",
+        "base_url": base_url.rstrip("/"),
+        "wire_api": "responses",
+    }
+    rollout["codex_auth_source"] = "synth_cloud_api_key"
     path.write_text(json.dumps(rollout, indent=2) + "\n", encoding="utf-8")
     raise SystemExit(0)
 if model.startswith("openrouter/"):
