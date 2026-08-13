@@ -1,0 +1,45 @@
+{
+  "task": {
+    "schema": "gamebench.task.sokoban.v1",
+    "task_id": "parity_mini",
+    "map": {
+      "source": "inline",
+      "grid": [
+        "#####",
+        "#@$.#",
+        "#####"
+      ]
+    },
+    "rules": {
+      "base": "sparse_sokoban"
+    }
+  },
+  "seed": 0,
+  "actions": [
+    "right"
+  ],
+  "expected": {
+    "reset": {
+      "ascii": "#####\n#@$.#\n#####",
+      "grid_hash": "33abd76821e455d7",
+      "reward": 0.0,
+      "terminated": false,
+      "achievements": [],
+      "config_hash": "sha256:8a394a9a0194f5f0ccfcde0895a088e4db9a36de1d99e8af598289b0e3a4d446",
+      "episode_id": "e975703ab53c245268e7148a7b9f4282"
+    },
+    "after_actions": {
+      "ascii": "#####\n# @*#\n#####",
+      "grid_hash": "1358d72987b72f1f",
+      "reward": 1.09,
+      "terminated": true,
+      "achievements": [
+        "first_box_on_target",
+        "first_push",
+        "level_complete"
+      ],
+      "boxes_on_target": 1,
+      "step_index": 1
+    }
+  }
+}

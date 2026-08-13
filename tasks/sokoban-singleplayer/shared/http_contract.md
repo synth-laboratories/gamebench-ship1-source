@@ -12,7 +12,10 @@ Both gold lanes expose the same local development surface.
 | `POST /rollouts/{id}/simulate` | `{ "blob": "...", "sequences": [["right"], ["up", "right"]] }` | batch branch results without mutating the live rollout |
 | `GET /rollouts/{id}/readout` | none | symbolic readout |
 | `GET /rollouts/{id}/event_log` | none | structured NEV and legacy strings |
-| `GET /rollouts/{id}/render.svg` | none | SVG board image, Python lane |
-| `GET /rollouts/{id}/render.png` | none | PNG board image, Python lane |
+| `GET /rollouts/{id}/render.svg` | none | SVG board image, **Python lane only** |
+| `GET /rollouts/{id}/render.png` | none | PNG board image, **Python lane only** |
 
 Actions are `up`, `down`, `left`, and `right`.
+
+**Rust lane:** `gold_rust` binary `sokoban_gold` (default port `8093`) implements all routes above except render.*.
+**Python lane:** `gold_python` (default port `8092`) implements the full table including render.*.
