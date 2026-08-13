@@ -1253,6 +1253,11 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                 json!({"role": "system", "content": system_prompt}),
                 json!({"role": "user", "content": opening_content}),
             ];
+            // What the model conditions on for the coming turn. Conversation
+            // mode has no per-turn user message — turn 0 reads the opening and
+            // every later turn reads the previous tool result — so a training
+            // example cannot reconstruct the teacher's input without this.
+            let mut conditioning: String = opening.clone();
             // Index 2 is the pinned scratchpad when enabled. Compaction keeps
             // the head intact, so this slot is never summarized away.
             let head_len = if scratchpad_enabled { 3 } else { 2 };
@@ -1338,6 +1343,7 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                     .and_then(Value::as_str)
                     .unwrap_or("")
                     .to_string();
+                let prompt_for_turn = conditioning.clone();
                 let used_tool_call = tool_calls.as_ref().is_some_and(|c| !c.is_empty());
                 match tool_calls {
                     Some(calls) if !calls.is_empty() => {
@@ -1433,6 +1439,7 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                                     )
                                 }
                             );
+                            conditioning = result.clone();
                             messages.push(json!({
                                 "role": "tool",
                                 "tool_call_id": call.get("id").and_then(Value::as_str).unwrap_or(""),
@@ -1481,14 +1488,13 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                         let readout = engine.readout();
                         let obs = readout.get("observation_text")
                             .and_then(Value::as_str).unwrap_or("");
-                        messages.push(json!({
-                            "role": "user",
-                            "content": format!(
-                                "Use the `interact` tool next time. executed={}\n\n{}",
-                                serde_json::to_string(&executed).unwrap_or_else(|_| "[]".into()),
-                                obs
-                            )
-                        }));
+                        let recovery = format!(
+                            "Use the `interact` tool next time. executed={}\n\n{}",
+                            serde_json::to_string(&executed).unwrap_or_else(|_| "[]".into()),
+                            obs
+                        );
+                        conditioning = recovery.clone();
+                        messages.push(json!({"role": "user", "content": recovery}));
                     }
                 }
 
@@ -1556,6 +1562,12 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                     "assistant": assistant_text,
                     "actions": executed,
                     "planned": planned,
+                    // The teacher's exact conditioning input for this turn.
+                    // Curation trains on this; `observation_text` alone drops
+                    // the budgets and the executed-action feedback the teacher
+                    // actually read.
+                    "prompt": prompt_for_turn,
+                    "system_prompt": system_prompt,
                     // The observation this turn conditioned on. Without it a
                     // turn cannot become an SFT example — curation rejects
                     // "no observation to condition on" — and in image mode the
