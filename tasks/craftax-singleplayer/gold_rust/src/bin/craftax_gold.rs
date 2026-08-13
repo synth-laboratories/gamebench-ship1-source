@@ -175,6 +175,8 @@ async fn main() {
         .route("/rollouts/:rollout_id/simulate", post(simulate))
         .route("/rollouts/:rollout_id/render.svg", get(render_svg))
         .route("/rollouts/:rollout_id/render.png", get(render_png_route))
+        // What the agent actually sees: FOV window + vitals/inventory HUD.
+        .route("/rollouts/:rollout_id/observation.png", get(observation_png_route))
         .route("/rollouts/:rollout_id/frames/manifest", get(frame_manifest_route))
         .route("/rollouts/:rollout_id/frames/:step", get(frame_png_route))
         .route("/rollouts/:rollout_id/replay.gif", get(replay_gif_route))
@@ -335,6 +337,30 @@ fn is_optimizer_rollout_body(body: &Value) -> bool {
             .is_some_and(|s| s.contains("goex") || s.contains("gepa") || s.contains("rollout_request"))
         || body.get("submission_mode").is_some()
         || body.get("policy").is_some()
+}
+
+
+/// Render the agent's current view as a base64 PNG, cropped to the same window
+/// the symbolic observation shows.
+///
+/// `render_rgb_frame_from_world` draws the whole world. Handing that to a model
+/// would leak every unexplored tile and quietly break partial observability, so
+/// the frame is cropped to (player ± view_radius) — the same 9x9 window
+/// `observation_text` describes. Text and image modes then carry the same
+/// information in different modalities, which is the only way the comparison
+/// means anything.
+fn observation_png_b64(
+    world: &craftax_gamebench_gold::CraftaxWorld,
+    readout: &Value,
+    view_radius: i64,
+    tile: u32,
+) -> String {
+    use base64::Engine as _;
+    let _ = readout;
+    let (w, h, rows) =
+        craftax_gamebench_gold::render_observation_frame(world, view_radius, tile);
+    let png = encode_png_rgb(w, h, &rows);
+    base64::engine::general_purpose::STANDARD.encode(png)
 }
 
 async fn optimizer_or_scenario_rollout(
@@ -585,6 +611,34 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
     // Optional durable scratchpad. The compaction summary is model-written and
     // lossy; a scratchpad is agent-authored and pinned, so a plan survives
     // verbatim no matter how many times the middle is summarized away.
+    // How the agent perceives the world: symbolic text, a rendered frame, or
+    // both. The frame is cropped to the same view window as the text.
+    let observation_mode = policy_cfg
+        .get("observation_mode")
+        .and_then(Value::as_str)
+        .unwrap_or("text")
+        .to_string();
+    let render_tile_size = policy_cfg
+        .get("render_tile_size")
+        .and_then(Value::as_u64)
+        .unwrap_or(32)
+        .clamp(8, 64) as u32;
+    let view_radius = policy_cfg
+        .get("view_radius")
+        .and_then(Value::as_i64)
+        .unwrap_or(4)
+        .clamp(1, 24);
+    // Frames are re-sent on every turn until compaction, so an unbounded
+    // transcript costs ~1M tokens per episode and eventually exceeds the
+    // request timeout. Only the most recent frames carry usable information;
+    // older ones become a placeholder.
+    let keep_recent_frames = policy_cfg
+        .get("keep_recent_frames")
+        .and_then(Value::as_u64)
+        .unwrap_or(2)
+        .clamp(1, 16) as usize;
+    let send_image = observation_mode == "image" || observation_mode == "both";
+    let send_text = observation_mode != "image";
     let scratchpad_enabled = policy_cfg
         .get("enable_scratchpad")
         .and_then(Value::as_bool)
@@ -611,7 +665,7 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
             });
         }
         let client = reqwest::Client::builder()
-            .timeout(std::time::Duration::from_secs(120))
+            .timeout(std::time::Duration::from_secs(600))
             .build()
             .map_err(|err| ApiError {
                 status: StatusCode::INTERNAL_SERVER_ERROR,
@@ -678,9 +732,22 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                     .and_then(Value::as_str)
                     .unwrap_or("")
             );
+            let opening_content = if send_image {
+                let mut parts = vec![json!({"type": "text", "text": opening})];
+                parts.push(json!({
+                    "type": "image_url",
+                    "image_url": {"url": format!(
+                        "data:image/png;base64,{}",
+                        observation_png_b64(&engine.world, &engine.readout(), view_radius, render_tile_size)
+                    )}
+                }));
+                json!(parts)
+            } else {
+                json!(opening)
+            };
             let mut messages: Vec<Value> = vec![
                 json!({"role": "system", "content": system_prompt}),
-                json!({"role": "user", "content": opening}),
+                json!({"role": "user", "content": opening_content}),
             ];
             // Index 2 is the pinned scratchpad when enabled. Compaction keeps
             // the head intact, so this slot is never summarized away.
@@ -818,20 +885,59 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                             let readout = engine.readout();
                             let obs = readout.get("observation_text")
                                 .and_then(Value::as_str).unwrap_or("");
+                            // A `tool` message must be a plain string, so the
+                            // frame cannot ride along here. It follows as its
+                            // own user turn.
                             let result = format!(
-                                "executed={}\nsteps_remaining={}\nllm_calls_remaining={}\n\n{}",
+                                "executed={}\nsteps_remaining={}\nllm_calls_remaining={}{}",
                                 serde_json::to_string(&executed).unwrap_or_else(|_| "[]".into()),
                                 max_steps.saturating_sub(
                                     engine.private.get("step_index")
                                         .and_then(Value::as_u64).unwrap_or(0) as usize),
                                 llm_remaining.saturating_sub(1),
-                                obs
+                                if send_text {
+                                    format!("\n\n{obs}")
+                                } else {
+                                    // Visual-only. The frame carries terrain,
+                                    // vitals and inventory, but the reference
+                                    // Craftax screen has no achievement row —
+                                    // so achievements are the one fact that
+                                    // must come through as text, or the agent
+                                    // cannot see its own progress at all.
+                                    let unlocked = engine
+                                        .private
+                                        .get("achievements")
+                                        .and_then(Value::as_array)
+                                        .map(|a| {
+                                            a.iter()
+                                                .filter_map(Value::as_str)
+                                                .collect::<Vec<_>>()
+                                                .join(", ")
+                                        })
+                                        .unwrap_or_default();
+                                    format!(
+                                        "\n\nachievements: {}",
+                                        if unlocked.is_empty() { "none yet" } else { &unlocked }
+                                    )
+                                }
                             );
                             messages.push(json!({
                                 "role": "tool",
                                 "tool_call_id": call.get("id").and_then(Value::as_str).unwrap_or(""),
                                 "content": result
                             }));
+                            if send_image {
+                                messages.push(json!({
+                                    "role": "user",
+                                    "content": [
+                                        {"type": "text", "text": "Current view:"},
+                                        {"type": "image_url", "image_url": {"url": format!(
+                                            "data:image/png;base64,{}",
+                                            observation_png_b64(&engine.world, &engine.readout(), view_radius, render_tile_size)
+                                        )}}
+                                    ]
+                                }));
+                            }
                         }
                     }
                     _ => {
@@ -872,6 +978,41 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                     }
                 }
 
+                // Keep only the most recent frames as pixels; older image
+                // messages keep their text and lose the payload.
+                if send_image {
+                    let mut seen = 0usize;
+                    for message in messages.iter_mut().rev() {
+                        let has_image = message
+                            .get("content")
+                            .and_then(Value::as_array)
+                            .is_some_and(|parts| {
+                                parts.iter().any(|p| {
+                                    p.get("type").and_then(Value::as_str) == Some("image_url")
+                                })
+                            });
+                        if !has_image {
+                            continue;
+                        }
+                        seen += 1;
+                        if seen > keep_recent_frames {
+                            let text = message
+                                .get("content")
+                                .and_then(Value::as_array)
+                                .map(|parts| {
+                                    parts
+                                        .iter()
+                                        .filter_map(|p| p.get("text").and_then(Value::as_str))
+                                        .collect::<Vec<_>>()
+                                        .join(" ")
+                                })
+                                .unwrap_or_default();
+                            message["content"] =
+                                json!(format!("{text} [frame dropped — superseded]"));
+                        }
+                    }
+                }
+
                 llm_calls += 1;
                 turns.push(json!({
                     "llm_call": llm_calls,
@@ -902,7 +1043,32 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                     }
                     if start > head_len {
                         let middle: Vec<Value> = messages[head_len..start].to_vec();
-                        let transcript = serde_json::to_string(&middle)
+                        // Strip base64 frames before summarizing. Serializing
+                        // the raw transcript would ship every accumulated image
+                        // to the summarizer as a data URI — enormous, and the
+                        // summarizer cannot use pixels in a text brief anyway.
+                        let stripped: Vec<Value> = middle
+                            .iter()
+                            .map(|m| {
+                                let mut m = m.clone();
+                                if let Some(parts) = m.get("content").and_then(Value::as_array).cloned() {
+                                    let text: Vec<String> = parts
+                                        .iter()
+                                        .map(|part| match part.get("type").and_then(Value::as_str) {
+                                            Some("image_url") => "<frame omitted>".to_string(),
+                                            _ => part
+                                                .get("text")
+                                                .and_then(Value::as_str)
+                                                .unwrap_or("")
+                                                .to_string(),
+                                        })
+                                        .collect();
+                                    m["content"] = json!(text.join(" "));
+                                }
+                                m
+                            })
+                            .collect();
+                        let transcript = serde_json::to_string(&stripped)
                             .unwrap_or_else(|_| "[]".into());
                         let summary_req = json!({
                             "model": model,
@@ -1155,6 +1321,10 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                     "conversation_carried": true,
                     "summarized": !compactions.is_empty(),
                     "compaction_count": compactions.len(),
+                    "observation_mode": observation_mode,
+                    "render_tile_size": render_tile_size,
+                    "keep_recent_frames": keep_recent_frames,
+                    "view_radius": view_radius,
                     "scratchpad_enabled": scratchpad_enabled,
                     "scratchpad_writes": scratchpad_writes,
                     "scratchpad_chars": scratchpad.len(),
@@ -1780,6 +1950,23 @@ async fn render_png_route(
             RenderMode::Auto,
         );
         encode_png_rgb(frame.0, frame.1, &frame.2)
+    };
+    Ok(([(header::CONTENT_TYPE, "image/png")], png).into_response())
+}
+
+async fn observation_png_route(
+    State(app): State<AppState>,
+    Path(rollout_id): Path<String>,
+) -> Result<Response, ApiError> {
+    let png = {
+        let guard = app.sessions.lock().unwrap();
+        let session = guard.get(&rollout_id).ok_or_else(rollout_not_found)?;
+        let (w, h, rows) = craftax_gamebench_gold::render_observation_frame(
+            &session.engine.world,
+            4,
+            DEFAULT_RENDER_TILE_SIZE * 2,
+        );
+        encode_png_rgb(w, h, &rows)
     };
     Ok(([(header::CONTENT_TYPE, "image/png")], png).into_response())
 }
