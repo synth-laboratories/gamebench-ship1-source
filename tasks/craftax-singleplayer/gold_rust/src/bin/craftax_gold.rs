@@ -9,10 +9,12 @@ use craftax_gamebench_gold::render::{
     encode_gif_via_ffmpeg, encode_png_rgb, frame_sha256, render_rgb_frame_from_world,
     RenderMode, RgbFrame, DEFAULT_RENDER_TILE_SIZE,
 };
-use craftax_gamebench_gold::{run_entry, CraftaxRustSession};
+use craftax_gamebench_gold::{run_entry, CraftaxRustSession, EventRecord};
 use serde::Deserialize;
 use serde_json::{json, Value};
+use sha2::{Digest, Sha256};
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 use std::convert::Infallible;
@@ -444,6 +446,61 @@ async fn call_policy_lm(
     })
 }
 
+
+/// Where rollout event logs are spooled. Override with GAMEBENCH_CRAFTAX_NEV_DIR.
+fn nev_dir() -> PathBuf {
+    std::env::var("GAMEBENCH_CRAFTAX_NEV_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            // task_dir() is crate-private; derive the same location from the
+            // manifest so the spool sits with the task, not the cwd.
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .parent()
+                .map(|p| p.join(".out/nev"))
+                .unwrap_or_else(|| PathBuf::from(".out/nev"))
+        })
+}
+
+/// Write a rollout's NEV log to disk and describe where it went.
+///
+/// Returns a reference even on failure, with `error` set — losing evidence
+/// silently is how a run ends up unauditable, so a spool failure is reported in
+/// the rollout record rather than swallowed.
+fn spool_nev(rollout_id: &str, events: &[EventRecord]) -> Value {
+    let dir = nev_dir();
+    let path = dir.join(format!("{rollout_id}.jsonl"));
+    let mut body = String::new();
+    for event in events {
+        match serde_json::to_string(event) {
+            Ok(line) => {
+                body.push_str(&line);
+                body.push('\n');
+            }
+            Err(err) => {
+                return json!({
+                    "count": events.len(),
+                    "error": format!("serialize failed: {err}"),
+                });
+            }
+        }
+    }
+    let digest = format!("sha256:{:x}", Sha256::digest(body.as_bytes()));
+    if let Err(err) = std::fs::create_dir_all(&dir).and_then(|_| std::fs::write(&path, &body)) {
+        return json!({
+            "count": events.len(),
+            "digest": digest,
+            "error": format!("write {} failed: {err}", path.display()),
+        });
+    }
+    json!({
+        "count": events.len(),
+        "digest": digest,
+        "path": path.to_string_lossy(),
+        "url": format!("/rollouts/{rollout_id}/events"),
+        "bytes": body.len(),
+    })
+}
+
 async fn optimizer_or_scenario_rollout(
     State(app): State<AppState>,
     Json(body): Json<Value>,
@@ -716,6 +773,12 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
     // Retries for transient upstream failures. A lost seed is not neutral: the
     // rollouts that fail are the long ones, so silent drops bias a comparison
     // toward early deaths.
+    // Events are the only durable record this path produces; default to
+    // returning them. Opt out for throughput runs that do not need evidence.
+    let include_events = policy_cfg
+        .get("include_events")
+        .and_then(Value::as_bool)
+        .unwrap_or(true);
     let policy_lm_attempts = policy_cfg
         .get("policy_lm_attempts")
         .and_then(Value::as_u64)
@@ -1343,6 +1406,7 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
         .get("step_index")
         .and_then(Value::as_u64)
         .unwrap_or(0);
+    let nev_ref = spool_nev(&rollout_id, &engine.events);
     let record = json!({
         "status": "completed",
         "rollout_id": rollout_id,
@@ -1405,7 +1469,19 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
         },
         "usage": usage_total,
         "turns": turns,
+        // Spooled to disk, not inlined: a 1000-step rollout produces thousands
+        // of events and nobody wants them in every response body. Retrieve via
+        // GET /rollouts/{id}/events.
+        //
+        // Previously this shipped a literal [] while the engine — which had
+        // accumulated the whole log — was dropped when the request returned.
+        // The events were not merely unreported, they were destroyed, so every
+        // optimizer, GEPA and SFT rollout ran with no durable step evidence.
+        //
+        // NOTE: this is the engine's NEV log, not Trace V5. Trace V5 emission
+        // (CraftaxTrace) exists only in the Python ReAct container.
         "events": [],
+        "nev": nev_ref,
         "scheduled_checkpoints": [],
         "final_achievements": engine.private.get("achievements").cloned().unwrap_or(json!([])),
         "metadata": {
@@ -1856,6 +1932,38 @@ async fn event_log(
     State(app): State<AppState>,
     Path(rollout_id): Path<String>,
 ) -> Result<Json<Value>, ApiError> {
+    // A live session wins; otherwise fall back to the spool, which is the only
+    // record an optimizer rollout leaves behind.
+    let live = {
+        let guard = app.sessions.lock().unwrap();
+        guard.get(&rollout_id).map(|session| {
+            json!({
+                "rollout_id": rollout_id,
+                "source": "session",
+                "events": session.engine.events,
+                "legacy": session.engine.legacy_strings(),
+                "nev_cursor": session.engine.events.len(),
+            })
+        })
+    };
+    if let Some(payload) = live {
+        return Ok(Json(payload));
+    }
+    let path = nev_dir().join(format!("{rollout_id}.jsonl"));
+    if let Ok(body) = std::fs::read_to_string(&path) {
+        let events: Vec<Value> = body
+            .lines()
+            .filter(|line| !line.trim().is_empty())
+            .filter_map(|line| serde_json::from_str(line).ok())
+            .collect();
+        return Ok(Json(json!({
+            "rollout_id": rollout_id,
+            "source": "spool",
+            "path": path.to_string_lossy(),
+            "nev_cursor": events.len(),
+            "events": events,
+        })));
+    }
     let guard = app.sessions.lock().unwrap();
     let session = guard.get(&rollout_id).ok_or_else(rollout_not_found)?;
     Ok(Json(json!({
