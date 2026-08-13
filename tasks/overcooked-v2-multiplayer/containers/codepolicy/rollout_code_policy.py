@@ -9,9 +9,13 @@ from pathlib import Path
 from typing import Any, Callable
 
 TASK_ROOT = Path(__file__).resolve().parents[2]
-for extra in (TASK_ROOT, TASK_ROOT / "gold_python", TASK_ROOT / "shared", TASK_ROOT / "policies"):
-    if str(extra) not in sys.path:
-        sys.path.insert(0, str(extra))
+# Force task gold_python ahead of any inherited PYTHONPATH / shadowed `core`.
+_task_paths = (TASK_ROOT, TASK_ROOT / "gold_python", TASK_ROOT / "shared", TASK_ROOT / "policies")
+for extra in reversed(_task_paths):
+    text = str(extra)
+    while text in sys.path:
+        sys.path.remove(text)
+    sys.path.insert(0, text)
 
 from agent_io import format_joint_observation, normalize_joint_action
 from engine import OvercookedV2Engine

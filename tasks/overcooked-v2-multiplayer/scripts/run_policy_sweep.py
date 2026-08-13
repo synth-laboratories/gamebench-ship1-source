@@ -18,7 +18,26 @@ for path in (TASK_DIR, TASK_DIR / "gold_python", TASK_DIR / "shared"):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from containers.codepolicy.rollout_code_policy import compile_check_policy, load_policy_module, rollout_code_policy
+# Load by absolute path — never `import containers…`. Harbor workspaces can
+# otherwise pick up a shadowed/empty `containers` namespace and flake with
+# ModuleNotFoundError during verifier hillclimb.
+import importlib.util
+
+_ROLLOUT_PATH = TASK_DIR / "containers" / "codepolicy" / "rollout_code_policy.py"
+if not _ROLLOUT_PATH.is_file():
+    raise FileNotFoundError(f"missing overcooked rollout helper: {_ROLLOUT_PATH}")
+_spec = importlib.util.spec_from_file_location(
+    "overcooked_v2_rollout_code_policy",
+    _ROLLOUT_PATH,
+)
+if _spec is None or _spec.loader is None:
+    raise ImportError(f"cannot load overcooked rollout helper: {_ROLLOUT_PATH}")
+_rollout = importlib.util.module_from_spec(_spec)
+sys.modules[_spec.name] = _rollout
+_spec.loader.exec_module(_rollout)
+compile_check_policy = _rollout.compile_check_policy
+load_policy_module = _rollout.load_policy_module
+rollout_code_policy = _rollout.rollout_code_policy
 
 
 def policy_sha256(path: Path) -> str:

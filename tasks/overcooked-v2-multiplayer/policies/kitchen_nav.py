@@ -2,11 +2,18 @@
 
 from __future__ import annotations
 
+import time
 from collections import Counter, deque
 from dataclasses import dataclass, field
 from typing import Any
 
 WAIT = {"kind": "wait"}
+# Joint search is exponential in depth. Keep defaults cheap enough that a full
+# policy_dev sweep (9 scenarios × 120 steps) finishes in seconds, not hours.
+_DEFAULT_SEARCH_DEPTH = 2
+_DEFAULT_SEARCH_MAX_JOINT = 24
+_DEFAULT_SEARCH_MAX_NODES = 3_000
+_DEFAULT_SEARCH_MAX_SECONDS = 0.25
 AGENT_SPAWN_CHARS = frozenset({"0", "1", "2", "3"})
 DIRECTIONS = {
     "north": (-1, 0),
@@ -593,23 +600,56 @@ def enumerate_joint_actions(
     return stack
 
 
-def search_best_joint_action(engine: Any, *, depth: int = 8, max_joint: int = 40) -> dict[str, dict[str, Any]]:
+@dataclass
+class _SearchBudget:
+    max_nodes: int
+    deadline: float
+    nodes: int = 0
+    exhausted: bool = False
+
+    def spend(self) -> bool:
+        self.nodes += 1
+        if self.nodes > self.max_nodes or time.perf_counter() >= self.deadline:
+            self.exhausted = True
+            return False
+        return True
+
+
+def search_best_joint_action(
+    engine: Any,
+    *,
+    depth: int = _DEFAULT_SEARCH_DEPTH,
+    max_joint: int = _DEFAULT_SEARCH_MAX_JOINT,
+    max_nodes: int = _DEFAULT_SEARCH_MAX_NODES,
+    max_seconds: float = _DEFAULT_SEARCH_MAX_SECONDS,
+) -> dict[str, dict[str, Any]]:
     readout = engine.symbolic_readout()
     joint_valid = readout.get("joint_valid_actions") or engine.joint_valid_actions()
     agent_ids = sorted(joint_valid.keys())
     if not agent_ids:
         return {}
 
+    depth = max(0, int(depth))
+    max_joint = max(1, int(max_joint))
+    budget = _SearchBudget(
+        max_nodes=max(1, int(max_nodes)),
+        deadline=time.perf_counter() + max(0.01, float(max_seconds)),
+    )
     candidates = enumerate_joint_actions(joint_valid, max_joint=max_joint)
     best_score = float("-inf")
     best_joint: dict[str, dict[str, Any]] = {agent_id: WAIT for agent_id in agent_ids}
+    inner_max_joint = min(24, max_joint)
 
     for joint in candidates:
+        if budget.exhausted:
+            break
         if all(action == WAIT for action in joint.values()):
             continue
+        if not budget.spend():
+            break
         sim = engine.clone_for_sim()
         sim.step(joint)
-        score = _search_score(sim, depth - 1)
+        score = _search_score(sim, depth - 1, budget=budget, max_joint=inner_max_joint)
         if score > best_score:
             best_score = score
             best_joint = dict(joint)
@@ -620,16 +660,28 @@ def search_best_joint_action(engine: Any, *, depth: int = 8, max_joint: int = 40
     return best_joint
 
 
-def _search_score(engine: Any, depth: int) -> float:
+def _search_score(
+    engine: Any,
+    depth: int,
+    *,
+    budget: _SearchBudget,
+    max_joint: int = 24,
+) -> float:
     if depth <= 0 or engine.private.terminated or engine.private.truncated:
+        return score_sim_engine(engine)
+    if budget.exhausted:
         return score_sim_engine(engine)
     readout = engine.symbolic_readout()
     joint_valid = readout.get("joint_valid_actions") or engine.joint_valid_actions()
     best = score_sim_engine(engine)
-    for joint in enumerate_joint_actions(joint_valid, max_joint=24):
+    for joint in enumerate_joint_actions(joint_valid, max_joint=max_joint):
+        if budget.exhausted:
+            break
         if all(action == WAIT for action in joint.values()):
             continue
+        if not budget.spend():
+            break
         sim = engine.clone_for_sim()
         sim.step(joint)
-        best = max(best, _search_score(sim, depth - 1))
+        best = max(best, _search_score(sim, depth - 1, budget=budget, max_joint=max_joint))
     return best
