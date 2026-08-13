@@ -50,11 +50,52 @@ class RolloutRequest(BaseModel):
     policy: RolloutPolicySpec = Field(default_factory=RolloutPolicySpec)
 
 
+def _world_identity(task: dict[str, Any]) -> dict[str, Any]:
+    """Name the world that was actually played.
+
+    A Craftax score is meaningless without this. The 2026-08-12 Luna run
+    reported `reward 0.98` with no record that it was a 16x16, 3-level board
+    with 16% of vanilla tree density and a 120-step budget, so the number read
+    as a Craftax capability result. Every rollout now carries its world so that
+    confusion cannot recur, and `is_reference_world` says in one boolean
+    whether the score is comparable to a real Craftax run.
+    """
+    world = task.get("world") or {}
+    densities = world.get("densities") or {}
+    width = int(world.get("width", 48))
+    height = int(world.get("height", 48))
+    levels = int(world.get("levels", 9))
+    max_steps = int(task.get("max_steps") or world.get("max_steps") or 0)
+    # Vanilla Craftax: full board, all nine levels, unscaled densities.
+    is_reference = (
+        width >= 48
+        and height >= 48
+        and levels >= 9
+        and not densities
+    )
+    return {
+        "preset": world.get("use_default"),
+        "width": width,
+        "height": height,
+        "levels": levels,
+        "max_steps": max_steps,
+        "densities": densities,
+        "is_reference_world": is_reference,
+        "scaled_resources": sorted(densities.keys()),
+    }
+
+
 def _load_task(env_config: dict[str, Any]) -> dict[str, Any]:
     if isinstance(env_config.get("task"), dict):
         task = dict(env_config["task"])
     else:
-        task_path = str(env_config.get("task_path", "tasks/policy_dev_template.json"))
+        # Real Craftax (48x48, 9 levels, vanilla densities), never a fixture
+        # room. The old default was `policy_dev_template.json` -> `fixture_room`
+        # (9x9, 2 levels, tree density 0.0), so any caller that omitted
+        # `task_path` silently evaluated a unit-test arena and reported it as a
+        # Craftax score. Every real caller passes task_path explicitly; only the
+        # forgetful one landed here.
+        task_path = str(env_config.get("task_path", "tasks/craftax_default_template.json"))
         path = TASK_DIR / task_path
         if not path.is_file():
             raise HTTPException(
@@ -974,7 +1015,9 @@ async def _execute_goex_rollout(
                 "final_objective_labels": labels,
                 "policy_llm_turns": llm_calls,
                 "achievement_count": len(_achievement_names(readout)),
+                "world": _world_identity(task),
             },
+            "world": _world_identity(task),
             "objective_labels": labels,
             "final_objective_labels": labels,
             "state": final_state,

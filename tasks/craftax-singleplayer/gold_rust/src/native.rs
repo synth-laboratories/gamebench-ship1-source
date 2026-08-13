@@ -288,14 +288,7 @@ impl CraftaxWorld {
                 if let Some(entity) = self.entities.iter().find(|entity| {
                     entity.mask && entity.level == self.player_level && entity.pos == (x, y)
                 }) {
-                    row.push(
-                        entity
-                            .kind
-                            .chars()
-                            .next()
-                            .unwrap_or('?')
-                            .to_ascii_uppercase(),
-                    );
+                    row.push(entity_char(&entity.kind));
                     continue;
                 }
                 if let Some(projectile) = self
@@ -686,7 +679,7 @@ impl CraftaxRustSession {
     pub fn readout(&self) -> Value {
         let observation = self.observation();
         let valid_actions = self.valid_actions();
-        let observation_text = observation_text(&observation, &valid_actions);
+        let observation_text = observation_text(&observation);
         json!({
             "schema": READOUT_SCHEMA,
             "env_family": ENV_FAMILY,
@@ -898,6 +891,15 @@ impl CraftaxRustSession {
     }
 
     fn apply_melee(&mut self, entity_index: usize, action: &str) -> Result<()> {
+        // Entity transitions describe the combat result, not the submitted
+        // action. Keep a primary action event so an action_applied-only replay
+        // tape preserves this world-advancing step.
+        let entity_before = self.world.entities[entity_index].clone();
+        self.append_action(
+            action,
+            "melee",
+            json!({"target": [entity_before.pos.0, entity_before.pos.1], "entity": entity_before.to_value()}),
+        );
         if mob_class(&self.world.entities[entity_index].kind) == "passive" {
             let damage = self.player_damage()?;
             self.world.entities[entity_index].health -= damage;
@@ -1078,11 +1080,7 @@ impl CraftaxRustSession {
             return Ok(());
         }
         if !self.pay(&costs)? {
-            self.append_noop(
-                action,
-                "missing_resources",
-                json!({"costs": costs_json(&costs)}),
-            );
+            self.append_missing_resources(action, &costs)?;
             return Ok(());
         }
         if action == "place_torch" {
@@ -1134,11 +1132,7 @@ impl CraftaxRustSession {
             return Ok(());
         }
         if !self.pay(recipe.costs)? {
-            self.append_noop(
-                action,
-                "missing_resources",
-                json!({"costs": costs_json(recipe.costs)}),
-            );
+            self.append_missing_resources(action, recipe.costs)?;
             return Ok(());
         }
         if recipe.target == "pickaxe" || recipe.target == "sword" {
@@ -1246,6 +1240,11 @@ impl CraftaxRustSession {
         if self.spawn_player_projectile("fireball", "cast_spell")? {
             self.set_inventory_number("mana", self.inventory_f64("mana")? - 2.0)?;
             self.unlock("cast_spell")?;
+            self.append_action(
+                "cast_spell",
+                "projectile_spawn",
+                json!({"projectile": "fireball"}),
+            );
         }
         Ok(())
     }
@@ -1262,6 +1261,11 @@ impl CraftaxRustSession {
         if self.spawn_player_projectile("arrow2", "shoot_arrow")? {
             self.add_inventory_i64("arrows", -1)?;
             self.unlock("fire_bow")?;
+            self.append_action(
+                "shoot_arrow",
+                "projectile_spawn",
+                json!({"projectile": "arrow2"}),
+            );
         }
         Ok(())
     }
@@ -1600,14 +1604,7 @@ impl CraftaxRustSession {
                 if pos == self.world.player_pos {
                     row.push('P');
                 } else if let Some(index) = self.entity_at(pos, self.world.player_level) {
-                    row.push(
-                        self.world.entities[index]
-                            .kind
-                            .chars()
-                            .next()
-                            .unwrap_or('?')
-                            .to_ascii_uppercase(),
-                    );
+                    row.push(entity_char(&self.world.entities[index].kind));
                 } else if let Some(projectile) = self.projectile_at(pos, self.world.player_level) {
                     row.push(projectile_char(&projectile.kind, &projectile.owner));
                 } else {
@@ -2580,6 +2577,33 @@ impl CraftaxRustSession {
         Ok(())
     }
 
+    /// Report what the recipe cost, what is held, and what is short.
+    ///
+    /// A bare "missing_resources" leaves the policy to rediscover the recipe
+    /// from a system prompt that is thousands of tokens behind it.  Used by
+    /// both the crafting and the placement path so they cannot drift.
+    fn append_missing_resources(&mut self, action: &str, costs: &[(&str, i64)]) -> Result<()> {
+        let mut held = Map::new();
+        let mut short = Map::new();
+        for (key, amount) in costs {
+            let have = self.inventory_i64(key)?;
+            held.insert((*key).to_string(), json!(have));
+            if have < *amount {
+                short.insert((*key).to_string(), json!(*amount - have));
+            }
+        }
+        self.append_noop(
+            action,
+            "missing_resources",
+            json!({
+                "costs": costs_json(costs),
+                "held": Value::Object(held),
+                "short": Value::Object(short),
+            }),
+        );
+        Ok(())
+    }
+
     fn pay(&mut self, costs: &[(&str, i64)]) -> Result<bool> {
         for (key, amount) in costs {
             if self.inventory_i64(key)? < *amount {
@@ -2761,7 +2785,10 @@ pub fn scenario_to_task(entry: &Value) -> Result<Value> {
         "task_id": object.get("task_id").and_then(Value::as_str).unwrap_or(scenario_id),
         "scenario_id": scenario_id,
         "seed": object.get("seed").cloned().unwrap_or_else(|| json!(0)),
-        "world": object.get("world").cloned().unwrap_or_else(|| json!({"use_default": "policy_dev_small"})),
+        // Reference Craftax unless the scenario names another board. The dev
+        // board is a fast smoke fixture, not a default anyone should land on
+        // by omission.
+        "world": object.get("world").cloned().unwrap_or_else(|| json!({"use_default": "craftax_default"})),
         "rules": object.get("rules").cloned().unwrap_or_else(|| json!({"base": "symbolic_no_homeostasis"})),
         "readouts": object.get("readouts").cloned().unwrap_or_else(|| json!({"profile": "symbolic_compact"})),
     }))
@@ -3270,15 +3297,15 @@ fn generate_smooth_level(
             let mut water = water_noise[y as usize][x as usize] + water_proximity - 1.0;
             if water_density <= 0.0 {
                 water = -1.0;
-            } else if (water_density - 1.0).abs() > f64::EPSILON {
-                water = (water - config.water_threshold) * water_density + config.water_threshold;
             }
-            let mut block = if water > config.water_threshold {
+            let (water_cut, sand_cut) =
+                water_cuts(config.water_threshold, config.sand_threshold, water_density);
+            let mut block = if water > water_cut {
                 config.sea_block
             } else {
                 config.default_block
             };
-            if water > config.sand_threshold && block != config.sea_block {
+            if water > sand_cut && block != config.sea_block {
                 block = config.coast_block;
             }
 
@@ -4229,6 +4256,10 @@ fn choose_ladder(
     candidates[index as usize]
 }
 
+/// A `densities` entry scales how much of a feature the generator produces,
+/// relative to the vanilla amount.  `1.0` is vanilla, `0.0` removes the
+/// feature, `0.5` is half as much.  It is never an absolute fraction of the
+/// map.
 fn density(densities: Option<&Value>, key: &str, default: f64) -> f64 {
     densities
         .and_then(|value| value.get(key))
@@ -4240,6 +4271,33 @@ fn density(densities: Option<&Value>, key: &str, default: f64) -> f64 {
 fn tree_uniform_threshold(threshold: f64, density: f64) -> f64 {
     let chance = (1.0 - threshold).max(0.0) * density.max(0.0);
     (1.0 - chance).clamp(0.0, 1.0)
+}
+
+/// Scale the sea and coast cut points instead of distorting the water field.
+///
+/// Compressing the noise toward `water_threshold` (the previous behaviour)
+/// pulls every tile into the narrow band between `sand_threshold` and
+/// `water_threshold`, so a low density turned the whole surface into coast and
+/// erased the default block.  Trees require the default block, so `water: 0.05`
+/// silently produced a treeless world on every seed.  Moving the cuts upward
+/// shrinks sea and coast together and leaves the default block in place.
+fn water_cuts(water_threshold: f64, sand_threshold: f64, density: f64) -> (f64, f64) {
+    if (density - 1.0).abs() <= f64::EPSILON {
+        return (water_threshold, sand_threshold);
+    }
+    let shrink = |cut: f64| -> f64 {
+        if density >= 1.0 {
+            // More water: move the cut down toward the field minimum.
+            cut - (density - 1.0) * (cut + 1.0)
+        } else {
+            // Less water: move the cut up toward the field maximum.
+            cut + (1.0 - density) * (1.0 - cut)
+        }
+    };
+    (
+        shrink(water_threshold).clamp(-1.0, 1.0),
+        shrink(sand_threshold).clamp(-1.0, 1.0),
+    )
 }
 
 fn dot(gradient: (f64, f64), x: f64, y: f64) -> f64 {
@@ -4737,45 +4795,8 @@ fn costs_json(costs: &[(&str, i64)]) -> Value {
     Value::Object(object)
 }
 
-fn achievement_reward(achievement: &str) -> f64 {
-    if matches!(
-        achievement,
-        "enter_fire_realm"
-            | "enter_ice_realm"
-            | "enter_graveyard"
-            | "defeat_pigman"
-            | "defeat_fire_elemental"
-            | "defeat_frost_troll"
-            | "defeat_ice_elemental"
-            | "damage_necromancer"
-            | "defeat_necromancer"
-    ) {
-        8.0
-    } else if matches!(
-        achievement,
-        "collect_sapphire"
-            | "collect_ruby"
-            | "make_diamond_pickaxe"
-            | "make_diamond_sword"
-            | "make_iron_armour"
-            | "make_diamond_armour"
-            | "enter_gnomish_mines"
-            | "enter_dungeon"
-            | "defeat_gnome_warrior"
-            | "defeat_gnome_archer"
-            | "defeat_orc_solider"
-            | "defeat_orc_mage"
-            | "eat_bat"
-            | "eat_snail"
-            | "find_bow"
-            | "fire_bow"
-            | "open_chest"
-            | "drink_potion"
-    ) {
-        3.0
-    } else {
-        1.0
-    }
+fn achievement_reward(_achievement: &str) -> f64 {
+    1.0
 }
 
 fn max_stat(world: &CraftaxWorld, stat: &str) -> Result<i64> {
@@ -4821,39 +4842,102 @@ fn armour_vec(world: &CraftaxWorld) -> Result<Vec<i64>> {
     Ok(pieces)
 }
 
+/// One glyph per world feature, shared by `local_map`, `ascii_map`, and the
+/// legend handed to policies.
+///
+/// The table is the single source of truth and is asserted injective by
+/// `glyph_table_is_injective`.  Ambiguity here is not cosmetic: entity glyphs
+/// used to be `kind[0].to_ascii_uppercase()`, which rendered a pigman as `P`
+/// (the player), a troll as `T` (a tree), and a lizard as `L` (lava).
+pub const TILE_GLYPHS: &[(&str, char, &str)] = &[
+    ("grass", '.', "grass, walkable; `do` may yield a sapling"),
+    ("path", '_', "path, walkable and inert"),
+    ("sand", ',', "sand, walkable and inert"),
+    ("gravel", ';', "gravel, walkable and inert"),
+    ("fire_grass", '"', "fire grass, walkable"),
+    ("ice_grass", '\'', "ice grass, walkable"),
+    ("water", '~', "water, blocks movement; `do` drinks"),
+    ("fountain", 'u', "fountain, blocks movement; `do` drinks"),
+    ("stone", 'o', "stone, blocks movement; `do` mines it with a wood pickaxe"),
+    ("stalagmite", '^', "stalagmite, mines like stone"),
+    ("wall", '#', "wall"),
+    ("wall_moss", '%', "mossy wall"),
+    ("tree", 'T', "tree; `do` yields wood, no tool needed"),
+    ("fire_tree", 'Y', "fire tree; yields wood"),
+    ("ice_shrub", 'y', "ice shrub; yields wood"),
+    ("lava", 'L', "lava, lethal"),
+    ("coal", 'c', "coal; needs a wood pickaxe"),
+    ("iron", 'i', "iron; needs a stone pickaxe"),
+    ("diamond", 'd', "diamond; needs an iron pickaxe"),
+    ("sapphire", 's', "sapphire; needs a diamond pickaxe"),
+    ("ruby", 'r', "ruby; needs a diamond pickaxe"),
+    ("chest", 'h', "chest; `do` opens it"),
+    ("crafting_table", 'a', "crafting table"),
+    ("furnace", 'F', "furnace"),
+    ("ladder_down", '>', "ladder down; stand on it and `descend`"),
+    ("ladder_up", '<', "ladder up; stand on it and `ascend`"),
+    ("ladder_down_blocked", 'x', "down ladder, not yet open"),
+    ("plant", 'p', "planted sapling"),
+    ("ripe_plant", 'R', "ripe plant; `do` eats it"),
+    ("torch", 't', "torch"),
+    ("grave", '+', "grave"),
+    ("grave2", '+', "grave"),
+    ("grave3", '+', "grave"),
+    ("enchantment_table_fire", 'E', "fire enchantment table"),
+    ("enchantment_table_ice", 'e', "ice enchantment table"),
+    ("necromancer", 'N', "necromancer, not vulnerable"),
+    ("necromancer_vulnerable", 'n', "necromancer, vulnerable"),
+    ("darkness", ' ', "unseen"),
+    ("out_of_bounds", ' ', "outside the world"),
+    ("invalid", '?', "unknown"),
+];
+
+/// Mob glyphs.  Distinct from every tile glyph and from the player.
+pub const ENTITY_GLYPHS: &[(&str, char)] = &[
+    ("cow", 'C'),
+    ("zombie", 'Z'),
+    ("skeleton", 'S'),
+    ("bat", 'B'),
+    ("snail", 'U'),
+    ("orc_solider", 'O'),
+    ("orc_mage", 'Q'),
+    ("gnome_warrior", 'G'),
+    ("gnome_archer", 'g'),
+    ("lizard", 'V'),
+    ("kobold", 'K'),
+    ("knight", 'W'),
+    ("archer", 'A'),
+    ("troll", 'M'),
+    ("deep_thing", 'D'),
+    ("pigman", 'X'),
+    ("fire_elemental", 'H'),
+    ("frost_troll", 'I'),
+    ("ice_elemental", 'J'),
+    ("necromancer", 'N'),
+];
+
+/// The fixed action vocabulary, published once via `/info`.
+pub fn action_names() -> Vec<&'static str> {
+    ACTION_NAMES.to_vec()
+}
+
+pub const PLAYER_GLYPH: char = 'P';
+pub const UNKNOWN_GLYPH: char = '?';
+
 fn tile_char(tile: &str) -> char {
-    match tile {
-        "water" => '~',
-        "grass" | "fire_grass" | "ice_grass" => '.',
-        "stone" => 'o',
-        "wall" => '#',
-        "wall_moss" => '%',
-        "darkness" => ' ',
-        "path" => '.',
-        "sand" | "gravel" => ',',
-        "tree" | "fire_tree" | "ice_shrub" => 'T',
-        "lava" => 'L',
-        "coal" => 'c',
-        "iron" => 'i',
-        "diamond" => 'd',
-        "sapphire" => 's',
-        "ruby" => 'r',
-        "chest" => 'h',
-        "crafting_table" => 'a',
-        "furnace" => 'F',
-        "ladder_down" => '>',
-        "ladder_up" => '<',
-        "plant" => 'p',
-        "ripe_plant" => 'R',
-        "torch" => 't',
-        "necromancer" => 'N',
-        "necromancer_vulnerable" => 'n',
-        "grave" | "grave2" | "grave3" => '+',
-        "stalagmite" => '^',
-        "fountain" => 'u',
-        "enchantment_table_fire" | "enchantment_table_ice" => 'E',
-        _ => '?',
-    }
+    TILE_GLYPHS
+        .iter()
+        .find(|(name, _, _)| *name == tile)
+        .map(|(_, glyph, _)| *glyph)
+        .unwrap_or(UNKNOWN_GLYPH)
+}
+
+fn entity_char(kind: &str) -> char {
+    ENTITY_GLYPHS
+        .iter()
+        .find(|(name, _)| *name == kind)
+        .map(|(_, glyph)| *glyph)
+        .unwrap_or(UNKNOWN_GLYPH)
 }
 
 fn projectile_char(kind: &str, owner: &str) -> char {
@@ -4862,23 +4946,80 @@ fn projectile_char(kind: &str, owner: &str) -> char {
     } else {
         match kind {
             "fireball" | "fireball2" => '*',
-            "iceball" | "iceball2" => 'o',
+            "iceball" | "iceball2" => ':',
             _ => '-',
         }
     }
 }
 
-fn observation_text(observation: &Value, valid_actions: &[&str]) -> String {
+/// Render the legend that policies receive, straight from the tables above so
+/// prompt text cannot drift from what the renderer emits.
+pub fn glyph_legend() -> String {
+    let mut lines = vec![
+        "Map glyphs, each denoting exactly one thing:".to_string(),
+        format!("  {PLAYER_GLYPH}  you"),
+    ];
+    let mut seen = HashSet::new();
+    for (_, glyph, description) in TILE_GLYPHS {
+        if *glyph == ' ' || !seen.insert(*glyph) {
+            continue;
+        }
+        lines.push(format!("  {glyph}  {description}"));
+    }
+    lines.push("  (space)  unseen, or outside the world".to_string());
+    let mobs = ENTITY_GLYPHS
+        .iter()
+        .filter(|(name, _)| *name != "necromancer")
+        .map(|(name, glyph)| format!("{glyph} {}", name.replace('_', " ")))
+        .collect::<Vec<_>>()
+        .join(", ");
+    lines.push(format!("Mobs: {mobs}."));
+    lines.push(
+        "Projectiles: ! incoming mob projectile, * your fireball, : your iceball, \
+         - your arrow."
+            .to_string(),
+    );
+    lines.join("\n")
+}
+
+/// True when an inventory slot is at its starting value and carries no
+/// information.  Stats that start full (health, food, drink, energy, mana) are
+/// always shown, because their decline is the signal.
+fn is_default_inventory(key: &str, value: &Value) -> bool {
+    if matches!(
+        key,
+        "health" | "food" | "drink" | "energy" | "mana" | "xp"
+    ) {
+        return false;
+    }
+    match key {
+        "dexterity" | "strength" | "intelligence" => value.as_i64() == Some(1),
+        "armour" => value
+            .as_array()
+            .is_some_and(|slots| slots.iter().all(|slot| slot.as_i64() == Some(0))),
+        "armour_enchantments" => value
+            .as_array()
+            .is_some_and(|slots| slots.iter().all(|slot| slot.as_str() == Some("none"))),
+        "sword_enchantment" | "bow_enchantment" => value.as_str() == Some("none"),
+        _ => value.as_i64() == Some(0) || value.as_f64() == Some(0.0),
+    }
+}
+
+fn observation_text(observation: &Value) -> String {
     let inventory = observation
         .get("inventory")
         .cloned()
         .unwrap_or_else(|| json!({}));
     let inventory_object = inventory.as_object().cloned().unwrap_or_default();
+    // Only carry what is not at its default.  A twenty-turn ReAct history
+    // repeats this line every turn, and spelling out thirty zero-valued slots
+    // each time crowded out the part of the context that changes.
     let mut inventory_parts = Vec::new();
     for (key, value) in inventory_object {
-        if key != "potions" && key != "learned_spells" {
-            inventory_parts.push(format!("{key}={value}"));
+        if key == "potions" || key == "learned_spells" || is_default_inventory(&key, &value) {
+            continue;
         }
+        inventory_parts.push(format!("{key}={value}"));
     }
     let potions = observation
         .pointer("/inventory/potions")
@@ -4997,13 +5138,28 @@ fn observation_text(observation: &Value, valid_actions: &[&str]) -> String {
         "local_map:".to_string(),
     ];
     lines.extend(local_map);
-    lines.push(format!("inventory: {}", inventory_parts.join(", ")));
-    lines.push(format!("potions: {potions}"));
-    lines.push(format!("learned_spells: {learned_spells}"));
-    lines.push(format!("achievements: {achievements}"));
-    lines.push(format!("nearby_entities: {nearby_entities}"));
-    lines.push(format!("projectiles: {projectiles}"));
-    lines.push(format!("valid_actions: {}", valid_actions.join(", ")));
+    lines.push(format!(
+        "inventory: {} (anything not listed is 0)",
+        if inventory_parts.is_empty() {
+            "empty".to_string()
+        } else {
+            inventory_parts.join(", ")
+        }
+    ));
+    for (label, value) in [
+        ("potions", &potions),
+        ("learned_spells", &learned_spells),
+        ("achievements", &achievements),
+        ("nearby_entities", &nearby_entities),
+        ("projectiles", &projectiles),
+    ] {
+        if !value.is_empty() {
+            lines.push(format!("{label}: {value}"));
+        }
+    }
+    // The action vocabulary is fixed and is published once via `/info` and the
+    // tool schema.  Repeating it per turn cost ~90 tokens a turn and grew
+    // quadratically as the conversation accumulated.
     lines.join("\n")
 }
 
@@ -5248,5 +5404,180 @@ mod tests {
         assert_eq!(session.private["done_reason"], json!("death"));
         assert_eq!(session.private["terminated"], json!(true));
         assert_eq!(session.private["truncated"], json!(false));
+    }
+
+    #[test]
+    fn every_achievement_has_unit_reward() {
+        for achievement in [
+            "collect_wood",
+            "enter_dungeon",
+            "open_chest",
+            "enter_fire_realm",
+            "defeat_necromancer",
+        ] {
+            assert_eq!(achievement_reward(achievement), 1.0);
+        }
+    }
+
+    #[test]
+    fn world_advancing_combat_actions_replay_from_action_events() {
+        let task = json!({
+            "schema": "gamebench.task.craftax.v1",
+            "task_id": "action-applied-replay",
+            "scenario_id": "action-applied-replay",
+            "seed": 0,
+            "world": {
+                "use_default": "fixture_room",
+                "seed": 0,
+                "max_passive_mobs": 0,
+                "max_melee_mobs": 0,
+                "max_ranged_mobs": 0,
+                "initial_state": {
+                    "player": {"pos": [4, 4], "direction": [1, 0], "level": 0},
+                    "inventory": {
+                        "sword": 1,
+                        "mana": 2,
+                        "bow": 1,
+                        "arrows": 1,
+                        "learned_spells": ["fireball"]
+                    },
+                    "entities": [
+                        {"kind": "zombie", "pos": [5, 4], "level": 0, "health": 5}
+                    ]
+                }
+            },
+            "rules": {"base": "symbolic_no_homeostasis"}
+        });
+        let submitted_actions = vec![json!("do"), json!("shoot_arrow"), json!("cast_spell")];
+        let mut original = CraftaxRustSession::reset_from_task(&task, None).unwrap();
+        for action in &submitted_actions {
+            original.step(action).unwrap();
+        }
+        let replay_tape: Vec<Value> = original
+            .events
+            .iter()
+            .filter(|event| event.kind == "action_applied")
+            .filter_map(|event| event.action.clone())
+            .collect();
+        assert_eq!(replay_tape, submitted_actions);
+
+        let original_readout = original.readout();
+        let mut replay = CraftaxRustSession::reset_from_task(&task, None).unwrap();
+        for action in &replay_tape {
+            replay.step(action).unwrap();
+        }
+        assert_eq!(replay.readout(), original_readout);
+    }
+}
+
+#[cfg(test)]
+mod glyph_tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    /// Every glyph must denote exactly one thing.  Before this table existed,
+    /// mob glyphs were `kind[0].to_ascii_uppercase()`: pigman rendered as `P`
+    /// (indistinguishable from the player), troll as `T` (a tree), lizard as
+    /// `L` (lava), and both elementals as `F` (a furnace).
+    #[test]
+    fn glyph_table_is_injective() {
+        let mut owner: HashMap<char, String> = HashMap::new();
+        owner.insert(PLAYER_GLYPH, "player".to_string());
+        for (name, glyph, _) in TILE_GLYPHS {
+            if *glyph == ' ' || *glyph == '+' {
+                continue; // darkness/out_of_bounds and the grave variants alias on purpose
+            }
+            if let Some(previous) = owner.insert(*glyph, format!("tile {name}")) {
+                panic!("glyph {glyph:?} is used by both {previous} and tile {name}");
+            }
+        }
+        for (kind, glyph) in ENTITY_GLYPHS {
+            if *kind == "necromancer" {
+                continue; // the boss tile and the boss entity are the same referent
+            }
+            if let Some(previous) = owner.insert(*glyph, format!("mob {kind}")) {
+                panic!("glyph {glyph:?} is used by both {previous} and mob {kind}");
+            }
+        }
+        for glyph in ['!', '*', ':', '-'] {
+            if let Some(previous) = owner.insert(glyph, "projectile".to_string()) {
+                panic!("glyph {glyph:?} is used by both {previous} and a projectile");
+            }
+        }
+    }
+
+    /// Every mob the generator can spawn must have a glyph, or it renders as
+    /// `?` and the map silently loses a threat.
+    #[test]
+    fn every_spawnable_mob_has_a_glyph() {
+        for level in 0..9 {
+            for kind in floor_mobs(level) {
+                assert_ne!(
+                    entity_char(kind),
+                    UNKNOWN_GLYPH,
+                    "mob {kind} on level {level} has no glyph"
+                );
+            }
+        }
+        assert_ne!(entity_char("necromancer"), UNKNOWN_GLYPH);
+    }
+
+    /// Every block the generator can place must have a glyph.
+    #[test]
+    fn every_placed_block_has_a_glyph() {
+        for tile in SOLID_BLOCKS {
+            assert_ne!(tile_char(tile), UNKNOWN_GLYPH, "block {tile} has no glyph");
+        }
+        for tile in ["grass", "path", "sand", "gravel", "fire_grass", "ice_grass"] {
+            assert_ne!(tile_char(tile), UNKNOWN_GLYPH, "block {tile} has no glyph");
+        }
+    }
+
+    /// Walkable floors must not share a glyph with each other when `do`
+    /// behaves differently on them: `do` on grass can yield a sapling, `do` on
+    /// path never can.  Collapsing both to `.` produced 96 dead `do` calls.
+    #[test]
+    fn grass_and_path_are_distinguishable() {
+        assert_ne!(tile_char("grass"), tile_char("path"));
+    }
+
+    #[test]
+    fn legend_covers_the_glyphs_the_renderer_emits() {
+        let legend = glyph_legend();
+        for (name, glyph, _) in TILE_GLYPHS {
+            if *glyph == ' ' {
+                continue;
+            }
+            assert!(
+                legend.contains(&format!("{glyph} ")),
+                "legend omits tile {name} ({glyph:?})"
+            );
+        }
+        for (kind, glyph) in ENTITY_GLYPHS {
+            if *kind == "necromancer" {
+                continue;
+            }
+            assert!(
+                legend.contains(&format!("{glyph} ")),
+                "legend omits mob {kind} ({glyph:?})"
+            );
+        }
+    }
+
+    /// A low water density used to compress the whole noise field into the
+    /// coast band, erasing the default block and therefore every tree.
+    #[test]
+    fn low_water_density_keeps_the_default_block() {
+        let (water_cut, sand_cut) = water_cuts(0.7, 0.6, 0.05);
+        assert!(water_cut > 0.7, "sea cut must rise as water shrinks");
+        assert!(sand_cut > 0.6, "coast cut must rise as water shrinks");
+        assert!(sand_cut < water_cut, "coast must stay below sea");
+        // A mid-field tile stays the default block instead of turning to coast.
+        assert!(0.5 < sand_cut);
+    }
+
+    #[test]
+    fn unit_water_density_is_vanilla() {
+        assert_eq!(water_cuts(0.7, 0.6, 1.0), (0.7, 0.6));
     }
 }
