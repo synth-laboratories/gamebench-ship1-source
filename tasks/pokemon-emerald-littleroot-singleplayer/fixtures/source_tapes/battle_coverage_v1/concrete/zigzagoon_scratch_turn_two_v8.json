@@ -1,0 +1,27 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "zigzagoon_scratch_turn_two_v8",
+  "coverage_segment": "route101_zigzagoon_turn_two",
+  "description": "From the authenticated post-turn-one source snapshot, make the next legal Scratch selection and capture the complete second turn through a settled command surface. Source-only evidence; battle fields are not invented when unavailable from the adapter.",
+  "program": [
+    { "buttons": ["a"], "frames": 1 },
+    { "buttons": [], "frames": 30 },
+    { "buttons": ["a"], "frames": 1 },
+    { "buttons": [], "frames": 600 }
+  ],
+  "source_assertions": {
+    "terminal_source_position": {
+      "map_group": 0,
+      "map_number": 16,
+      "player_x": 7,
+      "player_y": 15
+    },
+    "terminal_observability": {
+      "active_tasks": { "count": 0 },
+      "callbacks": {
+        "main_callback1": "0x08039ef1",
+        "main_callback2": "0x08038421"
+      }
+    }
+  }
+}

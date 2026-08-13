@@ -1,0 +1,15 @@
+{
+  "schema": "gamebench.pokemon_emerald.continuous_battle_tape.v1",
+  "id": "route101_return_wild_to_command_continuous_v8",
+  "coverage_segment": "post_rival_return",
+  "description": "Continuously advance the authenticated second Route 101 return encounter from its native entry text to the stable command surface, preserving battle RNG and memory ownership.",
+  "program": [
+    { "buttons": [], "frames": 180, "marker": "wild_appeared_ready" },
+    { "buttons": ["a"], "frames": 1, "marker": "dismiss_wild_appeared" },
+    { "buttons": [], "frames": 180, "marker": "command_surface" }
+  ],
+  "terminal_expectations": {
+    "callbacks": { "battle_owned": true },
+    "position": { "map_group": 0, "map_number": 16, "player_x": 15, "player_y": 10 }
+  }
+}

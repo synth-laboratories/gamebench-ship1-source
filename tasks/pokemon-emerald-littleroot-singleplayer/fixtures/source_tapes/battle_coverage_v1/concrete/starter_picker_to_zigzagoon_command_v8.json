@@ -1,0 +1,37 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "starter_picker_to_zigzagoon_command_v8",
+  "coverage_segment": "route101_zigzagoon_command",
+  "description": "From the authenticated settled starter picker, confirm its source default (Torchic), preserve explicit A press/release edges through the native first-battle handoff, and stop at the first stable Zigzagoon command menu. This is source-only evidence, not a Rust equivalence claim.",
+  "program": [
+    { "buttons": ["a"], "frames": 1 },
+    { "buttons": [], "frames": 120 },
+    { "buttons": ["a"], "frames": 1 },
+    { "buttons": [], "frames": 477 },
+    { "buttons": ["a"], "frames": 1 },
+    { "buttons": [], "frames": 119 },
+    { "buttons": ["a"], "frames": 1 },
+    { "buttons": [], "frames": 60 }
+  ],
+  "source_assertions": {
+    "terminal_source_position": {
+      "map_group": 0,
+      "map_number": 16,
+      "player_x": 7,
+      "player_y": 15
+    },
+    "terminal_observability": {
+      "active_tasks": { "count": 0 },
+      "callbacks": {
+        "main_callback1": "0x08039ef1",
+        "main_callback2": "0x08038421",
+        "main_saved_callback": "0x080b1205"
+      },
+      "script_contexts": { "global_status": 1 },
+      "story_flags": {
+        "pokemon_get": true,
+        "rescued_birch": true
+      }
+    }
+  }
+}

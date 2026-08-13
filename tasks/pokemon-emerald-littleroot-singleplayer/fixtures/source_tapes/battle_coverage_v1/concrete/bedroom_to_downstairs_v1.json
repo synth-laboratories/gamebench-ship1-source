@@ -1,0 +1,21 @@
+{
+  "schema": "gamebench.pokemon_emerald.source_tape_request.v1",
+  "id": "bedroom_to_downstairs_v1",
+  "description": "Authenticated 02_starter boundary to the settled downstairs field surface. This is a prerequisite scope-boundary trace, not battle coverage.",
+  "program": [
+    {"buttons": ["right"], "frames": 16},
+    {"buttons": ["up"], "frames": 16},
+    {"buttons": ["left"], "frames": 16},
+    {"buttons": ["up"], "frames": 32},
+    {"buttons": [], "frames": 128}
+  ],
+  "source_assertions": {
+    "initial_state_sha256": "34ae4afe4285efbc61c2345a2927b66097ea97b40636f42e32226f5a586e6e6e",
+    "terminal_source_position": {
+      "map_group": 1,
+      "map_number": 2,
+      "player_x": 2,
+      "player_y": 3
+    }
+  }
+}

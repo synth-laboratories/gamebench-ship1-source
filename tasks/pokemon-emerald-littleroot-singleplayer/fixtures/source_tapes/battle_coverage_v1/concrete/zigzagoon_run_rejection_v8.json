@@ -1,0 +1,31 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "zigzagoon_run_rejection_v8",
+  "coverage_segment": "route101_zigzagoon_run_rejection",
+  "description": "At the source first-battle command menu, move BAG→RUN with released edges, invoke RUN, wait for Birch's native rejection message to become ready, acknowledge it, and return to the command surface. Source-only evidence, not a Rust equivalence claim.",
+  "program": [
+    { "buttons": ["right"], "frames": 1 },
+    { "buttons": [], "frames": 30 },
+    { "buttons": ["down"], "frames": 1 },
+    { "buttons": [], "frames": 31 },
+    { "buttons": ["a"], "frames": 1 },
+    { "buttons": [], "frames": 300 },
+    { "buttons": ["a"], "frames": 1 },
+    { "buttons": [], "frames": 60 }
+  ],
+  "source_assertions": {
+    "terminal_source_position": {
+      "map_group": 0,
+      "map_number": 16,
+      "player_x": 7,
+      "player_y": 15
+    },
+    "terminal_observability": {
+      "active_tasks": { "count": 0 },
+      "callbacks": {
+        "main_callback1": "0x08039ef1",
+        "main_callback2": "0x08038421"
+      }
+    }
+  }
+}

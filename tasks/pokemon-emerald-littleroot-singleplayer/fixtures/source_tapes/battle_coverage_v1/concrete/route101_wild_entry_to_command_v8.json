@@ -1,0 +1,11 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "route101_wild_entry_to_command_v8",
+  "coverage_segment": "route101_wild_encounter",
+  "description": "Dismiss the authenticated native ‘Wild Wurmple appeared!’ entry text with a released A edge and settle at the actual battle command menu.",
+  "program": [ { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 60 } ],
+  "source_assertions": {
+    "terminal_source_position": { "map_group": 0, "map_number": 16, "player_x": 13, "player_y": 9 },
+    "terminal_observability": { "active_tasks": { "count": 0 }, "palette_fade": { "active": false }, "callbacks": { "main_callback1": "0x08039ef1", "main_callback2": "0x08038421" } }
+  }
+}

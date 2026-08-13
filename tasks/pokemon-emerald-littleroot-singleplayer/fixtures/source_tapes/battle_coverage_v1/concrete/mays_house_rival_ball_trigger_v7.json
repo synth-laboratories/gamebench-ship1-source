@@ -1,0 +1,14 @@
+{
+  "schema": "gamebench.pokemon_emerald.source_tape_request.v1",
+  "id": "mays_house_rival_ball_trigger_v7",
+  "coverage_segment": "littleroot_town",
+  "status": "diagnostic_black_transition",
+  "description": "Pinned-source per-VBlank diagnostic for the actual rival ball in May's House. From 1:3(1,2), stand at (5,3), face north for one VBlank, press A once, and observe a bounded 240-VBlank continuation. This tape is evidence of trigger behavior, not a completion claim.",
+  "program": [
+    {"buttons": ["right"], "frames": 64},
+    {"buttons": ["down"], "frames": 16},
+    {"buttons": ["up"], "frames": 1},
+    {"buttons": ["a"], "frames": 1},
+    {"buttons": [], "frames": 240}
+  ]
+}

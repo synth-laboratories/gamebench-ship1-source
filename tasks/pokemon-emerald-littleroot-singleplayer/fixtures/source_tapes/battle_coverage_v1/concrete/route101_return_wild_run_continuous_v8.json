@@ -1,0 +1,27 @@
+{
+  "schema": "gamebench.pokemon_emerald.continuous_battle_tape.v1",
+  "id": "route101_return_wild_run_continuous_v8",
+  "coverage_segment": "post_rival_return",
+  "description": "From the authenticated second Route 101 wild-entry state, continuously dismiss the level-3 Poochyena entry, select RUN from the true command surface, and require native field ownership at the terminal boundary.",
+  "program": [
+    { "buttons": [], "frames": 180, "marker": "wild_appeared_ready" },
+    { "buttons": ["a"], "frames": 1, "marker": "dismiss_wild_appeared" },
+    { "buttons": [], "frames": 180, "marker": "command_surface" },
+    { "buttons": ["right"], "frames": 1, "marker": "command_cursor_right" },
+    { "buttons": [], "frames": 30, "marker": "bag_cursor_settled" },
+    { "buttons": ["down"], "frames": 1, "marker": "command_cursor_down_to_run" },
+    { "buttons": [], "frames": 31, "marker": "run_cursor_settled" },
+    { "buttons": ["a"], "frames": 1, "marker": "activate_run" },
+    { "buttons": [], "frames": 180, "marker": "run_result_text" },
+    { "buttons": ["a"], "frames": 1, "marker": "acknowledge_run_result" },
+    { "buttons": [], "frames": 1200, "marker": "native_field_return" }
+  ],
+  "terminal_expectations": {
+    "callbacks": { "battle_owned": false },
+    "position": { "map_group": 0, "map_number": 16, "player_x": 15, "player_y": 10 },
+    "battlers": {
+      "battler0": { "species": 280, "level": 7, "hp": 8, "max_hp": 23, "pp": [26, 39, 30, 0] },
+      "battler1": { "species": 286, "level": 3, "hp": 15, "max_hp": 15 }
+    }
+  }
+}

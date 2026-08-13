@@ -1,0 +1,32 @@
+{
+  "schema": "gamebench.pokemon_emerald.source_tape_request.v1",
+  "id": "littleroot_running_shoes_trigger_11pulse_v8",
+  "coverage_segment": "running_shoes",
+  "description": "Exact bounded 11-pulse walk from post-Pokedex Birch Lab exit to Mom's Running Shoes trigger: three Right pulses then eight Up pulses, each 16 held VBlanks followed by 60 released VBlanks.",
+  "source_assertions": {
+    "terminal_source_position": {
+      "map_group": 0,
+      "map_number": 9,
+      "player_x": 10,
+      "player_y": 9
+    },
+    "terminal_observability": {
+      "story_vars": {"littleroot_town_state": 3},
+      "story_flags": {"running_shoes_received": false},
+      "palette_fade": {"active": false}
+    }
+  },
+  "program": [
+    {"buttons": ["right"], "frames": 16}, {"buttons": [], "frames": 60},
+    {"buttons": ["right"], "frames": 16}, {"buttons": [], "frames": 60},
+    {"buttons": ["right"], "frames": 16}, {"buttons": [], "frames": 60},
+    {"buttons": ["up"], "frames": 16}, {"buttons": [], "frames": 60},
+    {"buttons": ["up"], "frames": 16}, {"buttons": [], "frames": 60},
+    {"buttons": ["up"], "frames": 16}, {"buttons": [], "frames": 60},
+    {"buttons": ["up"], "frames": 16}, {"buttons": [], "frames": 60},
+    {"buttons": ["up"], "frames": 16}, {"buttons": [], "frames": 60},
+    {"buttons": ["up"], "frames": 16}, {"buttons": [], "frames": 60},
+    {"buttons": ["up"], "frames": 16}, {"buttons": [], "frames": 60},
+    {"buttons": ["up"], "frames": 16}, {"buttons": [], "frames": 60}
+  ]
+}

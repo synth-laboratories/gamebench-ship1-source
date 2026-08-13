@@ -1,0 +1,12 @@
+{
+  "schema": "gamebench.pokemon_emerald.source_tape_request.v1",
+  "id": "littleroot_to_rival_house_v7",
+  "coverage_segment": "littleroot_town",
+  "description": "Tile-derived route from settled May's-house exterior to the neighboring rival house door: nine left tiles, one up tile/warp, then transition settle.",
+  "program": [
+    {"buttons": ["left"], "frames": 144},
+    {"buttons": ["up"], "frames": 16},
+    {"buttons": [], "frames": 120}
+  ],
+  "source_assertions": {"terminal_source_position": {"map_group": 1, "map_number": 0, "player_x": 8, "player_y": 8}}
+}

@@ -1,0 +1,8 @@
+{
+  "schema": "gamebench.pokemon_emerald.source_tape_request.v1",
+  "id": "littleroot_exterior_settle_v7",
+  "coverage_segment": "littleroot_town",
+  "description": "Advance the v7 May's-house exterior warp to a stable field-controlled surface before attempting tile navigation.",
+  "program": [{"buttons": [], "frames": 300}],
+  "source_assertions": {"starting_checkpoint": "littleroot_exterior", "settle_vblanks": 300}
+}

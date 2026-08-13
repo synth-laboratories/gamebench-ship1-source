@@ -1,0 +1,11 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "route103_rival_trigger_v8",
+  "coverage_segment": "route103_rival",
+  "description": "From the authenticated southern adjacency to May on Route 103, issue an Up pulse into the rival object and observe the native object-script/dialogue handoff without presupposing its battle phase.",
+  "program": [ { "buttons": ["up"], "frames": 16 }, { "buttons": [], "frames": 600 } ],
+  "source_assertions": {
+    "terminal_source_position": { "map_group": 0, "map_number": 18, "player_x": 10, "player_y": 4 },
+    "terminal_observability": { "palette_fade": { "active": false } }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "schema": "gamebench.pokemon_emerald.source_tape_request.v1",
+  "id": "littleroot_to_mays_house_1f_v7",
+  "coverage_segment": "littleroot_town",
+  "description": "Source-derived east-house entry from the settled Littleroot field; 120 VBlanks are required for the entry warp to settle.",
+  "program": [
+    {"buttons": ["up"], "frames": 16},
+    {"buttons": [], "frames": 120}
+  ]
+}

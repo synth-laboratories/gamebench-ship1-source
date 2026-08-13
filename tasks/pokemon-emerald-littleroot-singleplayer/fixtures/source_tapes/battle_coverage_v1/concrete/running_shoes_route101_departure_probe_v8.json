@@ -1,0 +1,35 @@
+{
+  "schema": "gamebench.pokemon_emerald.source_tape_request.v1",
+  "id": "running_shoes_route101_departure_v8",
+  "coverage_segment": "running_shoes",
+  "description": "Exact ten-pulse north departure from the authenticated Running Shoes grant to the stable Route 101 field boundary.",
+  "source_assertions": {
+    "terminal_source_position": {
+      "map_group": 0,
+      "map_number": 16,
+      "player_x": 10,
+      "player_y": 19
+    },
+    "terminal_observability": {
+      "story_vars": {"littleroot_town_state": 4},
+      "story_flags": {"running_shoes_received": true},
+      "script_contexts": {
+        "global_status": 2,
+        "global": {"mode": 0}
+      },
+      "palette_fade": {"active": false}
+    }
+  },
+  "program": [
+    {"buttons": ["up"], "frames": 16}, {"buttons": [], "frames": 60},
+    {"buttons": ["up"], "frames": 16}, {"buttons": [], "frames": 60},
+    {"buttons": ["up"], "frames": 16}, {"buttons": [], "frames": 60},
+    {"buttons": ["up"], "frames": 16}, {"buttons": [], "frames": 60},
+    {"buttons": ["up"], "frames": 16}, {"buttons": [], "frames": 60},
+    {"buttons": ["up"], "frames": 16}, {"buttons": [], "frames": 60},
+    {"buttons": ["up"], "frames": 16}, {"buttons": [], "frames": 60},
+    {"buttons": ["up"], "frames": 16}, {"buttons": [], "frames": 60},
+    {"buttons": ["up"], "frames": 16}, {"buttons": [], "frames": 60},
+    {"buttons": ["up"], "frames": 16}, {"buttons": [], "frames": 360}
+  ]
+}

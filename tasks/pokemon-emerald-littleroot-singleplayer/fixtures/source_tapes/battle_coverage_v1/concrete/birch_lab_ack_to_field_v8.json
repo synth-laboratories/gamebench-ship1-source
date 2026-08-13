@@ -1,0 +1,20 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "birch_lab_ack_to_field_v8",
+  "coverage_segment": "birch_lab_acknowledgement",
+  "description": "Complete the source Birch Lab acknowledgement from its authenticated third acknowledgement page: advance four remaining acknowledgement pages, choose NO to nickname Torchic, choose YES to see the rival, acknowledge Birch's two final instruction pages, and settle at released field ownership. This is a canonical source route, not a Rust equivalence claim.",
+  "program": [
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 300 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 300 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 300 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 300 },
+    { "buttons": ["down"], "frames": 1 }, { "buttons": [], "frames": 30 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 300 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 300 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 300 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 300 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 300 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 300 }
+  ],
+  "source_assertions": {}
+}

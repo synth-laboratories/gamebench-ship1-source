@@ -1,0 +1,20 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "route101_rescue_to_starter_picker_v8",
+  "coverage_segment": "route101_starter_picker",
+  "description": "From the authenticated Route 101 rescue field boundary, walk to Birch's Bag, face it, activate it once, and wait for the native starter picker to settle. This is a source-only route tape; it asserts no Rust equivalence.",
+  "program": [
+    { "buttons": ["left"], "frames": 64 },
+    { "buttons": ["up"], "frames": 1 },
+    { "buttons": ["a"], "frames": 1 },
+    { "buttons": [], "frames": 240 }
+  ],
+  "source_assertions": {
+    "terminal_source_position": {
+      "map_group": 0,
+      "map_number": 16,
+      "player_x": 7,
+      "player_y": 15
+    }
+  }
+}

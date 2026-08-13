@@ -166,7 +166,8 @@ fn trace_inputs(trace: &FrameTrace, task_root: &Path) -> Result<Vec<StepRequest>
     }
     let replay_path = task_root.join(replay);
     let replay: Value = serde_json::from_slice(
-        &std::fs::read(&replay_path).map_err(|error| format!("{}: {error}", replay_path.display()))?,
+        &std::fs::read(&replay_path)
+            .map_err(|error| format!("{}: {error}", replay_path.display()))?,
     )
     .map_err(|error| format!("{}: {error}", replay_path.display()))?;
     let program = replay
@@ -177,10 +178,19 @@ fn trace_inputs(trace: &FrameTrace, task_root: &Path) -> Result<Vec<StepRequest>
         .into_iter()
         .map(serde_json::from_value)
         .collect::<Result<Vec<StepRequest>, _>>()
-        .map_err(|error| format!("{} contains an invalid step: {error}", replay_path.display()))?;
+        .map_err(|error| {
+            format!(
+                "{} contains an invalid step: {error}",
+                replay_path.display()
+            )
+        })?;
     if let Some(limit) = trace.input_limit {
         if limit > inputs.len() {
-            return Err(format!("{} input_limit exceeds {} replay steps", trace.id, inputs.len()));
+            return Err(format!(
+                "{} input_limit exceeds {} replay steps",
+                trace.id,
+                inputs.len()
+            ));
         }
         inputs.truncate(limit);
     }

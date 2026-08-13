@@ -1,0 +1,36 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "littleroot_post_rival_to_birch_lab_v8",
+  "coverage_segment": "post_rival_return",
+  "description": "Replay the pret/pokeemerald collision-valid route from Littleroot north entry to Birch Lab: Down 17, Left 3, then enter the declared warp at (7,16).",
+  "program": [
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["left"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["left"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["left"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["up"], "frames": 16 }, { "buttons": [], "frames": 300 }
+  ],
+  "source_assertions": {
+    "terminal_source_position": { "map_group": 1, "map_number": 4, "player_x": 6, "player_y": 5 },
+    "terminal_observability": {
+      "palette_fade": { "active": false },
+      "callbacks": { "main_callback1": "0x08085e05", "main_callback2": "0x08085e5d" }
+    }
+  }
+}

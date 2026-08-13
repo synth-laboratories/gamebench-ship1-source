@@ -1,0 +1,28 @@
+{
+  "schema": "gamebench.pokemon_emerald.source_tape_request.v1",
+  "id": "downstairs_to_littleroot_v1",
+  "description": "Direct transcription of the committed May opening replay steps 157 through 196, beginning at the round-trip-authenticated route01_clock_tv state. It advances the downstairs Mom/TV story sequence and then follows the checked-in field route; the terminal map is source-discovered.",
+  "program": [
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 240},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 240},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 240},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 240},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 240},
+    {"buttons": ["left"], "frames": 32}, {"buttons": ["up"], "frames": 16},
+    {"buttons": [], "frames": 360}, {"buttons": [], "frames": 240},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 240},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 240},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 240},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 240},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 240},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 240},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 240},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 240},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 240},
+    {"buttons": ["down"], "frames": 112}, {"buttons": [], "frames": 120},
+    {"buttons": ["down"], "frames": 32}, {"buttons": ["left"], "frames": 160},
+    {"buttons": ["up"], "frames": 32}, {"buttons": ["right"], "frames": 16},
+    {"buttons": ["up"], "frames": 16}, {"buttons": [], "frames": 600}
+  ],
+  "source_replay": {"file": "fixtures/gold/replays/title_to_met_rival_may.json", "start_step": 157, "end_step": 196}
+}

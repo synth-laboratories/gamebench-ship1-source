@@ -1,0 +1,14 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "route101_wild_default_move_v8",
+  "coverage_segment": "route101_wild_encounter",
+  "description": "At the authenticated Route 101 wild-battle command surface, choose FIGHT then the default first move with released one-VBlank edges and wait through the native turn/possible victory handoff. Terminal ownership is observed rather than assumed.",
+  "program": [
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 30 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 1200 }
+  ],
+  "source_assertions": {
+    "terminal_source_position": { "map_group": 0, "map_number": 16, "player_x": 13, "player_y": 9 },
+    "terminal_observability": { "palette_fade": { "active": false } }
+  }
+}

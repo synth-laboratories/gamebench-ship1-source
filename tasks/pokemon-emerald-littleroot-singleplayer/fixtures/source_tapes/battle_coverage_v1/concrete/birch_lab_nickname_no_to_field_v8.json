@@ -1,0 +1,29 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "birch_lab_nickname_no_to_field_v8",
+  "coverage_segment": "birch_lab_acknowledgement",
+  "description": "From the authenticated nickname menu, choose NO with two VBlanks of Down followed by two VBlanks of A; acknowledge the three-page rival invitation, choose its default YES, and close Birch's two-page final instruction. The terminal must be checked as field-owned before promotion. Source-only evidence.",
+  "program": [
+    { "buttons": ["down"], "frames": 2 }, { "buttons": [], "frames": 30 },
+    { "buttons": ["a"], "frames": 2 }, { "buttons": [], "frames": 300 },
+    { "buttons": ["a"], "frames": 2 }, { "buttons": [], "frames": 300 },
+    { "buttons": ["a"], "frames": 2 }, { "buttons": [], "frames": 300 },
+    { "buttons": ["a"], "frames": 2 }, { "buttons": [], "frames": 300 },
+    { "buttons": ["a"], "frames": 2 }, { "buttons": [], "frames": 300 },
+    { "buttons": ["a"], "frames": 2 }, { "buttons": [], "frames": 300 },
+    { "buttons": ["a"], "frames": 2 }, { "buttons": [], "frames": 300 }
+  ],
+  "source_assertions": {
+    "terminal_source_position": { "map_group": 1, "map_number": 4, "player_x": 6, "player_y": 5 },
+    "terminal_observability": {
+      "active_tasks": { "count": 4 },
+      "callbacks": {
+        "main_callback1": "0x08085e05",
+        "main_callback2": "0x08085e5d",
+        "main_saved_callback": "0x08085ffd"
+      },
+      "script_contexts": { "global_status": 2 },
+      "story_flags": { "pokemon_get": true, "rescued_birch": true }
+    }
+  }
+}

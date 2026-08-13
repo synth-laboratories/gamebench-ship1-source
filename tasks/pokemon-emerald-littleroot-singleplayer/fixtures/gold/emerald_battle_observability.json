@@ -1,0 +1,49 @@
+{
+  "schema": "gamebench.pokemon_emerald.battle_observability_symbols.v1",
+  "rom_sha256": "a9dec84dfe7f62ab2220bafaef7479da0929d066ece16a6885f6226db19085af",
+  "source_revision": "83df84e40623b79281f2397faa611cbf044170bd",
+  "symbol_table_sha256": "98b99e4f60b9b976e4ef2c065f30e03b8a6441b6cf0ed57cbe4b737dc893848c",
+  "symbols": {
+    "gBattleControllerExecFlags": {"address": "0x02024068", "size": "0x04"},
+    "gBattlersCount": {"address": "0x0202406c", "size": "0x01"},
+    "gBattlerPositions": {"address": "0x02024076", "size": "0x04"},
+    "gCurrentTurnActionNumber": {"address": "0x02024082", "size": "0x01"},
+    "gCurrentActionFuncId": {"address": "0x02024083", "size": "0x01"},
+    "gBattleMons": {"address": "0x02024084", "size": "0x160"},
+    "gBattleOutcome": {"address": "0x0202433a", "size": "0x01"},
+    "gBattleMainFunc": {"address": "0x03005d04", "size": "0x04"}
+  },
+  "battle_pokemon": {
+    "source": "include/pokemon.h struct BattlePokemon",
+    "count": 4,
+    "size": "0x58",
+    "fields": {
+      "species": "0x00:u16",
+      "attack": "0x02:u16",
+      "defense": "0x04:u16",
+      "speed": "0x06:u16",
+      "spAttack": "0x08:u16",
+      "spDefense": "0x0a:u16",
+      "moves": "0x0c:u16[4]",
+      "ivWord": "0x14:u32",
+      "statStages": "0x18:s8[8]",
+      "ability": "0x20:u8",
+      "types": "0x21:u8[2]",
+      "pp": "0x24:u8[4]",
+      "hp": "0x28:u16",
+      "level": "0x2a:u8",
+      "friendship": "0x2b:u8",
+      "maxHP": "0x2c:u16",
+      "item": "0x2e:u16",
+      "nickname": "0x30:u8[11]",
+      "ppBonuses": "0x3b:u8",
+      "otName": "0x3c:u8[8]",
+      "experience": "0x44:u32",
+      "personality": "0x48:u32",
+      "status1": "0x4c:u32",
+      "status2": "0x50:u32",
+      "otId": "0x54:u32"
+    }
+  },
+  "interpretation_policy": "All phase, position, species, move, ability, type, item, and status values are emitted as raw integers. No story or battle-result semantics are inferred."
+}

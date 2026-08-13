@@ -1,0 +1,6 @@
+{"schema":"gamebench.pokemon_emerald.concrete_source_tape.v1","id":"birch_lab_pokedex_to_gift_phase_v8","coverage_segment":"post_rival_return","description":"Eight bounded A cycles from Pokédex receipt to active rival gift/fanfare phase; not an item receipt claim.","program":[
+{"buttons":[],"frames":300},{"buttons":["a"],"frames":1},{"buttons":[],"frames":300},{"buttons":["a"],"frames":1},
+{"buttons":[],"frames":300},{"buttons":["a"],"frames":1},{"buttons":[],"frames":300},{"buttons":["a"],"frames":1},
+{"buttons":[],"frames":300},{"buttons":["a"],"frames":1},{"buttons":[],"frames":300},{"buttons":["a"],"frames":1},
+{"buttons":[],"frames":300},{"buttons":["a"],"frames":1},{"buttons":[],"frames":300},{"buttons":["a"],"frames":1},{"buttons":[],"frames":300}],
+"source_assertions":{"terminal_source_position":{"map_group":1,"map_number":4,"player_x":6,"player_y":5},"terminal_observability":{"story_flags":{"pokedex_get":true,"received_pokedex_from_birch":true},"callbacks":{"main_callback1":"0x08085e05","main_callback2":"0x08085e5d"}}}}

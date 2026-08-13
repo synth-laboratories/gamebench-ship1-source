@@ -1,0 +1,36 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "route101_return_wild_resume_to_south_edge_v8",
+  "coverage_segment": "post_rival_return",
+  "description": "Follow the complete live-validated post-escape corridor from Route 101 (15,10) to its Littleroot connection edge at (10,19), with one released input per source tile.",
+  "program": [
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["left"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["left"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["left"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["left"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["left"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["left"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["left"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["left"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["right"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["right"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["right"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 60 },
+    { "buttons": ["down"], "frames": 16 }, { "buttons": [], "frames": 300 }
+  ],
+  "source_assertions": {
+    "terminal_source_position": { "map_group": 0, "map_number": 16, "player_x": 10, "player_y": 19 },
+    "terminal_observability": {
+      "palette_fade": { "active": false },
+      "callbacks": { "main_callback1": "0x08085e05", "main_callback2": "0x08085e5d" },
+      "script_contexts": { "global_status": 2, "global": { "mode": 0 } }
+    }
+  }
+}

@@ -1,0 +1,270 @@
+{
+  "candidate_provenance": {
+    "bedroom_clock_flat_step": 123,
+    "flat_step_interval": {
+      "end_exclusive": 157,
+      "start_inclusive": 118
+    },
+    "source": "fixtures/gold/replays/title_to_met_rival_may.json",
+    "source_sha256": "1c173856eb4a253658e170c9e6049d4cf739e2282931bba2d80b8b08b04a9c90"
+  },
+  "checkpoint": "bedroom_idle",
+  "coverage_segment": "clock_tv",
+  "expected_evidence": {
+    "forbidden_inference": [
+      "Rust terminal world state",
+      "frozen frame",
+      "candidate program alone"
+    ],
+    "minimum": [
+      "per-VBlank source trace",
+      "snapshot SHA-256",
+      "fresh reload receipt"
+    ]
+  },
+  "id": "bedroom_clock_to_downstairs_v7_candidate",
+  "program": [
+    {
+      "buttons": [
+        "up"
+      ],
+      "frames": 96,
+      "opening_flat_step": 118
+    },
+    {
+      "buttons": [],
+      "frames": 32,
+      "opening_flat_step": 119
+    },
+    {
+      "buttons": [
+        "down"
+      ],
+      "frames": 32,
+      "opening_flat_step": 120
+    },
+    {
+      "buttons": [
+        "right"
+      ],
+      "frames": 48,
+      "opening_flat_step": 121
+    },
+    {
+      "buttons": [
+        "left"
+      ],
+      "frames": 16,
+      "opening_flat_step": 122
+    },
+    {
+      "buttons": [
+        "up"
+      ],
+      "frames": 16,
+      "opening_flat_step": 123
+    },
+    {
+      "buttons": [
+        "a"
+      ],
+      "frames": 1,
+      "opening_flat_step": 124
+    },
+    {
+      "buttons": [
+        "a"
+      ],
+      "frames": 1,
+      "opening_flat_step": 125
+    },
+    {
+      "buttons": [
+        "a"
+      ],
+      "frames": 1,
+      "opening_flat_step": 126
+    },
+    {
+      "buttons": [],
+      "frames": 72,
+      "opening_flat_step": 127
+    },
+    {
+      "buttons": [
+        "a"
+      ],
+      "frames": 1,
+      "opening_flat_step": 128
+    },
+    {
+      "buttons": [],
+      "frames": 240,
+      "opening_flat_step": 129
+    },
+    {
+      "buttons": [
+        "a"
+      ],
+      "frames": 1,
+      "opening_flat_step": 130
+    },
+    {
+      "buttons": [],
+      "frames": 240,
+      "opening_flat_step": 131
+    },
+    {
+      "buttons": [
+        "a"
+      ],
+      "frames": 1,
+      "opening_flat_step": 132
+    },
+    {
+      "buttons": [],
+      "frames": 240,
+      "opening_flat_step": 133
+    },
+    {
+      "buttons": [
+        "a"
+      ],
+      "frames": 1,
+      "opening_flat_step": 134
+    },
+    {
+      "buttons": [],
+      "frames": 240,
+      "opening_flat_step": 135
+    },
+    {
+      "buttons": [
+        "a"
+      ],
+      "frames": 1,
+      "opening_flat_step": 136
+    },
+    {
+      "buttons": [],
+      "frames": 240,
+      "opening_flat_step": 137
+    },
+    {
+      "buttons": [
+        "a"
+      ],
+      "frames": 1,
+      "opening_flat_step": 138
+    },
+    {
+      "buttons": [],
+      "frames": 240,
+      "opening_flat_step": 139
+    },
+    {
+      "buttons": [
+        "a"
+      ],
+      "frames": 1,
+      "opening_flat_step": 140
+    },
+    {
+      "buttons": [],
+      "frames": 240,
+      "opening_flat_step": 141
+    },
+    {
+      "buttons": [
+        "a"
+      ],
+      "frames": 1,
+      "opening_flat_step": 142
+    },
+    {
+      "buttons": [],
+      "frames": 240,
+      "opening_flat_step": 143
+    },
+    {
+      "buttons": [
+        "a"
+      ],
+      "frames": 1,
+      "opening_flat_step": 144
+    },
+    {
+      "buttons": [],
+      "frames": 240,
+      "opening_flat_step": 145
+    },
+    {
+      "buttons": [
+        "a"
+      ],
+      "frames": 1,
+      "opening_flat_step": 146
+    },
+    {
+      "buttons": [],
+      "frames": 240,
+      "opening_flat_step": 147
+    },
+    {
+      "buttons": [
+        "a"
+      ],
+      "frames": 1,
+      "opening_flat_step": 148
+    },
+    {
+      "buttons": [],
+      "frames": 240,
+      "opening_flat_step": 149
+    },
+    {
+      "buttons": [
+        "a"
+      ],
+      "frames": 1,
+      "opening_flat_step": 150
+    },
+    {
+      "buttons": [],
+      "frames": 240,
+      "opening_flat_step": 151
+    },
+    {
+      "buttons": [
+        "up"
+      ],
+      "frames": 1,
+      "opening_flat_step": 152
+    },
+    {
+      "buttons": [],
+      "frames": 1,
+      "opening_flat_step": 153
+    },
+    {
+      "buttons": [
+        "a"
+      ],
+      "frames": 1,
+      "opening_flat_step": 154
+    },
+    {
+      "buttons": [],
+      "frames": 240,
+      "opening_flat_step": 155
+    },
+    {
+      "buttons": [],
+      "frames": 240,
+      "opening_flat_step": 156
+    }
+  ],
+  "purpose": "deterministic mGBA story-route search seed; requires a live trace and reload receipt",
+  "schema": "gamebench.pokemon_emerald.concrete_capture_tape.v1",
+  "status": "candidate_unvalidated"
+}

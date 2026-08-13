@@ -1,0 +1,17 @@
+{
+  "schema": "gamebench.pokemon_emerald.source_tape_request.v1",
+  "id": "running_shoes_scene_candidate_v8",
+  "coverage_segment": "running_shoes",
+  "description": "Bounded phase probe from active Mom trigger: settle approach, advance released A edges through dialogue/fanfare, then settle exit.",
+  "program": [
+    {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 120},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 120},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 120},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 120},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 120},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 120},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 120},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 900}
+  ]
+}

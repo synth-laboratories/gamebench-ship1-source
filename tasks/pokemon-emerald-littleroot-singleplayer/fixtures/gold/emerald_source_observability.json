@@ -1,0 +1,70 @@
+{
+  "schema": "gamebench.pokemon_emerald.source_observability.v1",
+  "rom_sha256": "a9dec84dfe7f62ab2220bafaef7479da0929d066ece16a6885f6226db19085af",
+  "rom_sha1": "f3ae088181bf583e55daf962a92bb46f4f1d07b7",
+  "source": {
+    "repository": "https://github.com/pret/pokeemerald",
+    "revision": "83df84e40623b79281f2397faa611cbf044170bd",
+    "matching_linker_map_sha256": "1e8c977c50e41fe3ed8099aabbfb7337842d0bb8f9fb1cac783f773e2ada5e5a",
+    "matching_symbol_table_sha256": "98b99e4f60b9b976e4ef2c065f30e03b8a6441b6cf0ed57cbe4b737dc893848c"
+  },
+  "symbols": {
+    "gMain": "0x030022c0",
+    "gPaletteFade": "0x02037fd4",
+    "gSaveBlock1Ptr": "0x03005d8c",
+    "gSaveBlock2Ptr": "0x03005d90",
+    "gFieldCallback": "0x03005dac",
+    "gFieldCallback2": "0x03005db0",
+    "gTasks": "0x03005e00",
+    "sGlobalScriptContextStatus": "0x03000e38",
+    "sGlobalScriptContext": "0x03000e40",
+    "sImmediateScriptContext": "0x03000eb8"
+  },
+  "derivation": {
+    "global_symbols": "Addresses and sizes come from the matching linker map and symbol table built from the pinned pret revision. Its expected ROM SHA-1 equals rom_sha1.",
+    "local_script_symbols": "The matching symbol table directly records status=0x03000e38 size 1, global=0x03000e40 size 0x74, and immediate=0x03000eb8 size 0x74.",
+    "player_gender": "gSaveBlock2Ptr dereference + SaveBlock2.playerGender offset 0x08 (include/global.h).",
+    "story_var": "gSaveBlock1Ptr dereference + SaveBlock1.vars offset 0x139c + 2 * (var_id - 0x4000).",
+    "story_flag": "gSaveBlock1Ptr dereference + SaveBlock1.flags offset 0x1270 + floor(flag_id / 8), mask 1 << (flag_id % 8).",
+    "script_context": "include/script.h; size 0x74, stackDepth=0, mode=1, comparisonResult=2, nativePtr=4, scriptPtr=8, cmdTable=0x5c, cmdTableEnd=0x60.",
+    "task": "include/task.h; 16 entries of size 0x28, func=0, isActive=4, prev=5, next=6, priority=7, data=8.",
+    "palette_fade": "include/palette.h plus matching palette.o disassembly; size 0x0c, active=byte 7 bit 7, mode=byte 9 bits 0..1, delayCounter=byte 4 bits 0..5.",
+    "callbacks": "include/main.h offsets callback1=0, callback2=4, savedCallback=8; field callback globals from matching map."
+  },
+  "variables": {
+    "VAR_LITTLEROOT_TOWN_STATE": "0x4050",
+    "VAR_LITTLEROOT_RIVAL_STATE": "0x408d",
+    "VAR_LITTLEROOT_INTRO_STATE": "0x4092"
+  },
+  "flags": {
+    "FLAG_SET_WALL_CLOCK": "0x051",
+    "FLAG_RESCUED_BIRCH": "0x052",
+    "FLAG_HIDE_LITTLEROOT_TOWN_BRENDANS_HOUSE_2F_POKE_BALL": "0x331",
+    "FLAG_HIDE_LITTLEROOT_TOWN_MAYS_HOUSE_2F_POKE_BALL": "0x332",
+    "FLAG_SYS_POKEMON_GET": "0x860",
+    "FLAG_SYS_POKEDEX_GET": "0x861",
+    "FLAG_VISITED_LITTLEROOT_TOWN": "0x86f",
+    "FLAG_SYS_B_DASH": "0x8c0",
+    "FLAG_RECEIVED_POKEDEX_FROM_BIRCH": "0x8e4"
+  },
+  "optional_ppu_capture_schema": {
+    "schema": "gamebench.pokemon_emerald.ppu_provenance.v1",
+    "emission": "opt-in capture only; never included in the default JSONL oracle source_state payload",
+    "frame_boundary": "the same post-load or post-step VBlank used for the RGB frame",
+    "registers": [
+      { "name": "dispcnt", "address": "0x04000000", "bytes": 2 },
+      { "name": "bgcnt", "address": "0x04000008", "bytes": 8 },
+      { "name": "bg_offsets", "address": "0x04000010", "bytes": 16 },
+      { "name": "window", "address": "0x04000040", "bytes": 12 }
+    ],
+    "memory_ranges": [
+      { "name": "bg_vram", "address": "0x06000000", "bytes": 65536, "default": "sha256" },
+      { "name": "bg_palette", "address": "0x05000000", "bytes": 512, "default": "sha256" },
+      { "name": "obj_vram", "address": "0x06010000", "bytes": 32768, "default": "sha256" },
+      { "name": "obj_palette", "address": "0x05000200", "bytes": 512, "default": "sha256" },
+      { "name": "oam", "address": "0x07000000", "bytes": 1024, "default": "sha256" }
+    ],
+    "raw_payload_policy": "Emit register values and SHA-256 digests by default. Include raw bytes only for explicitly named, receipt-backed capture artifacts; never expand every oracle frame with VRAM, palette, or OAM blobs."
+  },
+  "interpretation_policy": "The oracle emits numeric variables, booleans, raw pointer strings, and hashes. It does not infer story stage or function names from these values."
+}

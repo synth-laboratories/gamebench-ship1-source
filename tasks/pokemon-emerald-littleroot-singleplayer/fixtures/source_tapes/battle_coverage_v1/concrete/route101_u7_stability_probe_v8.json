@@ -1,0 +1,1 @@
+{"schema":"gamebench.pokemon_emerald.concrete_source_tape.v1","id":"route101_u7_stability_probe_v8","coverage_segment":"oldale_connection","description":"No-input stability probe at Route101 (15,2).","program":[{"buttons":[],"frames":300}],"source_assertions":{"terminal_source_position":{"map_group":0,"map_number":16,"player_x":15,"player_y":2}}}

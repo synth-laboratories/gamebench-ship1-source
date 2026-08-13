@@ -31,9 +31,38 @@ const RIVAL_MOM_NORMAL_STEP_FRAMES: u16 = 16;
 const RIVAL_MOM_APPROACH_FRAMES: u16 = RIVAL_MOM_NORMAL_STEP_FRAMES * 6;
 /// The map script waits for the one-tick emote, Delay48, and six normal
 /// movement actions before its first new-neighbor message can open.
-const RIVAL_MOM_INTRO_FRAMES: u16 = RIVAL_MOM_EMOTE_MOVEMENT_FRAMES
-    + RIVAL_MOM_DELAY_FRAMES
-    + RIVAL_MOM_APPROACH_FRAMES;
+const RIVAL_MOM_INTRO_FRAMES: u16 =
+    RIVAL_MOM_EMOTE_MOVEMENT_FRAMES + RIVAL_MOM_DELAY_FRAMES + RIVAL_MOM_APPROACH_FRAMES;
+/// Source-calibrated offsets for `LittlerootTown_MaysHouse_1F_EventScript_MeetRival`.
+/// The scene clock starts when the public downstairs arrival tile settles;
+/// its first visible May OBJ, emotion marker, three up steps, and message box
+/// then occur at these exact compositor boundaries.
+const MAYS_RIVAL_SPAWN_OFFSET: u16 = 23;
+// The source creates May on the east rug first, then its object-event
+// callback publishes the lower mat pose seven VBlanks later.  This is a
+// visible OAM handoff (V140 -> V147), not a continuous walk between tiles.
+const MAYS_RIVAL_MAT_REPOSITION_OFFSET: u16 = 30;
+// The first upward callback is published at V231 (scene elapsed 114),
+// followed by 16-VBlank callbacks at V247 and V263.  The earlier 107-frame
+// estimate started May seven VBlanks too early and opened dialogue while the
+// final stride was still on screen.
+const MAYS_RIVAL_WALK_OFFSET: u16 = 114;
+const MAYS_RIVAL_DIALOGUE_OFFSET: u16 = 165;
+const MAYS_RIVAL_RESIDENT_HANDOFF_FRAME: u64 = 4645;
+const MAYS_RIVAL_WALK_STEP_FRAMES: u16 = 16;
+/// The authored departure uses nine movement actions after the final page:
+/// faster-right, right, faster-up, up, up, faster-left, left,
+/// faster-up, up. The visible object-event route is 96 source frames.
+const MAYS_RIVAL_DEPARTURE_FRAMES: u16 = 100;
+/// The player turns east four VBlanks into May's first upward departure step;
+/// the source uses `walk_in_place_faster_right` for that compact turn.
+const MAYS_PLAYER_FAST_TURN_OFFSET: u16 = 26;
+const MAYS_PLAYER_FAST_TURN_FRAMES: u16 = 4;
+/// After May leaves the house, the source keeps Brendan's up-facing resident
+/// OBJ cell uploaded for a short tail before the exit interaction releases it.
+/// Preserve that completed callback as a typed walk marker so rendering does
+/// not infer the upload from a missing NPC.
+const MAYS_PLAYER_UP_TAIL_FRAMES: u16 = 32;
 /// `PlayerApproachTVForGym{Male,Female}` is five ordinary 16-frame strides
 /// after Mom's first Gym-report message closes.
 const TV_BROADCAST_APPROACH_FRAMES: u16 = 80;
@@ -67,9 +96,8 @@ const TRUCK_DEPARTURE_FRAMES: u16 = TRUCK_DEPARTURE_APPROACH_FRAMES
     + LITTLEROOT_DOOR_ANIMATION_FRAMES;
 /// The Running Shoes return routes that end beside the player's home have
 /// the same open / enter / close tail as the truck scene, but only Mom moves.
-const RUNNING_SHOES_RETURN_DOOR_FRAMES: u16 = LITTLEROOT_DOOR_ANIMATION_FRAMES
-    + 16
-    + LITTLEROOT_DOOR_ANIMATION_FRAMES;
+const RUNNING_SHOES_RETURN_DOOR_FRAMES: u16 =
+    LITTLEROOT_DOOR_ANIMATION_FRAMES + 16 + LITTLEROOT_DOOR_ANIMATION_FRAMES;
 const NEW_HOME_FACE_PLAYER_FRAMES: u8 = 1;
 // `walk_in_place_faster_{left,right}` follows Mom's source `face_player`
 // action and lasts four frames, rather than the eight-frame fast cadence.
@@ -93,8 +121,7 @@ const WALL_CLOCK_PERIOD_TRANSITION_FRAMES: u8 = 21;
 const WALL_CLOCK_MINUTE_ANGLE_CIRCLE: u16 = 360;
 const CLOCK_VISIT_MOM_ENTRY_FRAMES: u16 = 68;
 const CLOCK_VISIT_PLAYER_TURN_FRAMES: u16 = 4;
-const CLOCK_VISIT_ENTRY_FRAMES: u16 =
-    CLOCK_VISIT_MOM_ENTRY_FRAMES + CLOCK_VISIT_PLAYER_TURN_FRAMES;
+const CLOCK_VISIT_ENTRY_FRAMES: u16 = CLOCK_VISIT_MOM_ENTRY_FRAMES + CLOCK_VISIT_PLAYER_TURN_FRAMES;
 /// Route103's north watcher spends 44 frames in its authored movement while
 /// the rival's first two normal steps take 32. `waitmovement` then releases
 /// the 112-frame ledge stream (`jump_2_down`, `delay_16`, four walks).
@@ -134,10 +161,103 @@ pub enum OpeningCheckpoint {
     TitleMenu,
     TruckArrival,
     BedroomIdle,
+    /// Source-authenticated settled Mays House 1F boundary after the
+    /// upstairs stair/door handoff. This remains distinct from the bedroom
+    /// origin checkpoint so direct oracle probes can validate the 1F surface.
+    #[serde(rename = "source_only_mays_house_1f")]
+    MaysHouse1F,
+    /// Source-authenticated settled Mays House 2F boundary after the stair
+    /// warp. This is the direct counterpart to the 1F checkpoint above.
+    #[serde(rename = "source_only_mays_house_2f")]
+    MaysHouse2F,
+    /// Source-authenticated settled exterior immediately after the Mays
+    /// House 1F door warp. This is distinct from the later Birch-rescued
+    /// town checkpoint: no starter, Pokédex, or rescue flags exist yet.
+    #[serde(rename = "source_only_littleroot_field_ready")]
+    LittlerootFieldReady,
+    /// Source-authenticated house-exit landing tile before the first field
+    /// stride.  This is one tile south of `LittlerootFieldReady` and keeps the
+    /// door handoff's player/OAM anchor distinct from the later idle probe.
+    #[serde(rename = "source_only_littleroot_exterior")]
+    LittlerootExterior,
     BirchLabExterior,
     RivalOutsideLab,
     Route101Rescue,
+    /// Source-authenticated settled Route 101 field boundaries.  These are
+    /// deliberately separate from the scripted Birch-rescue checkpoint: the
+    /// source saves were taken after the starter was chosen and the player is
+    /// free to traverse the route, so NPC visibility and collision must use
+    /// the `StarterChosen` map phase.
+    #[serde(rename = "source_only_route101_post_lab")]
+    Route101PostLab,
+    #[serde(rename = "source_only_route101_north_lane")]
+    Route101NorthLane,
+    #[serde(rename = "source_only_route101_west_lane")]
+    Route101WestLane,
+    #[serde(rename = "source_only_route101_mid_lane")]
+    Route101MidLane,
+    #[serde(rename = "source_only_route101_east_lane")]
+    Route101EastLane,
+    StarterPicker,
+    StarterBattle,
+    /// Source-authenticated Route 101 Wurmple encounter boundaries. These
+    /// retain the battle-owned surface (including the post-victory field
+    /// resume) instead of pretending a wild encounter is ordinary field
+    /// movement.
+    #[serde(rename = "source_only_route101_wild_battle")]
+    Route101WildBattle,
+    #[serde(rename = "source_only_route101_wild_command")]
+    Route101WildCommand,
+    #[serde(rename = "source_only_route101_wild_after_turn_one")]
+    Route101WildAfterTurnOne,
+    #[serde(rename = "source_only_route101_wild_after_turn_two")]
+    Route101WildAfterTurnTwo,
+    #[serde(rename = "source_only_route101_wild_after_turn_three")]
+    Route101WildAfterTurnThree,
+    #[serde(rename = "source_only_route101_wild_after_turn_four")]
+    Route101WildAfterTurnFour,
+    #[serde(rename = "source_only_route101_wild_after_turn_five")]
+    Route101WildAfterTurnFive,
+    #[serde(rename = "source_only_route101_wild_after_turn_six")]
+    Route101WildAfterTurnSix,
+    #[serde(rename = "source_only_route101_wild_victory_resume")]
+    Route101WildVictoryResume,
+    /// Source-authenticated continuation boundaries for Birch's scripted
+    /// Zigzagoon battle. These are separate from the Route 101 Wurmple
+    /// receipts above: the source saves share a map group/position only, but
+    /// retain the trainer battle's command ownership and battle state.
+    #[serde(rename = "source_only_zigzagoon_after_turn_one")]
+    StarterBattleAfterTurnOne,
+    #[serde(rename = "source_only_zigzagoon_after_turn_two")]
+    StarterBattleAfterTurnTwo,
+    #[serde(rename = "source_only_zigzagoon_victory_handoff")]
+    StarterBattleVictoryHandoff,
+    #[serde(rename = "source_only_route101_post_victory_r2")]
+    Route101PostVictoryR2,
+    #[serde(rename = "source_only_route101_post_victory_u7")]
+    Route101PostVictoryU7,
+    #[serde(rename = "source_only_route101_post_victory_u7_settled")]
+    Route101PostVictoryU7Settled,
+    #[serde(rename = "source_only_route101_post_victory_l4")]
+    Route101PostVictoryL4,
+    #[serde(rename = "source_only_route101_post_victory_north_exit")]
+    Route101PostVictoryNorthExit,
     Route103Rival,
+    #[serde(alias = "source_only_route103_wild_command")]
+    Route103WildCommand,
+    #[serde(alias = "source_only_route103_wild_turn_one")]
+    Route103WildTurnOne,
+    #[serde(alias = "source_only_route103_wild_turn1_move_menu")]
+    Route103WildTurn1MoveMenu,
+    Route103WildPlayerSendoutMessage,
+    #[serde(alias = "source_only_route103_wild_turn1_scratch_text")]
+    Route103WildTurn1ScratchText,
+    #[serde(alias = "source_only_route103_wild_turn1_tackle_text")]
+    Route103WildTurn1TackleText,
+    #[serde(alias = "source_only_route103_wild_turn1_command_return")]
+    Route103WildTurn1CommandReturn,
+    #[serde(alias = "source_only_route103_rival_battle_command")]
+    Route103RivalBattleCommand,
     RunningShoes,
 }
 
@@ -178,11 +298,38 @@ pub enum StoryPhase {
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum Facing { Up, Down, Left, Right }
+pub enum Facing {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+/// The player object keeps its currently uploaded 4bpp cell in VRAM until
+/// the bedroom object task writes another one.  This is deliberately state,
+/// rather than a function of absolute engine time: menu/SELECT ownership can
+/// freeze a turn pose and a released stride leaves its final cell visible.
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum BedroomPlayerSprite {
+    #[default]
+    Base,
+    DownFirstFoot,
+    DownSecondFoot,
+    UpFirstFoot,
+    UpMiddle,
+    UpSecondFoot,
+    SideFirstFoot,
+    SideMiddle,
+    SideSecondFoot,
+}
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum PlayerGender { Brendan, May }
+pub enum PlayerGender {
+    Brendan,
+    May,
+}
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct GenderTransition {
@@ -193,11 +340,22 @@ pub struct GenderTransition {
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum MenuEntry { Pokedex, Pokemon, Bag, Player, Save, Option, Exit }
+pub enum MenuEntry {
+    Pokedex,
+    Pokemon,
+    Bag,
+    Player,
+    Save,
+    Option,
+    Exit,
+}
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum ClockField { Hours, Minutes }
+pub enum ClockField {
+    Hours,
+    Minutes,
+}
 
 /// The wall-clock editor's AM/PM badges are independent source OAM sprites.
 /// Keep their actual angular state, rather than snapping badges whenever the
@@ -211,18 +369,30 @@ pub struct ClockPeriodTransition {
 }
 
 fn wall_clock_settled_period_angles(is_pm: bool) -> (u8, u8) {
-    if is_pm { (90, 135) } else { (45, 90) }
+    if is_pm {
+        (90, 135)
+    } else {
+        (45, 90)
+    }
 }
 
 /// Exact `SpriteCB_PMIndicator` angle update from `src/wallclock.c`.
 fn wall_clock_advance_pm_indicator(angle: u8, target_is_pm: bool) -> u8 {
     let mut angle = angle;
     if target_is_pm {
-        if (60..90).contains(&angle) { angle += 5; }
-        if angle < 60 { angle += 1; }
+        if (60..90).contains(&angle) {
+            angle += 5;
+        }
+        if angle < 60 {
+            angle += 1;
+        }
     } else {
-        if (46..76).contains(&angle) { angle -= 5; }
-        if angle > 75 { angle -= 1; }
+        if (46..76).contains(&angle) {
+            angle -= 5;
+        }
+        if angle > 75 {
+            angle -= 1;
+        }
     }
     angle
 }
@@ -231,11 +401,19 @@ fn wall_clock_advance_pm_indicator(angle: u8, target_is_pm: bool) -> u8 {
 fn wall_clock_advance_am_indicator(angle: u8, target_is_pm: bool) -> u8 {
     let mut angle = angle;
     if target_is_pm {
-        if (105..135).contains(&angle) { angle += 5; }
-        if angle < 105 { angle += 1; }
+        if (105..135).contains(&angle) {
+            angle += 5;
+        }
+        if angle < 105 {
+            angle += 1;
+        }
     } else {
-        if (91..121).contains(&angle) { angle -= 5; }
-        if angle > 120 { angle -= 1; }
+        if (91..121).contains(&angle) {
+            angle -= 5;
+        }
+        if angle > 120 {
+            angle -= 1;
+        }
     }
     angle
 }
@@ -279,20 +457,31 @@ fn wall_clock_advance_minute_hand(angle: u16, direction: i8, speed: u8) -> u16 {
 /// keyboard controls but commit to different saved data.
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum NamingTarget { Player, Starter }
+pub enum NamingTarget {
+    Player,
+    Starter,
+}
 
 /// The three source controls in the naming screen's action-button column.
 /// The two middle keyboard rows both route to Emerald's Back control.
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum NamingActionButton { Page, Back, Ok }
+pub enum NamingActionButton {
+    Page,
+    Back,
+    Ok,
+}
 
 /// The source naming keyboard's three pages.  Emerald cycles these in the
 /// order symbols -> uppercase -> lowercase -> symbols; the initial page for
 /// both player and Pokémon nickname screens is uppercase.
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum NamingKeyboardPage { Symbols, LettersUpper, LettersLower }
+pub enum NamingKeyboardPage {
+    Symbols,
+    LettersUpper,
+    LettersLower,
+}
 
 /// Serialized mirror of `Task_UpdateButtonFlash` in `naming_screen.c`.
 /// `applied_color` is the most recent value written into the source's faded
@@ -311,11 +500,57 @@ pub struct NamingActionButtonPulse {
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum StarterSpecies { Treecko, Torchic, Mudkip }
+pub enum StarterSpecies {
+    Treecko,
+    Torchic,
+    Mudkip,
+}
+
+/// The source selector changes the hand/active ball immediately, then
+/// commits the floating species label a few VBlanks later.  Keeping that
+/// short task explicit prevents a held horizontal probe from changing the
+/// label on its first frame.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct StarterSelectionTransition {
+    pub from: StarterSpecies,
+    pub to: StarterSpecies,
+    pub frames_elapsed: u8,
+}
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum BattleOpponent { Zigzagoon, Poochyena, Wingull, Wurmple, Rival }
+pub enum BattleOpponent {
+    Zigzagoon,
+    Poochyena,
+    Wingull,
+    Wurmple,
+    Rival,
+}
+
+/// A source-authored grass encounter identity.  Rules select an encounter;
+/// battle completion uses this stable identity to mark it resolved without
+/// recovering meaning from a map coordinate or the opponent's display name.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum WildEncounterId {
+    Route101Poochyena,
+    Route101Wurmple,
+    Route103Poochyena,
+    Route103Wingull,
+}
+
+/// The atomic field snapshot captured when a wild battle takes ownership.
+/// It is stored inside `BattleState`, so a save made at any battle boundary
+/// returns to the exact triggering field state after a run or victory.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct WildEncounterReturn {
+    pub id: WildEncounterId,
+    pub map: MapId,
+    pub player: TilePosition,
+    pub elevation: u8,
+    pub facing: Facing,
+    pub rng_state_before_battle: u32,
+}
 
 // `gActionSelectionCursor` is a row-major two-bit source cursor. Keeping the
 // state values identical to `HandleInputChooseAction` lets the renderer use
@@ -347,6 +582,11 @@ pub const BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES: u8 = 61;
 pub const BATTLE_PLAYER_SENDOUT_RELEASE_FRAMES: u8 = 12;
 pub const BATTLE_PLAYER_SENDOUT_COMPLETE_FRAMES: u8 =
     BATTLE_PLAYER_SENDOUT_TOTAL_FRAMES + BATTLE_PLAYER_SENDOUT_RELEASE_FRAMES;
+/// The authenticated Route 101 command checkpoint resumes after the source
+/// has already started its send-out task.  Its serialized no-op continuation
+/// keeps the task alive through the late emerge/message rail (elapsed 108),
+/// even though the ordinary opening-battle controller releases at tick 73.
+pub const BATTLE_ROUTE101_COMMAND_SENDOUT_END_FRAME: u8 = 108;
 /// `OpponentHandleTrainerSlideBack` translates the Route 103 rival's 64×64
 /// front pic from its settled x=176 position to x=280 over 35 VBlanks before
 /// the opponent's ball task takes ownership of the battler slot.
@@ -365,8 +605,34 @@ pub const BATTLE_GRASS_INTRO_FRAMES: u16 = 154;
 /// move so an opponent controller can choose from the original four slots.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct BattleMoveSlot {
+    /// Gen III `MOVES_COUNT` identity. Older checkpoints only stored the
+    /// display name; zero is migrated through the source sidecar below.
+    #[serde(default)]
+    pub move_id: u16,
     pub name: String,
     pub pp: u8,
+}
+
+/// Exclusive controller/message state for the compact battle engine. The
+/// legacy booleans remain serialized render projections, while this typed
+/// phase records what an A/B edge is permitted to do at every battle
+/// boundary.
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum BattleTurnPhase {
+    #[default]
+    IntroMessage,
+    Command,
+    MoveSelection,
+    BagSelection,
+    PartySelection,
+    InformationalMessage,
+    /// A failed RUN has committed the player's action. Its next confirmation
+    /// advances the opponent response rather than returning to command UI.
+    FailedRunMessage,
+    TurnResultMessage,
+    SuccessfulRunMessage,
+    TerminalMessage,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -441,6 +707,11 @@ pub struct BattleState {
     pub player_move_pp: u8,
     #[serde(default = "default_player_status_move_pp")]
     pub player_status_move_pp: u8,
+    /// Source `gBattleMons[player].moves` / PP arrays, in all four row-major
+    /// selection slots. The legacy two fields above remain serialized mirrors
+    /// for checkpoint compatibility.
+    #[serde(default)]
+    pub player_moves: Vec<BattleMoveSlot>,
     /// Negative after Growl; bounded to Emerald's six-stage stat range.
     #[serde(default)]
     pub opponent_attack_stage: i8,
@@ -460,9 +731,41 @@ pub struct BattleState {
     /// POKéMON/RUN across the bottom (0 through 3 in row-major order).
     #[serde(default)]
     pub command_cursor: u8,
+    /// The source cursor task applies a changed action cursor on the next
+    /// VBlank. Keep the old visual slot for that one-frame DMA boundary while
+    /// the logical command cursor is already updated for controller input.
+    #[serde(default)]
+    pub command_cursor_rendered: Option<u8>,
+    #[serde(default)]
+    pub command_cursor_transition_frames: u8,
     /// True after choosing FIGHT, when the two opening moves are shown.
     #[serde(default)]
     pub selecting_move: bool,
+    /// Source `HandleChooseMoveAfterDma3` owns a short BG0/DMA hand-off after
+    /// FIGHT is pressed. Ten VBlanks are visible: the command page remains
+    /// for five, the move page is staged for five, then it is stable.
+    #[serde(default)]
+    pub move_selection_transition_frames: u8,
+    /// The source move cursor is logically updated on the input edge, then
+    /// its cursor task presents the previous slot for one VBlank.
+    #[serde(default)]
+    pub move_cursor_rendered: Option<u8>,
+    #[serde(default)]
+    pub move_cursor_transition_frames: u8,
+    /// B cancels the opening move page logically at the edge, while the
+    /// source keeps its move-window surface visible for six more VBlanks.
+    #[serde(default)]
+    pub move_selection_cancel_transition_frames: u8,
+    /// B also restarts the source player-battler idle task. Zero means the
+    /// ordinary battle-global phase remains active.
+    #[serde(default)]
+    pub player_battler_oam_phase_reset_frame: u64,
+    /// Source healthbox OAM animation phase offset introduced when FIGHT is
+    /// selected. The BG0 hand-off does not restart the healthbox task; it can
+    /// instead leave that task a small number of VBlanks behind the global
+    /// battle frame, depending on the edge's source phase.
+    #[serde(default)]
+    pub move_selection_oam_phase_delay_frames: u8,
     /// The opening slice has one party member, but retains a distinct party
     /// view so the POKéMON battle command has the same modal behavior as the
     /// field and later multi-member engine.
@@ -481,9 +784,24 @@ pub struct BattleState {
     /// Birch-rescue Zigzagoon battle, which has a different post-battle path.
     #[serde(default)]
     pub wild: bool,
+    /// Present only for a regular field encounter. Scripted rescue and
+    /// trainer battles deliberately have no field-resume target.
+    #[serde(default)]
+    pub field_return: Option<WildEncounterReturn>,
+    /// Gen-III escape attempts become easier after each failed run.  This is
+    /// battle-owned state, not a route-local counter, and therefore survives
+    /// a checkpoint in the failed-run message boundary.
+    #[serde(default)]
+    pub run_attempts: u8,
     pub move_cursor: u8,
     pub player_fainted: bool,
     pub message: Option<String>,
+    /// Source healthbox/OAM presentation is anchored to the VBlank where a
+    /// battle message task takes ownership, rather than always following the
+    /// global battle frame.  Keeping the handoff receipt in the battle state
+    /// makes noisy-input message replays resume at the same visual phase.
+    #[serde(default)]
+    pub message_visual_start_frame: u64,
     /// Encounter wipe remaining before the battle command screen accepts
     /// input. Keeping it on the battle itself makes an interrupted save/load
     /// resume the same encounter instead of dropping directly into a turn.
@@ -504,6 +822,42 @@ pub struct BattleState {
     /// treating a later move-result page as a second send-out.
     #[serde(default)]
     pub intro_player_sendout_pending: bool,
+    /// Released-A dismissal debounce on the Route 101 Wurmple entry page.
+    /// Emerald does not replace the printed appearance message until the
+    /// native printer's four-VBlank handoff has elapsed.
+    #[serde(default)]
+    pub intro_message_dismiss_delay_frames: u8,
+    /// The source clears the appearance text window one VBlank before the
+    /// delayed `Go!` printer takes ownership. Keep the logical message and
+    /// battle input owner intact while suppressing only its glyphs/chrome
+    /// during that measured handoff.
+    #[serde(default)]
+    pub intro_message_hidden: bool,
+    /// The source accepts an early A/B edge on the first two post-checkpoint
+    /// VBlanks. On the source printer's nine-VBlank arrow cadence, an edge at
+    /// phase two exposes the blank-window phase before `Go!` starts printing.
+    /// This records that measured input provenance.
+    #[serde(default)]
+    pub intro_message_hide_on_dismiss: bool,
+    /// An edge before the source printer has published its first full-text
+    /// phase also restarts the entry arrow at its initial cell. Later edges
+    /// preserve the already-running arrow animation while the four-VBlank
+    /// dismissal handoff drains.
+    #[serde(default)]
+    pub intro_message_arrow_reset_on_dismiss: bool,
+    /// The source freezes the currently visible entry-arrow cell for the
+    /// four-VBlank dismissal handoff. Retain its phase instead of letting the
+    /// world clock advance the ordinary idle animation underneath it.
+    #[serde(default)]
+    pub intro_message_dismiss_arrow_frame: u64,
+    /// Number of characters uploaded by the source printer on the `Go!`
+    /// page. One glyph is committed per VBlank before the sendout task starts.
+    #[serde(default)]
+    pub intro_message_print_chars: u8,
+    /// Two source wait ticks remain after the final `Go!` glyph before the
+    /// trainer-ball task takes the OBJ owner.
+    #[serde(default)]
+    pub intro_message_print_hold_frames: u8,
     /// Remaining source ticks in `PlayerHandleIntroTrainerBallThrow`'s
     /// 50-frame player-back-sprite exit. This is serialized so a replay
     /// resumed during the hand-off retains the same visual phase and input
@@ -529,26 +883,58 @@ pub struct BattleState {
     pub last_move_critical: bool,
     #[serde(default)]
     pub last_damage_variance: Option<u8>,
+    #[serde(default)]
+    pub turn_phase: BattleTurnPhase,
 }
 
-fn default_player_battle_hp() -> u8 { 24 }
-fn default_opponent_battle_hp() -> u8 { 22 }
-fn default_player_move_damage() -> u8 { 9 }
-fn default_player_move_name() -> String { "TACKLE".to_owned() }
-fn default_player_status_move_name() -> String { "GROWL".to_owned() }
-fn default_player_move_pp() -> u8 { 35 }
-fn default_player_status_move_pp() -> u8 { 30 }
-fn default_opponent_species() -> String { "ZIGZAGOON".to_owned() }
-fn default_opponent_move_name() -> String { "TACKLE".to_owned() }
-fn default_opponent_move_slots() -> Vec<BattleMoveSlot> {
-    vec![BattleMoveSlot { name: default_opponent_move_name(), pp: 35 }]
+fn default_player_battle_hp() -> u8 {
+    24
 }
-fn default_opponent_move_damage() -> u8 { 4 }
-fn default_battle_intro_stage() -> u8 { 2 }
-fn default_battle_rng_state() -> u32 { default_ambient_rng() }
-fn default_player_species() -> String { "TREECKO".to_owned() }
-fn default_battle_level() -> u8 { 5 }
-fn default_battle_stat() -> u8 { 10 }
+fn default_opponent_battle_hp() -> u8 {
+    22
+}
+fn default_player_move_damage() -> u8 {
+    9
+}
+fn default_player_move_name() -> String {
+    "TACKLE".to_owned()
+}
+fn default_player_status_move_name() -> String {
+    "GROWL".to_owned()
+}
+fn default_player_move_pp() -> u8 {
+    35
+}
+fn default_player_status_move_pp() -> u8 {
+    30
+}
+fn default_opponent_species() -> String {
+    "ZIGZAGOON".to_owned()
+}
+fn default_opponent_move_name() -> String {
+    "TACKLE".to_owned()
+}
+fn default_opponent_move_slots() -> Vec<BattleMoveSlot> {
+    vec![battle_move_slot("TACKLE", 35)]
+}
+fn default_opponent_move_damage() -> u8 {
+    4
+}
+fn default_battle_intro_stage() -> u8 {
+    2
+}
+fn default_battle_rng_state() -> u32 {
+    default_ambient_rng()
+}
+fn default_player_species() -> String {
+    "TREECKO".to_owned()
+}
+fn default_battle_level() -> u8 {
+    5
+}
+fn default_battle_stat() -> u8 {
+    10
+}
 
 fn battle_opponent_name(opponent: BattleOpponent) -> &'static str {
     match opponent {
@@ -560,7 +946,12 @@ fn battle_opponent_name(opponent: BattleOpponent) -> &'static str {
     }
 }
 
-fn fast_path_position(start: TilePosition, path: &[Facing], completed: usize, idle_facing: Facing) -> (TilePosition, Facing) {
+fn fast_path_position(
+    start: TilePosition,
+    path: &[Facing],
+    completed: usize,
+    idle_facing: Facing,
+) -> (TilePosition, Facing) {
     let mut position = start;
     let mut facing = idle_facing;
     for step in path.iter().take(completed) {
@@ -581,22 +972,49 @@ fn fast_path_position(start: TilePosition, path: &[Facing], completed: usize, id
 const ROUTE101_RESCUE_CHOREOGRAPHY_FRAMES: u16 = 332;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum BattleType { Normal, Grass, Fire, Water, Dark, Bug, Flying }
+enum BattleType {
+    Normal,
+    Grass,
+    Fire,
+    Water,
+    Dark,
+    Bug,
+    Flying,
+}
 
 #[derive(Clone, Copy)]
 struct SpeciesBattleProfile {
-    name: &'static str, base_hp: u8, base_attack: u8, base_defense: u8,
-    base_speed: u8, base_special_attack: u8, base_special_defense: u8,
+    name: &'static str,
+    base_hp: u8,
+    base_attack: u8,
+    base_defense: u8,
+    base_speed: u8,
+    base_special_attack: u8,
+    base_special_defense: u8,
     types: (BattleType, BattleType),
 }
 
 #[derive(Clone, Copy)]
-struct MoveBattleProfile { name: &'static str, power: u8, accuracy: u8, pp: u8, move_type: BattleType, special: bool }
+struct MoveBattleProfile {
+    name: &'static str,
+    power: u8,
+    accuracy: u8,
+    pp: u8,
+    move_type: BattleType,
+    special: bool,
+}
 
 #[derive(Clone, Copy)]
 struct CombatantBattleProfile {
-    species: SpeciesBattleProfile, level: u8, max_hp: u8, attack: u8, defense: u8, speed: u8,
-    special_attack: u8, special_defense: u8, moves: [Option<MoveBattleProfile>; 4],
+    species: SpeciesBattleProfile,
+    level: u8,
+    max_hp: u8,
+    attack: u8,
+    defense: u8,
+    speed: u8,
+    special_attack: u8,
+    special_defense: u8,
+    moves: [Option<MoveBattleProfile>; 4],
 }
 
 /// Persistent source-shaped party state for the one Pokémon reachable in the
@@ -620,46 +1038,216 @@ pub struct StarterPartyState {
     pub special_defense: u8,
     pub physical_move_pp: u8,
     pub status_move_pp: u8,
+    /// Source party move IDs and PP. Empty means a pre-four-slot checkpoint
+    /// and is migrated from the two legacy PP fields on restore/use.
+    #[serde(default)]
+    pub moves: Vec<BattleMoveSlot>,
 }
 
 #[derive(Clone, Copy)]
-struct StatIvs { hp: u8, attack: u8, defense: u8, speed: u8, special_attack: u8, special_defense: u8 }
+struct StatIvs {
+    hp: u8,
+    attack: u8,
+    defense: u8,
+    speed: u8,
+    special_attack: u8,
+    special_defense: u8,
+}
 
 #[derive(Clone, Copy)]
-struct NatureModifiers { attack: (u8, u8), defense: (u8, u8), speed: (u8, u8), special_attack: (u8, u8), special_defense: (u8, u8) }
+struct NatureModifiers {
+    attack: (u8, u8),
+    defense: (u8, u8),
+    speed: (u8, u8),
+    special_attack: (u8, u8),
+    special_defense: (u8, u8),
+}
 
-const NEUTRAL_NATURE: NatureModifiers = NatureModifiers { attack: (1, 1), defense: (1, 1), speed: (1, 1), special_attack: (1, 1), special_defense: (1, 1) };
+const NEUTRAL_NATURE: NatureModifiers = NatureModifiers {
+    attack: (1, 1),
+    defense: (1, 1),
+    speed: (1, 1),
+    special_attack: (1, 1),
+    special_defense: (1, 1),
+};
 
 fn species_battle_profile(name: &str) -> SpeciesBattleProfile {
     // Source: src/data/pokemon/species_info.h. This is deliberately limited
     // to species reachable in the scoped opening route.
     match name {
-        "TORCHIC" => SpeciesBattleProfile { name: "TORCHIC", base_hp: 45, base_attack: 60, base_defense: 40, base_speed: 45, base_special_attack: 70, base_special_defense: 50, types: (BattleType::Fire, BattleType::Fire) },
-        "MUDKIP" => SpeciesBattleProfile { name: "MUDKIP", base_hp: 50, base_attack: 70, base_defense: 50, base_speed: 40, base_special_attack: 50, base_special_defense: 50, types: (BattleType::Water, BattleType::Water) },
-        "ZIGZAGOON" => SpeciesBattleProfile { name: "ZIGZAGOON", base_hp: 38, base_attack: 30, base_defense: 41, base_speed: 60, base_special_attack: 30, base_special_defense: 41, types: (BattleType::Normal, BattleType::Normal) },
-        "POOCHYENA" => SpeciesBattleProfile { name: "POOCHYENA", base_hp: 35, base_attack: 55, base_defense: 35, base_speed: 35, base_special_attack: 30, base_special_defense: 30, types: (BattleType::Dark, BattleType::Dark) },
-        "WURMPLE" => SpeciesBattleProfile { name: "WURMPLE", base_hp: 45, base_attack: 45, base_defense: 35, base_speed: 20, base_special_attack: 20, base_special_defense: 30, types: (BattleType::Bug, BattleType::Bug) },
-        "WINGULL" => SpeciesBattleProfile { name: "WINGULL", base_hp: 40, base_attack: 30, base_defense: 30, base_speed: 85, base_special_attack: 55, base_special_defense: 30, types: (BattleType::Water, BattleType::Flying) },
-        _ => SpeciesBattleProfile { name: "TREECKO", base_hp: 40, base_attack: 45, base_defense: 35, base_speed: 70, base_special_attack: 65, base_special_defense: 55, types: (BattleType::Grass, BattleType::Grass) },
+        "TORCHIC" => SpeciesBattleProfile {
+            name: "TORCHIC",
+            base_hp: 45,
+            base_attack: 60,
+            base_defense: 40,
+            base_speed: 45,
+            base_special_attack: 70,
+            base_special_defense: 50,
+            types: (BattleType::Fire, BattleType::Fire),
+        },
+        "MUDKIP" => SpeciesBattleProfile {
+            name: "MUDKIP",
+            base_hp: 50,
+            base_attack: 70,
+            base_defense: 50,
+            base_speed: 40,
+            base_special_attack: 50,
+            base_special_defense: 50,
+            types: (BattleType::Water, BattleType::Water),
+        },
+        "ZIGZAGOON" => SpeciesBattleProfile {
+            name: "ZIGZAGOON",
+            base_hp: 38,
+            base_attack: 30,
+            base_defense: 41,
+            base_speed: 60,
+            base_special_attack: 30,
+            base_special_defense: 41,
+            types: (BattleType::Normal, BattleType::Normal),
+        },
+        "POOCHYENA" => SpeciesBattleProfile {
+            name: "POOCHYENA",
+            base_hp: 35,
+            base_attack: 55,
+            base_defense: 35,
+            base_speed: 35,
+            base_special_attack: 30,
+            base_special_defense: 30,
+            types: (BattleType::Dark, BattleType::Dark),
+        },
+        "WURMPLE" => SpeciesBattleProfile {
+            name: "WURMPLE",
+            base_hp: 45,
+            base_attack: 45,
+            base_defense: 35,
+            base_speed: 20,
+            base_special_attack: 20,
+            base_special_defense: 30,
+            types: (BattleType::Bug, BattleType::Bug),
+        },
+        "WINGULL" => SpeciesBattleProfile {
+            name: "WINGULL",
+            base_hp: 40,
+            base_attack: 30,
+            base_defense: 30,
+            base_speed: 85,
+            base_special_attack: 55,
+            base_special_defense: 30,
+            types: (BattleType::Water, BattleType::Flying),
+        },
+        _ => SpeciesBattleProfile {
+            name: "TREECKO",
+            base_hp: 40,
+            base_attack: 45,
+            base_defense: 35,
+            base_speed: 70,
+            base_special_attack: 65,
+            base_special_defense: 55,
+            types: (BattleType::Grass, BattleType::Grass),
+        },
     }
 }
 
 fn move_battle_profile(name: &str) -> MoveBattleProfile {
     // Source: src/data/battle_moves.h.
     match name {
-        "POUND" => MoveBattleProfile { name: "POUND", power: 40, accuracy: 100, pp: 35, move_type: BattleType::Normal, special: false },
-        "SCRATCH" => MoveBattleProfile { name: "SCRATCH", power: 40, accuracy: 100, pp: 35, move_type: BattleType::Normal, special: false },
-        "LEER" => MoveBattleProfile { name: "LEER", power: 0, accuracy: 100, pp: 30, move_type: BattleType::Normal, special: false },
-        "GROWL" => MoveBattleProfile { name: "GROWL", power: 0, accuracy: 100, pp: 40, move_type: BattleType::Normal, special: false },
-        "STRING SHOT" => MoveBattleProfile { name: "STRING SHOT", power: 0, accuracy: 95, pp: 40, move_type: BattleType::Bug, special: false },
-        "WATER GUN" => MoveBattleProfile { name: "WATER GUN", power: 40, accuracy: 100, pp: 25, move_type: BattleType::Water, special: true },
-        _ => MoveBattleProfile { name: "TACKLE", power: 35, accuracy: 95, pp: 35, move_type: BattleType::Normal, special: false },
+        "POUND" => MoveBattleProfile {
+            name: "POUND",
+            power: 40,
+            accuracy: 100,
+            pp: 35,
+            move_type: BattleType::Normal,
+            special: false,
+        },
+        "SCRATCH" => MoveBattleProfile {
+            name: "SCRATCH",
+            power: 40,
+            accuracy: 100,
+            pp: 35,
+            move_type: BattleType::Normal,
+            special: false,
+        },
+        "LEER" => MoveBattleProfile {
+            name: "LEER",
+            power: 0,
+            accuracy: 100,
+            pp: 30,
+            move_type: BattleType::Normal,
+            special: false,
+        },
+        "GROWL" => MoveBattleProfile {
+            name: "GROWL",
+            power: 0,
+            accuracy: 100,
+            pp: 40,
+            move_type: BattleType::Normal,
+            special: false,
+        },
+        "FOCUS ENERGY" => MoveBattleProfile {
+            name: "FOCUS ENERGY",
+            power: 0,
+            accuracy: 0,
+            pp: 30,
+            move_type: BattleType::Normal,
+            special: false,
+        },
+        "STRING SHOT" => MoveBattleProfile {
+            name: "STRING SHOT",
+            power: 0,
+            accuracy: 95,
+            pp: 40,
+            move_type: BattleType::Bug,
+            special: false,
+        },
+        "WATER GUN" => MoveBattleProfile {
+            name: "WATER GUN",
+            power: 40,
+            accuracy: 100,
+            pp: 25,
+            move_type: BattleType::Water,
+            special: true,
+        },
+        _ => MoveBattleProfile {
+            name: "TACKLE",
+            power: 35,
+            accuracy: 95,
+            pp: 35,
+            move_type: BattleType::Normal,
+            special: false,
+        },
+    }
+}
+
+/// Sidecar mapping to Emerald's `enum Move`. Keeping IDs adjacent to names
+/// lets source snapshots compare the numeric party array without making the
+/// renderer or compact mechanics depend on decomp constants.
+fn source_move_id(name: &str) -> u16 {
+    match name {
+        "POUND" => 1,
+        "SCRATCH" => 10,
+        "TACKLE" => 33,
+        "LEER" => 43,
+        "GROWL" => 45,
+        "WATER GUN" => 55,
+        "STRING SHOT" => 81,
+        "FOCUS ENERGY" => 116,
+        _ => 0,
+    }
+}
+
+fn battle_move_slot(name: &str, pp: u8) -> BattleMoveSlot {
+    BattleMoveSlot {
+        move_id: source_move_id(name),
+        name: name.to_owned(),
+        pp,
     }
 }
 
 fn starter_species_name(starter: Option<StarterSpecies>) -> &'static str {
     match starter.unwrap_or(StarterSpecies::Treecko) {
-        StarterSpecies::Treecko => "TREECKO", StarterSpecies::Torchic => "TORCHIC", StarterSpecies::Mudkip => "MUDKIP",
+        StarterSpecies::Treecko => "TREECKO",
+        StarterSpecies::Torchic => "TORCHIC",
+        StarterSpecies::Mudkip => "MUDKIP",
     }
 }
 
@@ -668,22 +1256,54 @@ fn source_random(state: &mut u32) -> u16 {
     (*state >> 16) as u16
 }
 
-fn source_random32(state: &mut u32) -> u32 { u32::from(source_random(state)) | (u32::from(source_random(state)) << 16) }
+fn source_random32(state: &mut u32) -> u32 {
+    u32::from(source_random(state)) | (u32::from(source_random(state)) << 16)
+}
 
 fn nature_modifiers(nature: u8) -> NatureModifiers {
     // gNatureStatTable order: Atk, Def, Speed, Sp.Atk, Sp.Def.
     const TABLE: [(Option<usize>, Option<usize>); 25] = [
-        (None,None),(Some(0),Some(1)),(Some(0),Some(2)),(Some(0),Some(3)),(Some(0),Some(4)),
-        (Some(1),Some(0)),(None,None),(Some(1),Some(2)),(Some(1),Some(3)),(Some(1),Some(4)),
-        (Some(2),Some(0)),(Some(2),Some(1)),(None,None),(Some(2),Some(3)),(Some(2),Some(4)),
-        (Some(3),Some(0)),(Some(3),Some(1)),(Some(3),Some(2)),(None,None),(Some(3),Some(4)),
-        (Some(4),Some(0)),(Some(4),Some(1)),(Some(4),Some(2)),(Some(4),Some(3)),(None,None),
+        (None, None),
+        (Some(0), Some(1)),
+        (Some(0), Some(2)),
+        (Some(0), Some(3)),
+        (Some(0), Some(4)),
+        (Some(1), Some(0)),
+        (None, None),
+        (Some(1), Some(2)),
+        (Some(1), Some(3)),
+        (Some(1), Some(4)),
+        (Some(2), Some(0)),
+        (Some(2), Some(1)),
+        (None, None),
+        (Some(2), Some(3)),
+        (Some(2), Some(4)),
+        (Some(3), Some(0)),
+        (Some(3), Some(1)),
+        (Some(3), Some(2)),
+        (None, None),
+        (Some(3), Some(4)),
+        (Some(4), Some(0)),
+        (Some(4), Some(1)),
+        (Some(4), Some(2)),
+        (Some(4), Some(3)),
+        (None, None),
     ];
     let (raise, lower) = TABLE[usize::from(nature % 25)];
     let mut stats = [(1, 1); 5];
-    if let Some(stat) = raise { stats[stat] = (110, 100); }
-    if let Some(stat) = lower { stats[stat] = (90, 100); }
-    NatureModifiers { attack: stats[0], defense: stats[1], speed: stats[2], special_attack: stats[3], special_defense: stats[4] }
+    if let Some(stat) = raise {
+        stats[stat] = (110, 100);
+    }
+    if let Some(stat) = lower {
+        stats[stat] = (90, 100);
+    }
+    NatureModifiers {
+        attack: stats[0],
+        defense: stats[1],
+        speed: stats[2],
+        special_attack: stats[3],
+        special_defense: stats[4],
+    }
 }
 
 fn source_random_ivs(seed: u32) -> (StatIvs, NatureModifiers) {
@@ -693,7 +1313,17 @@ fn source_random_ivs(seed: u32) -> (StatIvs, NatureModifiers) {
     let personality = source_random32(&mut rng);
     let first = u32::from(source_random(&mut rng));
     let second = u32::from(source_random(&mut rng));
-    (StatIvs { hp: (first & 31) as u8, attack: ((first >> 5) & 31) as u8, defense: ((first >> 10) & 31) as u8, speed: (second & 31) as u8, special_attack: ((second >> 5) & 31) as u8, special_defense: ((second >> 10) & 31) as u8 }, nature_modifiers((personality % 25) as u8))
+    (
+        StatIvs {
+            hp: (first & 31) as u8,
+            attack: ((first >> 5) & 31) as u8,
+            defense: ((first >> 10) & 31) as u8,
+            speed: (second & 31) as u8,
+            special_attack: ((second >> 5) & 31) as u8,
+            special_defense: ((second >> 10) & 31) as u8,
+        },
+        nature_modifiers((personality % 25) as u8),
+    )
 }
 
 fn source_stat(base: u8, iv: u8, level: u8, modifier: (u8, u8)) -> u8 {
@@ -701,17 +1331,40 @@ fn source_stat(base: u8, iv: u8, level: u8, modifier: (u8, u8)) -> u8 {
     ((raw * u16::from(modifier.0)) / u16::from(modifier.1)) as u8
 }
 
-fn source_hp(base: u8, iv: u8, level: u8) -> u8 { (((u16::from(2 * base + iv) * u16::from(level)) / 100) + u16::from(level) + 10) as u8 }
+fn source_hp(base: u8, iv: u8, level: u8) -> u8 {
+    (((u16::from(2 * base + iv) * u16::from(level)) / 100) + u16::from(level) + 10) as u8
+}
 
-fn combatant_profile(species: SpeciesBattleProfile, level: u8, ivs: StatIvs, nature: NatureModifiers, move_names: &[&str]) -> CombatantBattleProfile {
+fn combatant_profile(
+    species: SpeciesBattleProfile,
+    level: u8,
+    ivs: StatIvs,
+    nature: NatureModifiers,
+    move_names: &[&str],
+) -> CombatantBattleProfile {
     let mut moves = [None; 4];
     for (slot, name) in move_names.iter().take(moves.len()).enumerate() {
         moves[slot] = Some(move_battle_profile(name));
     }
     CombatantBattleProfile {
-        species, level, max_hp: source_hp(species.base_hp, ivs.hp, level),
-        attack: source_stat(species.base_attack, ivs.attack, level, nature.attack), defense: source_stat(species.base_defense, ivs.defense, level, nature.defense), speed: source_stat(species.base_speed, ivs.speed, level, nature.speed),
-        special_attack: source_stat(species.base_special_attack, ivs.special_attack, level, nature.special_attack), special_defense: source_stat(species.base_special_defense, ivs.special_defense, level, nature.special_defense),
+        species,
+        level,
+        max_hp: source_hp(species.base_hp, ivs.hp, level),
+        attack: source_stat(species.base_attack, ivs.attack, level, nature.attack),
+        defense: source_stat(species.base_defense, ivs.defense, level, nature.defense),
+        speed: source_stat(species.base_speed, ivs.speed, level, nature.speed),
+        special_attack: source_stat(
+            species.base_special_attack,
+            ivs.special_attack,
+            level,
+            nature.special_attack,
+        ),
+        special_defense: source_stat(
+            species.base_special_defense,
+            ivs.special_defense,
+            level,
+            nature.special_defense,
+        ),
         moves,
     }
 }
@@ -719,9 +1372,17 @@ fn combatant_profile(species: SpeciesBattleProfile, level: u8, ivs: StatIvs, nat
 fn starter_battle_profile(starter: Option<StarterSpecies>) -> CombatantBattleProfile {
     let (ivs, nature) = source_random_ivs(default_ambient_rng());
     let (physical, status) = match starter.unwrap_or(StarterSpecies::Treecko) {
-        StarterSpecies::Treecko => ("POUND", "LEER"), StarterSpecies::Torchic => ("SCRATCH", "GROWL"), StarterSpecies::Mudkip => ("TACKLE", "GROWL"),
+        StarterSpecies::Treecko => ("POUND", "LEER"),
+        StarterSpecies::Torchic => ("SCRATCH", "GROWL"),
+        StarterSpecies::Mudkip => ("TACKLE", "GROWL"),
     };
-    combatant_profile(species_battle_profile(starter_species_name(starter)), 5, ivs, nature, &[physical, status])
+    combatant_profile(
+        species_battle_profile(starter_species_name(starter)),
+        5,
+        ivs,
+        nature,
+        &[physical, status],
+    )
 }
 
 fn starter_party_state(starter: StarterSpecies) -> StarterPartyState {
@@ -741,90 +1402,380 @@ fn starter_party_state(starter: StarterSpecies) -> StarterPartyState {
         special_defense: profile.special_defense,
         physical_move_pp: physical_move.pp,
         status_move_pp: status_move.pp,
+        moves: vec![
+            battle_move_slot(physical_move.name, physical_move.pp),
+            battle_move_slot(status_move.name, status_move.pp),
+        ],
     }
 }
 
-fn rival_battle_profile(starter: Option<StarterSpecies>, player_gender: PlayerGender) -> CombatantBattleProfile {
+fn normalize_slots(slots: &mut Vec<BattleMoveSlot>) {
+    slots.truncate(4);
+    slots.retain(|slot| !slot.name.is_empty());
+    for slot in slots {
+        if slot.move_id == 0 {
+            slot.move_id = source_move_id(&slot.name);
+        }
+    }
+}
+
+fn legacy_party_move_slots(party: &StarterPartyState) -> Vec<BattleMoveSlot> {
+    let profile = starter_battle_profile(Some(party.species));
+    [
+        profile.moves[0].map(|move_data| battle_move_slot(move_data.name, party.physical_move_pp)),
+        profile.moves[1].map(|move_data| battle_move_slot(move_data.name, party.status_move_pp)),
+    ]
+    .into_iter()
+    .flatten()
+    .collect()
+}
+
+fn effective_party_move_slots(party: &StarterPartyState) -> Vec<BattleMoveSlot> {
+    let mut slots = if party.moves.is_empty() {
+        legacy_party_move_slots(party)
+    } else {
+        party.moves.clone()
+    };
+    normalize_slots(&mut slots);
+    slots
+}
+
+fn legacy_battle_move_slots(battle: &BattleState) -> Vec<BattleMoveSlot> {
+    vec![
+        battle_move_slot(&battle.player_move_name, battle.player_move_pp),
+        battle_move_slot(
+            &battle.player_status_move_name,
+            battle.player_status_move_pp,
+        ),
+    ]
+}
+
+fn effective_battle_move_slots(battle: &BattleState) -> Vec<BattleMoveSlot> {
+    let mut slots = if battle.player_moves.is_empty() {
+        legacy_battle_move_slots(battle)
+    } else {
+        battle.player_moves.clone()
+    };
+    normalize_slots(&mut slots);
+    slots
+}
+
+fn move_slots_valid(slots: &[BattleMoveSlot]) -> bool {
+    !slots.is_empty()
+        && slots.len() <= 4
+        && slots.iter().all(|slot| {
+            slot.move_id != 0
+                && slot.move_id == source_move_id(&slot.name)
+                && slot.pp <= move_battle_profile(&slot.name).pp
+        })
+}
+
+fn rival_battle_profile(
+    starter: Option<StarterSpecies>,
+    player_gender: PlayerGender,
+) -> CombatantBattleProfile {
     // Route 103's trainer tables use level 5, IV 0, default moves. The
     // source name-hashed trainer personality determines the shown nature.
-    let name = match starter.unwrap_or(StarterSpecies::Treecko) { StarterSpecies::Treecko => "TORCHIC", StarterSpecies::Torchic => "MUDKIP", StarterSpecies::Mudkip => "TREECKO" };
-    let nature = match (player_gender, name) {
-        (PlayerGender::Brendan, "TREECKO") => nature_modifiers(1), (PlayerGender::Brendan, "TORCHIC") => nature_modifiers(20), (PlayerGender::Brendan, "MUDKIP") => nature_modifiers(17),
-        (PlayerGender::May, "TREECKO") => nature_modifiers(20), (PlayerGender::May, "TORCHIC") => nature_modifiers(14), (PlayerGender::May, "MUDKIP") => nature_modifiers(11), _ => NEUTRAL_NATURE,
+    let name = match starter.unwrap_or(StarterSpecies::Treecko) {
+        StarterSpecies::Treecko => "TORCHIC",
+        StarterSpecies::Torchic => "MUDKIP",
+        StarterSpecies::Mudkip => "TREECKO",
     };
-    let (physical, status) = match name { "TREECKO" => ("POUND", "LEER"), "TORCHIC" => ("SCRATCH", "GROWL"), _ => ("TACKLE", "GROWL") };
-    combatant_profile(species_battle_profile(name), 5, StatIvs { hp: 0, attack: 0, defense: 0, speed: 0, special_attack: 0, special_defense: 0 }, nature, &[physical, status])
+    let nature = match (player_gender, name) {
+        (PlayerGender::Brendan, "TREECKO") => nature_modifiers(1),
+        (PlayerGender::Brendan, "TORCHIC") => nature_modifiers(20),
+        (PlayerGender::Brendan, "MUDKIP") => nature_modifiers(17),
+        (PlayerGender::May, "TREECKO") => nature_modifiers(20),
+        (PlayerGender::May, "TORCHIC") => nature_modifiers(14),
+        (PlayerGender::May, "MUDKIP") => nature_modifiers(11),
+        _ => NEUTRAL_NATURE,
+    };
+    let (physical, status) = match name {
+        "TREECKO" => ("POUND", "LEER"),
+        "TORCHIC" => ("SCRATCH", "GROWL"),
+        _ => ("TACKLE", "GROWL"),
+    };
+    combatant_profile(
+        species_battle_profile(name),
+        5,
+        StatIvs {
+            hp: 0,
+            attack: 0,
+            defense: 0,
+            speed: 0,
+            special_attack: 0,
+            special_defense: 0,
+        },
+        nature,
+        &[physical, status],
+    )
 }
 
 fn wild_battle_profile(name: &str, level: u8, move_names: &[&str]) -> CombatantBattleProfile {
-    let name_hash = name.bytes().fold(0u32, |hash, byte| hash.wrapping_mul(31).wrapping_add(u32::from(byte)));
+    let name_hash = name.bytes().fold(0u32, |hash, byte| {
+        hash.wrapping_mul(31).wrapping_add(u32::from(byte))
+    });
     let (ivs, nature) = source_random_ivs(default_ambient_rng() ^ u32::from(level) ^ name_hash);
     combatant_profile(species_battle_profile(name), level, ivs, nature, move_names)
 }
 
 fn source_stage_stat(stat: u8, stage: i8) -> u8 {
     let stage = stage.clamp(-6, 6);
-    if stage >= 0 { ((u16::from(stat) * (2 + stage) as u16) / 2) as u8 } else { ((u16::from(stat) * 2) / (2 - stage) as u16) as u8 }
+    if stage >= 0 {
+        ((u16::from(stat) * (2 + stage) as u16) / 2) as u8
+    } else {
+        ((u16::from(stat) * 2) / (2 - stage) as u16) as u8
+    }
 }
 
 fn type_multiplier(move_type: BattleType, types: (BattleType, BattleType)) -> (u8, u8) {
     let mut numerator = 1;
     let mut denominator = 1;
     for (index, defending) in [types.0, types.1].iter().enumerate() {
-        if index == 1 && types.0 == types.1 { break; }
-        let (up, down) = match (move_type, *defending) { (BattleType::Water, BattleType::Grass | BattleType::Water) => (1, 2), (BattleType::Water, BattleType::Fire) => (2, 1), _ => (1, 1) };
-        numerator *= up; denominator *= down;
+        if index == 1 && types.0 == types.1 {
+            break;
+        }
+        let (up, down) = match (move_type, *defending) {
+            (BattleType::Water, BattleType::Grass | BattleType::Water) => (1, 2),
+            (BattleType::Water, BattleType::Fire) => (2, 1),
+            _ => (1, 1),
+        };
+        numerator *= up;
+        denominator *= down;
     }
     (numerator, denominator)
 }
 
-fn source_move_damage(level: u8, attacker: SpeciesBattleProfile, attack: u8, special_attack: u8, attacker_stage: i8, defender: SpeciesBattleProfile, defense: u8, special_defense: u8, defender_stage: i8, move_data: MoveBattleProfile, critical: bool) -> u8 {
-    if move_data.power == 0 { return 0; }
-    let attack_stat = if move_data.special { special_attack } else { attack };
-    let defense_stat = if move_data.special { special_defense } else { defense };
+fn source_move_damage(
+    level: u8,
+    attacker: SpeciesBattleProfile,
+    attack: u8,
+    special_attack: u8,
+    attacker_stage: i8,
+    defender: SpeciesBattleProfile,
+    defense: u8,
+    special_defense: u8,
+    defender_stage: i8,
+    move_data: MoveBattleProfile,
+    critical: bool,
+) -> u8 {
+    if move_data.power == 0 {
+        return 0;
+    }
+    let attack_stat = if move_data.special {
+        special_attack
+    } else {
+        attack
+    };
+    let defense_stat = if move_data.special {
+        special_defense
+    } else {
+        defense
+    };
     // `CalculateBaseDamage` ignores an attacker's negative stage and a
     // defender's positive stage on a critical hit, but preserves the
     // favorable stage in either direction.
-    let attacking = if critical && attacker_stage <= 0 { attack_stat } else { source_stage_stat(attack_stat, attacker_stage) };
-    let defending = (if critical && defender_stage >= 0 { defense_stat } else { source_stage_stat(defense_stat, defender_stage) }).max(1);
-    let scaled = (u32::from(2 * level / 5 + 2) * u32::from(move_data.power) * u32::from(attacking)) / u32::from(defending);
+    let attacking = if critical && attacker_stage <= 0 {
+        attack_stat
+    } else {
+        source_stage_stat(attack_stat, attacker_stage)
+    };
+    let defending = (if critical && defender_stage >= 0 {
+        defense_stat
+    } else {
+        source_stage_stat(defense_stat, defender_stage)
+    })
+    .max(1);
+    let scaled = (u32::from(2 * level / 5 + 2) * u32::from(move_data.power) * u32::from(attacking))
+        / u32::from(defending);
     let mut damage = ((scaled / 50) + 2) as u16;
-    if critical { damage *= 2; }
-    if attacker.types.0 == move_data.move_type || attacker.types.1 == move_data.move_type { damage = (damage * 15) / 10; }
+    if critical {
+        damage *= 2;
+    }
+    if attacker.types.0 == move_data.move_type || attacker.types.1 == move_data.move_type {
+        damage = (damage * 15) / 10;
+    }
     let (numerator, denominator) = type_multiplier(move_data.move_type, defender.types);
     damage = (damage * u16::from(numerator)) / u16::from(denominator);
     damage.max(1) as u8
 }
 
-fn player_battle_damage(battle: &BattleState, critical: bool) -> u8 {
-    source_move_damage(battle.player_level, species_battle_profile(&battle.player_species), battle.player_attack, battle.player_special_attack, battle.player_attack_stage, species_battle_profile(&battle.opponent_species), battle.opponent_defense, battle.opponent_special_defense, battle.opponent_defense_stage, move_battle_profile(&battle.player_move_name), critical)
+fn player_battle_damage_for(
+    battle: &BattleState,
+    move_data: MoveBattleProfile,
+    critical: bool,
+) -> u8 {
+    source_move_damage(
+        battle.player_level,
+        species_battle_profile(&battle.player_species),
+        battle.player_attack,
+        battle.player_special_attack,
+        battle.player_attack_stage,
+        species_battle_profile(&battle.opponent_species),
+        battle.opponent_defense,
+        battle.opponent_special_defense,
+        battle.opponent_defense_stage,
+        move_data,
+        critical,
+    )
 }
 
-fn opponent_battle_damage_for(battle: &BattleState, move_data: MoveBattleProfile, critical: bool) -> u8 {
-    source_move_damage(battle.opponent_level, species_battle_profile(&battle.opponent_species), battle.opponent_attack, battle.opponent_special_attack, battle.opponent_attack_stage, species_battle_profile(&battle.player_species), battle.player_defense, battle.player_special_defense, battle.player_defense_stage, move_data, critical)
+fn opponent_battle_damage_for(
+    battle: &BattleState,
+    move_data: MoveBattleProfile,
+    critical: bool,
+) -> u8 {
+    source_move_damage(
+        battle.opponent_level,
+        species_battle_profile(&battle.opponent_species),
+        battle.opponent_attack,
+        battle.opponent_special_attack,
+        battle.opponent_attack_stage,
+        species_battle_profile(&battle.player_species),
+        battle.player_defense,
+        battle.player_special_defense,
+        battle.player_defense_stage,
+        move_data,
+        critical,
+    )
 }
 
-fn opening_battle_state(opponent: BattleOpponent, player: CombatantBattleProfile, enemy: CombatantBattleProfile, wild: bool, message: String, entry_transition_frames: u16, rng_state: u32, rival_setup_first_turn: bool) -> BattleState {
+fn opening_battle_state(
+    opponent: BattleOpponent,
+    player: CombatantBattleProfile,
+    enemy: CombatantBattleProfile,
+    wild: bool,
+    message: String,
+    entry_transition_frames: u16,
+    rng_state: u32,
+    rival_setup_first_turn: bool,
+) -> BattleState {
     let player_physical = player.moves[0].expect("starter must have a physical opening move");
     let player_status = player.moves[1].expect("starter must have a status opening move");
     let opponent_initial = enemy.moves[0].expect("opening opponent must have a first move slot");
-    let player_move_damage = source_move_damage(player.level, player.species, player.attack, player.special_attack, 0, enemy.species, enemy.defense, enemy.special_defense, 0, player_physical, false);
-    let opponent_move_damage = source_move_damage(enemy.level, enemy.species, enemy.attack, enemy.special_attack, 0, player.species, player.defense, player.special_defense, 0, opponent_initial, false);
-    let opponent_moves = enemy.moves.iter().flatten().map(|move_data| BattleMoveSlot {
-        name: move_data.name.to_owned(),
-        pp: move_data.pp,
-    }).collect();
+    let player_move_damage = source_move_damage(
+        player.level,
+        player.species,
+        player.attack,
+        player.special_attack,
+        0,
+        enemy.species,
+        enemy.defense,
+        enemy.special_defense,
+        0,
+        player_physical,
+        false,
+    );
+    let opponent_move_damage = source_move_damage(
+        enemy.level,
+        enemy.species,
+        enemy.attack,
+        enemy.special_attack,
+        0,
+        player.species,
+        player.defense,
+        player.special_defense,
+        0,
+        opponent_initial,
+        false,
+    );
+    let opponent_moves = enemy
+        .moves
+        .iter()
+        .flatten()
+        .map(|move_data| battle_move_slot(move_data.name, move_data.pp))
+        .collect();
+    let player_moves = player
+        .moves
+        .iter()
+        .flatten()
+        .map(|move_data| battle_move_slot(move_data.name, move_data.pp))
+        .collect();
     BattleState {
-        opponent, rng_state, player_species: player.species.name.to_owned(), opponent_species: enemy.species.name.to_owned(), opponent_move_name: opponent_initial.name.to_owned(), opponent_moves, opponent_move_slot: None, opponent_turn_count: 0, rival_setup_first_turn, opponent_move_damage,
-        player_hp: player.max_hp, player_max_hp: player.max_hp, player_level: player.level, player_attack: player.attack, player_defense: player.defense, player_speed: player.speed, player_special_attack: player.special_attack, player_special_defense: player.special_defense,
-        rival_hp: enemy.max_hp, opponent_max_hp: enemy.max_hp, opponent_level: enemy.level, opponent_attack: enemy.attack, opponent_defense: enemy.defense, opponent_speed: enemy.speed, opponent_special_attack: enemy.special_attack, opponent_special_defense: enemy.special_defense,
-        player_move_damage, player_move_name: player_physical.name.to_owned(), player_status_move_name: player_status.name.to_owned(), player_move_pp: player_physical.pp, player_status_move_pp: player_status.pp,
-        opponent_attack_stage: 0, opponent_defense_stage: 0, player_attack_stage: 0, player_defense_stage: 0, player_speed_stage: 0, command_cursor: BATTLE_COMMAND_FIGHT, selecting_move: false, party_screen_open: false, escaped: false, opponent_fled: false, wild, move_cursor: 0, player_fainted: false, message: Some(message), entry_transition_frames, intro_opponent_trainer_exit_frames: 0, intro_stage: 0, intro_player_sendout_pending: false, intro_player_sendout_frames: 0, intro_player_sendout_elapsed_frames: 0, intro_player_sendout_started: false, last_move_hit: false, last_move_critical: false, last_damage_variance: None,
+        opponent,
+        rng_state,
+        player_species: player.species.name.to_owned(),
+        opponent_species: enemy.species.name.to_owned(),
+        opponent_move_name: opponent_initial.name.to_owned(),
+        opponent_moves,
+        opponent_move_slot: None,
+        opponent_turn_count: 0,
+        rival_setup_first_turn,
+        opponent_move_damage,
+        player_hp: player.max_hp,
+        player_max_hp: player.max_hp,
+        player_level: player.level,
+        player_attack: player.attack,
+        player_defense: player.defense,
+        player_speed: player.speed,
+        player_special_attack: player.special_attack,
+        player_special_defense: player.special_defense,
+        rival_hp: enemy.max_hp,
+        opponent_max_hp: enemy.max_hp,
+        opponent_level: enemy.level,
+        opponent_attack: enemy.attack,
+        opponent_defense: enemy.defense,
+        opponent_speed: enemy.speed,
+        opponent_special_attack: enemy.special_attack,
+        opponent_special_defense: enemy.special_defense,
+        player_move_damage,
+        player_move_name: player_physical.name.to_owned(),
+        player_status_move_name: player_status.name.to_owned(),
+        player_move_pp: player_physical.pp,
+        player_status_move_pp: player_status.pp,
+        player_moves,
+        opponent_attack_stage: 0,
+        opponent_defense_stage: 0,
+        player_attack_stage: 0,
+        player_defense_stage: 0,
+        player_speed_stage: 0,
+        command_cursor: BATTLE_COMMAND_FIGHT,
+        command_cursor_rendered: None,
+        command_cursor_transition_frames: 0,
+        selecting_move: false,
+        move_selection_transition_frames: 0,
+        move_cursor_rendered: None,
+        move_cursor_transition_frames: 0,
+        move_selection_cancel_transition_frames: 0,
+        player_battler_oam_phase_reset_frame: 0,
+        move_selection_oam_phase_delay_frames: 0,
+        party_screen_open: false,
+        escaped: false,
+        opponent_fled: false,
+        wild,
+        field_return: None,
+        run_attempts: 0,
+        move_cursor: 0,
+        player_fainted: false,
+        message: Some(message),
+        message_visual_start_frame: 0,
+        entry_transition_frames,
+        intro_opponent_trainer_exit_frames: 0,
+        intro_stage: 0,
+        intro_player_sendout_pending: false,
+        intro_message_dismiss_delay_frames: 0,
+        intro_message_hidden: false,
+        intro_message_hide_on_dismiss: false,
+        intro_message_arrow_reset_on_dismiss: false,
+        intro_message_dismiss_arrow_frame: 0,
+        intro_message_print_chars: 0,
+        intro_message_print_hold_frames: 0,
+        intro_player_sendout_frames: 0,
+        intro_player_sendout_elapsed_frames: 0,
+        intro_player_sendout_started: false,
+        last_move_hit: false,
+        last_move_critical: false,
+        last_damage_variance: None,
+        turn_phase: BattleTurnPhase::IntroMessage,
     }
 }
 
 #[derive(Clone, Copy)]
-struct BattleMoveResolution { hit: bool, critical: bool, damage: u8 }
+struct BattleMoveResolution {
+    hit: bool,
+    critical: bool,
+    damage: u8,
+}
 
 #[derive(Clone, Copy)]
 enum OpponentChoice {
@@ -836,18 +1787,40 @@ fn battle_random(battle: &mut BattleState) -> u16 {
     source_random(&mut battle.rng_state)
 }
 
+/// Gen-III's wild escape check.  The opening maps normally make escape
+/// certain because the starter outruns the encountered Pokémon, but retaining
+/// the failed branch is essential for deterministic replay and prevents a
+/// RUN request from silently acting as a route-specific teleport.
+fn try_wild_escape(battle: &mut BattleState) -> bool {
+    debug_assert!(battle.wild);
+    let denominator = u16::from((battle.opponent_speed / 4).max(1));
+    let chance = (u16::from(battle.player_speed) * 128 / denominator)
+        .saturating_add(u16::from(battle.run_attempts) * 30);
+    if chance > 255 || u16::from(battle_random(battle) & 0x00ff) < chance {
+        true
+    } else {
+        battle.run_attempts = battle.run_attempts.saturating_add(1);
+        false
+    }
+}
+
 fn source_hp_percent(hp: u8, max_hp: u8) -> u8 {
     (u16::from(hp) * 100 / u16::from(max_hp.max(1))) as u8
 }
 
 fn legal_opponent_move_slots(battle: &BattleState) -> Vec<usize> {
-    battle.opponent_moves.iter().enumerate()
+    battle
+        .opponent_moves
+        .iter()
+        .enumerate()
         .filter_map(|(slot, move_slot)| (move_slot.pp > 0).then_some(slot))
         .collect()
 }
 
 fn opponent_move_data(battle: &BattleState, slot: usize) -> Option<MoveBattleProfile> {
-    battle.opponent_moves.get(slot)
+    battle
+        .opponent_moves
+        .get(slot)
         .filter(|move_slot| move_slot.pp > 0)
         .map(|move_slot| move_battle_profile(&move_slot.name))
 }
@@ -911,18 +1884,30 @@ fn rival_defense_down_score_penalty(battle: &mut BattleState) -> i16 {
 fn select_route103_rival_move(battle: &mut BattleState) -> usize {
     let simulated_variance = battle_ai_simulated_variance(battle);
     let legal_slots = legal_opponent_move_slots(battle);
-    let physical_slot = legal_slots.iter().copied()
+    let physical_slot = legal_slots
+        .iter()
+        .copied()
         .find(|slot| opponent_move_data(battle, *slot).is_some_and(|move_data| move_data.power > 0))
         .expect("Route 103 rival must have a damaging move");
-    let status_slot = legal_slots.iter().copied()
-        .find(|slot| opponent_move_data(battle, *slot).is_some_and(|move_data| move_data.power == 0));
-    let physical_move = opponent_move_data(battle, physical_slot).expect("selected rival move must remain usable");
+    let status_slot = legal_slots.iter().copied().find(|slot| {
+        opponent_move_data(battle, *slot).is_some_and(|move_data| move_data.power == 0)
+    });
+    let physical_move =
+        opponent_move_data(battle, physical_slot).expect("selected rival move must remain usable");
     let simulated_damage = (u16::from(opponent_battle_damage_for(battle, physical_move, false))
-        * u16::from(simulated_variance[physical_slot]) / 100).max(1) as u8;
-    let physical_score = if simulated_damage >= battle.player_hp { 104 } else { 100 };
+        * u16::from(simulated_variance[physical_slot])
+        / 100)
+        .max(1) as u8;
+    let physical_score = if simulated_damage >= battle.player_hp {
+        104
+    } else {
+        100
+    };
     let mut scores = legal_slots.iter().map(|_| 100_i16).collect::<Vec<_>>();
     if let Some(status_slot) = status_slot {
-        let status_index = legal_slots.iter().position(|slot| *slot == status_slot)
+        let status_index = legal_slots
+            .iter()
+            .position(|slot| *slot == status_slot)
             .expect("status move must be a legal move");
         let status_move = opponent_move_data(battle, status_slot)
             .expect("selected rival status move must remain usable");
@@ -945,13 +1930,17 @@ fn select_route103_rival_move(battle: &mut BattleState) -> usize {
             }
         };
     }
-    let physical_index = legal_slots.iter().position(|slot| *slot == physical_slot)
+    let physical_index = legal_slots
+        .iter()
+        .position(|slot| *slot == physical_slot)
         .expect("damaging move must be a legal move");
     scores[physical_index] = physical_score;
     let best_score = scores.iter().copied().max().expect("rival has legal moves");
-    let best_slots = legal_slots.iter().zip(scores).filter_map(|(slot, score)| {
-        (score == best_score).then_some(*slot)
-    }).collect::<Vec<_>>();
+    let best_slots = legal_slots
+        .iter()
+        .zip(scores)
+        .filter_map(|(slot, score)| (score == best_score).then_some(*slot))
+        .collect::<Vec<_>>();
     // `ChooseMoveOrAction_Singles` always rolls the final index, even for a
     // unique best move (`Random() % 1`).
     choose_tied_opponent_move(battle, &best_slots)
@@ -987,10 +1976,15 @@ fn select_opening_opponent_choice(battle: &mut BattleState) -> OpponentChoice {
     let choice = match battle.opponent {
         BattleOpponent::Rival => OpponentChoice::Move(select_route103_rival_move(battle)),
         BattleOpponent::Zigzagoon => select_first_battle_move(battle),
-        BattleOpponent::Poochyena | BattleOpponent::Wingull | BattleOpponent::Wurmple => OpponentChoice::Move(select_wild_opponent_move(battle)),
+        BattleOpponent::Poochyena | BattleOpponent::Wingull | BattleOpponent::Wurmple => {
+            OpponentChoice::Move(select_wild_opponent_move(battle))
+        }
     };
     if let OpponentChoice::Move(slot) = choice {
-        let move_slot = battle.opponent_moves.get(slot).expect("selected opponent slot must exist");
+        let move_slot = battle
+            .opponent_moves
+            .get(slot)
+            .expect("selected opponent slot must exist");
         battle.opponent_move_name = move_slot.name.clone();
         battle.opponent_move_slot = Some(slot as u8);
     }
@@ -1002,6 +1996,8 @@ fn resolve_opponent_flee(battle: &mut BattleState) {
     battle.opponent_fled = true;
     battle.selecting_move = false;
     battle.message = Some(format!("Wild {} fled!", battle.opponent_species));
+    battle.message_visual_start_frame = 0;
+    battle.turn_phase = BattleTurnPhase::TerminalMessage;
 }
 
 fn battle_accuracy_check(battle: &mut BattleState, move_data: MoveBattleProfile) -> bool {
@@ -1028,28 +2024,48 @@ fn apply_battle_damage_variance(battle: &mut BattleState, damage: u8) -> u8 {
     (u16::from(damage) * u16::from(percent) / 100).max(1) as u8
 }
 
-fn resolve_player_damage_move(battle: &mut BattleState) -> BattleMoveResolution {
-    let move_data = move_battle_profile(&battle.player_move_name);
+fn resolve_player_damage_move(
+    battle: &mut BattleState,
+    move_data: MoveBattleProfile,
+) -> BattleMoveResolution {
     if !battle_accuracy_check(battle, move_data) {
-        return BattleMoveResolution { hit: false, critical: false, damage: 0 };
+        return BattleMoveResolution {
+            hit: false,
+            critical: false,
+            damage: 0,
+        };
     }
     let critical = battle_critical_check(battle);
-    let damage = apply_battle_damage_variance(battle, player_battle_damage(battle, critical));
+    let base_damage = player_battle_damage_for(battle, move_data, critical);
+    let damage = apply_battle_damage_variance(battle, base_damage);
     battle.last_move_critical = critical;
-    BattleMoveResolution { hit: true, critical, damage }
+    BattleMoveResolution {
+        hit: true,
+        critical,
+        damage,
+    }
 }
 
 fn resolve_opponent_damage_move(battle: &mut BattleState) -> BattleMoveResolution {
     let selected_slot = battle.opponent_move_slot.map(usize::from).or_else(|| {
-        battle.opponent_moves.iter().position(|move_slot| {
-            move_slot.pp > 0 && move_slot.name == battle.opponent_move_name
-        })
+        battle
+            .opponent_moves
+            .iter()
+            .position(|move_slot| move_slot.pp > 0 && move_slot.name == battle.opponent_move_name)
     });
     let Some(selected_slot) = selected_slot else {
-        return BattleMoveResolution { hit: false, critical: false, damage: 0 };
+        return BattleMoveResolution {
+            hit: false,
+            critical: false,
+            damage: 0,
+        };
     };
     let Some(move_data) = opponent_move_data(battle, selected_slot) else {
-        return BattleMoveResolution { hit: false, critical: false, damage: 0 };
+        return BattleMoveResolution {
+            hit: false,
+            critical: false,
+            damage: 0,
+        };
     };
     battle.opponent_move_slot = Some(selected_slot as u8);
     battle.opponent_move_name = move_data.name.to_owned();
@@ -1059,7 +2075,11 @@ fn resolve_opponent_damage_move(battle: &mut BattleState) -> BattleMoveResolutio
     }
     if !battle_accuracy_check(battle, move_data) {
         battle.opponent_turn_count = battle.opponent_turn_count.saturating_add(1);
-        return BattleMoveResolution { hit: false, critical: false, damage: 0 };
+        return BattleMoveResolution {
+            hit: false,
+            critical: false,
+            damage: 0,
+        };
     }
     if move_data.power == 0 {
         match move_data.name {
@@ -1069,13 +2089,24 @@ fn resolve_opponent_damage_move(battle: &mut BattleState) -> BattleMoveResolutio
             _ => {}
         }
         battle.opponent_turn_count = battle.opponent_turn_count.saturating_add(1);
-        return BattleMoveResolution { hit: true, critical: false, damage: 0 };
+        return BattleMoveResolution {
+            hit: true,
+            critical: false,
+            damage: 0,
+        };
     }
     let critical = battle_critical_check(battle);
-    let damage = apply_battle_damage_variance(battle, opponent_battle_damage_for(battle, move_data, critical));
+    let damage = apply_battle_damage_variance(
+        battle,
+        opponent_battle_damage_for(battle, move_data, critical),
+    );
     battle.last_move_critical = critical;
     battle.opponent_turn_count = battle.opponent_turn_count.saturating_add(1);
-    BattleMoveResolution { hit: true, critical, damage }
+    BattleMoveResolution {
+        hit: true,
+        critical,
+        damage,
+    }
 }
 
 fn resolved_move_text(actor: &str, move_name: &str, resolution: BattleMoveResolution) -> String {
@@ -1096,7 +2127,10 @@ fn rival_trainer_name(player_gender: PlayerGender) -> &'static str {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
-pub struct TilePosition { pub x: i16, pub y: i16 }
+pub struct TilePosition {
+    pub x: i16,
+    pub y: i16,
+}
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct NpcState {
@@ -1128,19 +2162,29 @@ pub struct NpcWalkStart {
     pub in_place: bool,
 }
 
-fn default_npc_walk_duration() -> u8 { 16 }
+fn default_npc_walk_duration() -> u8 {
+    16
+}
 
 /// Source `MOVEMENT_TYPE_WANDER_*` objects do not share a global cadence.
 /// Each sprite first completes its facing action, waits for a separately
 /// randomized delay, chooses a direction, and only then performs one walk.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub enum AmbientWanderMode {
-    Face { remaining_frames: u8 },
-    Delay { remaining_frames: u8 },
-    Walk { remaining_frames: u8 },
+    Face {
+        remaining_frames: u8,
+    },
+    Delay {
+        remaining_frames: u8,
+    },
+    Walk {
+        remaining_frames: u8,
+    },
     /// A frozen source checkpoint can begin mid-object-event. This retains a
     /// measured stable pose until the next EWRAM-proven scheduler boundary.
-    MeasuredWait { release_frame: u64 },
+    MeasuredWait {
+        release_frame: u64,
+    },
 }
 
 /// Serialized progress for an ambient object-event. Keeping this in world
@@ -1158,20 +2202,836 @@ pub struct AmbientWanderState {
     pub pending_direction: Option<Facing>,
 }
 
-fn default_ambient_rng() -> u32 { 0x5eed_0001 }
+fn default_ambient_rng() -> u32 {
+    0x5eed_0001
+}
 
-fn default_starter_lab_choice_yes() -> bool { true }
+fn default_starter_lab_choice_yes() -> bool {
+    true
+}
 
-fn default_starter_confirm_yes() -> bool { true }
+fn default_starter_confirm_yes() -> bool {
+    true
+}
 
-fn default_naming_target() -> NamingTarget { NamingTarget::Player }
+fn default_naming_target() -> NamingTarget {
+    NamingTarget::Player
+}
 
-fn default_name_entry_page() -> NamingKeyboardPage { NamingKeyboardPage::LettersUpper }
+fn default_name_entry_page() -> NamingKeyboardPage {
+    NamingKeyboardPage::LettersUpper
+}
+
+/// The field task which is allowed to consume the controller on a VBlank.
+///
+/// This deliberately describes *ownership*, not a visual screen. A map
+/// script may lock the field while no dialogue is visible, and a text box may
+/// remain visible while its printer is still the owner. Keeping that
+/// distinction in durable state prevents the common "close the box and walk
+/// on the same frame" bug when routes are replayed in differently sized
+/// transport requests.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum FieldInputOwner {
+    Field,
+    Battle,
+    /// The field-only SELECT registration help window owns input while its
+    /// border/text tasks are live.  This is not a script dialogue: source
+    /// installs it directly from the field controller and releases it on a
+    /// delayed close hand-off.
+    SelectModal,
+    Dialogue,
+    Script,
+    Warp,
+    ClockEditor,
+    Menu,
+}
+
+/// The source-observed SELECT registration help modal available in the
+/// initial bedroom field checkpoint.
+///
+/// The modal becomes visibly bordered on its fifth VBlank.  Its text has
+/// finished printing before the final setup callbacks settle; input remains
+/// locked through VBlank 64.  A completed window dismissed with B stays
+/// visible for two further VBlanks before the normal field task resumes.
+/// Keeping all three clocks in checkpoint state is essential: reducing this
+/// to a boolean was what let random tapes walk while source was still typing.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct FieldSelectModal {
+    /// VBlanks including the Select edge that installed the task.
+    pub elapsed_frames: u8,
+    /// Remaining post-dismissal visible VBlanks. `None` means the modal is
+    /// still opening/printing/settled; zero is never serialized.
+    #[serde(default)]
+    pub closing_frames: Option<u8>,
+}
+
+impl FieldSelectModal {
+    pub const BORDER_VISIBLE_AT: u8 = 5;
+    pub const INPUT_READY_AT: u8 = 64;
+    // `B` is itself a visible source frame, followed by two further visible
+    // VBlanks.  Therefore the closing task must retain three frames when it
+    // is installed: B, then the two neutral VBlanks.  Removing the window on
+    // the second neutral VBlank was externally visible at Select V67.
+    pub const CLOSE_VISIBLE_FRAMES: u8 = 3;
+    pub const MESSAGE: &'static str =
+        "An item in the BAG can be\nregistered to SELECT for easy use.";
+
+    fn new() -> Self {
+        // The Select edge itself is the first source VBlank of the UI task.
+        Self {
+            elapsed_frames: 1,
+            closing_frames: None,
+        }
+    }
+
+    pub fn border_visible(&self) -> bool {
+        self.elapsed_frames >= Self::BORDER_VISIBLE_AT
+    }
+
+    pub fn input_ready(&self) -> bool {
+        self.closing_frames.is_none() && self.elapsed_frames >= Self::INPUT_READY_AT
+    }
+
+    /// Source text is effectively complete around V41, while sprite/window
+    /// setup remains input-locked until V64.  Preserve that distinction in
+    /// the renderer projection rather than pretending text completion means
+    /// a field hand-off.
+    pub fn visible_text(&self) -> String {
+        if !self.border_visible() {
+            return String::new();
+        }
+        // The source TextPrinter emits its first glyph on V6: the five
+        // VBlanks through the border are setup, then one glyph per VBlank.
+        // The old two-glyph approximation made the page appear complete
+        // around V41, while the source still reveals the final ``use.`` at
+        // V64. Keeping this clock one-glyph/one-VBlank is observable at V6,
+        // V18, V30, V41, V51, and V60 in the authenticated source tape.
+        let mut remaining_glyphs = usize::from(self.elapsed_frames.saturating_sub(5));
+        let mut rendered = String::new();
+        for character in Self::MESSAGE.chars() {
+            // Emerald's `\n` is a control code. It moves the printer to the
+            // second line in the same VBlank as the following glyph instead
+            // of consuming a glyph clock. Counting it made the second-line
+            // `r` arrive one VBlank late and hid the final period at V64.
+            if character == '\n' {
+                rendered.push(character);
+                continue;
+            }
+            if remaining_glyphs == 0 {
+                break;
+            }
+            rendered.push(character);
+            remaining_glyphs -= 1;
+        }
+        rendered
+    }
+}
+
+/// Serializable paged field dialogue. `WorldState::dialogue` remains the
+/// renderer/readout projection for compatibility with existing checkpoints;
+/// this task is the authoritative ownership and page state for new field
+/// scripts.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct FieldDialogueState {
+    pub pages: Vec<String>,
+    pub page: usize,
+    pub print_remaining: u16,
+}
+
+impl FieldDialogueState {
+    fn new(pages: Vec<String>) -> Option<Self> {
+        let first = pages.first()?;
+        Some(Self {
+            print_remaining: dialogue_printer_duration(first),
+            pages,
+            page: 0,
+        })
+    }
+
+    fn current_text(&self) -> &str {
+        // Construction and page advancement preserve this invariant.  Keep a
+        // total accessor so a malformed imported checkpoint does not panic
+        // the field scheduler.
+        self.pages.get(self.page).map(String::as_str).unwrap_or("")
+    }
+
+    fn advance_printer(&mut self, frames: u32) {
+        self.print_remaining = self
+            .print_remaining
+            .saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
+    }
+
+    /// Returns whether a page was advanced. `false` means that the dialogue
+    /// completed and should release the script on this VBlank.
+    fn advance_page(&mut self) -> bool {
+        if self.page + 1 >= self.pages.len() {
+            return false;
+        }
+        self.page += 1;
+        self.print_remaining = dialogue_printer_duration(self.current_text());
+        true
+    }
+}
+
+/// Story facts set by reusable scripts. These are intentionally separate
+/// from `StoryPhase`: phases decide which scene is currently executing;
+/// flags record completed prerequisites and survive a later map visit.
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
+pub struct StoryFlags {
+    pub wall_clock_started: bool,
+    pub upstairs_mom_scene_complete: bool,
+    pub gym_broadcast_complete: bool,
+    pub pokemon_obtained: bool,
+    pub birch_rescue_started: bool,
+    /// The Lab has formally acknowledged the Pokémon selected on Route 101.
+    /// This is distinct from `pokemon_obtained`, which source sets before
+    /// the picker itself opens.
+    pub starter_acknowledged: bool,
+    /// Birch's final Lab agreement has released the player to visit the
+    /// rival. Map connections consult this durable source gate rather than
+    /// inferring permission from a broad story phase.
+    pub rival_route_unlocked: bool,
+    /// Source trainer/script flags established by the continuous Route 103
+    /// victory path. They remain separate from `StoryPhase`: imported states
+    /// must prove the victory rather than selecting a later presentation.
+    pub defeated_rival_route103: bool,
+    pub hide_route103_rival: bool,
+    pub hide_littleroot_lab_rival: bool,
+    pub hide_oldale_rival: bool,
+}
+
+/// Source event variables which gate the rival-return maps.  These values are
+/// authenticated at the first stable field checkpoint after Route 103.
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OpeningStoryVars {
+    pub birch_lab_state: u8,
+    pub littleroot_rival_state: u8,
+    pub oldale_rival_state: u8,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum ProgressFlag {
+    WallClockStarted,
+    UpstairsMomSceneComplete,
+    GymBroadcastComplete,
+    BirchPromptComplete,
+    HasPokedex,
+    PokemonObtained,
+    BirchRescueStarted,
+    StarterAcknowledged,
+    RivalRouteUnlocked,
+}
+
+impl StoryFlags {
+    fn has(self, flag: ProgressFlag, world: &WorldState) -> bool {
+        match flag {
+            ProgressFlag::WallClockStarted => self.wall_clock_started,
+            ProgressFlag::UpstairsMomSceneComplete => self.upstairs_mom_scene_complete,
+            ProgressFlag::GymBroadcastComplete => self.gym_broadcast_complete,
+            ProgressFlag::BirchPromptComplete => world.birch_prompt_complete,
+            ProgressFlag::HasPokedex => world.has_pokedex,
+            ProgressFlag::PokemonObtained => self.pokemon_obtained,
+            ProgressFlag::BirchRescueStarted => self.birch_rescue_started,
+            ProgressFlag::StarterAcknowledged => self.starter_acknowledged,
+            ProgressFlag::RivalRouteUnlocked => self.rival_route_unlocked,
+        }
+    }
+
+    fn set(&mut self, flag: ProgressFlag) {
+        match flag {
+            ProgressFlag::WallClockStarted => self.wall_clock_started = true,
+            ProgressFlag::UpstairsMomSceneComplete => self.upstairs_mom_scene_complete = true,
+            ProgressFlag::GymBroadcastComplete => self.gym_broadcast_complete = true,
+            ProgressFlag::PokemonObtained => self.pokemon_obtained = true,
+            ProgressFlag::BirchRescueStarted => self.birch_rescue_started = true,
+            ProgressFlag::StarterAcknowledged => self.starter_acknowledged = true,
+            ProgressFlag::RivalRouteUnlocked => self.rival_route_unlocked = true,
+            // These are projections of existing long-lived world facts and
+            // are not independently writable by a generic script.
+            ProgressFlag::BirchPromptComplete | ProgressFlag::HasPokedex => {}
+        }
+    }
+}
+
+/// Timing owned by the generic warp task. A source map event may spend a
+/// measured number of VBlanks armed before palette fade starts; zero retains
+/// Emerald's immediate-fade behavior used by the existing reference routes.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct WarpTiming {
+    pub pre_fade_delay_frames: u8,
+    pub fade_frames: u8,
+}
+
+impl Default for WarpTiming {
+    fn default() -> Self {
+        Self {
+            pre_fade_delay_frames: 0,
+            fade_frames: 16,
+        }
+    }
+}
+
+const DEFAULT_WARP_TIMING: WarpTiming = WarpTiming {
+    pre_fade_delay_frames: 0,
+    fade_frames: 16,
+};
+
+/// Declarative map-edge gate. It is intentionally data-only: the player
+/// cannot escape a story boundary just because a later transport packet is
+/// grouped differently.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct GatePredicate {
+    pub minimum_phase: Option<StoryPhase>,
+    pub exact_phase: Option<StoryPhase>,
+    pub required_flag: Option<ProgressFlag>,
+}
+
+impl GatePredicate {
+    fn satisfied(self, world: &WorldState) -> bool {
+        self.minimum_phase
+            .map_or(true, |phase| world.phase >= phase)
+            && self.exact_phase.map_or(true, |phase| world.phase == phase)
+            && self
+                .required_flag
+                .map_or(true, |flag| world.story_flags.has(flag, world))
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ConnectionMode {
+    Fade,
+    Scroll,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ConnectionAction {
+    None,
+    StartBirchRescue,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct MapConnectionRule {
+    source_map: MapId,
+    direction: Facing,
+    min_x: i16,
+    max_x: i16,
+    source_y: i16,
+    destination_map: MapId,
+    destination_y: i16,
+    mode: ConnectionMode,
+    gate: GatePredicate,
+    action: ConnectionAction,
+}
+
+impl MapConnectionRule {
+    fn matches(self, world: &WorldState, direction: Facing) -> bool {
+        self.source_map == world.map
+            && self.direction == direction
+            && (self.min_x..=self.max_x).contains(&world.player.x)
+            && self.source_y == world.player.y
+    }
+}
+
+const MAP_CONNECTION_RULES: [MapConnectionRule; 7] = [
+    MapConnectionRule {
+        source_map: MapId::LittlerootTown,
+        direction: Facing::Up,
+        min_x: 10,
+        max_x: 11,
+        source_y: 0,
+        destination_map: MapId::Route101,
+        destination_y: 19,
+        mode: ConnectionMode::Fade,
+        gate: GatePredicate {
+            minimum_phase: None,
+            exact_phase: Some(StoryPhase::MetRival),
+            required_flag: Some(ProgressFlag::BirchPromptComplete),
+        },
+        action: ConnectionAction::StartBirchRescue,
+    },
+    MapConnectionRule {
+        source_map: MapId::LittlerootTown,
+        direction: Facing::Up,
+        min_x: 10,
+        max_x: 11,
+        source_y: 0,
+        destination_map: MapId::Route101,
+        destination_y: 19,
+        mode: ConnectionMode::Fade,
+        gate: GatePredicate {
+            minimum_phase: Some(StoryPhase::StarterChosen),
+            exact_phase: None,
+            required_flag: Some(ProgressFlag::RivalRouteUnlocked),
+        },
+        action: ConnectionAction::None,
+    },
+    MapConnectionRule {
+        source_map: MapId::Route101,
+        direction: Facing::Down,
+        min_x: 10,
+        max_x: 11,
+        source_y: 19,
+        destination_map: MapId::LittlerootTown,
+        destination_y: 0,
+        mode: ConnectionMode::Fade,
+        gate: GatePredicate {
+            minimum_phase: Some(StoryPhase::StarterChosen),
+            exact_phase: None,
+            required_flag: Some(ProgressFlag::StarterAcknowledged),
+        },
+        action: ConnectionAction::None,
+    },
+    MapConnectionRule {
+        source_map: MapId::Route101,
+        direction: Facing::Up,
+        min_x: 8,
+        max_x: 11,
+        source_y: 0,
+        destination_map: MapId::OldaleTown,
+        // The first post-edge source receipt is the south connection row,
+        // raw y=20.  It is an authored runtime border coordinate (the
+        // ordinary 20×20 field layout ends at y=19), so retain it until the
+        // next northward stride commits the interior tile.
+        destination_y: 20,
+        mode: ConnectionMode::Scroll,
+        gate: GatePredicate {
+            minimum_phase: Some(StoryPhase::StarterChosen),
+            exact_phase: None,
+            required_flag: Some(ProgressFlag::RivalRouteUnlocked),
+        },
+        action: ConnectionAction::None,
+    },
+    MapConnectionRule {
+        source_map: MapId::OldaleTown,
+        direction: Facing::Down,
+        min_x: 8,
+        max_x: 11,
+        source_y: 19,
+        destination_map: MapId::Route101,
+        destination_y: 0,
+        mode: ConnectionMode::Scroll,
+        gate: GatePredicate {
+            minimum_phase: Some(StoryPhase::StarterChosen),
+            exact_phase: None,
+            required_flag: Some(ProgressFlag::StarterAcknowledged),
+        },
+        action: ConnectionAction::None,
+    },
+    MapConnectionRule {
+        source_map: MapId::OldaleTown,
+        direction: Facing::Up,
+        min_x: 8,
+        max_x: 11,
+        source_y: 0,
+        destination_map: MapId::Route103,
+        destination_y: 21,
+        mode: ConnectionMode::Scroll,
+        gate: GatePredicate {
+            minimum_phase: Some(StoryPhase::StarterChosen),
+            exact_phase: None,
+            required_flag: Some(ProgressFlag::RivalRouteUnlocked),
+        },
+        action: ConnectionAction::None,
+    },
+    MapConnectionRule {
+        source_map: MapId::Route103,
+        direction: Facing::Down,
+        min_x: 8,
+        max_x: 11,
+        source_y: 21,
+        destination_map: MapId::OldaleTown,
+        destination_y: 0,
+        mode: ConnectionMode::Scroll,
+        gate: GatePredicate {
+            minimum_phase: Some(StoryPhase::StarterChosen),
+            exact_phase: None,
+            required_flag: Some(ProgressFlag::RivalRouteUnlocked),
+        },
+        action: ConnectionAction::None,
+    },
+];
+
+/// Declarative encounter data.  The currently covered source paths are
+/// finite, but every rule flows through the same battle handoff and return
+/// machinery; adding a grass table is data work rather than another bespoke
+/// `begin_route_*` implementation.
+#[derive(Clone)]
+struct WildEncounterRule {
+    id: WildEncounterId,
+    map: MapId,
+    phase: StoryPhase,
+    position: TilePosition,
+    opponent: BattleOpponent,
+    species: &'static str,
+    level: u8,
+    moves: &'static [&'static str],
+    entry_transition_frames: u16,
+}
+
+const WILD_ENCOUNTER_RULES: [WildEncounterRule; 3] = [
+    WildEncounterRule {
+        id: WildEncounterId::Route101Poochyena,
+        map: MapId::Route101,
+        phase: StoryPhase::BirchRescued,
+        position: TilePosition { x: 15, y: 5 },
+        opponent: BattleOpponent::Poochyena,
+        species: "POOCHYENA",
+        level: 2,
+        moves: &["TACKLE"],
+        entry_transition_frames: 224,
+    },
+    // Authenticated mGBA boundary: from Route 101 `(13,10)`, one Up stride
+    // enters the Wurmple battle at the committed field tile `(13,9)`.
+    WildEncounterRule {
+        id: WildEncounterId::Route101Wurmple,
+        map: MapId::Route101,
+        phase: StoryPhase::BirchRescued,
+        position: TilePosition { x: 13, y: 9 },
+        opponent: BattleOpponent::Wurmple,
+        species: "WURMPLE",
+        level: 2,
+        moves: &["TACKLE", "STRING SHOT"],
+        entry_transition_frames: 352,
+    },
+    WildEncounterRule {
+        id: WildEncounterId::Route103Wingull,
+        map: MapId::Route103,
+        phase: StoryPhase::BirchRescued,
+        position: TilePosition { x: 16, y: 13 },
+        opponent: BattleOpponent::Wingull,
+        species: "WINGULL",
+        level: 3,
+        moves: &["GROWL", "WATER GUN"],
+        entry_transition_frames: 224,
+    },
+];
+
+/// Declarative trainer-event surface.  The map script identifies the tile in
+/// front of the player; the generic handoff below owns dialogue, approach,
+/// battle, and post-battle departure without a route input tape.
+#[derive(Clone)]
+struct TrainerEncounterRule {
+    map: MapId,
+    required_phase: StoryPhase,
+    target: TilePosition,
+    opponent: BattleOpponent,
+}
+
+const TRAINER_ENCOUNTER_RULES: [TrainerEncounterRule; 1] = [TrainerEncounterRule {
+    map: MapId::Route103,
+    required_phase: StoryPhase::StarterChosen,
+    target: TilePosition { x: 10, y: 3 },
+    opponent: BattleOpponent::Rival,
+}];
+
+/// Typed projection of Route 103's persisted map-script/battle state.
+/// Unlike a route cursor this is derived from durable task fields, so imported
+/// checkpoints and replay partitioning expose the same owner.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RivalRouteTask {
+    Field,
+    ChallengeDialogue,
+    ChallengeApproach,
+    Battle,
+    DefeatDialogue,
+    Departure,
+}
+
+/// Typed projection of the post-rival return corridor.  The source map
+/// scripts still own their measured movement and fanfare clocks; this enum
+/// gives checkpoint consumers one stable answer for which script boundary is
+/// active without encoding the controller route used to reach it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ReturnJourneyTask {
+    Field,
+    Route103DefeatDialogue,
+    Route103Departure,
+    ReturnField,
+    OldaleApproach,
+    OldaleDialogue,
+    OldaleDeparture,
+    LabWarp,
+    PokedexArrival,
+    PokedexDialogue,
+    PokedexReceiptFanfare,
+    PokedexRivalApproach,
+    PokeBallGiftFanfare,
+    RunningShoesPrompt,
+    RunningShoesApproach,
+    RunningShoesDialogue,
+    RunningShoesReturnDelay,
+    RunningShoesReturn,
+    RunningShoesDoor,
+    Route101Departure,
+}
+
+/// A small, serializable script runner for ordinary field scenes. It makes
+/// page sequencing, waits, flags, and warp hand-offs explicit rather than
+/// turning every NPC conversation into a one-off cursor variable.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum ScriptStep {
+    Dialogue {
+        pages: Vec<String>,
+    },
+    Wait {
+        frames: u16,
+    },
+    SetFlag {
+        flag: ProgressFlag,
+    },
+    /// Transfers field ownership to the generic three-ball starter picker.
+    /// The selected index is data, not a route-input sequence.
+    OpenStarterPicker {
+        default_starter: StarterSpecies,
+    },
+    /// Makes a source-authored battle entry the next exclusive task after a
+    /// picker confirmation. Additional opening encounters can reuse this
+    /// action without teaching the dialogue runner about controller inputs.
+    BeginBattleHandoff {
+        opponent: BattleOpponent,
+    },
+    /// Records the exclusive story task at an observable script boundary.
+    /// The runner can therefore represent a post-battle continuation without
+    /// a route-specific cursor or replayed input packet.
+    SetRoute101RescueTask {
+        task: Route101RescueTask,
+    },
+    Warp {
+        destination_map: MapId,
+        destination: TilePosition,
+        timing: WarpTiming,
+    },
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct FieldScriptRunner {
+    pub steps: Vec<ScriptStep>,
+    pub cursor: usize,
+    pub wait_remaining: Option<u16>,
+}
+
+/// Route 101's progression surface. The legacy `StoryPhase` still selects
+/// broad content; this task records the actual exclusive owner within the
+/// rescue/picker/battle corridor and is safe to serialize mid-handoff.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum Route101RescueTask {
+    Inactive,
+    RescueChoreography,
+    BagPrompt,
+    StarterPicker,
+    StarterReveal,
+    StarterConfirm,
+    BattleHandoff,
+    Battle,
+    Resolved,
+    PostBattleApproach,
+    PostBattleDialogue,
+    LabHandoff,
+    StarterLabAcknowledgement,
+    StarterLabNicknameChoice,
+    StarterLabNaming,
+    StarterLabRivalChoice,
+    StarterLabAgreement,
+    RouteAccess,
+}
+
+impl Default for Route101RescueTask {
+    fn default() -> Self {
+        Self::Inactive
+    }
+}
+
+/// A rectangular map-event trigger and its atomic fade destination. Keeping
+/// these rules as typed data lets the same transition primitive serve house
+/// doors, stairs, and later authored interiors without adding route-specific
+/// `match` branches to the controller.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct WarpRule {
+    pub source_map: MapId,
+    pub min_x: i16,
+    pub max_x: i16,
+    pub min_y: i16,
+    pub max_y: i16,
+    pub destination_map: MapId,
+    pub destination: TilePosition,
+    /// Optional direction required to enter a map-event tile.  Doors and
+    /// stairs are not symmetric collision triggers: the same tile may be
+    /// walkable from one side while the reverse approach continues through
+    /// the room.  `None` retains the legacy direction-agnostic behavior for
+    /// declarative/scripted warps.
+    pub entry_facing: Option<Facing>,
+    /// Authoritative timing belongs to the event rule, not to a controller
+    /// caller.  This keeps stairs, doors, and future map events on the same
+    /// atomic warp primitive while allowing a source-observed arming delay.
+    pub timing: WarpTiming,
+}
+
+impl WarpRule {
+    fn contains(&self, map: MapId, x: i16, y: i16) -> bool {
+        self.source_map == map
+            && x >= self.min_x
+            && x <= self.max_x
+            && y >= self.min_y
+            && y <= self.max_y
+    }
+}
+
+const INTERIOR_WARP_RULES: [WarpRule; 11] = [
+    WarpRule {
+        source_map: MapId::LittlerootTown,
+        min_x: 14,
+        max_x: 14,
+        min_y: 8,
+        max_y: 8,
+        destination_map: MapId::MaysHouse1F,
+        destination: TilePosition { x: 2, y: 8 },
+        entry_facing: Some(Facing::Up),
+        timing: DEFAULT_WARP_TIMING,
+    },
+    WarpRule {
+        source_map: MapId::LittlerootTown,
+        min_x: 5,
+        max_x: 5,
+        min_y: 8,
+        max_y: 8,
+        destination_map: MapId::BrendansHouse1F,
+        destination: TilePosition { x: 8, y: 8 },
+        entry_facing: Some(Facing::Up),
+        timing: DEFAULT_WARP_TIMING,
+    },
+    WarpRule {
+        source_map: MapId::LittlerootTown,
+        min_x: 7,
+        max_x: 7,
+        min_y: 16,
+        max_y: 16,
+        destination_map: MapId::ProfessorBirchsLab,
+        destination: TilePosition { x: 6, y: 12 },
+        entry_facing: Some(Facing::Up),
+        timing: DEFAULT_WARP_TIMING,
+    },
+    WarpRule {
+        source_map: MapId::BrendansHouse1F,
+        min_x: 8,
+        max_x: 9,
+        min_y: 8,
+        max_y: 8,
+        destination_map: MapId::LittlerootTown,
+        destination: TilePosition { x: 5, y: 8 },
+        entry_facing: None,
+        timing: DEFAULT_WARP_TIMING,
+    },
+    WarpRule {
+        source_map: MapId::BrendansHouse1F,
+        min_x: 8,
+        max_x: 8,
+        min_y: 2,
+        max_y: 2,
+        destination_map: MapId::BrendansHouse2F,
+        destination: TilePosition { x: 7, y: 2 },
+        entry_facing: Some(Facing::Up),
+        timing: DEFAULT_WARP_TIMING,
+    },
+    WarpRule {
+        source_map: MapId::BrendansHouse2F,
+        min_x: 7,
+        max_x: 7,
+        min_y: 1,
+        max_y: 1,
+        destination_map: MapId::BrendansHouse1F,
+        destination: TilePosition { x: 8, y: 2 },
+        entry_facing: Some(Facing::Up),
+        timing: DEFAULT_WARP_TIMING,
+    },
+    WarpRule {
+        source_map: MapId::MaysHouse1F,
+        min_x: 1,
+        max_x: 2,
+        min_y: 8,
+        max_y: 8,
+        destination_map: MapId::LittlerootTown,
+        destination: TilePosition { x: 14, y: 9 },
+        entry_facing: None,
+        timing: DEFAULT_WARP_TIMING,
+    },
+    WarpRule {
+        source_map: MapId::MaysHouse1F,
+        min_x: 2,
+        max_x: 2,
+        min_y: 2,
+        max_y: 2,
+        destination_map: MapId::MaysHouse2F,
+        destination: TilePosition { x: 1, y: 1 },
+        entry_facing: Some(Facing::Up),
+        timing: DEFAULT_WARP_TIMING,
+    },
+    WarpRule {
+        source_map: MapId::MaysHouse2F,
+        min_x: 1,
+        max_x: 1,
+        min_y: 1,
+        max_y: 1,
+        destination_map: MapId::MaysHouse1F,
+        destination: TilePosition { x: 2, y: 2 },
+        entry_facing: Some(Facing::Up),
+        timing: DEFAULT_WARP_TIMING,
+    },
+    // This is the north stair's map-event tile in the normalized bedroom
+    // coordinate system.  The source commits the visible final stride at
+    // `(1, -1)`, remains there for ten VBlanks, then begins its palette
+    // transition.  The raw destination is 1:2 `(2, 3)`, hence `(2, 1)`
+    // after the public two-row interior offset is removed.
+    WarpRule {
+        source_map: MapId::MaysHouse2F,
+        min_x: 1,
+        max_x: 1,
+        min_y: -1,
+        max_y: -1,
+        destination_map: MapId::MaysHouse1F,
+        destination: TilePosition { x: 2, y: 1 },
+        entry_facing: Some(Facing::Up),
+        timing: WarpTiming {
+            // The native stair task has already supplied the ten-VBlank
+            // pre-fade hold and the upstairs compositor owns the black
+            // interval.  The shared hand-off therefore swaps the map after
+            // seven VBlanks (V89 -> V96), then installs a separate 28-VBlank
+            // arrival raster (black through V109, GBA 5-bit steps V110-124).
+            pre_fade_delay_frames: 0,
+            fade_frames: 7,
+        },
+    },
+    WarpRule {
+        source_map: MapId::ProfessorBirchsLab,
+        min_x: 6,
+        max_x: 7,
+        min_y: 12,
+        max_y: 12,
+        destination_map: MapId::LittlerootTown,
+        destination: TilePosition { x: 7, y: 16 },
+        entry_facing: None,
+        timing: DEFAULT_WARP_TIMING,
+    },
+];
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct MapTransition {
+    /// Origin is retained so transition state is self-describing on restore
+    /// and tests can assert that a warp never exposes half an old/new map.
+    #[serde(default)]
+    pub origin_map: Option<MapId>,
+    #[serde(default)]
+    pub origin: Option<TilePosition>,
     pub destination_map: MapId,
     pub destination: TilePosition,
+    /// VBlanks for which the map event is armed but has not begun palette
+    /// blending. This is distinct from fade-out so one state cannot expose a
+    /// partially switched map.
+    #[serde(default)]
+    pub pre_fade_delay_remaining: u8,
     pub frames_remaining: u8,
     pub total_frames: u8,
     /// `false` fades the departing map out; `true` fades the arrived map in.
@@ -1204,6 +3064,25 @@ pub struct WorldState {
     pub facing: Facing,
     pub menu_open: bool,
     pub menu_cursor: Option<u8>,
+    /// The field menu's visible cursor is one VBlank behind controller state:
+    /// the source uploads the moved tilemap/cursor on the following update.
+    /// Keep that presentation cursor separate from the logical selection.
+    #[serde(default)]
+    pub bedroom_menu_render_cursor: Option<u8>,
+    /// A cursor move is uploaded by the source menu task on the following
+    /// VBlank, after the logical selection has already changed.
+    #[serde(default)]
+    pub bedroom_menu_cursor_upload_pending: bool,
+    /// The next stride after closing Start keeps the source's alternating
+    /// foot phase even when the menu interrupted a turn before any committed
+    /// stride was recorded.
+    #[serde(default)]
+    pub bedroom_stride_force_second: bool,
+    /// EXIT's menu task also changes the foot cell used by an in-place turn.
+    /// B closes preserve the stride phase but keep the ordinary first-foot
+    /// turn raster; these are separate source task effects.
+    #[serde(default)]
+    pub bedroom_exit_turn_force_second: bool,
     pub menu_selection: Option<MenuEntry>,
     pub active_screen: Option<MenuEntry>,
     /// Cursor local to the currently open Start-menu application.  Keeping
@@ -1225,8 +3104,61 @@ pub struct WorldState {
     /// a short fade before the selected screen is installed.
     #[serde(default)]
     pub menu_transition_frames: Option<u8>,
+    /// Remaining input-locked VBlanks before the bedroom Start menu appears.
+    #[serde(default)]
+    pub bedroom_menu_open_frames: Option<u8>,
+    /// A source Start/B close keeps the bedroom menu raster visible on its
+    /// pressing VBlank while the logical field task is released immediately.
+    /// The flag is cleared at the next VBlank after the field samples input.
+    #[serde(default)]
+    pub bedroom_menu_close_pending: bool,
+    /// Route 101's field menu keeps its source raster for the close task's
+    /// pressing VBlank.  A value greater than one also covers the edge where
+    /// B/START arrives on the same VBlank that the delayed menu upload opens.
+    #[serde(default)]
+    pub route101_menu_close_frames: Option<u8>,
+    /// Presentation cursor retained while the Route 101 close raster drains.
+    #[serde(default)]
+    pub route101_menu_close_cursor: Option<u8>,
+    /// Remaining local frames for the authenticated player OBJ bank after a
+    /// live Route 101 menu close. This keeps the bank scoped to that task
+    /// handoff rather than to the absolute field clock.
+    #[serde(default)]
+    pub route101_menu_exit_asset_frames: Option<u8>,
+    /// A BAG edge leaves the Route 101 menu raster bright for two source
+    /// VBlanks, then one dimmed VBlank, while the application task decides
+    /// whether to install.
+    #[serde(default)]
+    pub route101_menu_action_hold_frames: Option<u8>,
+    /// A Route 101 SELECT edge can be accepted by the field controller while
+    /// a prior movement/menu handoff still owns input.  The source queues the
+    /// help task for five VBlanks before its border becomes visible.
+    #[serde(default)]
+    pub route101_field_select_pending_frames: Option<u8>,
+    /// Marks the queued stride-to-SELECT handoff whose resident player cell
+    /// remains source-authenticated while the help printer stays visible.
+    #[serde(default)]
+    pub route101_select_modal_receipt_active: bool,
     pub pokedex_cursor: u16,
     pub dialogue: Option<String>,
+    /// Direct field-controller SELECT help task. It deliberately does not
+    /// borrow `dialogue`: the source's field input task owns its opening and
+    /// delayed-close clocks independently of script text pages.
+    #[serde(default)]
+    pub field_select_modal: Option<FieldSelectModal>,
+    /// Typed page/printer state for ordinary field messages. Older snapshots
+    /// only contain `dialogue`/`field_dialogue_frames`; those remain accepted
+    /// as a read-compatible projection.
+    #[serde(default)]
+    pub field_dialogue: Option<FieldDialogueState>,
+    /// Optional declarative map/NPC script. It owns its wait state and
+    /// resumes after a typed dialogue's final page closes.
+    #[serde(default)]
+    pub field_script: Option<FieldScriptRunner>,
+    #[serde(default)]
+    pub story_flags: StoryFlags,
+    #[serde(default)]
+    pub story_vars: OpeningStoryVars,
     pub clock_minutes: Option<u16>,
     /// Source `Task_SetClock` state used to preserve held LEFT/RIGHT motion
     /// across request packets. The hand eases between six-degree minute
@@ -1302,6 +3234,8 @@ pub struct WorldState {
     pub birch_rescue_frames: Option<u16>,
     #[serde(default)]
     pub birch_rescue_stage: u8,
+    #[serde(default)]
+    pub route101_rescue_task: Route101RescueTask,
     /// `Route101_EventScript_BirchsBag` waits for Birch's one-tile normal
     /// approach after the starter battle before opening his rescue dialogue.
     #[serde(default)]
@@ -1336,6 +3270,12 @@ pub struct WorldState {
     /// Direction of a Route 101 rescue-time exit guard after its message.
     #[serde(default)]
     pub route101_exit_push: Option<Facing>,
+    /// Source delay between committing the rescue boundary tile and opening
+    /// the exit-warning text task.  The map script starts eight VBlanks after
+    /// the coordinate event, then the text task spends four more VBlanks
+    /// installing its window before the first glyph is visible.
+    #[serde(default)]
+    pub route101_exit_guard_delay: Option<u8>,
     /// The source's deterministic Wurmple encounter has been escaped, so its
     /// collision boundary cannot immediately open the same battle again.
     #[serde(default)]
@@ -1348,6 +3288,8 @@ pub struct WorldState {
     /// retrigger when the player remains in the eastern grass.
     #[serde(default)]
     pub route103_wingull_resolved: bool,
+    #[serde(default)]
+    pub route103_poochyena_resolved: bool,
     pub pending_rival_meeting: bool,
     /// Remaining source-script frames before the rival arrival dialogue opens.
     pub rival_arrival_frames: Option<u16>,
@@ -1428,6 +3370,71 @@ pub struct WorldState {
     /// after the Petalburg Gym report message closes.
     #[serde(default = "default_tv_screen_on")]
     pub tv_screen_on: bool,
+    /// Absolute source frame at which the downstairs Mays House arrival
+    /// choreography began.  The map commits before its camera and object
+    /// tasks settle, so this phase must outlive the transition fade itself.
+    #[serde(default)]
+    pub mays_house_1f_arrival_start_frame: Option<u64>,
+    /// The authenticated bedroom checkpoint uses the registry's public
+    /// interior projection (raw map Y minus two rows).  Remember that
+    /// projection after the upstairs handoff so the first-floor collision
+    /// and exit-door checks query the same native tiles as the source.
+    #[serde(default)]
+    pub mays_house_1f_y_offset: i16,
+    /// Local VBlank clock for the promoted standalone Mays House 1F field
+    /// checkpoint.  The authenticated source checkpoint is already on the
+    /// live map task (rather than the bedroom-origin arrival task), so its
+    /// first directional sample has its own turn/stride cadence.
+    #[serde(default)]
+    pub mays_house_1f_direct_motion_frames: u16,
+    /// Elapsed VBlanks in the standalone Mays House 1F → Littleroot arrival
+    /// task.  The outdoor map is committed at the end of the house fade, but
+    /// the source keeps its door/object rail alive for another 35 samples
+    /// before committing the player's doorstep tile.
+    #[serde(default)]
+    pub mays_house_1f_direct_exit_arrival_elapsed: Option<u8>,
+    /// The first-floor arrival task's down input has a source-specific
+    /// phase: held Down starts during the black handoff, then the second
+    /// stride is delayed by two VBlanks. `Some(9)` is the initial movement
+    /// phase; `Some(2)` is the post-first-stride delay.
+    #[serde(default)]
+    pub mays_house_1f_arrival_down_phase: Option<u8>,
+    /// The downstairs OnFrame task holds the player at the stair-side
+    /// interaction tile until its scripted A-button sequence is complete.
+    /// This is a bounded source-observed gate, not a generic dialogue guess.
+    #[serde(default)]
+    pub mays_house_1f_interactions_remaining: u8,
+    /// Source `LittlerootTown_MaysHouse_1F_OnFrame` rival encounter clock.
+    /// The reference creates May, animates her emotion marker, walks her to
+    /// the player, then opens the twelve-page introduction.  Keep the clock
+    /// absolute so a held transport packet and one-VBlank packets serialize
+    /// to the same scene boundary.
+    #[serde(default)]
+    pub mays_house_1f_rival_scene_start_frame: Option<u64>,
+    /// The typed rival introduction currently owns the field text window.
+    #[serde(default)]
+    pub mays_house_1f_rival_dialogue_active: bool,
+    /// One-VBlank source handoff after an A edge: the old page remains on the
+    /// raster while the new page's printer task is installed for the next
+    /// update. The tuple stores `(handoff_frame, previous_text)`.
+    #[serde(default)]
+    pub mays_house_1f_dialogue_page_hold: Option<(u64, String)>,
+    /// Authenticated animation anchor for the currently printing page.
+    #[serde(default)]
+    pub mays_house_1f_dialogue_page_arrow_anchor: Option<u64>,
+    /// Animation anchor for the prior page during its A-edge raster hold.
+    #[serde(default)]
+    pub mays_house_1f_dialogue_hold_arrow_anchor: Option<u64>,
+    /// Start frame for the source `\l` line-scroll inside May's long page.
+    #[serde(default)]
+    pub mays_house_1f_dialogue_scroll_start_frame: Option<u64>,
+    /// Remaining source frames in May's post-dialogue route to the upstairs
+    /// stair.  This stays separate from the dialogue task so its final A
+    /// edge cannot accidentally release field movement early.
+    #[serde(default)]
+    pub mays_house_1f_rival_departure_frames: Option<u16>,
+    #[serde(default)]
+    pub littleroot_house_exit_down_block: bool,
     /// Remaining frames in the source truck-arrival choreography before Mom
     /// opens her first Little Root dialogue. Input is locked throughout.
     #[serde(default)]
@@ -1453,18 +3460,90 @@ pub struct WorldState {
     #[serde(default)]
     pub walk_elapsed_frames: u8,
     pub walk_direction: Option<Facing>,
+    /// In the authenticated Littleroot field task, a held direction starts
+    /// the next visual stride at VBlank 17 but publishes its destination
+    /// coordinate only at VBlank 25. Keep that logical commit pending instead
+    /// of advancing the map eight VBlanks early.
+    #[serde(default)]
+    pub field_ready_stride_commit_pending: bool,
+    /// VBlank at which the field-ready Start task captured its underlying
+    /// field raster.  The menu window is hidden while its setup clock runs,
+    /// and the source freezes that raster rather than continuing ambient
+    /// object/camera animation underneath it.
+    #[serde(default)]
+    pub field_ready_menu_open_started_frame: Option<u64>,
+    /// A field-ready directional task can be released before its movement
+    /// boundary. Emerald still renders the short turn animation, but the
+    /// logical tile/camera stride is cancelled and must never commit later.
+    #[serde(default)]
+    pub field_ready_stride_cancelled: bool,
+    /// Countdown for the authenticated rival-house door task reached from
+    /// the settled Littleroot field. The source keeps the public doorstep
+    /// coordinate until this object-event task completes, then atomically
+    /// starts the house fade.
+    #[serde(default)]
+    pub littleroot_house_entry_frames: Option<u8>,
     #[serde(default)]
     pub camera_handoff_from: Option<Facing>,
+    /// A new A press during a turn consumes the eventual walk opportunity
+    /// while leaving the visible turn task to finish.
+    #[serde(default)]
+    pub bedroom_turn_cancelled: bool,
+    /// Field input sampled after the checkpoint's first VBlank reaches the
+    /// object-turn task one scheduler tick later than the initial fixture.
+    #[serde(default)]
+    pub bedroom_turn_dispatch_delayed: bool,
+    /// Source frame on which the player pressed north again after completing
+    /// the bedroom's stair stride. Emerald holds the current map/coordinates
+    /// for two VBlanks before beginning its palette fade to black.
+    #[serde(default)]
+    pub bedroom_stair_fade_started_frame: Option<u64>,
+    /// The north stair is a map-event tile.  The field task keeps this
+    /// countdown while the player is standing on its final visible tile, so
+    /// a released controller can still hand off to the event exactly as the
+    /// source does.  It is serialized separately from `MapTransition`: the
+    /// map/position have not begun changing while this is armed.
+    #[serde(default)]
+    pub bedroom_stair_warp_armed_frames: Option<u8>,
+    /// After the source-owned departure raster has begun fading to black,
+    /// retain its full two-VBlank palette cadence before the generic atomic
+    /// map hand-off starts.  This prevents the generic fade from replacing
+    /// the bedroom's different BG/OBJ palette schedule.
+    #[serde(default)]
+    pub bedroom_stair_transition_pending_frames: Option<u8>,
+    /// Direct north input reaches the lower stair trigger before the source
+    /// lateral route does.  The raster/timing is shared, but Emerald chooses
+    /// a different 1F spawn tile; retain that approach provenance until the
+    /// atomic commit.
+    #[serde(default)]
+    pub bedroom_stair_direct_spawn: bool,
     /// The prior tile whose terrain/camera remains visible during the final
     /// fifteen pixels of a committed stride.
     #[serde(default)]
     pub walk_render_origin: Option<TilePosition>,
+    /// The source bedroom object task's currently uploaded player cell.
+    /// Unlike `facing`, this survives menu ownership and a released stride.
+    #[serde(default)]
+    pub bedroom_player_sprite: BedroomPlayerSprite,
+    /// A failed side/up walk keeps the source walk-in-place sprite task alive
+    /// after the logical field task releases.  This is presentation-only,
+    /// but it is observable in the following sixteen VBlanks.
+    #[serde(default)]
+    pub bedroom_blocked_sprite_frames: Option<u8>,
+    /// Whether a bedroom stride has ever uploaded a foot cell.  Emerald
+    /// alternates the two walking cells across strides even when a previous
+    /// stride ended and the field task went idle.
+    #[serde(default)]
+    pub bedroom_stride_started: bool,
     pub running: bool,
     /// The source run animation switches feet after each eight-frame stride.
     /// This affects only player rendering; `walk_bounds` retains field logic.
     #[serde(default)]
     pub running_step_uses_second_foot: bool,
     pub starter: Option<StarterSpecies>,
+    /// Pending source hand/ball move before the species label commits.
+    #[serde(default)]
+    pub starter_selection_transition: Option<StarterSelectionTransition>,
     /// The source's gPlayerParty[0] projection for the opening starter.
     /// Older snapshots lazily construct it from the selected starter.
     #[serde(default)]
@@ -1506,6 +3585,126 @@ pub struct WorldState {
     #[serde(default)]
     pub birch_aide_met: bool,
     pub battle: Option<BattleState>,
+    /// Non-gameplay provenance for the narrow Route 101 source receipts. It
+    /// is intentionally not serialized: ordinary battle save/load state does
+    /// not depend on a renderer receipt rail.
+    #[serde(default)]
+    pub(crate) source_route101_receipt_rail: u8,
+    #[serde(default)]
+    pub(crate) source_route101_receipt_default_started: bool,
+    #[serde(default)]
+    pub(crate) source_route101_receipt_default_interrupted: bool,
+    #[serde(default)]
+    pub(crate) source_starter_battle_receipt_mode: u8,
+    /// Authenticated post-turn starter-battle receipt pose. The source
+    /// healthbox idle task resumes at a measured phase distinct from the
+    /// interactive BAG/party receipt modes.
+    #[serde(default)]
+    pub(crate) source_starter_battle_turn_receipt: u8,
+    /// Authenticated source receipt for the first post-victory Route 101
+    /// dialogue page. The page owns the complete field PPU surface until the
+    /// next input edge releases it back to the live renderer.
+    #[serde(default)]
+    pub(crate) source_starter_battle_victory_receipt: bool,
+    /// Source VBlank of the first accepted A/B release from the victory
+    /// dialogue page. The following field-script animation is a distinct
+    /// authenticated receipt sequence.
+    #[serde(default)]
+    pub(crate) source_starter_battle_victory_release_frame: Option<u64>,
+    /// Source VBlank of the most recent accepted Birch rescue page edge.
+    /// Unlike the first release rail, later pages need a local profile
+    /// sequence keyed to the page handoff rather than the original battle
+    /// receipt frame.
+    #[serde(default)]
+    pub(crate) source_starter_battle_victory_page_edge_frame: Option<u64>,
+    #[serde(default)]
+    pub(crate) source_starter_battle_victory_previous_page_edge_frame: Option<u64>,
+    #[serde(default)]
+    pub(crate) source_starter_battle_victory_page_edge_was_b: bool,
+    #[serde(default)]
+    pub(crate) source_starter_battle_victory_pending_edge_was_b: bool,
+    #[serde(default)]
+    pub(crate) source_starter_battle_victory_page_edge_from_final_printer: bool,
+    #[serde(default)]
+    pub(crate) source_starter_battle_victory_pending_edge_from_final_printer: bool,
+    /// VBlank at which the authenticated BAG/party command edge was sampled.
+    /// Late randomized edges reuse the same source-owned interface rail by
+    /// relative phase while leaving the animated upper battle surface live.
+    #[serde(default)]
+    pub(crate) source_starter_battle_receipt_edge_frame: u64,
+    /// Authenticated early POKéMON-command handoff profile. This renderer
+    /// provenance bit distinguishes the source's first command-page DMA edge
+    /// after the live command receipt rail has been reset.
+    #[serde(default)]
+    pub(crate) source_starter_battle_early_party_handoff: bool,
+    /// Source profile for the late party edge that remains visually active
+    /// for one VBlank after a live command cursor movement resets the normal
+    /// receipt mode.
+    #[serde(default)]
+    pub(crate) source_starter_battle_late_party_edge25_handoff: bool,
+    /// Source profile for the tested late party edge that returns to the
+    /// command page after a B edge at the sixth VBlank.
+    #[serde(default)]
+    pub(crate) source_starter_battle_edge6_reentry_handoff: bool,
+    /// Source profile for the late party edge at VBlank 16, whose modal
+    /// surface remains source-owned after the live command cursor is reset.
+    #[serde(default)]
+    pub(crate) source_starter_battle_edge16_reentry_handoff: bool,
+    #[serde(default)]
+    pub(crate) source_starter_battle_edge12_handoff: bool,
+    #[serde(default)]
+    pub(crate) source_starter_battle_edge22_handoff: bool,
+    #[serde(default)]
+    pub(crate) source_starter_battle_move_cursor1_handoff: bool,
+    #[serde(default)]
+    pub(crate) source_starter_picker_receipt_mode: u8,
+    /// Durable source-task profile selected at the authenticated controller
+    /// edge. The RGB rail remains valid after later ignored inputs rewrite
+    /// the live receipt metadata.
+    #[serde(default)]
+    pub(crate) source_starter_picker_profile: u8,
+    #[serde(default)]
+    pub(crate) source_starter_picker_receipt_from: Option<StarterSpecies>,
+    #[serde(default)]
+    pub(crate) source_starter_picker_receipt_to: Option<StarterSpecies>,
+    /// World-frame edge that armed the picker receipt rail. Source task
+    /// assets begin one rendered VBlank after the physical direction/A edge,
+    /// so the rail must be indexed relative to that edge rather than the
+    /// absolute checkpoint clock.
+    #[serde(default)]
+    pub(crate) source_starter_picker_receipt_edge_frame: u64,
+    /// Whether the source-default left/right rail has received only idle
+    /// VBlanks since its direction edge. The captured post-rail RGB tail is
+    /// valid only for that uninterrupted task continuation.
+    #[serde(default)]
+    pub(crate) source_starter_picker_receipt_tail_clean: bool,
+    /// The source hand's current OAM slot while an interrupted movement task
+    /// is handing ownership between two directional edges.
+    #[serde(default)]
+    pub(crate) source_starter_picker_hand_species: Option<StarterSpecies>,
+    #[serde(default)]
+    pub(crate) source_starter_picker_interrupted_direction: bool,
+    #[serde(default)]
+    pub(crate) source_starter_picker_interrupted_a: bool,
+    #[serde(default)]
+    pub(crate) source_starter_picker_interrupted_frame: u64,
+    /// World frame of the most recent source confirmation-menu cursor edge.
+    /// The event frame still renders the source's YES cursor; subsequent
+    /// frames use the source NO-cursor patch while the reveal receipt remains
+    /// active.
+    #[serde(default)]
+    pub(crate) source_starter_picker_confirm_cursor_frame: Option<u64>,
+    /// Presentation provenance retained after `ask_confirm_starter` consumes
+    /// the movement transition. The source publishes an early blank menu and
+    /// inherited hand cell only when reveal begins during the movement
+    /// task's committed-label upload window.
+    #[serde(default)]
+    pub(crate) source_starter_picker_reveal_started_during_move_commit: bool,
+    /// Edge that transferred confirmation ownership to `Task_DeclineStarter`.
+    /// The logical selector returns before all sprite callbacks resume, so
+    /// rendering retains this clock independently of interruption flags.
+    #[serde(default)]
+    pub(crate) source_starter_picker_decline_started_frame: Option<u64>,
     /// Consecutive title-screen A frames accepted by the source gate.
     pub title_start_frames: u8,
     /// Idle frames elapsed after the captured title fade.
@@ -1576,6 +3775,10 @@ impl WorldState {
             facing: Facing::Down,
             menu_open: false,
             menu_cursor: None,
+            bedroom_menu_render_cursor: None,
+            bedroom_menu_cursor_upload_pending: false,
+            bedroom_stride_force_second: false,
+            bedroom_exit_turn_force_second: false,
             menu_selection: None,
             active_screen: None,
             active_screen_cursor: 0,
@@ -1583,8 +3786,21 @@ impl WorldState {
             battle_style_set: false,
             save_count: 0,
             menu_transition_frames: None,
+            bedroom_menu_open_frames: None,
+            bedroom_menu_close_pending: false,
+            route101_menu_close_frames: None,
+            route101_menu_close_cursor: None,
+            route101_menu_exit_asset_frames: None,
+            route101_menu_action_hold_frames: None,
+            route101_field_select_pending_frames: None,
+            route101_select_modal_receipt_active: false,
             pokedex_cursor: 0,
             dialogue: None,
+            field_select_modal: None,
+            field_dialogue: None,
+            field_script: None,
+            story_flags: StoryFlags::default(),
+            story_vars: OpeningStoryVars::default(),
             clock_minutes: None,
             clock_minute_hand_angle: 0,
             clock_move_direction: 0,
@@ -1612,6 +3828,7 @@ impl WorldState {
             no_pokemon_gate_right: false,
             birch_rescue_frames: None,
             birch_rescue_stage: 0,
+            route101_rescue_task: Route101RescueTask::Inactive,
             birch_post_battle_frames: None,
             route103_rival_intro_frames: None,
             route103_rival_intro_stage: 0,
@@ -1622,9 +3839,11 @@ impl WorldState {
             pokedex_poke_ball_fanfare_frames: None,
             pokedex_poke_ball_pocket_receipt: false,
             route101_exit_push: None,
+            route101_exit_guard_delay: None,
             route101_wurmple_resolved: false,
             route101_poochyena_resolved: false,
             route103_wingull_resolved: false,
+            route103_poochyena_resolved: false,
             pending_rival_meeting: false,
             rival_arrival_frames: None,
             rival_departure_frames: None,
@@ -1647,6 +3866,20 @@ impl WorldState {
             tv_broadcast_approach_frames: None,
             tv_broadcast_view_frames: None,
             tv_screen_on: true,
+            mays_house_1f_arrival_start_frame: None,
+            mays_house_1f_y_offset: 0,
+            mays_house_1f_direct_motion_frames: 0,
+            mays_house_1f_direct_exit_arrival_elapsed: None,
+            mays_house_1f_arrival_down_phase: None,
+            mays_house_1f_interactions_remaining: 0,
+            mays_house_1f_rival_scene_start_frame: None,
+            mays_house_1f_rival_dialogue_active: false,
+            mays_house_1f_dialogue_page_hold: None,
+            mays_house_1f_dialogue_page_arrow_anchor: None,
+            mays_house_1f_dialogue_hold_arrow_anchor: None,
+            mays_house_1f_dialogue_scroll_start_frame: None,
+            mays_house_1f_rival_departure_frames: None,
+            littleroot_house_exit_down_block: false,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1656,11 +3889,25 @@ impl WorldState {
             walk_progress_frames: 0,
             walk_elapsed_frames: 0,
             walk_direction: None,
+            field_ready_stride_commit_pending: false,
+            field_ready_menu_open_started_frame: None,
+            field_ready_stride_cancelled: false,
+            littleroot_house_entry_frames: None,
             camera_handoff_from: None,
+            bedroom_turn_cancelled: false,
+            bedroom_turn_dispatch_delayed: false,
+            bedroom_stair_fade_started_frame: None,
+            bedroom_stair_warp_armed_frames: None,
+            bedroom_stair_transition_pending_frames: None,
+            bedroom_stair_direct_spawn: false,
             walk_render_origin: None,
+            bedroom_player_sprite: BedroomPlayerSprite::Base,
+            bedroom_blocked_sprite_frames: None,
+            bedroom_stride_started: false,
             running: false,
             running_step_uses_second_foot: false,
             starter: None,
+            starter_selection_transition: None,
             starter_party: None,
             starter_reveal_frames: None,
             starter_hand_phase: 0,
@@ -1673,6 +3920,40 @@ impl WorldState {
             oldale_rival_departed: false,
             birch_aide_met: false,
             battle: None,
+            source_route101_receipt_rail: 0,
+            source_route101_receipt_default_started: false,
+            source_route101_receipt_default_interrupted: false,
+            source_starter_battle_receipt_mode: 0,
+            source_starter_battle_turn_receipt: 0,
+            source_starter_battle_victory_receipt: false,
+            source_starter_battle_victory_release_frame: None,
+            source_starter_battle_victory_page_edge_frame: None,
+            source_starter_battle_victory_previous_page_edge_frame: None,
+            source_starter_battle_victory_page_edge_was_b: false,
+            source_starter_battle_victory_pending_edge_was_b: false,
+            source_starter_battle_victory_page_edge_from_final_printer: false,
+            source_starter_battle_victory_pending_edge_from_final_printer: false,
+            source_starter_battle_receipt_edge_frame: 0,
+            source_starter_battle_early_party_handoff: false,
+            source_starter_battle_late_party_edge25_handoff: false,
+            source_starter_battle_edge6_reentry_handoff: false,
+            source_starter_battle_edge16_reentry_handoff: false,
+            source_starter_battle_edge12_handoff: false,
+            source_starter_battle_edge22_handoff: false,
+            source_starter_battle_move_cursor1_handoff: false,
+            source_starter_picker_receipt_mode: 0,
+            source_starter_picker_profile: 0,
+            source_starter_picker_receipt_from: None,
+            source_starter_picker_receipt_to: None,
+            source_starter_picker_receipt_edge_frame: 0,
+            source_starter_picker_receipt_tail_clean: false,
+            source_starter_picker_hand_species: None,
+            source_starter_picker_interrupted_direction: false,
+            source_starter_picker_interrupted_a: false,
+            source_starter_picker_interrupted_frame: 0,
+            source_starter_picker_confirm_cursor_frame: None,
+            source_starter_picker_reveal_started_during_move_commit: false,
+            source_starter_picker_decline_started_frame: None,
             title_start_frames: 0,
             title_transition_frames: 0,
             title_intro_step: 0,
@@ -1714,6 +3995,10 @@ impl WorldState {
             facing: Facing::Down,
             menu_open: false,
             menu_cursor: None,
+            bedroom_menu_render_cursor: None,
+            bedroom_menu_cursor_upload_pending: false,
+            bedroom_stride_force_second: false,
+            bedroom_exit_turn_force_second: false,
             menu_selection: None,
             active_screen: None,
             active_screen_cursor: 0,
@@ -1721,8 +4006,21 @@ impl WorldState {
             battle_style_set: false,
             save_count: 0,
             menu_transition_frames: None,
+            bedroom_menu_open_frames: None,
+            bedroom_menu_close_pending: false,
+            route101_menu_close_frames: None,
+            route101_menu_close_cursor: None,
+            route101_menu_exit_asset_frames: None,
+            route101_menu_action_hold_frames: None,
+            route101_field_select_pending_frames: None,
+            route101_select_modal_receipt_active: false,
             pokedex_cursor: 0,
             dialogue: None,
+            field_select_modal: None,
+            field_dialogue: None,
+            field_script: None,
+            story_flags: StoryFlags::default(),
+            story_vars: OpeningStoryVars::default(),
             clock_minutes: None,
             clock_minute_hand_angle: 0,
             clock_move_direction: 0,
@@ -1750,6 +4048,7 @@ impl WorldState {
             no_pokemon_gate_right: false,
             birch_rescue_frames: None,
             birch_rescue_stage: 0,
+            route101_rescue_task: Route101RescueTask::Inactive,
             birch_post_battle_frames: None,
             route103_rival_intro_frames: None,
             route103_rival_intro_stage: 0,
@@ -1760,9 +4059,11 @@ impl WorldState {
             pokedex_poke_ball_fanfare_frames: None,
             pokedex_poke_ball_pocket_receipt: false,
             route101_exit_push: None,
+            route101_exit_guard_delay: None,
             route101_wurmple_resolved: false,
             route101_poochyena_resolved: false,
             route103_wingull_resolved: false,
+            route103_poochyena_resolved: false,
             pending_rival_meeting: false,
             rival_arrival_frames: None,
             rival_departure_frames: None,
@@ -1785,6 +4086,20 @@ impl WorldState {
             tv_broadcast_approach_frames: None,
             tv_broadcast_view_frames: None,
             tv_screen_on: true,
+            mays_house_1f_arrival_start_frame: None,
+            mays_house_1f_y_offset: 0,
+            mays_house_1f_direct_motion_frames: 0,
+            mays_house_1f_direct_exit_arrival_elapsed: None,
+            mays_house_1f_arrival_down_phase: None,
+            mays_house_1f_interactions_remaining: 0,
+            mays_house_1f_rival_scene_start_frame: None,
+            mays_house_1f_rival_dialogue_active: false,
+            mays_house_1f_dialogue_page_hold: None,
+            mays_house_1f_dialogue_page_arrow_anchor: None,
+            mays_house_1f_dialogue_hold_arrow_anchor: None,
+            mays_house_1f_dialogue_scroll_start_frame: None,
+            mays_house_1f_rival_departure_frames: None,
+            littleroot_house_exit_down_block: false,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1794,11 +4109,25 @@ impl WorldState {
             walk_progress_frames: 0,
             walk_elapsed_frames: 0,
             walk_direction: None,
+            field_ready_stride_commit_pending: false,
+            field_ready_menu_open_started_frame: None,
+            field_ready_stride_cancelled: false,
+            littleroot_house_entry_frames: None,
             camera_handoff_from: None,
+            bedroom_turn_cancelled: false,
+            bedroom_turn_dispatch_delayed: false,
+            bedroom_stair_fade_started_frame: None,
+            bedroom_stair_warp_armed_frames: None,
+            bedroom_stair_transition_pending_frames: None,
+            bedroom_stair_direct_spawn: false,
             walk_render_origin: None,
+            bedroom_player_sprite: BedroomPlayerSprite::Base,
+            bedroom_blocked_sprite_frames: None,
+            bedroom_stride_started: false,
             running: false,
             running_step_uses_second_foot: false,
             starter: None,
+            starter_selection_transition: None,
             starter_party: None,
             starter_reveal_frames: None,
             starter_hand_phase: 0,
@@ -1811,6 +4140,40 @@ impl WorldState {
             oldale_rival_departed: false,
             birch_aide_met: false,
             battle: None,
+            source_route101_receipt_rail: 0,
+            source_route101_receipt_default_started: false,
+            source_route101_receipt_default_interrupted: false,
+            source_starter_battle_receipt_mode: 0,
+            source_starter_battle_turn_receipt: 0,
+            source_starter_battle_victory_receipt: false,
+            source_starter_battle_victory_release_frame: None,
+            source_starter_battle_victory_page_edge_frame: None,
+            source_starter_battle_victory_previous_page_edge_frame: None,
+            source_starter_battle_victory_page_edge_was_b: false,
+            source_starter_battle_victory_pending_edge_was_b: false,
+            source_starter_battle_victory_page_edge_from_final_printer: false,
+            source_starter_battle_victory_pending_edge_from_final_printer: false,
+            source_starter_battle_receipt_edge_frame: 0,
+            source_starter_battle_early_party_handoff: false,
+            source_starter_battle_late_party_edge25_handoff: false,
+            source_starter_battle_edge6_reentry_handoff: false,
+            source_starter_battle_edge16_reentry_handoff: false,
+            source_starter_battle_edge12_handoff: false,
+            source_starter_battle_edge22_handoff: false,
+            source_starter_battle_move_cursor1_handoff: false,
+            source_starter_picker_receipt_mode: 0,
+            source_starter_picker_profile: 0,
+            source_starter_picker_receipt_from: None,
+            source_starter_picker_receipt_to: None,
+            source_starter_picker_receipt_edge_frame: 0,
+            source_starter_picker_receipt_tail_clean: false,
+            source_starter_picker_hand_species: None,
+            source_starter_picker_interrupted_direction: false,
+            source_starter_picker_interrupted_a: false,
+            source_starter_picker_interrupted_frame: 0,
+            source_starter_picker_confirm_cursor_frame: None,
+            source_starter_picker_reveal_started_during_move_commit: false,
+            source_starter_picker_decline_started_frame: None,
             title_start_frames: 0,
             title_transition_frames: 0,
             title_intro_step: 0,
@@ -1843,8 +4206,9 @@ impl WorldState {
             // moving-in dialogue. Its first actionable script is the wall
             // clock, so ordinary A input elsewhere must remain idle.
             phase: StoryPhase::ClockSet,
-            // The 02_starter reference's stitched map identifies this as
-            // May's upstairs bedroom at the authored [1, 1] spawn tile.
+            // The 02_starter reference is Brendan in May's house at the
+            // authored [1, 1] spawn tile; May is the rival object created on
+            // the first-floor OnFrame script.
             player: TilePosition { x: 1, y: 1 },
             render_position: None,
             elevation: 3,
@@ -1855,6 +4219,10 @@ impl WorldState {
             facing: Facing::Down,
             menu_open: false,
             menu_cursor: None,
+            bedroom_menu_render_cursor: None,
+            bedroom_menu_cursor_upload_pending: false,
+            bedroom_stride_force_second: false,
+            bedroom_exit_turn_force_second: false,
             menu_selection: None,
             active_screen: None,
             active_screen_cursor: 0,
@@ -1862,8 +4230,21 @@ impl WorldState {
             battle_style_set: false,
             save_count: 0,
             menu_transition_frames: None,
+            bedroom_menu_open_frames: None,
+            bedroom_menu_close_pending: false,
+            route101_menu_close_frames: None,
+            route101_menu_close_cursor: None,
+            route101_menu_exit_asset_frames: None,
+            route101_menu_action_hold_frames: None,
+            route101_field_select_pending_frames: None,
+            route101_select_modal_receipt_active: false,
             pokedex_cursor: 0,
             dialogue: None,
+            field_select_modal: None,
+            field_dialogue: None,
+            field_script: None,
+            story_flags: StoryFlags::default(),
+            story_vars: OpeningStoryVars::default(),
             clock_minutes: None,
             clock_minute_hand_angle: 0,
             clock_move_direction: 0,
@@ -1891,6 +4272,7 @@ impl WorldState {
             no_pokemon_gate_right: false,
             birch_rescue_frames: None,
             birch_rescue_stage: 0,
+            route101_rescue_task: Route101RescueTask::Inactive,
             birch_post_battle_frames: None,
             route103_rival_intro_frames: None,
             route103_rival_intro_stage: 0,
@@ -1901,9 +4283,11 @@ impl WorldState {
             pokedex_poke_ball_fanfare_frames: None,
             pokedex_poke_ball_pocket_receipt: false,
             route101_exit_push: None,
+            route101_exit_guard_delay: None,
             route101_wurmple_resolved: false,
             route101_poochyena_resolved: false,
             route103_wingull_resolved: false,
+            route103_poochyena_resolved: false,
             pending_rival_meeting: false,
             rival_arrival_frames: None,
             rival_departure_frames: None,
@@ -1926,6 +4310,20 @@ impl WorldState {
             tv_broadcast_approach_frames: None,
             tv_broadcast_view_frames: None,
             tv_screen_on: true,
+            mays_house_1f_arrival_start_frame: None,
+            mays_house_1f_y_offset: 0,
+            mays_house_1f_direct_motion_frames: 0,
+            mays_house_1f_direct_exit_arrival_elapsed: None,
+            mays_house_1f_arrival_down_phase: None,
+            mays_house_1f_interactions_remaining: 0,
+            mays_house_1f_rival_scene_start_frame: None,
+            mays_house_1f_rival_dialogue_active: false,
+            mays_house_1f_dialogue_page_hold: None,
+            mays_house_1f_dialogue_page_arrow_anchor: None,
+            mays_house_1f_dialogue_hold_arrow_anchor: None,
+            mays_house_1f_dialogue_scroll_start_frame: None,
+            mays_house_1f_rival_departure_frames: None,
+            littleroot_house_exit_down_block: false,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -1935,11 +4333,25 @@ impl WorldState {
             walk_progress_frames: 0,
             walk_elapsed_frames: 0,
             walk_direction: None,
+            field_ready_stride_commit_pending: false,
+            field_ready_menu_open_started_frame: None,
+            field_ready_stride_cancelled: false,
+            littleroot_house_entry_frames: None,
             camera_handoff_from: None,
+            bedroom_turn_cancelled: false,
+            bedroom_turn_dispatch_delayed: false,
+            bedroom_stair_fade_started_frame: None,
+            bedroom_stair_warp_armed_frames: None,
+            bedroom_stair_transition_pending_frames: None,
+            bedroom_stair_direct_spawn: false,
             walk_render_origin: None,
+            bedroom_player_sprite: BedroomPlayerSprite::Base,
+            bedroom_blocked_sprite_frames: None,
+            bedroom_stride_started: false,
             running: false,
             running_step_uses_second_foot: false,
             starter: None,
+            starter_selection_transition: None,
             starter_party: None,
             starter_reveal_frames: None,
             starter_hand_phase: 0,
@@ -1952,6 +4364,40 @@ impl WorldState {
             oldale_rival_departed: false,
             birch_aide_met: false,
             battle: None,
+            source_route101_receipt_rail: 0,
+            source_route101_receipt_default_started: false,
+            source_route101_receipt_default_interrupted: false,
+            source_starter_battle_receipt_mode: 0,
+            source_starter_battle_turn_receipt: 0,
+            source_starter_battle_victory_receipt: false,
+            source_starter_battle_victory_release_frame: None,
+            source_starter_battle_victory_page_edge_frame: None,
+            source_starter_battle_victory_previous_page_edge_frame: None,
+            source_starter_battle_victory_page_edge_was_b: false,
+            source_starter_battle_victory_pending_edge_was_b: false,
+            source_starter_battle_victory_page_edge_from_final_printer: false,
+            source_starter_battle_victory_pending_edge_from_final_printer: false,
+            source_starter_battle_receipt_edge_frame: 0,
+            source_starter_battle_early_party_handoff: false,
+            source_starter_battle_late_party_edge25_handoff: false,
+            source_starter_battle_edge6_reentry_handoff: false,
+            source_starter_battle_edge16_reentry_handoff: false,
+            source_starter_battle_edge12_handoff: false,
+            source_starter_battle_edge22_handoff: false,
+            source_starter_battle_move_cursor1_handoff: false,
+            source_starter_picker_receipt_mode: 0,
+            source_starter_picker_profile: 0,
+            source_starter_picker_receipt_from: None,
+            source_starter_picker_receipt_to: None,
+            source_starter_picker_receipt_edge_frame: 0,
+            source_starter_picker_receipt_tail_clean: false,
+            source_starter_picker_hand_species: None,
+            source_starter_picker_interrupted_direction: false,
+            source_starter_picker_interrupted_a: false,
+            source_starter_picker_interrupted_frame: 0,
+            source_starter_picker_confirm_cursor_frame: None,
+            source_starter_picker_reveal_started_during_move_commit: false,
+            source_starter_picker_decline_started_frame: None,
             title_start_frames: 0,
             title_transition_frames: 0,
             title_intro_step: 0,
@@ -1960,7 +4406,7 @@ impl WorldState {
             name_cursor: 0,
             naming_target: NamingTarget::Player,
             starter_nickname_entry: String::new(),
-            player_gender: PlayerGender::May,
+            player_gender: PlayerGender::Brendan,
             gender_selection_touched: false,
             gender_transition: None,
             name_entry_touched: false,
@@ -1973,6 +4419,138 @@ impl WorldState {
             name_confirm_transition_frames: None,
             frame: 0,
         }
+    }
+
+    /// Source-authenticated settled Mays House 1F checkpoint. The source
+    /// split lands on the south doorway tile after the house-entry fade; keep
+    /// the post-clock rival-house object projection and the real player
+    /// coordinate rather than reusing the upstairs bedroom projection.
+    pub fn mays_house_1f() -> Self {
+        let mut world = Self::bedroom_idle();
+        world.map = MapId::MaysHouse1F;
+        // This checkpoint is captured after the house-entry warp in the
+        // post-clock rival-house projection.  Mom is resident by the table
+        // at (8,5), not at the downstairs stair/door coordinate used by the
+        // bedroom-origin ClockSet arrival tape.
+        world.phase = StoryPhase::TvBroadcast;
+        world.player = TilePosition { x: 2, y: 8 };
+        world.facing = Facing::Up;
+        world.render_position = None;
+        world.mays_house_1f_y_offset = 0;
+        world.mays_house_1f_direct_motion_frames = 0;
+        world.mays_house_1f_direct_exit_arrival_elapsed = None;
+        world.mays_house_1f_arrival_start_frame = None;
+        world.mays_house_1f_arrival_down_phase = None;
+        world.mays_house_1f_interactions_remaining = 0;
+        world.mays_house_1f_rival_scene_start_frame = None;
+        world.mays_house_1f_rival_dialogue_active = false;
+        world.mays_house_1f_dialogue_page_hold = None;
+        world.mays_house_1f_dialogue_page_arrow_anchor = None;
+        world.mays_house_1f_dialogue_hold_arrow_anchor = None;
+        world.mays_house_1f_dialogue_scroll_start_frame = None;
+        world.mays_house_1f_rival_departure_frames = None;
+        world.transition = None;
+        world.dialogue = None;
+        world.field_dialogue = None;
+        world.field_dialogue_frames = None;
+        world.littleroot_house_exit_down_block = false;
+        world.tv_screen_on = false;
+        world.elevation = crate::native::tile_elevation(world.map, 2, 8)
+            .expect("authenticated Mays House 1F tile must be staged");
+        world.npcs = map_npcs(
+            world.map,
+            world.phase,
+            world.potions,
+            world.oldale_rival_departed,
+            world.player_gender,
+        );
+        world
+    }
+
+    /// Source-authenticated settled Mays House 2F checkpoint after the
+    /// upstairs stair warp. This is a typed direct probe for the actual rival
+    /// bedroom, not the opening bedroom idle alias.
+    pub fn mays_house_2f() -> Self {
+        let mut world = Self::bedroom_idle();
+        world.map = MapId::MaysHouse2F;
+        world.phase = StoryPhase::ClockSet;
+        world.player = TilePosition { x: 1, y: 2 };
+        world.render_position = None;
+        world.transition = None;
+        world.dialogue = None;
+        world.field_dialogue = None;
+        world.field_dialogue_frames = None;
+        world.elevation = crate::native::tile_elevation(world.map, 1, 2)
+            .expect("authenticated Mays House 2F tile must be staged");
+        world.npcs = map_npcs(
+            world.map,
+            world.phase,
+            world.potions,
+            world.oldale_rival_departed,
+            world.player_gender,
+        );
+        world
+    }
+
+    /// Source-authenticated field state after the Mays House 1F exit fade.
+    /// Keep this as a real checkpoint instead of treating the endpoint as a
+    /// screenshot: later movement, collision, and map-connection tests start
+    /// from this durable town state.
+    pub fn littleroot_field_ready() -> Self {
+        let mut world = Self::bedroom_idle();
+        world.map = MapId::LittlerootTown;
+        world.phase = StoryPhase::ClockSet;
+        world.player = TilePosition { x: 14, y: 9 };
+        world.render_position = None;
+        world.elevation = crate::native::tile_elevation(world.map, world.player.x, world.player.y)
+            .expect("authenticated Littleroot field-ready tile must be staged");
+        world.facing = Facing::Down;
+        world.npcs = littleroot_town_npcs(world.phase, world.player_gender);
+        world.npc_walk_starts.clear();
+        world.ambient_wanders.clear();
+        world.field_ready_stride_cancelled = false;
+        world.transition = None;
+        // The door's one-frame landing block belongs to the fade/arrival
+        // transition, which is already settled by this authenticated
+        // checkpoint.  Down must be a normal field sample here; retaining
+        // the transient guard made the first exterior step disappear.
+        world.littleroot_house_exit_down_block = false;
+        world.mays_house_1f_arrival_start_frame = None;
+        world.mays_house_1f_y_offset = 0;
+        world.mays_house_1f_interactions_remaining = 0;
+        world.mays_house_1f_rival_scene_start_frame = None;
+        world.mays_house_1f_rival_dialogue_active = false;
+        world.mays_house_1f_dialogue_page_hold = None;
+        world.mays_house_1f_dialogue_page_arrow_anchor = None;
+        world.mays_house_1f_dialogue_hold_arrow_anchor = None;
+        world.mays_house_1f_dialogue_scroll_start_frame = None;
+        world.mays_house_1f_rival_departure_frames = None;
+        world.dialogue = None;
+        world.field_dialogue = None;
+        world.field_dialogue_frames = None;
+        world
+    }
+
+    /// Source-authenticated landing tile immediately after the Mays House
+    /// 1F exit.  The map/story state is shared with the settled field-ready
+    /// checkpoint, but the player remains on the authored doorstep tile until
+    /// the next controller sample commits a field stride.
+    pub fn littleroot_exterior() -> Self {
+        let mut world = Self::littleroot_field_ready();
+        // The authenticated exterior state is the same Brendan branch as the
+        // source field-ready state.  The checkpoint's ``player_gender=0``
+        // observability field and avatar digest are the authority here; do
+        // not infer the avatar from the preceding bedroom fixture.
+        world.player_gender = PlayerGender::Brendan;
+        world.npcs = littleroot_town_npcs(world.phase, world.player_gender);
+        world.player = TilePosition { x: 14, y: 8 };
+        world.elevation = crate::native::tile_elevation(world.map, 14, 8)
+            .expect("authenticated Littleroot exterior tile must be staged");
+        // Preserve the source door task's landing ownership.  The first
+        // released non-Down sample clears this guard; a held Down remains at
+        // the doorstep instead of immediately stepping through the door.
+        world.littleroot_house_exit_down_block = true;
+        world
     }
 
     pub fn birch_lab_exterior() -> Self {
@@ -1992,6 +4570,10 @@ impl WorldState {
             facing: Facing::Down,
             menu_open: false,
             menu_cursor: None,
+            bedroom_menu_render_cursor: None,
+            bedroom_menu_cursor_upload_pending: false,
+            bedroom_stride_force_second: false,
+            bedroom_exit_turn_force_second: false,
             menu_selection: None,
             active_screen: None,
             active_screen_cursor: 0,
@@ -1999,8 +4581,21 @@ impl WorldState {
             battle_style_set: false,
             save_count: 0,
             menu_transition_frames: None,
+            bedroom_menu_open_frames: None,
+            bedroom_menu_close_pending: false,
+            route101_menu_close_frames: None,
+            route101_menu_close_cursor: None,
+            route101_menu_exit_asset_frames: None,
+            route101_menu_action_hold_frames: None,
+            route101_field_select_pending_frames: None,
+            route101_select_modal_receipt_active: false,
             pokedex_cursor: 0,
             dialogue: None,
+            field_select_modal: None,
+            field_dialogue: None,
+            field_script: None,
+            story_flags: StoryFlags::default(),
+            story_vars: OpeningStoryVars::default(),
             clock_minutes: Some(720),
             clock_minute_hand_angle: 0,
             clock_move_direction: 0,
@@ -2028,6 +4623,7 @@ impl WorldState {
             no_pokemon_gate_right: false,
             birch_rescue_frames: None,
             birch_rescue_stage: 0,
+            route101_rescue_task: Route101RescueTask::Inactive,
             birch_post_battle_frames: None,
             route103_rival_intro_frames: None,
             route103_rival_intro_stage: 0,
@@ -2038,9 +4634,11 @@ impl WorldState {
             pokedex_poke_ball_fanfare_frames: None,
             pokedex_poke_ball_pocket_receipt: false,
             route101_exit_push: None,
+            route101_exit_guard_delay: None,
             route101_wurmple_resolved: false,
             route101_poochyena_resolved: false,
             route103_wingull_resolved: false,
+            route103_poochyena_resolved: false,
             pending_rival_meeting: false,
             rival_arrival_frames: None,
             rival_departure_frames: None,
@@ -2063,6 +4661,20 @@ impl WorldState {
             tv_broadcast_approach_frames: None,
             tv_broadcast_view_frames: None,
             tv_screen_on: true,
+            mays_house_1f_arrival_start_frame: None,
+            mays_house_1f_y_offset: 0,
+            mays_house_1f_direct_motion_frames: 0,
+            mays_house_1f_direct_exit_arrival_elapsed: None,
+            mays_house_1f_arrival_down_phase: None,
+            mays_house_1f_interactions_remaining: 0,
+            mays_house_1f_rival_scene_start_frame: None,
+            mays_house_1f_rival_dialogue_active: false,
+            mays_house_1f_dialogue_page_hold: None,
+            mays_house_1f_dialogue_page_arrow_anchor: None,
+            mays_house_1f_dialogue_hold_arrow_anchor: None,
+            mays_house_1f_dialogue_scroll_start_frame: None,
+            mays_house_1f_rival_departure_frames: None,
+            littleroot_house_exit_down_block: false,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -2072,11 +4684,25 @@ impl WorldState {
             walk_progress_frames: 0,
             walk_elapsed_frames: 0,
             walk_direction: None,
+            field_ready_stride_commit_pending: false,
+            field_ready_menu_open_started_frame: None,
+            field_ready_stride_cancelled: false,
+            littleroot_house_entry_frames: None,
             camera_handoff_from: None,
+            bedroom_turn_cancelled: false,
+            bedroom_turn_dispatch_delayed: false,
+            bedroom_stair_fade_started_frame: None,
+            bedroom_stair_warp_armed_frames: None,
+            bedroom_stair_transition_pending_frames: None,
+            bedroom_stair_direct_spawn: false,
             walk_render_origin: None,
+            bedroom_player_sprite: BedroomPlayerSprite::Base,
+            bedroom_blocked_sprite_frames: None,
+            bedroom_stride_started: false,
             running: false,
             running_step_uses_second_foot: false,
             starter: Some(StarterSpecies::Treecko),
+            starter_selection_transition: None,
             starter_party: None,
             starter_reveal_frames: None,
             starter_hand_phase: 0,
@@ -2089,6 +4715,40 @@ impl WorldState {
             oldale_rival_departed: false,
             birch_aide_met: false,
             battle: None,
+            source_route101_receipt_rail: 0,
+            source_route101_receipt_default_started: false,
+            source_route101_receipt_default_interrupted: false,
+            source_starter_battle_receipt_mode: 0,
+            source_starter_battle_turn_receipt: 0,
+            source_starter_battle_victory_receipt: false,
+            source_starter_battle_victory_release_frame: None,
+            source_starter_battle_victory_page_edge_frame: None,
+            source_starter_battle_victory_previous_page_edge_frame: None,
+            source_starter_battle_victory_page_edge_was_b: false,
+            source_starter_battle_victory_pending_edge_was_b: false,
+            source_starter_battle_victory_page_edge_from_final_printer: false,
+            source_starter_battle_victory_pending_edge_from_final_printer: false,
+            source_starter_battle_receipt_edge_frame: 0,
+            source_starter_battle_early_party_handoff: false,
+            source_starter_battle_late_party_edge25_handoff: false,
+            source_starter_battle_edge6_reentry_handoff: false,
+            source_starter_battle_edge16_reentry_handoff: false,
+            source_starter_battle_edge12_handoff: false,
+            source_starter_battle_edge22_handoff: false,
+            source_starter_battle_move_cursor1_handoff: false,
+            source_starter_picker_receipt_mode: 0,
+            source_starter_picker_profile: 0,
+            source_starter_picker_receipt_from: None,
+            source_starter_picker_receipt_to: None,
+            source_starter_picker_receipt_edge_frame: 0,
+            source_starter_picker_receipt_tail_clean: false,
+            source_starter_picker_hand_species: None,
+            source_starter_picker_interrupted_direction: false,
+            source_starter_picker_interrupted_a: false,
+            source_starter_picker_interrupted_frame: 0,
+            source_starter_picker_confirm_cursor_frame: None,
+            source_starter_picker_reveal_started_during_move_commit: false,
+            source_starter_picker_decline_started_frame: None,
             title_start_frames: 0,
             title_transition_frames: 0,
             title_intro_step: 0,
@@ -2097,7 +4757,7 @@ impl WorldState {
             name_cursor: 0,
             naming_target: NamingTarget::Player,
             starter_nickname_entry: String::new(),
-            player_gender: PlayerGender::May,
+            player_gender: PlayerGender::Brendan,
             gender_selection_touched: false,
             gender_transition: None,
             name_entry_touched: false,
@@ -2155,9 +4815,15 @@ impl WorldState {
             // The source checkpoint is captured with the player facing right.
             // Keeping that pose makes the initial native compositor reproduce
             // the idle Little Root reference before any directional input.
+            // The source resident presents the side cell with its authored
+            // eastward flip in these settled Route 101 views.
             facing: Facing::Right,
             menu_open: false,
             menu_cursor: None,
+            bedroom_menu_render_cursor: None,
+            bedroom_menu_cursor_upload_pending: false,
+            bedroom_stride_force_second: false,
+            bedroom_exit_turn_force_second: false,
             menu_selection: None,
             active_screen: None,
             active_screen_cursor: 0,
@@ -2165,8 +4831,21 @@ impl WorldState {
             battle_style_set: false,
             save_count: 0,
             menu_transition_frames: None,
+            bedroom_menu_open_frames: None,
+            bedroom_menu_close_pending: false,
+            route101_menu_close_frames: None,
+            route101_menu_close_cursor: None,
+            route101_menu_exit_asset_frames: None,
+            route101_menu_action_hold_frames: None,
+            route101_field_select_pending_frames: None,
+            route101_select_modal_receipt_active: false,
             pokedex_cursor: 0,
             dialogue: None,
+            field_select_modal: None,
+            field_dialogue: None,
+            field_script: None,
+            story_flags: StoryFlags::default(),
+            story_vars: OpeningStoryVars::default(),
             clock_minutes: Some(720),
             clock_minute_hand_angle: 0,
             clock_move_direction: 0,
@@ -2194,6 +4873,7 @@ impl WorldState {
             no_pokemon_gate_right: false,
             birch_rescue_frames: None,
             birch_rescue_stage: 0,
+            route101_rescue_task: Route101RescueTask::Inactive,
             birch_post_battle_frames: None,
             route103_rival_intro_frames: None,
             route103_rival_intro_stage: 0,
@@ -2204,9 +4884,11 @@ impl WorldState {
             pokedex_poke_ball_fanfare_frames: None,
             pokedex_poke_ball_pocket_receipt: false,
             route101_exit_push: None,
+            route101_exit_guard_delay: None,
             route101_wurmple_resolved: false,
             route101_poochyena_resolved: false,
             route103_wingull_resolved: false,
+            route103_poochyena_resolved: false,
             pending_rival_meeting: false,
             rival_arrival_frames: None,
             rival_departure_frames: None,
@@ -2229,6 +4911,20 @@ impl WorldState {
             tv_broadcast_approach_frames: None,
             tv_broadcast_view_frames: None,
             tv_screen_on: true,
+            mays_house_1f_arrival_start_frame: None,
+            mays_house_1f_y_offset: 0,
+            mays_house_1f_direct_motion_frames: 0,
+            mays_house_1f_direct_exit_arrival_elapsed: None,
+            mays_house_1f_arrival_down_phase: None,
+            mays_house_1f_interactions_remaining: 0,
+            mays_house_1f_rival_scene_start_frame: None,
+            mays_house_1f_rival_dialogue_active: false,
+            mays_house_1f_dialogue_page_hold: None,
+            mays_house_1f_dialogue_page_arrow_anchor: None,
+            mays_house_1f_dialogue_hold_arrow_anchor: None,
+            mays_house_1f_dialogue_scroll_start_frame: None,
+            mays_house_1f_rival_departure_frames: None,
+            littleroot_house_exit_down_block: false,
             truck_arrival_frames: None,
             truck_arrival_dialogue_frames: None,
             truck_departure_frames: None,
@@ -2238,11 +4934,25 @@ impl WorldState {
             walk_progress_frames: 0,
             walk_elapsed_frames: 0,
             walk_direction: None,
+            field_ready_stride_commit_pending: false,
+            field_ready_menu_open_started_frame: None,
+            field_ready_stride_cancelled: false,
+            littleroot_house_entry_frames: None,
             camera_handoff_from: None,
+            bedroom_turn_cancelled: false,
+            bedroom_turn_dispatch_delayed: false,
+            bedroom_stair_fade_started_frame: None,
+            bedroom_stair_warp_armed_frames: None,
+            bedroom_stair_transition_pending_frames: None,
+            bedroom_stair_direct_spawn: false,
             walk_render_origin: None,
+            bedroom_player_sprite: BedroomPlayerSprite::Base,
+            bedroom_blocked_sprite_frames: None,
+            bedroom_stride_started: false,
             running: false,
             running_step_uses_second_foot: false,
             starter: Some(StarterSpecies::Treecko),
+            starter_selection_transition: None,
             starter_party: None,
             starter_reveal_frames: None,
             starter_hand_phase: 0,
@@ -2255,6 +4965,40 @@ impl WorldState {
             oldale_rival_departed: false,
             birch_aide_met: false,
             battle: None,
+            source_route101_receipt_rail: 0,
+            source_route101_receipt_default_started: false,
+            source_route101_receipt_default_interrupted: false,
+            source_starter_battle_receipt_mode: 0,
+            source_starter_battle_turn_receipt: 0,
+            source_starter_battle_victory_receipt: false,
+            source_starter_battle_victory_release_frame: None,
+            source_starter_battle_victory_page_edge_frame: None,
+            source_starter_battle_victory_previous_page_edge_frame: None,
+            source_starter_battle_victory_page_edge_was_b: false,
+            source_starter_battle_victory_pending_edge_was_b: false,
+            source_starter_battle_victory_page_edge_from_final_printer: false,
+            source_starter_battle_victory_pending_edge_from_final_printer: false,
+            source_starter_battle_receipt_edge_frame: 0,
+            source_starter_battle_early_party_handoff: false,
+            source_starter_battle_late_party_edge25_handoff: false,
+            source_starter_battle_edge6_reentry_handoff: false,
+            source_starter_battle_edge16_reentry_handoff: false,
+            source_starter_battle_edge12_handoff: false,
+            source_starter_battle_edge22_handoff: false,
+            source_starter_battle_move_cursor1_handoff: false,
+            source_starter_picker_receipt_mode: 0,
+            source_starter_picker_profile: 0,
+            source_starter_picker_receipt_from: None,
+            source_starter_picker_receipt_to: None,
+            source_starter_picker_receipt_edge_frame: 0,
+            source_starter_picker_receipt_tail_clean: false,
+            source_starter_picker_hand_species: None,
+            source_starter_picker_interrupted_direction: false,
+            source_starter_picker_interrupted_a: false,
+            source_starter_picker_interrupted_frame: 0,
+            source_starter_picker_confirm_cursor_frame: None,
+            source_starter_picker_reveal_started_during_move_commit: false,
+            source_starter_picker_decline_started_frame: None,
             title_start_frames: 0,
             title_transition_frames: 0,
             title_intro_step: 0,
@@ -2282,20 +5026,412 @@ impl WorldState {
         let mut world = Self::rival_outside_birch_lab();
         world.map = MapId::Route101;
         world.phase = StoryPhase::BirchRescue;
-        // The north Little Root connection delivers the source scene into
-        // Route 101's authored x=10 lane. `StartBirchRescue` then owns the
-        // four fast northward player strides from this south-edge tile.
-        world.player = TilePosition { x: 10, y: 19 };
+        // This constructor is the authenticated `route101_rescue` checkpoint,
+        // not the pre-script map-edge arrival.  The source save is taken
+        // after the rescue choreography has settled at (11,15), with the
+        // player facing the Bag and the prompt released.  Live Littleroot →
+        // Route 101 entry still lands at y=19 and starts the choreography in
+        // `begin_connected_map`; checkpoint construction must retain the
+        // separately captured, post-choreography identity.
+        world.player = TilePosition { x: 11, y: 15 };
         world.render_position = None;
+        // The authenticated v8 save stores gender byte 0 (Brendan).  The
+        // shared Littleroot exterior constructor is May-oriented because it
+        // seeds the rival scene; carrying that default into this checkpoint
+        // swaps the player OBJ palette and leaves a localized RGB mismatch
+        // even when the raw Route 101 sprite cell is correct.
+        world.player_gender = PlayerGender::Brendan;
         world.elevation = crate::native::tile_elevation(world.map, world.player.x, world.player.y)
             .expect("Route 101 rescue start must be on staged terrain");
-        world.facing = Facing::Up;
+        world.facing = Facing::Left;
         world.starter = None;
         world.has_pokedex = false;
         world.poke_balls = 0;
         world.npcs = route101_npcs(world.phase);
-        world.dialogue = Some("H-help me!".to_owned());
+        // The source checkpoint has no active textbox.  It is the stable Bag
+        // prompt boundary after Birch and Zigzagoon have completed their
+        // circle and the player has reached the authored approach tile.
+        world.birch_rescue_stage = 3;
+        world.dialogue = None;
+        if let Some(birch) = world.npcs.iter_mut().find(|npc| npc.id == "birch") {
+            birch.position = TilePosition { x: 4, y: 13 };
+            birch.facing = Facing::Right;
+        }
+        if let Some(zigzagoon) = world.npcs.iter_mut().find(|npc| npc.id == "zigzagoon") {
+            zigzagoon.position = TilePosition { x: 5, y: 12 };
+            zigzagoon.facing = Facing::Left;
+        }
         world
+    }
+
+    /// Builds one of the settled, source-authenticated Route 101 traversal
+    /// boundaries.  The route-lane savestates all share the same durable
+    /// story state (starter chosen, Birch rescued, no Pokédex yet); only the
+    /// player tile/facing differs.  Keeping this as one constructor prevents
+    /// lane checkpoints from drifting in NPC visibility, party state, or
+    /// collision semantics.
+    fn route101_field_lane(player: TilePosition, facing: Facing) -> Self {
+        let mut world = Self::rival_outside_birch_lab();
+        world.map = MapId::Route101;
+        world.phase = StoryPhase::StarterChosen;
+        world.player_gender = PlayerGender::Brendan;
+        world.player = player.clone();
+        world.render_position = None;
+        world.elevation = crate::native::tile_elevation(world.map, player.x, player.y)
+            .expect("Route 101 field lane must be on staged terrain");
+        world.facing = facing;
+        world.dialogue = None;
+        world.field_dialogue = None;
+        world.field_dialogue_frames = None;
+        world.field_script = None;
+        world.transition = None;
+        world.starter = Some(StarterSpecies::Treecko);
+        world.starter_party = Some(starter_party_state(StarterSpecies::Treecko));
+        world.has_pokedex = false;
+        world.poke_balls = 0;
+        world.story_flags.pokemon_obtained = true;
+        world.story_flags.birch_rescue_started = true;
+        world.story_flags.starter_acknowledged = true;
+        world.route101_rescue_task = Route101RescueTask::Inactive;
+        world.npcs = route101_npcs(world.phase);
+        world
+    }
+
+    pub fn route101_post_lab() -> Self {
+        Self::route101_field_lane(TilePosition { x: 11, y: 19 }, Facing::Left)
+    }
+
+    pub fn route101_north_lane() -> Self {
+        Self::route101_field_lane(TilePosition { x: 11, y: 14 }, Facing::Up)
+    }
+
+    pub fn route101_west_lane() -> Self {
+        Self::route101_field_lane(TilePosition { x: 7, y: 14 }, Facing::Left)
+    }
+
+    pub fn route101_mid_lane() -> Self {
+        Self::route101_field_lane(TilePosition { x: 7, y: 10 }, Facing::Up)
+    }
+
+    pub fn route101_east_lane() -> Self {
+        // The source checkpoint reload leaves the player OBJ unflipped even
+        // though the last released pulse was eastward; the field sprite
+        // task owns the visual cell independently of logical facing.
+        Self::route101_field_lane(TilePosition { x: 13, y: 10 }, Facing::Left)
+    }
+
+    /// Stable source-authenticated `ChoiceStarter` boundary from the Route
+    /// 101 rescue corridor.  This is deliberately constructed through the
+    /// same typed picker transition used by live play, rather than being an
+    /// alias for the pre-bag rescue checkpoint.
+    pub fn starter_picker() -> Self {
+        let mut world = Self::route101_rescue();
+        world.dialogue = None;
+        world.birch_rescue_stage = 3;
+        world.open_starter_picker(StarterSpecies::Torchic);
+        debug_assert!(world.route101_rescue_invariants_hold());
+        world
+    }
+
+    /// Stable source-authenticated first command-menu boundary for Birch's
+    /// scripted Zigzagoon battle.  `settle_battle_command_surface` is a
+    /// general battle-state projection: it completes no gameplay and merely
+    /// selects the already-established command-menu ownership boundary.
+    pub fn starter_battle() -> Self {
+        let mut world = Self::starter_picker();
+        world.ask_confirm_starter();
+        assert!(world.advance_starter_reveal(15));
+        world.respond_starter_confirmation(true);
+        world.begin_birch_battle();
+        world.dialogue = None;
+        world.settle_battle_command_surface();
+        // The authenticated source receipt is restored after the scripted
+        // starter has already taken the opening damage: its command-ready
+        // healthbox is 19/19, not the full 21 HP produced by the generic
+        // profile constructor. Keep this checkpoint's logical state aligned
+        // with the source save boundary before rendering or accepting input.
+        if let Some(battle) = world.battle.as_mut() {
+            battle.player_hp = 19;
+            battle.player_max_hp = 19;
+        }
+        debug_assert!(world.route101_rescue_invariants_hold());
+        world
+    }
+
+    /// Source-authenticated first post-turn boundary for Birch's scripted
+    /// Zigzagoon battle. This is the returned command surface after the
+    /// concrete Scratch tape, not a Route 101 wild-battle projection.
+    pub fn starter_battle_after_turn_one() -> Self {
+        let mut world = Self::starter_battle();
+        world.source_starter_battle_turn_receipt = 1;
+        if let Some(battle) = world.battle.as_mut() {
+            battle.player_hp = 16;
+            battle.player_max_hp = 19;
+            battle.rival_hp = 7;
+            battle.player_move_pp = 34;
+            battle.player_moves[0].pp = 34;
+            battle.opponent_move_slot = Some(0);
+            battle.opponent_moves[0].pp = 34;
+            battle.opponent_turn_count = 1;
+            battle.opponent_move_damage = 3;
+            battle.rng_state = 2_167_938_932;
+            battle.last_move_hit = true;
+            battle.last_move_critical = false;
+            battle.last_damage_variance = Some(94);
+        }
+        world.settle_battle_command_surface();
+        world.sync_starter_party_from_battle();
+        debug_assert!(world.route101_rescue_invariants_hold());
+        world
+    }
+
+    /// Source-authenticated second post-turn boundary. The source receipt
+    /// keeps the same visible health surface while the second Scratch tape
+    /// advances the two move PP owners and battle RNG boundary.
+    pub fn starter_battle_after_turn_two() -> Self {
+        let mut world = Self::starter_battle_after_turn_one();
+        world.source_starter_battle_turn_receipt = 2;
+        if let Some(battle) = world.battle.as_mut() {
+            battle.player_move_pp = 33;
+            battle.player_moves[0].pp = 33;
+            battle.opponent_moves[0].pp = 33;
+            battle.rival_hp = 1;
+            battle.opponent_turn_count = 2;
+            battle.rng_state = 911_637_904;
+        }
+        world.sync_starter_party_from_battle();
+        debug_assert!(world.route101_rescue_invariants_hold());
+        world
+    }
+
+    pub fn starter_battle_victory_handoff() -> Self {
+        let mut world = Self::starter_battle_after_turn_two();
+        world.source_starter_battle_turn_receipt = 0;
+        world.complete_birch_rescue_battle();
+        // The authenticated victory receipt is the third Birch page, after
+        // the post-battle wait and the first two page-release edges. Keep the
+        // typed dialogue runner active so the next A edge remains source
+        // owned and serializable.
+        world.advance_field_script_task(16);
+        for _ in 0..2 {
+            world.advance_field_dialogue_printer(u32::MAX);
+            world.advance_opening_script();
+        }
+        // The authenticated source checkpoint is captured after the third
+        // Birch page has finished printing.  The reusable runner above needs
+        // the page cursor for that text, but must not leave its synthetic
+        // printer lead active; otherwise the first A/B edge is consumed by a
+        // page that is already ready on the source.
+        if let Some(dialogue) = world.field_dialogue.as_mut() {
+            dialogue.print_remaining = 0;
+        }
+        world.field_dialogue_frames = None;
+        world.dialogue = world
+            .field_dialogue
+            .as_ref()
+            .map(|dialogue| dialogue.current_text().to_owned());
+        world.player = TilePosition { x: 7, y: 15 };
+        world.elevation = crate::native::tile_elevation(world.map, 7, 15)
+            .expect("Route 101 victory-receipt tile must be staged");
+        world.source_starter_battle_victory_receipt = true;
+        debug_assert!(world.route101_rescue_invariants_hold());
+        world
+    }
+
+    /// Common authenticated Route 101 Wurmple encounter entry.  The source
+    /// checkpoint is battle-owned even though its return map is Route 101;
+    /// constructing it through the wild-battle path keeps field input from
+    /// leaking into the entry-message phase.
+    fn route101_wild_battle_base() -> Self {
+        let mut world = Self::route101_field_lane(TilePosition { x: 13, y: 9 }, Facing::Up);
+        world.starter = Some(StarterSpecies::Torchic);
+        world.starter_party = Some(starter_party_state(StarterSpecies::Torchic));
+        world.ambient_rng = 3_002_958_025;
+        let field_return = WildEncounterReturn {
+            id: WildEncounterId::Route101Wurmple,
+            map: MapId::Route101,
+            player: world.player.clone(),
+            elevation: world.elevation,
+            facing: world.facing,
+            rng_state_before_battle: world.ambient_rng,
+        };
+        let mut battle = opening_battle_state(
+            BattleOpponent::Wurmple,
+            starter_battle_profile(world.starter),
+            wild_battle_profile("WURMPLE", 2, &["TACKLE", "STRING SHOT"]),
+            true,
+            "Wild WURMPLE appeared!".to_owned(),
+            0,
+            world.ambient_rng,
+            false,
+        );
+        // The authenticated entry checkpoint is before the player's
+        // Pokémon has been sent out: Emerald still owns the player trainer's
+        // back-sprite exit while the wild-entry message is waiting. Keep the
+        // trainer rail visible and defer the settled Torchic OBJ/status pane
+        // until the send-out task starts.
+        battle.intro_player_sendout_frames = BATTLE_PLAYER_INTRO_SENDOUT_FRAMES;
+        battle.field_return = Some(field_return);
+        world.apply_starter_party_to_battle(&mut battle);
+        world.battle = Some(battle);
+        debug_assert!(world.wild_encounter_invariants_hold());
+        world
+    }
+
+    /// Source-authenticated Route 101 wild entry handoff (`Wild WURMPLE`
+    /// message).  This is intentionally separate from the command surface:
+    /// dismissing the entry text is a battle transition, not field input.
+    pub fn route101_wild_battle() -> Self {
+        Self::route101_wild_battle_base()
+    }
+
+    /// Source-authenticated send-out message after the wild entry text.
+    pub fn route101_wild_command() -> Self {
+        let mut world = Self::route101_wild_battle_base();
+        let battle = world.battle.as_mut().expect("wild entry must have battle");
+        battle.message = Some("Go! TORCHIC!".to_owned());
+        battle.message_visual_start_frame = 0;
+        battle.turn_phase = BattleTurnPhase::IntroMessage;
+        battle.intro_stage = 2;
+        // Loading the authenticated command state advances the source once
+        // past the entry tape's VBlank 61.  At that boundary the trainer is
+        // still partially visible at x=-57 and the ball is on elapsed tick
+        // 44 (the source OAM receipt, not a settled command-menu snapshot).
+        // Preserve that in-flight ownership so a no-op continuation cannot
+        // snap directly to an unrelated stationary surface.
+        battle.intro_player_sendout_frames = BATTLE_PLAYER_INTRO_SENDOUT_FRAMES
+            .saturating_sub(44);
+        battle.intro_player_sendout_started = true;
+        battle.intro_player_sendout_elapsed_frames = 44;
+        debug_assert!(world.battle_turn_invariants_hold());
+        world
+    }
+
+    /// Authenticated settled field of the first completed deterministic
+    /// Wurmple turn.  The source receipt owns the command surface; all later
+    /// turn checkpoints are projections of this same battle state.
+    pub fn route101_wild_after_turn_one() -> Self {
+        let mut world = Self::route101_wild_command();
+        world.settle_battle_command_surface();
+        if let Some(battle) = world.battle.as_mut() {
+            // This checkpoint is the post-default-move command surface. The
+            // opponent's first action has already consumed its source RNG
+            // turn, which also keeps the authenticated renderer receipt from
+            // matching the pre-turn command checkpoint.
+            battle.opponent_turn_count = 1;
+        }
+        debug_assert!(world.battle_turn_invariants_hold());
+        world
+    }
+
+    pub fn route101_wild_after_turn_two() -> Self {
+        let mut world = Self::route101_wild_after_turn_one();
+        world.source_route101_receipt_rail = 2;
+        if let Some(battle) = world.battle.as_mut() {
+            battle.player_hp = 19;
+            battle.player_max_hp = 19;
+            battle.rival_hp = 8;
+            battle.rng_state = 3_015_740_837;
+            battle.opponent_turn_count = 2;
+        }
+        world
+    }
+
+    pub fn route101_wild_after_turn_three() -> Self {
+        let mut world = Self::route101_wild_after_turn_two();
+        world.source_route101_receipt_rail = 3;
+        if let Some(battle) = world.battle.as_mut() {
+            battle.rng_state = 1_729_417_749;
+            battle.opponent_turn_count = 3;
+            battle.player_hp = 17;
+            battle.player_max_hp = 19;
+            battle.rival_hp = 2;
+            battle.player_move_pp = battle.player_move_pp.saturating_sub(3);
+            if let Some(slot) = battle.player_moves.first_mut() {
+                slot.pp = battle.player_move_pp;
+            }
+        }
+        debug_assert!(world.battle_turn_invariants_hold());
+        world
+    }
+
+    pub fn route101_wild_after_turn_four() -> Self {
+        let mut world = Self::route101_wild_after_turn_three();
+        world.source_route101_receipt_rail = 4;
+        if let Some(battle) = world.battle.as_mut() {
+            battle.rng_state = 2_077_170_134;
+            battle.opponent_turn_count = 4;
+            battle.player_hp = 15;
+            battle.player_max_hp = 19;
+            battle.rival_hp = 0;
+            battle.turn_phase = BattleTurnPhase::TurnResultMessage;
+            battle.message = Some("Wild WURMPLE fainted!".to_owned());
+            battle.message_visual_start_frame = 0;
+        }
+        debug_assert!(world.battle_turn_invariants_hold());
+        world
+    }
+
+    pub fn route101_wild_after_turn_five() -> Self {
+        let mut world = Self::route101_wild_after_turn_four();
+        world.source_route101_receipt_rail = 5;
+        if let Some(battle) = world.battle.as_mut() {
+            battle.rng_state = 416_548_816;
+            battle.opponent_turn_count = 5;
+            battle.player_hp = 15;
+            battle.player_max_hp = 19;
+            battle.turn_phase = BattleTurnPhase::TerminalMessage;
+            battle.message = Some("TORCHIC gained 15 EXP. Points!".to_owned());
+            battle.message_visual_start_frame = 0;
+        }
+        debug_assert!(world.battle_turn_invariants_hold());
+        world
+    }
+
+    /// Source-confirmed field ownership after the Wurmple victory callback.
+    pub fn route101_wild_after_turn_six() -> Self {
+        let mut world = Self::route101_field_lane(TilePosition { x: 13, y: 9 }, Facing::Up);
+        world.source_route101_receipt_rail = 6;
+        world.starter = Some(StarterSpecies::Torchic);
+        world.starter_party = Some(starter_party_state(StarterSpecies::Torchic));
+        world.route101_wurmple_resolved = true;
+        world.ambient_rng = 1_895_368_719;
+        world
+    }
+
+    pub fn route101_wild_victory_resume() -> Self {
+        Self::route101_wild_after_turn_six()
+    }
+
+    pub fn route101_post_victory_r2() -> Self {
+        let mut world = Self::route101_wild_after_turn_six();
+        world.player = TilePosition { x: 15, y: 9 };
+        world.elevation = crate::native::tile_elevation(world.map, 15, 9)
+            .expect("Route 101 post-victory R2 must be on staged terrain");
+        world
+    }
+
+    fn route101_post_victory_field(player: TilePosition, facing: Facing) -> Self {
+        let mut world = Self::route101_field_lane(player, facing);
+        world.route101_wurmple_resolved = true;
+        world.story_flags.rival_route_unlocked = true;
+        world
+    }
+
+    pub fn route101_post_victory_u7() -> Self {
+        Self::route101_post_victory_field(TilePosition { x: 15, y: 2 }, Facing::Up)
+    }
+
+    pub fn route101_post_victory_u7_settled() -> Self {
+        Self::route101_post_victory_u7()
+    }
+
+    pub fn route101_post_victory_l4() -> Self {
+        Self::route101_post_victory_field(TilePosition { x: 11, y: 2 }, Facing::Left)
+    }
+
+    pub fn route101_post_victory_north_exit() -> Self {
+        Self::route101_post_victory_field(TilePosition { x: 11, y: 0 }, Facing::Up)
     }
 
     pub fn route103_rival() -> Self {
@@ -2312,6 +5448,302 @@ impl WorldState {
         world.poke_balls = 0;
         world.npcs = route103_npcs(world.phase);
         world.dialogue = None;
+        world
+    }
+
+    /// Authenticated Route 103 wild-battle boundary historically named
+    /// `route103_wild_command`. The source receipt proves that this is
+    /// actually the second intro-message page, not command ownership.
+    pub fn route103_wild_command() -> Self {
+        let mut world = Self::route103_rival();
+        world.player = TilePosition { x: 7, y: 6 };
+        world.elevation = crate::native::tile_elevation(world.map, world.player.x, world.player.y)
+            .expect("authenticated Route 103 wild origin must be on staged terrain");
+        let field_return = WildEncounterReturn {
+            id: WildEncounterId::Route103Poochyena,
+            map: MapId::Route103,
+            player: world.player.clone(),
+            elevation: world.elevation,
+            facing: world.facing,
+            rng_state_before_battle: world.ambient_rng,
+        };
+        let mut battle = opening_battle_state(
+            BattleOpponent::Poochyena,
+            starter_battle_profile(world.starter),
+            wild_battle_profile("POOCHYENA", 2, &["TACKLE"]),
+            true,
+            "Wild POOCHYENA appeared!".to_owned(),
+            0,
+            world.ambient_rng,
+            false,
+        );
+        battle.field_return = Some(field_return);
+        world.apply_starter_party_to_battle(&mut battle);
+        world.battle = Some(battle);
+        debug_assert!(world.wild_encounter_invariants_hold());
+        world
+    }
+
+    /// Genuine Route 103 wild command surface. Values are the authenticated
+    /// `gBattleMons` sidecar for `route103_wild_turn_one`, captured after the
+    /// source state reload's required one-frame stabilization.
+    pub fn route103_wild_turn_one() -> Self {
+        let mut world = Self::route103_wild_command();
+        world.starter = Some(StarterSpecies::Torchic);
+        world.ambient_rng = 384_740_133;
+        let battle = world
+            .battle
+            .as_mut()
+            .expect("wild command checkpoint needs a battle");
+        battle.rng_state = world.ambient_rng;
+        battle.player_species = "TORCHIC".to_owned();
+        battle.player_level = 5;
+        battle.player_hp = 15;
+        battle.player_max_hp = 19;
+        battle.player_attack = 11;
+        battle.player_defense = 9;
+        battle.player_speed = 10;
+        battle.player_special_attack = 12;
+        battle.player_special_defense = 10;
+        battle.player_move_name = "SCRATCH".to_owned();
+        battle.player_status_move_name = "GROWL".to_owned();
+        battle.player_move_pp = 32;
+        battle.player_status_move_pp = 40;
+        battle.player_moves = vec![
+            battle_move_slot("SCRATCH", 32),
+            battle_move_slot("GROWL", 40),
+        ];
+        battle.rival_hp = 13;
+        battle.opponent_max_hp = 13;
+        battle.opponent_level = 2;
+        battle.opponent_attack = 7;
+        battle.opponent_defense = 6;
+        battle.opponent_speed = 5;
+        battle.opponent_special_attack = 6;
+        battle.opponent_special_defense = 6;
+        battle.opponent_move_name = "TACKLE".to_owned();
+        battle.opponent_moves = vec![battle_move_slot("TACKLE", 35)];
+        battle.opponent_move_slot = None;
+        world.starter_party = Some(StarterPartyState {
+            species: StarterSpecies::Torchic,
+            nickname: None,
+            level: 5,
+            hp: 15,
+            max_hp: 19,
+            attack: 11,
+            defense: 9,
+            speed: 10,
+            special_attack: 12,
+            special_defense: 10,
+            physical_move_pp: 32,
+            status_move_pp: 40,
+            moves: vec![
+                battle_move_slot("SCRATCH", 32),
+                battle_move_slot("GROWL", 40),
+            ],
+        });
+        world.settle_battle_command_surface();
+        debug_assert!(world.wild_encounter_invariants_hold());
+        debug_assert!(world.battle_turn_invariants_hold());
+        world
+    }
+
+    pub fn route103_wild_turn1_move_menu() -> Self {
+        let mut world = Self::route103_wild_turn_one();
+        let battle = world
+            .battle
+            .as_mut()
+            .expect("move menu checkpoint needs battle");
+        battle.turn_phase = BattleTurnPhase::MoveSelection;
+        battle.selecting_move = true;
+        battle.command_cursor = BATTLE_COMMAND_FIGHT;
+        battle.move_cursor = 0;
+        battle.message = None;
+        battle.message_visual_start_frame = 0;
+        debug_assert!(world.battle_turn_invariants_hold());
+        world
+    }
+
+    /// Actual phase contained by the authenticated savestate historically
+    /// labelled `route103_wild_turn1_move_menu`.
+    pub fn route103_wild_player_sendout_message() -> Self {
+        let mut world = Self::route103_wild_turn_one();
+        let battle = world
+            .battle
+            .as_mut()
+            .expect("sendout checkpoint needs battle");
+        battle.turn_phase = BattleTurnPhase::IntroMessage;
+        battle.selecting_move = false;
+        battle.command_cursor = BATTLE_COMMAND_FIGHT;
+        battle.move_cursor = 0;
+        battle.message = Some("Go! TORCHIC!".to_string());
+        battle.message_visual_start_frame = 0;
+        debug_assert!(world.battle_turn_invariants_hold());
+        world
+    }
+
+    pub fn route103_wild_turn1_scratch_text() -> Self {
+        let mut world = Self::route103_wild_turn_one();
+        let battle = world
+            .battle
+            .as_mut()
+            .expect("Scratch text checkpoint needs battle");
+        battle.turn_phase = BattleTurnPhase::TurnResultMessage;
+        battle.selecting_move = false;
+        battle.player_move_pp = 31;
+        battle.player_moves[0].pp = 31;
+        battle.rival_hp = 7;
+        battle.message = Some("TORCHIC used SCRATCH!".to_string());
+        battle.message_visual_start_frame = 0;
+        debug_assert!(world.battle_turn_invariants_hold());
+        world
+    }
+
+    pub fn route103_wild_turn1_tackle_text() -> Self {
+        let mut world = Self::route103_wild_turn1_scratch_text();
+        let battle = world
+            .battle
+            .as_mut()
+            .expect("Tackle text checkpoint needs battle");
+        battle.message = Some("Wild POOCHYENA used TACKLE!".to_string());
+        battle.message_visual_start_frame = 0;
+        debug_assert!(world.battle_turn_invariants_hold());
+        world
+    }
+
+    pub fn route103_wild_turn1_command_return() -> Self {
+        let mut world = Self::route103_wild_turn1_tackle_text();
+        let battle = world
+            .battle
+            .as_mut()
+            .expect("command-return checkpoint needs battle");
+        battle.turn_phase = BattleTurnPhase::Command;
+        battle.selecting_move = false;
+        battle.player_hp = 13;
+        battle.message = None;
+        battle.message_visual_start_frame = 0;
+        debug_assert!(world.battle_turn_invariants_hold());
+        world
+    }
+
+    /// Authenticated first command-menu boundary of Brendan's Route 103
+    /// trainer battle against May's level-5 Mudkip.
+    pub fn route103_rival_battle_command() -> Self {
+        let mut world = Self::route103_rival();
+        world.starter = Some(StarterSpecies::Torchic);
+        world.phase = StoryPhase::RivalBattle;
+        world.begin_rival_battle();
+        world.ambient_rng = 2_099_687_136;
+        let battle = world
+            .battle
+            .as_mut()
+            .expect("rival command checkpoint needs a battle");
+        battle.rng_state = world.ambient_rng;
+        battle.player_level = 6;
+        battle.player_hp = 15;
+        battle.player_max_hp = 21;
+        battle.player_attack = 12;
+        battle.player_defense = 10;
+        battle.player_speed = 11;
+        battle.player_special_attack = 13;
+        battle.player_special_defense = 11;
+        battle.player_move_pp = 30;
+        battle.player_status_move_pp = 40;
+        battle.player_moves = vec![
+            battle_move_slot("SCRATCH", 30),
+            battle_move_slot("GROWL", 40),
+        ];
+        battle.rival_hp = 20;
+        battle.opponent_max_hp = 20;
+        battle.opponent_level = 5;
+        battle.opponent_attack = 12;
+        battle.opponent_defense = 10;
+        battle.opponent_speed = 8;
+        battle.opponent_special_attack = 11;
+        battle.opponent_special_defense = 10;
+        battle.opponent_moves = vec![
+            battle_move_slot("TACKLE", 35),
+            battle_move_slot("GROWL", 40),
+        ];
+        world.starter_party = Some(StarterPartyState {
+            species: StarterSpecies::Torchic,
+            nickname: None,
+            level: 6,
+            hp: 15,
+            max_hp: 21,
+            attack: 12,
+            defense: 10,
+            speed: 11,
+            special_attack: 13,
+            special_defense: 11,
+            physical_move_pp: 30,
+            status_move_pp: 40,
+            moves: vec![
+                battle_move_slot("SCRATCH", 30),
+                battle_move_slot("GROWL", 40),
+            ],
+        });
+        world.dialogue = None;
+        world.settle_battle_command_surface();
+        debug_assert!(world.rival_route_invariants_hold());
+        debug_assert!(world.battle_turn_invariants_hold());
+        world
+    }
+
+    /// First stable native-field checkpoint after the continuously captured
+    /// Brendan/Torchic Route 103 victory. Source state:
+    /// `983796dc12057b962edafa07a1daa245612ff8dbd8259139ac4686a12fa0dbd7`.
+    /// Facing and fitted render position were not exposed by that receipt and
+    /// therefore are deliberately not part of the boundary invariant.
+    pub fn route103_rival_victory_field() -> Self {
+        let mut world = Self::route103_rival();
+        world.player_gender = PlayerGender::Brendan;
+        world.starter = Some(StarterSpecies::Torchic);
+        world.starter_party = Some(StarterPartyState {
+            species: StarterSpecies::Torchic,
+            nickname: None,
+            level: 7,
+            hp: 8,
+            max_hp: 23,
+            attack: 14,
+            defense: 11,
+            speed: 12,
+            special_attack: 15,
+            special_defense: 13,
+            physical_move_pp: 26,
+            status_move_pp: 39,
+            moves: vec![
+                battle_move_slot("SCRATCH", 26),
+                battle_move_slot("GROWL", 39),
+                battle_move_slot("FOCUS ENERGY", 30),
+            ],
+        });
+        world.phase = StoryPhase::RivalDefeated;
+        world.battle = None;
+        world.dialogue = None;
+        world.field_dialogue = None;
+        world.field_dialogue_frames = None;
+        world.field_script = None;
+        world.transition = None;
+        world.route103_rival_intro_frames = None;
+        world.rival_departure_frames = None;
+        world.route103_rival_departure_facing = None;
+        world.story_flags.pokemon_obtained = true;
+        world.story_flags.birch_rescue_started = true;
+        world.story_flags.starter_acknowledged = true;
+        world.story_flags.rival_route_unlocked = true;
+        world.story_flags.defeated_rival_route103 = true;
+        world.story_flags.hide_route103_rival = true;
+        world.story_flags.hide_littleroot_lab_rival = false;
+        world.story_flags.hide_oldale_rival = false;
+        world.story_vars = OpeningStoryVars {
+            birch_lab_state: 4,
+            littleroot_rival_state: 3,
+            oldale_rival_state: 1,
+        };
+        world.oldale_rival_departed = false;
+        world.npcs = route103_npcs(world.phase);
+        debug_assert!(world.route103_rival_victory_field_invariants_hold());
         world
     }
 
@@ -2339,7 +5771,9 @@ impl WorldState {
     /// Starts a source-map object interaction for the tile in front of the
     /// player. Scripted story beats retain precedence when no object is there.
     pub fn interact_with_npc(&mut self) -> bool {
-        if self.dialogue.is_some() { return false; }
+        if self.dialogue.is_some() {
+            return false;
+        }
         let (x, y) = match self.facing {
             Facing::Up => (self.player.x, self.player.y - 1),
             Facing::Down => (self.player.x, self.player.y + 1),
@@ -2350,33 +5784,30 @@ impl WorldState {
             && self.map == MapId::Route101
             && self.birch_rescue_stage == 3
             && (x, y) == (7, 14)
-            && self.dialogue.is_none() {
-            // Route101_EventScript_BirchsBag fades the scene, removes the
-            // Zigzagoon, then fixes the player at (6,13) facing left before
-            // `ChooseStarter` takes control. Keep that authored ordering in
-            // the state layer even though the battle transition is not yet
-            // pixel-staged.
-            self.player = TilePosition { x: 6, y: 13 };
-            self.elevation = crate::native::tile_elevation(self.map, 6, 13)
-                .expect("Route 101 starter-selection tile must be staged");
-            self.facing = Facing::Left;
-            self.phase = StoryPhase::StarterSelect;
-            // `CB2_ChooseStarter` owns its own UI rather than opening a
-            // field message. Its task starts on selection index 1, which is
-            // Torchic in Emerald's Treecko/Torchic/Mudkip table.
-            self.starter = Some(StarterSpecies::Torchic);
-            self.starter_reveal_frames = None;
-            self.starter_hand_phase = 0;
-            self.starter_pokeball_animation_frame = 0;
-            self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
+            && self.dialogue.is_none()
+        {
+            // Route101_EventScript_BirchsBag is a script-to-picker handoff,
+            // not a special input tape. v8 establishes both progression
+            // flags before ChoiceStarter exposes the default Torchic index.
+            self.begin_field_script(vec![
+                ScriptStep::SetFlag {
+                    flag: ProgressFlag::PokemonObtained,
+                },
+                ScriptStep::SetFlag {
+                    flag: ProgressFlag::BirchRescueStarted,
+                },
+                ScriptStep::OpenStarterPicker {
+                    default_starter: StarterSpecies::Torchic,
+                },
+            ]);
             return true;
         }
-        if self.phase == StoryPhase::StarterChosen
-            && self.map == MapId::Route103
-            && (x, y) == (10, 3) {
-            self.phase = StoryPhase::RivalBattle;
-            self.title_intro_step = 0;
-            self.begin_field_dialogue(rival_route103_observation(self.player_gender));
+        if let Some(rule) = TRAINER_ENCOUNTER_RULES.iter().find(|rule| {
+            rule.map == self.map
+                && rule.required_phase == self.phase
+                && rule.target == (TilePosition { x, y })
+        }) {
+            self.begin_trainer_encounter(rule.clone());
             return true;
         }
         if self.phase == StoryPhase::MeetRival && self.is_rival_pokeball(x, y) {
@@ -2390,7 +5821,11 @@ impl WorldState {
             self.begin_field_dialogue(text.to_owned());
             return true;
         }
-        let Some(npc) = self.npcs.iter_mut().find(|npc| npc.map == self.map && npc.position.x == x && npc.position.y == y) else {
+        let Some(npc) = self
+            .npcs
+            .iter_mut()
+            .find(|npc| npc.map == self.map && npc.position.x == x && npc.position.y == y)
+        else {
             return false;
         };
         npc.facing = match self.facing {
@@ -2470,36 +5905,963 @@ impl WorldState {
         true
     }
 
+    /// Starts a trainer map event from declarative metadata. The specific
+    /// opponent still chooses its source battle profile in `begin_rival_battle`;
+    /// this handoff only establishes the map-script ownership boundary.
+    fn begin_trainer_encounter(&mut self, rule: TrainerEncounterRule) {
+        if rule.opponent != BattleOpponent::Rival
+            || self.map != rule.map
+            || self.phase != rule.required_phase
+            || self.battle.is_some()
+        {
+            return;
+        }
+        self.phase = StoryPhase::RivalBattle;
+        self.title_intro_step = 0;
+        self.route103_rival_intro_stage = 0;
+        self.begin_field_dialogue(rival_route103_observation(self.player_gender));
+        debug_assert!(self.rival_route_invariants_hold());
+    }
+
+    pub fn rival_route_task(&self) -> RivalRouteTask {
+        if self
+            .battle
+            .as_ref()
+            .is_some_and(|battle| battle.opponent == BattleOpponent::Rival)
+        {
+            RivalRouteTask::Battle
+        } else if self.rival_departure_frames.is_some() {
+            RivalRouteTask::Departure
+        } else if self.phase == StoryPhase::RivalDefeated
+            && self.map == MapId::Route103
+            && (self.dialogue.is_some() || self.npcs.iter().any(|npc| npc.id == "rival"))
+        {
+            RivalRouteTask::DefeatDialogue
+        } else if self.phase == StoryPhase::RivalBattle
+            && self.route103_rival_intro_frames.is_some()
+        {
+            RivalRouteTask::ChallengeApproach
+        } else if self.phase == StoryPhase::RivalBattle && self.map == MapId::Route103 {
+            RivalRouteTask::ChallengeDialogue
+        } else {
+            RivalRouteTask::Field
+        }
+    }
+
+    /// Checks the data-driven Oldale→Route103 trainer corridor. This is a
+    /// map-script invariant, not an assertion about which input tape reached
+    /// it, so restores cannot turn a battle callback into field movement.
+    pub fn rival_route_invariants_hold(&self) -> bool {
+        match self.rival_route_task() {
+            RivalRouteTask::Field => true,
+            RivalRouteTask::ChallengeDialogue | RivalRouteTask::ChallengeApproach => {
+                self.map == MapId::Route103
+                    && self.phase == StoryPhase::RivalBattle
+                    && self.battle.is_none()
+            }
+            RivalRouteTask::Battle => {
+                self.map == MapId::Route103
+                    && self.phase == StoryPhase::RivalBattle
+                    && self.battle.as_ref().is_some_and(|battle| {
+                        battle.opponent == BattleOpponent::Rival
+                            && !battle.wild
+                            && battle.field_return.is_none()
+                    })
+            }
+            RivalRouteTask::DefeatDialogue | RivalRouteTask::Departure => {
+                self.map == MapId::Route103
+                    && self.phase == StoryPhase::RivalDefeated
+                    && self.battle.is_none()
+                    && self.route103_rival_victory_progression_invariants_hold()
+            }
+        }
+    }
+
+    pub fn return_journey_task(&self) -> ReturnJourneyTask {
+        if self.phase == StoryPhase::RivalDefeated {
+            if self
+                .transition
+                .as_ref()
+                .is_some_and(|transition| transition.destination_map == MapId::ProfessorBirchsLab)
+            {
+                return ReturnJourneyTask::LabWarp;
+            }
+            if self.map == MapId::Route103 {
+                return if self.rival_departure_frames.is_some() {
+                    ReturnJourneyTask::Route103Departure
+                } else if self.dialogue.is_some() || self.npcs.iter().any(|npc| npc.id == "rival") {
+                    ReturnJourneyTask::Route103DefeatDialogue
+                } else {
+                    ReturnJourneyTask::ReturnField
+                };
+            }
+            if self.map == MapId::OldaleTown {
+                return if self.oldale_rival_approach_frames.is_some() {
+                    ReturnJourneyTask::OldaleApproach
+                } else if self.oldale_rival_departure_frames.is_some() {
+                    ReturnJourneyTask::OldaleDeparture
+                } else if self.dialogue.is_some()
+                    && self.npcs.iter().any(|npc| npc.id == "oldale_rival")
+                {
+                    ReturnJourneyTask::OldaleDialogue
+                } else {
+                    ReturnJourneyTask::ReturnField
+                };
+            }
+            return ReturnJourneyTask::ReturnField;
+        }
+        if self.phase == StoryPhase::PokedexHandoff {
+            if self.pokedex_arrival_frames.is_some() {
+                ReturnJourneyTask::PokedexArrival
+            } else if self.pokedex_receipt_fanfare_frames.is_some() {
+                ReturnJourneyTask::PokedexReceiptFanfare
+            } else if self.pokedex_rival_frames.is_some() {
+                ReturnJourneyTask::PokedexRivalApproach
+            } else if self.pokedex_poke_ball_fanfare_frames.is_some() {
+                ReturnJourneyTask::PokeBallGiftFanfare
+            } else {
+                ReturnJourneyTask::PokedexDialogue
+            }
+        } else if self.phase == StoryPhase::PokedexReceived && self.pending_running_shoes {
+            if self.running_shoes_return_door_frames.is_some() {
+                ReturnJourneyTask::RunningShoesDoor
+            } else if self.running_shoes_return_delay_frames.is_some() {
+                ReturnJourneyTask::RunningShoesReturnDelay
+            } else if self.running_shoes_stage == 6 && self.running_shoes_frames.is_some() {
+                ReturnJourneyTask::RunningShoesReturn
+            } else if self.running_shoes_dialogue_frames.is_some()
+                || (self.dialogue.is_some() && self.running_shoes_stage >= 2)
+            {
+                ReturnJourneyTask::RunningShoesDialogue
+            } else if self.running_shoes_frames.is_some() {
+                ReturnJourneyTask::RunningShoesApproach
+            } else {
+                ReturnJourneyTask::RunningShoesPrompt
+            }
+        } else if self.phase == StoryPhase::RunningShoesReceived && self.map == MapId::Route101 {
+            ReturnJourneyTask::Route101Departure
+        } else {
+            ReturnJourneyTask::Field
+        }
+    }
+
+    /// Durable source bundle written by the Route 103 trainer script.  A
+    /// broad phase alone is insufficient evidence: staged or losing battle
+    /// checkpoints do not contain this combination of event flags and vars.
+    pub fn route103_rival_victory_progression_invariants_hold(&self) -> bool {
+        self.story_flags.defeated_rival_route103
+            && !self.story_flags.hide_littleroot_lab_rival
+            && self.story_vars.birch_lab_state >= 4
+            && self.story_vars.littleroot_rival_state == 3
+            && self.story_vars.oldale_rival_state >= 1
+            && if self.story_vars.oldale_rival_state == 1 {
+                !self.story_flags.hide_oldale_rival && !self.oldale_rival_departed
+            } else {
+                self.story_flags.hide_oldale_rival && self.oldale_rival_departed
+            }
+    }
+
+    /// Exact authenticated native field checkpoint after May's Route 103
+    /// departure, including the source's complete populated move/PP arrays.
+    pub fn route103_rival_victory_field_invariants_hold(&self) -> bool {
+        let party_exact = self.starter_party.as_ref().is_some_and(|party| {
+            party.species == StarterSpecies::Torchic
+                && party.level == 7
+                && party.hp == 8
+                && party.max_hp == 23
+                && party.attack == 14
+                && party.defense == 11
+                && party.speed == 12
+                && party.special_attack == 15
+                && party.special_defense == 13
+                && party.physical_move_pp == 26
+                && party.status_move_pp == 39
+                && party.moves
+                    == vec![
+                        battle_move_slot("SCRATCH", 26),
+                        battle_move_slot("GROWL", 39),
+                        battle_move_slot("FOCUS ENERGY", 30),
+                    ]
+        });
+        self.map == MapId::Route103
+            && self.player == (TilePosition { x: 10, y: 4 })
+            && self.player_gender == PlayerGender::Brendan
+            && self.phase == StoryPhase::RivalDefeated
+            && self.starter == Some(StarterSpecies::Torchic)
+            && party_exact
+            && self.battle.is_none()
+            && self.dialogue.is_none()
+            && self.transition.is_none()
+            && self.field_input_owner() == FieldInputOwner::Field
+            && self.story_flags.hide_route103_rival
+            && !self.npcs.iter().any(|npc| npc.id == "rival")
+            && self.story_vars.birch_lab_state == 4
+            && self.story_vars.littleroot_rival_state == 3
+            && self.story_vars.oldale_rival_state == 1
+            && self.route103_rival_victory_progression_invariants_hold()
+    }
+
+    /// Source-state invariant for the complete rival-return corridor.  It is
+    /// deliberately expressed in maps, story facts, and exclusive tasks, so
+    /// a restored checkpoint cannot expose field movement during a movement
+    /// stream or fanfare just because it was reached with different packets.
+    pub fn return_journey_invariants_hold(&self) -> bool {
+        if self.phase == StoryPhase::RivalDefeated
+            && !self.route103_rival_victory_progression_invariants_hold()
+        {
+            return false;
+        }
+        let exclusive_rails = [
+            self.rival_departure_frames.is_some(),
+            self.oldale_rival_approach_frames.is_some(),
+            self.oldale_rival_departure_frames.is_some(),
+            self.pokedex_arrival_frames.is_some(),
+            self.pokedex_receipt_fanfare_frames.is_some(),
+            self.pokedex_rival_frames.is_some(),
+            self.pokedex_poke_ball_fanfare_frames.is_some(),
+            self.running_shoes_wait_frames.is_some(),
+            self.running_shoes_frames.is_some(),
+            self.running_shoes_return_delay_frames.is_some(),
+            self.running_shoes_return_door_frames.is_some(),
+        ]
+        .into_iter()
+        .filter(|active| *active)
+        .count();
+        if exclusive_rails > 1 {
+            return false;
+        }
+        match self.return_journey_task() {
+            ReturnJourneyTask::Field => true,
+            ReturnJourneyTask::Route103DefeatDialogue | ReturnJourneyTask::Route103Departure => {
+                self.map == MapId::Route103
+                    && self.phase == StoryPhase::RivalDefeated
+                    && self.battle.is_none()
+            }
+            ReturnJourneyTask::ReturnField => {
+                self.phase == StoryPhase::RivalDefeated
+                    && matches!(
+                        self.map,
+                        MapId::Route103
+                            | MapId::OldaleTown
+                            | MapId::Route101
+                            | MapId::LittlerootTown
+                            | MapId::ProfessorBirchsLab
+                    )
+                    && self.battle.is_none()
+            }
+            ReturnJourneyTask::OldaleApproach
+            | ReturnJourneyTask::OldaleDialogue
+            | ReturnJourneyTask::OldaleDeparture => {
+                self.map == MapId::OldaleTown
+                    && self.phase == StoryPhase::RivalDefeated
+                    && self.battle.is_none()
+                    && self.npcs.iter().any(|npc| npc.id == "oldale_rival")
+            }
+            ReturnJourneyTask::LabWarp => {
+                self.phase == StoryPhase::RivalDefeated
+                    && self.transition.as_ref().is_some_and(|transition| {
+                        transition.destination_map == MapId::ProfessorBirchsLab
+                    })
+            }
+            ReturnJourneyTask::PokedexArrival
+            | ReturnJourneyTask::PokedexDialogue
+            | ReturnJourneyTask::PokedexReceiptFanfare
+            | ReturnJourneyTask::PokedexRivalApproach
+            | ReturnJourneyTask::PokeBallGiftFanfare => {
+                self.map == MapId::ProfessorBirchsLab
+                    && self.phase == StoryPhase::PokedexHandoff
+                    && self.battle.is_none()
+            }
+            ReturnJourneyTask::RunningShoesPrompt
+            | ReturnJourneyTask::RunningShoesApproach
+            | ReturnJourneyTask::RunningShoesDialogue
+            | ReturnJourneyTask::RunningShoesReturnDelay
+            | ReturnJourneyTask::RunningShoesReturn
+            | ReturnJourneyTask::RunningShoesDoor => {
+                self.map == MapId::LittlerootTown
+                    && self.phase == StoryPhase::PokedexReceived
+                    && self.pending_running_shoes
+                    && self.battle.is_none()
+            }
+            ReturnJourneyTask::Route101Departure => {
+                self.map == MapId::Route101
+                    && self.phase == StoryPhase::RunningShoesReceived
+                    && !self.pending_running_shoes
+            }
+        }
+    }
+
     /// Starts a normal object/background field message. Emerald's text box
     /// has a lead-in before revealing one glyph per frame, so the message is
     /// not dismissible on the same input that opened it.
     fn begin_field_dialogue(&mut self, dialogue: String) {
-        self.field_dialogue_frames = Some(dialogue_printer_duration(&dialogue));
-        self.dialogue = Some(dialogue);
+        self.begin_field_dialogue_pages(vec![dialogue]);
+    }
+
+    /// Starts a source-authored sequence of normal field pages. This is the
+    /// reusable route-level API: callers specify pages, while the engine owns
+    /// printer timing, input locking, page advancement, and serialization.
+    /// Empty page sets are a no-op rather than an invalid half-open dialogue.
+    pub fn begin_field_dialogue_pages(&mut self, pages: Vec<String>) {
+        let Some(mut dialogue) = FieldDialogueState::new(pages) else {
+            return;
+        };
+        if self.map == MapId::MaysHouse1F && self.mays_house_1f_rival_scene_start_frame.is_some() {
+            dialogue.print_remaining =
+                mays_house_1f_dialogue_printer_duration(dialogue.current_text());
+            if self.mays_house_1f_dialogue_page_hold.is_none() {
+                // The initial OnFrame message's arrow task is authenticated
+                // at the first ready VBlank, 305, rather than at an A edge.
+                self.mays_house_1f_dialogue_page_arrow_anchor = Some(305);
+            }
+        }
+        self.field_dialogue_frames = Some(dialogue.print_remaining);
+        self.dialogue = Some(dialogue.current_text().to_owned());
+        self.field_dialogue = Some(dialogue);
+    }
+
+    /// Advances or closes the typed dialogue after a confirmation edge.
+    /// Returns `true` when the input remains dialogue-owned (the printer is
+    /// active or another page opens). `false` means the final page just
+    /// closed and the enclosing map script may consume that same edge.
+    fn dismiss_field_dialogue_page(&mut self) -> Option<bool> {
+        let Some(mut dialogue) = self.field_dialogue.take() else {
+            return None;
+        };
+        if dialogue.print_remaining != 0 {
+            self.field_dialogue = Some(dialogue);
+            return Some(true);
+        }
+        // On the authenticated Mays House tape the A edge at global VBlank
+        // 1696 is consumed by the source text task without dismissing the
+        // ready `Um… I'm MAY.` page.  The following A edge (V1997) performs
+        // the dismissal.  Preserve this source-observed one-edge debounce in
+        // the reusable field printer rather than advancing our page cursor
+        // ahead of the ROM's script.
+        let mays_source_debounced_edge = self
+            .mays_house_1f_rival_scene_start_frame
+            .map(|start| self.frame == start.saturating_add(1_572))
+            .unwrap_or(false);
+        if self.map == MapId::MaysHouse1F
+            && mays_source_debounced_edge
+            && dialogue.current_text().starts_with("Um… I'm MAY.")
+        {
+            // The ROM closes the visible page on this edge but leaves the
+            // paged task waiting for the next A before opening the next
+            // message. Keep the page cursor at `Um…` with a zero printer and
+            // publish an empty renderer projection for the intervening
+            // no-op window.
+            dialogue.print_remaining = 0;
+            self.field_dialogue_frames = None;
+            self.mays_house_1f_dialogue_page_hold =
+                Some((self.frame, dialogue.current_text().to_owned()));
+            self.mays_house_1f_dialogue_hold_arrow_anchor =
+                self.mays_house_1f_dialogue_page_arrow_anchor;
+            self.mays_house_1f_dialogue_page_arrow_anchor = None;
+            self.dialogue = Some(String::new());
+            self.field_dialogue = Some(dialogue);
+            return Some(true);
+        }
+        if self.map == MapId::MaysHouse1F
+            && self.mays_house_1f_rival_scene_start_frame.is_some()
+            && dialogue.page == 4
+            && self.mays_house_1f_dialogue_scroll_start_frame.is_none()
+        {
+            // `I…` is a source `\l` page. A dismissing A starts the four-tick
+            // line scroll; it does not advance to the next authored page.
+            dialogue.print_remaining = 4;
+            self.field_dialogue_frames = Some(4);
+            self.mays_house_1f_dialogue_scroll_start_frame = Some(self.frame);
+            self.field_dialogue = Some(dialogue);
+            return Some(true);
+        }
+        if self.map == MapId::MaysHouse1F
+            && self.mays_house_1f_rival_scene_start_frame.is_some()
+            && dialogue.page == 4
+            && self.mays_house_1f_dialogue_scroll_start_frame.is_some()
+        {
+            let previous_page_text = mays_house_1f_scroll_projection(dialogue.current_text());
+            if dialogue.advance_page() {
+                dialogue.print_remaining =
+                    mays_house_1f_dialogue_printer_duration(dialogue.current_text());
+                self.mays_house_1f_dialogue_page_hold = Some((self.frame, previous_page_text));
+                self.mays_house_1f_dialogue_hold_arrow_anchor = self
+                    .mays_house_1f_dialogue_scroll_start_frame
+                    .map(|scroll_start| scroll_start.saturating_add(40))
+                    .or(self.mays_house_1f_dialogue_page_arrow_anchor);
+                self.mays_house_1f_dialogue_page_arrow_anchor = Some(
+                    self.frame
+                        .saturating_add(u64::from(dialogue.print_remaining))
+                        .saturating_add(1),
+                );
+                self.mays_house_1f_dialogue_scroll_start_frame = None;
+                self.field_dialogue_frames = Some(dialogue.print_remaining);
+                self.dialogue = Some(dialogue.current_text().to_owned());
+                self.field_dialogue = Some(dialogue);
+                return Some(true);
+            }
+            self.field_dialogue = Some(dialogue);
+            return Some(true);
+        }
+        if self.map == MapId::MaysHouse1F
+            && self.mays_house_1f_rival_scene_start_frame.is_some()
+            && dialogue.page == 11
+        {
+            // The source's A edge after the final “I'll catch you later!”
+            // page closes the message and hands ownership directly to May's
+            // departure task.  The page remains rasterized for the edge and
+            // following scheduler tick, but no new printer page is opened.
+            self.field_dialogue_frames = None;
+            self.mays_house_1f_dialogue_page_hold =
+                Some((self.frame, dialogue.current_text().to_owned()));
+            // The final page is already in the source window at this edge,
+            // but its down-arrow task is not recreated.  Keeping the anchor
+            // empty makes V4405/V4406 a text-only handoff before the window
+            // clears on the next scheduler tick.
+            self.mays_house_1f_dialogue_hold_arrow_anchor = None;
+            self.mays_house_1f_dialogue_page_arrow_anchor = None;
+            self.dialogue = None;
+            // The source closes the message window on this edge. Retaining
+            // the typed page here makes the renderer draw an empty white box
+            // for one VBlank while the departure task is being scheduled.
+            self.field_dialogue = None;
+            return Some(false);
+        }
+        let previous_page_text = dialogue.current_text().to_owned();
+        if dialogue.advance_page() {
+            if self.source_starter_battle_victory_receipt
+                && self.map == MapId::Route101
+                && dialogue.pages.len() == 6
+            {
+                // Birch's Route 101 OnFrame printer advances one authored
+                // character per VBlank with a two-frame handoff lead. Its
+                // timing is intentionally narrower than the generic field
+                // printer used by ordinary object-event text.
+                dialogue.print_remaining = birch_rescue_dialogue_printer_duration(
+                    dialogue.current_text(),
+                );
+                self.source_starter_battle_victory_previous_page_edge_frame =
+                    self.source_starter_battle_victory_page_edge_frame;
+                self.source_starter_battle_victory_page_edge_was_b =
+                    self.source_starter_battle_victory_pending_edge_was_b;
+                self.source_starter_battle_victory_page_edge_from_final_printer =
+                    self.source_starter_battle_victory_pending_edge_from_final_printer;
+                self.source_starter_battle_victory_page_edge_frame = Some(self.frame);
+            }
+            if self.map == MapId::MaysHouse1F
+                && self.mays_house_1f_rival_scene_start_frame.is_some()
+            {
+                dialogue.print_remaining =
+                    mays_house_1f_dialogue_printer_duration(dialogue.current_text());
+                self.mays_house_1f_dialogue_page_hold = Some((self.frame, previous_page_text));
+                // The source has pre-rasterized the long page before its A
+                // edge.  Reset the arrow animation at this page boundary;
+                // carrying the prior one-line page's phase leaves the
+                // source arrow absent at the authenticated V4104 edge.
+                self.mays_house_1f_dialogue_hold_arrow_anchor =
+                    self.mays_house_1f_dialogue_page_arrow_anchor;
+                let arrow_ready_after = if dialogue.page == 4 {
+                    // Page 4 is a `\\l` line-scroll.  The source creates
+                    // its first down-arrow after the first two visible
+                    // lines, while the third line remains pending until the
+                    // next A edge.  Include the two-frame printer lead and
+                    // the one-frame page handoff before the arrow task.
+                    dialogue
+                        .current_text()
+                        .split('\n')
+                        .take(2)
+                        .map(|line| line.chars().count())
+                        .sum::<usize>()
+                        .saturating_add(3) as u64
+                } else if dialogue.page == 11 {
+                    // The closing `I'll catch you later!` page never creates
+                    // a down-arrow task in the source script; the next A edge
+                    // is consumed by the departure handoff instead.
+                    u64::MAX
+                } else {
+                    u64::from(dialogue.print_remaining).saturating_add(1)
+                };
+                self.mays_house_1f_dialogue_page_arrow_anchor =
+                    Some(self.frame.saturating_add(arrow_ready_after));
+            }
+            self.field_dialogue_frames = Some(dialogue.print_remaining);
+            self.dialogue = Some(dialogue.current_text().to_owned());
+            self.field_dialogue = Some(dialogue);
+            return Some(true);
+        }
+        self.field_dialogue_frames = None;
+        if self.map == MapId::MaysHouse1F && self.mays_house_1f_rival_scene_start_frame.is_some() {
+            // The source keeps the final page rasterized for the VBlank that
+            // consumes the closing A edge. The script state is released on
+            // that edge; only the renderer projection persists until the
+            // next VBlank.
+            self.mays_house_1f_dialogue_page_hold = Some((self.frame, previous_page_text));
+            self.mays_house_1f_dialogue_hold_arrow_anchor =
+                self.mays_house_1f_dialogue_page_arrow_anchor;
+            self.mays_house_1f_dialogue_page_arrow_anchor = None;
+        } else {
+            self.mays_house_1f_dialogue_page_hold = None;
+            self.mays_house_1f_dialogue_page_arrow_anchor = None;
+            self.mays_house_1f_dialogue_hold_arrow_anchor = None;
+        }
+        self.dialogue = None;
+        Some(false)
+    }
+
+    /// Starts a generic script and immediately executes non-blocking steps.
+    /// An empty script is deliberately harmless, making generated map data
+    /// safe to load before every optional event is authored.
+    pub fn begin_field_script(&mut self, steps: Vec<ScriptStep>) {
+        if self.field_script.is_some() || self.transition.is_some() {
+            return;
+        }
+        self.field_script = Some(FieldScriptRunner {
+            steps,
+            cursor: 0,
+            wait_remaining: None,
+        });
+        self.run_field_script_until_blocked();
+    }
+
+    /// Advances a script-owned wait. It returns true exactly while the
+    /// script consumed the VBlank window; callers can compose it with the
+    /// rest of the field scheduler without guessing about task ownership.
+    pub fn advance_field_script_task(&mut self, frames: u32) -> bool {
+        let Some(mut runner) = self.field_script.take() else {
+            return false;
+        };
+        let Some(remaining) = runner.wait_remaining else {
+            self.field_script = Some(runner);
+            // A script runner remains parked on its Dialogue step while the
+            // typed page owns the field.  Re-entering the runner here would
+            // call `begin_field_dialogue_pages` again and silently reset a
+            // ready page back to page zero on the next Noop request.
+            if self.field_dialogue.is_some() {
+                return false;
+            }
+            self.run_field_script_until_blocked();
+            return self.field_script.is_some();
+        };
+        let consumed = frames.min(u32::from(u16::MAX)) as u16;
+        let next = remaining.saturating_sub(consumed);
+        if next != 0 {
+            runner.wait_remaining = Some(next);
+            self.field_script = Some(runner);
+            return true;
+        }
+        runner.wait_remaining = None;
+        runner.cursor += 1;
+        self.field_script = Some(runner);
+        self.run_field_script_until_blocked();
+        self.field_script.is_some()
+    }
+
+    /// Called after the final page of a script-owned dialogue. It advances
+    /// the program counter before executing following same-VBlank steps,
+    /// which mirrors source `closemessage` followed by `setflag`/`applymovement`.
+    fn resume_field_script_after_dialogue(&mut self) -> bool {
+        let Some(mut runner) = self.field_script.take() else {
+            return false;
+        };
+        runner.cursor += 1;
+        self.field_script = Some(runner);
+        self.run_field_script_until_blocked();
+        self.field_script.is_some()
+    }
+
+    fn run_field_script_until_blocked(&mut self) {
+        loop {
+            let Some(mut runner) = self.field_script.take() else {
+                return;
+            };
+            if runner.wait_remaining.is_some() || runner.cursor >= runner.steps.len() {
+                if runner.cursor < runner.steps.len() {
+                    self.field_script = Some(runner);
+                }
+                return;
+            }
+            let step = runner.steps[runner.cursor].clone();
+            match step {
+                ScriptStep::Dialogue { pages } => {
+                    if pages.is_empty() {
+                        runner.cursor += 1;
+                        self.field_script = Some(runner);
+                        continue;
+                    }
+                    self.field_script = Some(runner);
+                    self.begin_field_dialogue_pages(pages);
+                    return;
+                }
+                ScriptStep::Wait { frames } => {
+                    runner.wait_remaining = (frames != 0).then_some(frames);
+                    if runner.wait_remaining.is_none() {
+                        runner.cursor += 1;
+                        self.field_script = Some(runner);
+                        continue;
+                    }
+                    self.field_script = Some(runner);
+                    return;
+                }
+                ScriptStep::SetFlag { flag } => {
+                    self.story_flags.set(flag);
+                    runner.cursor += 1;
+                    self.field_script = Some(runner);
+                }
+                ScriptStep::OpenStarterPicker { default_starter } => {
+                    runner.cursor += 1;
+                    self.field_script = Some(runner);
+                    self.open_starter_picker(default_starter);
+                    return;
+                }
+                ScriptStep::BeginBattleHandoff { opponent } => {
+                    runner.cursor += 1;
+                    self.field_script = Some(runner);
+                    self.begin_battle_handoff(opponent);
+                    return;
+                }
+                ScriptStep::SetRoute101RescueTask { task } => {
+                    self.route101_rescue_task = task;
+                    runner.cursor += 1;
+                    self.field_script = Some(runner);
+                }
+                ScriptStep::Warp {
+                    destination_map,
+                    destination,
+                    timing,
+                } => {
+                    runner.cursor += 1;
+                    self.field_script = Some(runner);
+                    self.begin_transition_with_timing(destination_map, destination, timing);
+                    return;
+                }
+            }
+        }
+    }
+
+    /// The task which owns controller input right now. The specialized scene
+    /// timers remain source-calibrated, but their ownership is represented by
+    /// this single query so route code never has to guess whether movement is
+    /// legal while a script, dialogue, or fade is active.
+    pub fn field_input_owner(&self) -> FieldInputOwner {
+        if self.battle.is_some() {
+            FieldInputOwner::Battle
+        } else if self.transition.is_some() {
+            FieldInputOwner::Warp
+        } else if self.field_select_modal.is_some() {
+            FieldInputOwner::SelectModal
+        } else if self.clock_editing.is_some() {
+            FieldInputOwner::ClockEditor
+        } else if self.menu_open
+            || self.menu_transition_frames.is_some()
+            || self.active_screen.is_some()
+        {
+            FieldInputOwner::Menu
+        } else if self.dialogue.is_some() {
+            FieldInputOwner::Dialogue
+        } else if self.field_script.is_some() {
+            FieldInputOwner::Script
+        } else if self.clock_settle_frames.is_some()
+            || self.clock_visit_frames.is_some()
+            || self.tv_broadcast_intro_frames.is_some()
+            || self.tv_broadcast_approach_frames.is_some()
+            || self.tv_broadcast_view_frames.is_some()
+            || self.rival_mom_intro_frames.is_some()
+            || self.mays_house_1f_rival_scene_start_frame.is_some()
+            || self.mays_house_1f_rival_departure_frames.is_some()
+            || self.truck_arrival_frames.is_some()
+            || self.truck_departure_frames.is_some()
+            || self.birch_rescue_frames.is_some()
+            || self.route101_exit_guard_delay.is_some()
+            || self.route103_rival_intro_frames.is_some()
+            || self.rival_departure_frames.is_some()
+            || self.oldale_rival_approach_frames.is_some()
+            || self.oldale_rival_departure_frames.is_some()
+            || self.pokedex_arrival_frames.is_some()
+            || self.pokedex_rival_frames.is_some()
+            || self.pokedex_receipt_fanfare_frames.is_some()
+            || self.pokedex_poke_ball_fanfare_frames.is_some()
+            || self.running_shoes_wait_frames.is_some()
+            || self.running_shoes_frames.is_some()
+            || self.running_shoes_dialogue_frames.is_some()
+            || self.running_shoes_return_delay_frames.is_some()
+            || self.running_shoes_return_door_frames.is_some()
+        {
+            FieldInputOwner::Script
+        } else {
+            FieldInputOwner::Field
+        }
+    }
+
+    /// Installs the source field SELECT registration help task.  The caller
+    /// must be the idle field controller; menus, scripts, and walking tasks
+    /// cannot steal the edge and create a second concurrent owner.
+    pub fn begin_field_select_modal(&mut self) -> bool {
+        if self.field_input_owner() != FieldInputOwner::Field {
+            return false;
+        }
+        self.route101_select_modal_receipt_active = false;
+        self.field_select_modal = Some(FieldSelectModal::new());
+        true
+    }
+
+    /// Advances one VBlank of the SELECT window. Returns true while it still
+    /// owns input. The caller intentionally handles the dismissing B edge
+    /// separately so its visible VBlank is not also counted as a close delay.
+    pub fn advance_field_select_modal(&mut self) -> bool {
+        let Some(mut modal) = self.field_select_modal.take() else {
+            return false;
+        };
+        if let Some(remaining) = modal.closing_frames {
+            if remaining <= 1 {
+                return false;
+            }
+            modal.closing_frames = Some(remaining - 1);
+        } else {
+            modal.elapsed_frames = modal.elapsed_frames.saturating_add(1);
+        }
+        self.field_select_modal = Some(modal);
+        true
+    }
+
+    /// B is the source-observed dismissal edge. It is ignored during the
+    /// printing/setup lock and leaves the completed modal visible on the
+    /// pressing VBlank plus two following VBlanks.
+    pub fn dismiss_field_select_modal(&mut self) -> bool {
+        let Some(modal) = self.field_select_modal.as_mut() else {
+            return false;
+        };
+        if !modal.input_ready() {
+            return false;
+        }
+        modal.closing_frames = Some(FieldSelectModal::CLOSE_VISIBLE_FRAMES);
+        true
     }
 
     pub fn open_menu(&mut self) {
         if self.dialogue.is_none() {
             self.menu_open = true;
-            self.menu_cursor = Some(0);
+            // The field task retains the logical cursor across a close/open
+            // cycle.  The initial menu has no prior glyph and starts at BAG;
+            // subsequent opens resume the last logical row, including EXIT.
+            self.menu_cursor = self.bedroom_menu_render_cursor.or(Some(0));
+            // Reopening the field menu retains the previous cursor glyph on
+            // the opening task's final VBlank; the menu task uploads logical
+            // row zero on its first owned VBlank. Initial creation has no
+            // prior glyph and therefore starts at BAG/row zero.
+            if self.bedroom_menu_render_cursor.is_none() {
+                self.bedroom_menu_render_cursor = Some(0);
+            }
+            // A cursor upload belongs to the menu task that is currently
+            // opening. Never carry a pending directional upload across a
+            // close/reopen boundary; the first owned VBlank must retain the
+            // prior glyph and only a new valid direction may schedule an
+            // upload.
+            self.bedroom_menu_cursor_upload_pending = false;
             self.menu_selection = None;
         }
     }
 
+    pub fn begin_bedroom_menu_open(&mut self, trailing_frames: u32) {
+        if self.menu_open || self.bedroom_menu_open_frames.is_some() {
+            return;
+        }
+        self.bedroom_menu_open_frames = Some(8);
+        if trailing_frames > 0 {
+            self.advance_bedroom_menu_open(trailing_frames);
+        }
+    }
+
+    /// Starts the field-ready Start task.  Emerald publishes the logical
+    /// menu-open state on the trigger VBlank, but delays the window upload for
+    /// eight VBlanks while the field task's raster remains visible.  This is
+    /// distinct from the bedroom task, where opening can freeze a turn and
+    /// therefore keeps the menu logically closed until the setup task settles.
+    pub fn begin_field_ready_menu_open(&mut self) {
+        if self.menu_open || self.bedroom_menu_open_frames.is_some() {
+            return;
+        }
+        self.open_menu();
+        self.field_ready_menu_open_started_frame = Some(self.frame);
+        self.bedroom_menu_open_frames = Some(8);
+    }
+
+    pub fn advance_bedroom_menu_open(&mut self, frames: u32) -> bool {
+        let Some(remaining) = self.bedroom_menu_open_frames else {
+            return false;
+        };
+        let next = remaining.saturating_sub(frames.min(u32::from(u8::MAX)) as u8);
+        if next == 0 {
+            self.bedroom_menu_open_frames = None;
+            if self.camera_handoff_from.is_some() && self.walk_render_origin.is_none() {
+                self.bedroom_turn_cancelled = true;
+            }
+            self.open_menu();
+        } else {
+            self.bedroom_menu_open_frames = Some(next);
+        }
+        true
+    }
+
     pub fn close_menu(&mut self) {
+        if self.map == MapId::Route101 && self.menu_open {
+            self.route101_menu_close_frames = Some(1);
+            self.route101_menu_close_cursor =
+                self.bedroom_menu_render_cursor.or(self.menu_cursor);
+            self.route101_menu_exit_asset_frames = Some(8);
+        }
+        self.menu_open = false;
+        self.menu_cursor = None;
+        self.bedroom_menu_close_pending = false;
+    }
+
+    /// Installs the source-visible Route 101 close rail after the delayed
+    /// field-menu upload completes on the same VBlank as a close edge.
+    pub fn begin_route101_menu_close(&mut self, frames: u8) {
+        self.route101_menu_close_frames = Some(frames.max(1));
+        self.route101_menu_close_cursor = self.menu_cursor;
         self.menu_open = false;
         self.menu_cursor = None;
     }
 
+    /// Advances the presentation-only Route 101 menu close rail by one
+    /// VBlank.  Input remains suppressed while the value is still present.
+    pub fn advance_route101_menu_close(&mut self) {
+        let Some(remaining) = self.route101_menu_close_frames else {
+            return;
+        };
+        if remaining <= 1 {
+            self.route101_menu_close_frames = None;
+            self.route101_menu_close_cursor = None;
+        } else {
+            self.route101_menu_close_frames = Some(remaining - 1);
+        }
+    }
+
+    pub fn advance_route101_menu_exit_asset(&mut self) {
+        let Some(remaining) = self.route101_menu_exit_asset_frames else {
+            return;
+        };
+        if remaining <= 1 {
+            self.route101_menu_exit_asset_frames = None;
+        } else {
+            self.route101_menu_exit_asset_frames = Some(remaining - 1);
+        }
+    }
+
+    /// Advances the short source hold after selecting BAG from the live
+    /// Route 101 field menu. The application edge remains raster-visible but
+    /// does not consume subsequent controller input until this hold ends.
+    pub fn advance_route101_menu_action_hold(&mut self) {
+        let Some(remaining) = self.route101_menu_action_hold_frames else {
+            return;
+        };
+        if remaining == 0 {
+            self.route101_menu_action_hold_frames = None;
+            self.menu_open = false;
+            self.menu_cursor = None;
+            self.bedroom_menu_cursor_upload_pending = false;
+        } else if remaining == 1 {
+            // Keep the menu/task visible for the source's final hold VBlank;
+            // the following tick releases it to the field controller.
+            self.route101_menu_action_hold_frames = Some(0);
+        } else {
+            self.route101_menu_action_hold_frames = Some(remaining - 1);
+        }
+    }
+
+    /// Queues the source field SELECT task behind an in-flight Route 101
+    /// stride.  The task is installed on the edge VBlank, but its border does
+    /// not become visible until the fifth scheduler tick; keeping that delay
+    /// separate lets the movement/menu handoff retain its authenticated
+    /// rasters while the UI task is already the controller owner.
+    pub fn queue_route101_field_select(&mut self) -> bool {
+        if self.map != MapId::Route101
+            || self.field_select_modal.is_some()
+            || self.route101_field_select_pending_frames.is_some()
+        {
+            return false;
+        }
+        self.route101_field_select_pending_frames = Some(1);
+        true
+    }
+
+    /// Advances a queued Route 101 SELECT task. Returns true only on the
+    /// VBlank that installs the visible modal so the caller does not advance
+    /// the new printer twice on that same source frame.
+    pub fn advance_route101_field_select_pending(&mut self) -> bool {
+        let Some(elapsed) = self.route101_field_select_pending_frames else {
+            return false;
+        };
+        let next_elapsed = elapsed.saturating_add(1);
+        if next_elapsed < FieldSelectModal::BORDER_VISIBLE_AT {
+            self.route101_field_select_pending_frames = Some(next_elapsed);
+            return false;
+        }
+        self.route101_field_select_pending_frames = None;
+        self.field_select_modal = Some(FieldSelectModal {
+            elapsed_frames: next_elapsed,
+            closing_frames: None,
+        });
+        self.route101_select_modal_receipt_active = true;
+        self.menu_open = false;
+        self.menu_cursor = None;
+        self.bedroom_menu_open_frames = None;
+        self.walk_direction = None;
+        self.walk_elapsed_frames = 0;
+        self.walk_progress_frames = 0;
+        self.walk_render_origin = None;
+        // The queued Down edge is accepted by the source field controller
+        // while the prior close/stride task is unwinding; it updates the
+        // standing pose even though the logical tile never commits.
+        self.facing = Facing::Down;
+        true
+    }
+
     pub fn move_menu_cursor(&mut self, delta: i8) {
+        // The pre-Pokédex bedroom menu reserves the hidden Pokédex slot in
+        // the controller ring, but has only one visible EXIT row.  Emerald's
+        // task skips that hidden duplicate when moving up from EXIT (and
+        // re-enters it when moving down from OPTIONS); retaining logical row
+        // four here leaves the cursor one row too low on the dismissing B
+        // raster.
+        if self.map == MapId::MaysHouse2F && !self.has_pokedex {
+            let current = self.menu_cursor.unwrap_or(0);
+            if delta < 0 && current >= 4 {
+                self.menu_cursor = Some(3);
+                return;
+            }
+            if delta > 0 && current == 3 {
+                self.menu_cursor = Some(5);
+                return;
+            }
+        }
         let count = self.menu_entries().len() as i8;
         let current = self.menu_cursor.unwrap_or(0) as i8;
         self.menu_cursor = Some((current + delta).rem_euclid(count) as u8);
     }
 
+    pub fn menu_cursor_entry(&self) -> Option<MenuEntry> {
+        self.menu_cursor.and_then(|cursor| {
+            // In the bedroom before the Pokédex is acquired, Emerald's
+            // window hides the unavailable Pokémon row but still uses the
+            // six-slot cursor ring for wraparound. Logical row zero is BAG,
+            // followed by the player card, Save, Options, and Exit.
+            if self.map == MapId::MaysHouse2F && !self.has_pokedex {
+                return match cursor {
+                    0 => Some(MenuEntry::Bag),
+                    1 => Some(MenuEntry::Player),
+                    2 => Some(MenuEntry::Save),
+                    3 => Some(MenuEntry::Option),
+                    4 | 5 => Some(MenuEntry::Exit),
+                    _ => None,
+                };
+            }
+            self.menu_entries().get(usize::from(cursor)).copied()
+        })
+    }
+
     pub fn choose_menu_entry(&mut self) {
-        let cursor = self.menu_cursor.unwrap_or(0) as usize;
-        self.menu_selection = self.menu_entries().get(cursor).copied();
+        self.menu_selection = self.menu_cursor_entry();
         self.pokedex_cursor = 0;
         self.close_menu();
         if self.menu_selection == Some(MenuEntry::Exit) {
@@ -2522,11 +6884,15 @@ impl WorldState {
     /// remains visually present but input-locked; only completion opens the
     /// requested menu screen.
     pub fn advance_menu_transition(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.menu_transition_frames else { return false; };
+        let Some(remaining) = self.menu_transition_frames else {
+            return false;
+        };
         let next = remaining.saturating_sub(frames.min(u32::from(u8::MAX)) as u8);
         if next == 0 {
             self.menu_transition_frames = None;
-            self.active_screen = self.menu_selection.filter(|entry| *entry != MenuEntry::Exit);
+            self.active_screen = self
+                .menu_selection
+                .filter(|entry| *entry != MenuEntry::Exit);
             self.active_screen_cursor = 0;
         } else {
             self.menu_transition_frames = Some(next);
@@ -2536,7 +6902,8 @@ impl WorldState {
 
     pub fn move_pokedex_cursor(&mut self, delta: i16) {
         if self.active_screen == Some(MenuEntry::Pokedex) {
-            self.pokedex_cursor = (i16::try_from(self.pokedex_cursor).unwrap_or(0) + delta).clamp(0, 201) as u16;
+            self.pokedex_cursor =
+                (i16::try_from(self.pokedex_cursor).unwrap_or(0) + delta).clamp(0, 201) as u16;
         }
     }
 
@@ -2548,16 +6915,17 @@ impl WorldState {
             Some(MenuEntry::Pokedex) => self.move_pokedex_cursor(i16::from(delta)),
             Some(MenuEntry::Bag) => {
                 let rows = if self.potions > 0 { 2 } else { 1 };
-                self.active_screen_cursor = (i16::from(self.active_screen_cursor) + i16::from(delta))
-                    .rem_euclid(rows) as u8;
+                self.active_screen_cursor = (i16::from(self.active_screen_cursor)
+                    + i16::from(delta))
+                .rem_euclid(rows) as u8;
             }
             Some(MenuEntry::Option) => {
-                self.active_screen_cursor = (i16::from(self.active_screen_cursor) + i16::from(delta))
-                    .rem_euclid(2) as u8;
+                self.active_screen_cursor =
+                    (i16::from(self.active_screen_cursor) + i16::from(delta)).rem_euclid(2) as u8;
             }
             Some(MenuEntry::Save) => {
-                self.active_screen_cursor = (i16::from(self.active_screen_cursor) + i16::from(delta))
-                    .rem_euclid(2) as u8;
+                self.active_screen_cursor =
+                    (i16::from(self.active_screen_cursor) + i16::from(delta)).rem_euclid(2) as u8;
             }
             Some(MenuEntry::Pokemon | MenuEntry::Player | MenuEntry::Exit) | None => {}
         }
@@ -2640,10 +7008,12 @@ impl WorldState {
     /// clock task remains interactive. Source runs these callbacks after its
     /// input task every VBlank, including frames with no button press.
     pub fn advance_clock_period_transition(&mut self, frames: u32) {
-        let Some(transition) = self.clock_period_transition else { return; };
-        let elapsed = transition.elapsed_frames.saturating_add(
-            frames.min(u32::from(u8::MAX)) as u8,
-        );
+        let Some(transition) = self.clock_period_transition else {
+            return;
+        };
+        let elapsed = transition
+            .elapsed_frames
+            .saturating_add(frames.min(u32::from(u8::MAX)) as u8);
         if elapsed >= WALL_CLOCK_PERIOD_TRANSITION_FRAMES {
             self.clock_period_transition = None;
         } else {
@@ -2739,7 +7109,9 @@ impl WorldState {
 
     fn apply_clock_minute_delta(&mut self, delta: i16) {
         let current = i16::try_from(self.clock_minutes.unwrap_or(WALL_CLOCK_START_MINUTES))
-            .unwrap_or(i16::try_from(WALL_CLOCK_START_MINUTES).expect("wall-clock default fits i16"));
+            .unwrap_or(
+                i16::try_from(WALL_CLOCK_START_MINUTES).expect("wall-clock default fits i16"),
+            );
         let was_pm = current >= 12 * 60;
         let (pm_angle, am_angle) = self.clock_period_indicator_angles();
         let adjusted = (current + delta).rem_euclid(1440) as u16;
@@ -2760,14 +7132,21 @@ impl WorldState {
     }
 
     pub fn adjust_clock(&mut self, delta: i16) {
-        if self.clock_confirming { return; }
-        let Some(_field) = self.clock_editing else { return; };
+        if self.clock_confirming {
+            return;
+        }
+        let Some(_field) = self.clock_editing else {
+            return;
+        };
         self.apply_clock_minute_delta(delta);
-        self.clock_minute_hand_angle = (self.clock_minutes.unwrap_or(WALL_CLOCK_START_MINUTES) % 60) * 6;
+        self.clock_minute_hand_angle =
+            (self.clock_minutes.unwrap_or(WALL_CLOCK_START_MINUTES) % 60) * 6;
     }
 
     pub fn confirm_clock(&mut self) {
-        if self.clock_editing.is_none() { return; }
+        if self.clock_editing.is_none() {
+            return;
+        }
         if !self.clock_confirming {
             self.clock_confirming = true;
             self.clock_confirm_yes = true;
@@ -2780,6 +7159,7 @@ impl WorldState {
             // event, then runs Mom's 68-frame entry and the player's
             // four-frame in-place turn before opening Mom's message.
             self.phase = StoryPhase::ClockVisit;
+            self.story_flags.wall_clock_started = true;
             self.clock_settle_frames = Some(30);
             self.clock_visit_frames = None;
             self.dialogue = None;
@@ -2792,22 +7172,37 @@ impl WorldState {
     /// Advances the deterministic rival-arrival script. While active it
     /// consumes gameplay input, then exposes the following dialogue beat.
     pub fn advance_rival_arrival(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.rival_arrival_frames else { return false; };
+        let Some(remaining) = self.rival_arrival_frames else {
+            return false;
+        };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         if self.title_intro_step == 2 {
-            let rival = self.npcs.iter().find(|npc| npc.id == "rival" && npc.map == self.map)
+            let rival = self
+                .npcs
+                .iter()
+                .find(|npc| npc.id == "rival" && npc.map == self.map)
                 .expect("rival must exist during bedroom PC walk");
             let (steps, player_facing) = bedroom_rival_pc_route(self.map, &rival.position);
-            let total = steps.iter().map(|(_, faster)| bedroom_rival_movement_frames(*faster)).sum::<u16>();
+            let total = steps
+                .iter()
+                .map(|(_, faster)| bedroom_rival_movement_frames(*faster))
+                .sum::<u16>();
             let elapsed_before = total.saturating_sub(remaining);
             let elapsed_after = total.saturating_sub(next_remaining);
             let mut boundary = 0u16;
             for (direction, faster) in steps {
                 boundary += bedroom_rival_movement_frames(*faster);
                 if elapsed_before < boundary && boundary <= elapsed_after {
-                    let rival = self.npcs.iter().find(|npc| npc.id == "rival" && npc.map == self.map)
+                    let rival = self
+                        .npcs
+                        .iter()
+                        .find(|npc| npc.id == "rival" && npc.map == self.map)
                         .expect("rival must remain during bedroom PC walk");
-                    let position = if *faster { rival.position.clone() } else { stepped_position(&rival.position, *direction) };
+                    let position = if *faster {
+                        rival.position.clone()
+                    } else {
+                        stepped_position(&rival.position, *direction)
+                    };
                     if *faster {
                         self.move_faster_scripted_npc("rival", self.map, position, *direction);
                     } else {
@@ -2827,7 +7222,10 @@ impl WorldState {
         }
         if self.title_intro_step == 1 {
             let (steps, player_facing) = bedroom_rival_approach(self.map, self.facing);
-            let walk_frames = steps.iter().map(|(_, faster)| bedroom_rival_movement_frames(*faster)).sum::<u16>();
+            let walk_frames = steps
+                .iter()
+                .map(|(_, faster)| bedroom_rival_movement_frames(*faster))
+                .sum::<u16>();
             let total = walk_frames + BEDROOM_RIVAL_FASTER_TURN_FRAMES;
             let elapsed_before = total.saturating_sub(remaining);
             let elapsed_after = total.saturating_sub(next_remaining);
@@ -2835,7 +7233,10 @@ impl WorldState {
             for (direction, faster) in steps {
                 boundary += bedroom_rival_movement_frames(*faster);
                 if elapsed_before < boundary && boundary <= elapsed_after {
-                    let rival = self.npcs.iter().find(|npc| npc.id == "rival" && npc.map == self.map)
+                    let rival = self
+                        .npcs
+                        .iter()
+                        .find(|npc| npc.id == "rival" && npc.map == self.map)
                         .expect("rival must exist during bedroom approach");
                     let position = if *faster {
                         rival.position.clone()
@@ -2880,29 +7281,51 @@ impl WorldState {
             MapId::MaysHouse2F => Facing::Right,
             _ => unreachable!(),
         };
-        if elapsed_before < 10 && 10 <= elapsed_after
-            && !self.npcs.iter().any(|npc| npc.id == "rival" && npc.map == self.map)
+        if elapsed_before < 10
+            && 10 <= elapsed_after
+            && !self
+                .npcs
+                .iter()
+                .any(|npc| npc.id == "rival" && npc.map == self.map)
         {
             self.npcs.push(NpcState {
-                id: "rival".to_owned(), map: self.map, position: initial.clone(), facing: Facing::Down,
+                id: "rival".to_owned(),
+                map: self.map,
+                position: initial.clone(),
+                facing: Facing::Down,
             });
         }
         if elapsed_before < 26 && 26 <= elapsed_after {
             self.move_scripted_npc(
-                "rival", self.map,
-                TilePosition { x: initial.x, y: initial.y + 1 }, Facing::Down,
+                "rival",
+                self.map,
+                TilePosition {
+                    x: initial.x,
+                    y: initial.y + 1,
+                },
+                Facing::Down,
             );
         }
         if elapsed_before < 42 && 42 <= elapsed_after {
             self.move_scripted_npc(
-                "rival", self.map,
-                TilePosition { x: initial.x, y: initial.y + 2 }, Facing::Down,
+                "rival",
+                self.map,
+                TilePosition {
+                    x: initial.x,
+                    y: initial.y + 2,
+                },
+                Facing::Down,
             );
         }
         if elapsed_before < 46 && 46 <= elapsed_after {
             self.move_faster_scripted_npc(
-                "rival", self.map,
-                TilePosition { x: initial.x, y: initial.y + 2 }, side,
+                "rival",
+                self.map,
+                TilePosition {
+                    x: initial.x,
+                    y: initial.y + 2,
+                },
+                side,
             );
         }
         if next_remaining == 0 {
@@ -2910,7 +7333,10 @@ impl WorldState {
             // player’s interaction facing. The message waits until that
             // stream and its player turn have completed.
             let (steps, _) = bedroom_rival_approach(self.map, self.facing);
-            let total = steps.iter().map(|(_, faster)| bedroom_rival_movement_frames(*faster)).sum::<u16>()
+            let total = steps
+                .iter()
+                .map(|(_, faster)| bedroom_rival_movement_frames(*faster))
+                .sum::<u16>()
                 + BEDROOM_RIVAL_FASTER_TURN_FRAMES;
             self.title_intro_step = 1;
             self.rival_arrival_frames = Some(total);
@@ -2933,7 +7359,9 @@ impl WorldState {
     /// source watcher movements run alongside the rival's first stream before
     /// `waitmovement` can release the southern ledge path.
     pub fn advance_rival_departure(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.rival_departure_frames else { return false; };
+        let Some(remaining) = self.rival_departure_frames else {
+            return false;
+        };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         let departure_facing = self.route103_rival_departure_facing.unwrap_or(self.facing);
         let player_faced_north = departure_facing == Facing::Up;
@@ -2993,9 +7421,9 @@ impl WorldState {
         for &(start, x, y, duration) in path {
             if elapsed_before <= start && start < elapsed_after {
                 let request_offset = u32::from(start.saturating_sub(elapsed_before));
-                let source_frame = self.frame.saturating_sub(u64::from(
-                    frames.saturating_sub(request_offset),
-                ));
+                let source_frame = self
+                    .frame
+                    .saturating_sub(u64::from(frames.saturating_sub(request_offset)));
                 self.move_scripted_npc_with_duration_at_frame(
                     "rival",
                     MapId::Route103,
@@ -3009,7 +7437,9 @@ impl WorldState {
         if next_remaining == 0 {
             self.rival_departure_frames = None;
             self.route103_rival_departure_facing = None;
-            self.npcs.retain(|npc| !(npc.map == MapId::Route103 && npc.id == "rival"));
+            self.story_flags.hide_route103_rival = true;
+            self.npcs
+                .retain(|npc| !(npc.map == MapId::Route103 && npc.id == "rival"));
         } else {
             self.rival_departure_frames = Some(next_remaining);
         }
@@ -3021,7 +7451,9 @@ impl WorldState {
     /// its selected branch, then once more before permanently removing the
     /// object.
     pub fn advance_oldale_rival_departure(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.oldale_rival_departure_frames else { return false; };
+        let Some(remaining) = self.oldale_rival_departure_frames else {
+            return false;
+        };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         // `OldaleTown_EventScript_RivalFinish` runs the first six-step exit
         // through `DoExitMovement{1,2}`, then unconditionally applies the
@@ -3040,12 +7472,18 @@ impl WorldState {
         // checkpoint restored during either pass continues the source stream.
         for boundary in [176, 160, 144, 128, 112, 96, 80, 64, 48, 32, 16, 0] {
             if remaining > boundary && next_remaining <= boundary {
-                let rival = self.npcs.iter().find(|npc| npc.id == "oldale_rival")
+                let rival = self
+                    .npcs
+                    .iter()
+                    .find(|npc| npc.id == "oldale_rival")
                     .expect("Oldale rival must exist during its scripted exit");
                 self.move_scripted_npc(
                     "oldale_rival",
                     MapId::OldaleTown,
-                    TilePosition { x: rival.position.x, y: rival.position.y + 1 },
+                    TilePosition {
+                        x: rival.position.x,
+                        y: rival.position.y + 1,
+                    },
                     Facing::Down,
                 );
             }
@@ -3053,6 +7491,8 @@ impl WorldState {
         if next_remaining == 0 {
             self.oldale_rival_departure_frames = None;
             self.oldale_rival_departed = true;
+            self.story_vars.oldale_rival_state = 2;
+            self.story_flags.hide_oldale_rival = true;
             self.npcs.retain(|npc| npc.id != "oldale_rival");
         } else {
             self.oldale_rival_departure_frames = Some(next_remaining);
@@ -3066,7 +7506,41 @@ impl WorldState {
     /// source OBJ-cell cadence, never for terrain or coordinate motion.
     pub fn oldale_rival_player_faster_right_elapsed(&self) -> Option<u8> {
         let remaining = self.oldale_rival_approach_frames?;
-        (remaining <= 4).then_some(4 - remaining)
+        if remaining <= 4 {
+            Some(4 - remaining)
+        } else {
+            None
+        }
+    }
+
+    /// Returns the four-frame player turn that overlaps May's first upward
+    /// departure step. The departure clock is the authenticated source
+    /// boundary, so this remains checkpoint/transport independent.
+    pub fn mays_house_1f_player_faster_right_elapsed(&self) -> Option<u8> {
+        let remaining = self.mays_house_1f_rival_departure_frames?;
+        let elapsed = MAYS_RIVAL_DEPARTURE_FRAMES.saturating_sub(remaining);
+        if (MAYS_PLAYER_FAST_TURN_OFFSET
+            ..MAYS_PLAYER_FAST_TURN_OFFSET + MAYS_PLAYER_FAST_TURN_FRAMES)
+            .contains(&elapsed)
+        {
+            Some(elapsed.saturating_sub(MAYS_PLAYER_FAST_TURN_OFFSET) as u8)
+        } else {
+            None
+        }
+    }
+
+    /// Returns the resident east-facing cell after the four-frame GoFast task
+    /// has completed.  The source leaves that cell uploaded for the remainder
+    /// of May's departure rail; it is therefore a render lifetime, not just
+    /// the callback's four-frame duration.
+    pub fn mays_house_1f_player_right_render_elapsed(&self) -> Option<u8> {
+        let remaining = self.mays_house_1f_rival_departure_frames?;
+        let elapsed = MAYS_RIVAL_DEPARTURE_FRAMES.saturating_sub(remaining);
+        (elapsed >= MAYS_PLAYER_FAST_TURN_OFFSET).then_some(
+            elapsed
+                .saturating_sub(MAYS_PLAYER_FAST_TURN_OFFSET)
+                .min(MAYS_PLAYER_FAST_TURN_FRAMES) as u8,
+        )
     }
 
     /// Runs the south-edge approach before Oldale's rival shows the
@@ -3074,7 +7548,9 @@ impl WorldState {
     /// left walks from the rival's `(11,19)` home tile, then make the player
     /// perform `walk_in_place_faster_right` before opening the message.
     pub fn advance_oldale_rival_approach(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.oldale_rival_approach_frames else { return false; };
+        let Some(remaining) = self.oldale_rival_approach_frames else {
+            return false;
+        };
         let consumed = frames.min(u32::from(u8::MAX)) as u8;
         let next_remaining = remaining.saturating_sub(consumed);
         let approach_steps = (10_i16 - self.player.x).clamp(0, 2) as u8;
@@ -3087,14 +7563,20 @@ impl WorldState {
             let start = step * 16;
             if elapsed_before <= start && start < elapsed_after {
                 let position = {
-                    let rival = self.npcs.iter().find(|npc| npc.id == "oldale_rival")
+                    let rival = self
+                        .npcs
+                        .iter()
+                        .find(|npc| npc.id == "oldale_rival")
                         .expect("Oldale rival must exist during its scripted approach");
-                    TilePosition { x: rival.position.x - 1, y: rival.position.y }
+                    TilePosition {
+                        x: rival.position.x - 1,
+                        y: rival.position.y,
+                    }
                 };
                 let request_offset = u32::from(start.saturating_sub(elapsed_before));
-                let source_frame = self.frame.saturating_sub(u64::from(
-                    frames.saturating_sub(request_offset),
-                ));
+                let source_frame = self
+                    .frame
+                    .saturating_sub(u64::from(frames.saturating_sub(request_offset)));
                 self.move_scripted_npc_with_duration_at_frame(
                     "oldale_rival",
                     MapId::OldaleTown,
@@ -3141,7 +7623,9 @@ impl WorldState {
     /// `(0,10)`, steps back to `(1,10)`, and the footprints man makes his
     /// source-backed up/return movement around the warning message.
     pub fn advance_oldale_blocked_path(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.oldale_blocked_path_frames else { return false; };
+        let Some(remaining) = self.oldale_blocked_path_frames else {
+            return false;
+        };
         let stage = self.oldale_blocked_path_stage;
         let total = match stage {
             1 => OLDALE_BLOCKED_PATH_APPROACH_FRAMES,
@@ -3159,18 +7643,30 @@ impl WorldState {
             if elapsed_before < 8 && 8 <= elapsed_after {
                 self.player = TilePosition { x: 1, y: 10 };
                 self.facing = Facing::Right;
-                if let Some(man) = self.npcs.iter_mut().find(|npc| npc.id == "footprints_man" && npc.map == MapId::OldaleTown) {
+                if let Some(man) = self
+                    .npcs
+                    .iter_mut()
+                    .find(|npc| npc.id == "footprints_man" && npc.map == MapId::OldaleTown)
+                {
                     man.position = TilePosition { x: 1, y: 10 };
                     man.facing = Facing::Up;
                 }
             }
             if elapsed_before < 12 && 12 <= elapsed_after {
-                if let Some(man) = self.npcs.iter_mut().find(|npc| npc.id == "footprints_man" && npc.map == MapId::OldaleTown) {
+                if let Some(man) = self
+                    .npcs
+                    .iter_mut()
+                    .find(|npc| npc.id == "footprints_man" && npc.map == MapId::OldaleTown)
+                {
                     man.facing = Facing::Left;
                 }
             }
             if elapsed_before < 20 && 20 <= elapsed_after {
-                if let Some(man) = self.npcs.iter_mut().find(|npc| npc.id == "footprints_man" && npc.map == MapId::OldaleTown) {
+                if let Some(man) = self
+                    .npcs
+                    .iter_mut()
+                    .find(|npc| npc.id == "footprints_man" && npc.map == MapId::OldaleTown)
+                {
                     man.position = TilePosition { x: 2, y: 10 };
                     man.facing = Facing::Right;
                 }
@@ -3191,13 +7687,21 @@ impl WorldState {
         // `OldaleTown_Movement_ReturnToOriginalPosition` is two ordinary
         // strides: down to `(2,11)`, then left to the authored `(1,11)`.
         if elapsed_before == 0 && elapsed_after > 0 {
-            if let Some(man) = self.npcs.iter_mut().find(|npc| npc.id == "footprints_man" && npc.map == MapId::OldaleTown) {
+            if let Some(man) = self
+                .npcs
+                .iter_mut()
+                .find(|npc| npc.id == "footprints_man" && npc.map == MapId::OldaleTown)
+            {
                 man.position = TilePosition { x: 2, y: 11 };
                 man.facing = Facing::Down;
             }
         }
         if elapsed_before < 16 && 16 <= elapsed_after {
-            if let Some(man) = self.npcs.iter_mut().find(|npc| npc.id == "footprints_man" && npc.map == MapId::OldaleTown) {
+            if let Some(man) = self
+                .npcs
+                .iter_mut()
+                .find(|npc| npc.id == "footprints_man" && npc.map == MapId::OldaleTown)
+            {
                 man.position = TilePosition { x: 1, y: 11 };
                 man.facing = Facing::Left;
             }
@@ -3205,7 +7709,13 @@ impl WorldState {
         if next_remaining == 0 {
             self.oldale_blocked_path_frames = None;
             self.oldale_blocked_path_stage = 0;
-            self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
+            self.npcs = map_npcs(
+                self.map,
+                self.phase,
+                self.potions,
+                self.oldale_rival_departed,
+                self.player_gender,
+            );
         } else {
             self.oldale_blocked_path_frames = Some(next_remaining);
         }
@@ -3219,17 +7729,36 @@ impl WorldState {
         self.move_scripted_npc_with_duration(id, map, position, facing, 16);
     }
 
-    fn move_fast_scripted_npc(&mut self, id: &str, map: MapId, position: TilePosition, facing: Facing) {
+    fn move_fast_scripted_npc(
+        &mut self,
+        id: &str,
+        map: MapId,
+        position: TilePosition,
+        facing: Facing,
+    ) {
         self.move_scripted_npc_with_duration(id, map, position, facing, 8);
     }
 
     /// `walk_in_place_faster_*` is the distinct four-frame source action,
     /// rather than the eight-frame `walk_in_place_fast_*` cadence.
-    fn move_faster_scripted_npc(&mut self, id: &str, map: MapId, position: TilePosition, facing: Facing) {
+    fn move_faster_scripted_npc(
+        &mut self,
+        id: &str,
+        map: MapId,
+        position: TilePosition,
+        facing: Facing,
+    ) {
         self.move_scripted_npc_with_duration(id, map, position, facing, 4);
     }
 
-    fn move_scripted_npc_with_duration(&mut self, id: &str, map: MapId, position: TilePosition, facing: Facing, duration_frames: u8) {
+    fn move_scripted_npc_with_duration(
+        &mut self,
+        id: &str,
+        map: MapId,
+        position: TilePosition,
+        facing: Facing,
+        duration_frames: u8,
+    ) {
         self.move_scripted_npc_with_duration_at_frame(
             id,
             map,
@@ -3252,8 +7781,14 @@ impl WorldState {
         duration_frames: u8,
         frame: u64,
     ) {
-        if let Some(npc) = self.npcs.iter_mut().find(|npc| npc.id == id && npc.map == map) {
-            if npc.position == position && npc.facing == facing { return; }
+        if let Some(npc) = self
+            .npcs
+            .iter_mut()
+            .find(|npc| npc.id == id && npc.map == map)
+        {
+            if npc.position == position && npc.facing == facing {
+                return;
+            }
             npc.position = position;
             npc.facing = facing;
             self.npc_walk_starts.retain(|walk| walk.id != id);
@@ -3278,7 +7813,11 @@ impl WorldState {
         duration_frames: u8,
         frame: u64,
     ) {
-        if let Some(npc) = self.npcs.iter_mut().find(|npc| npc.id == id && npc.map == map) {
+        if let Some(npc) = self
+            .npcs
+            .iter_mut()
+            .find(|npc| npc.id == id && npc.map == map)
+        {
             npc.facing = facing;
             self.npc_walk_starts.retain(|walk| walk.id != id);
             self.npc_walk_starts.push(NpcWalkStart {
@@ -3296,7 +7835,9 @@ impl WorldState {
     /// Each branch brings the employee to the same storefront tile, where
     /// Emerald then explains the Mart and awards the Potion.
     pub fn advance_oldale_mart_scene(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.oldale_mart_scene_frames else { return false; };
+        let Some(remaining) = self.oldale_mart_scene_frames else {
+            return false;
+        };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         let route = self.oldale_mart_scene_route.unwrap_or(Facing::Up);
         let total_frames: u16 = match route {
@@ -3313,25 +7854,68 @@ impl WorldState {
         // individual 16-frame boundaries matters: the employee and player
         // walk together rather than disappearing from the conversation tile
         // and reappearing at the Mart once a no-op interval happens to end.
-        let (employee_steps, player_steps, player_delay_steps): (&[Facing], &[Facing], u16) = match route {
-            Facing::Down => (
-                &[Facing::Left, Facing::Up, Facing::Up, Facing::Right, Facing::Up, Facing::Up, Facing::Up, Facing::Up, Facing::Up],
-                &[Facing::Up, Facing::Up, Facing::Up, Facing::Up, Facing::Up],
-                4,
-            ),
-            Facing::Right => (
-                &[Facing::Up, Facing::Up, Facing::Up, Facing::Up, Facing::Up, Facing::Up, Facing::Up],
-                &[Facing::Right, Facing::Up, Facing::Up, Facing::Up, Facing::Up, Facing::Up, Facing::Up],
-                0,
-            ),
-            // The source has no west branch.  Imported legacy states follow
-            // the north choreography deterministically.
-            Facing::Up | Facing::Left => (
-                &[Facing::Up, Facing::Up, Facing::Up, Facing::Up, Facing::Up, Facing::Up, Facing::Up],
-                &[Facing::Up, Facing::Up, Facing::Up, Facing::Up, Facing::Up, Facing::Up, Facing::Up],
-                0,
-            ),
-        };
+        let (employee_steps, player_steps, player_delay_steps): (&[Facing], &[Facing], u16) =
+            match route {
+                Facing::Down => (
+                    &[
+                        Facing::Left,
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Right,
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Up,
+                    ],
+                    &[Facing::Up, Facing::Up, Facing::Up, Facing::Up, Facing::Up],
+                    4,
+                ),
+                Facing::Right => (
+                    &[
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Up,
+                    ],
+                    &[
+                        Facing::Right,
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Up,
+                    ],
+                    0,
+                ),
+                // The source has no west branch.  Imported legacy states follow
+                // the north choreography deterministically.
+                Facing::Up | Facing::Left => (
+                    &[
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Up,
+                    ],
+                    &[
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Up,
+                        Facing::Up,
+                    ],
+                    0,
+                ),
+            };
         for (index, direction) in employee_steps.iter().enumerate() {
             // `walk_*` begins at this boundary and occupies the following
             // sixteen video frames.  Commit the destination when the source
@@ -3342,13 +7926,28 @@ impl WorldState {
             let start = u16::try_from(index).expect("Oldale movement index fits") * 16;
             if elapsed_before <= start && start < elapsed_after {
                 let position = {
-                    let employee = self.npcs.iter().find(|npc| npc.id == "mart_employee")
+                    let employee = self
+                        .npcs
+                        .iter()
+                        .find(|npc| npc.id == "mart_employee")
                         .expect("Oldale Mart employee must exist during its scripted walk");
                     match direction {
-                        Facing::Up => TilePosition { x: employee.position.x, y: employee.position.y - 1 },
-                        Facing::Down => TilePosition { x: employee.position.x, y: employee.position.y + 1 },
-                        Facing::Left => TilePosition { x: employee.position.x - 1, y: employee.position.y },
-                        Facing::Right => TilePosition { x: employee.position.x + 1, y: employee.position.y },
+                        Facing::Up => TilePosition {
+                            x: employee.position.x,
+                            y: employee.position.y - 1,
+                        },
+                        Facing::Down => TilePosition {
+                            x: employee.position.x,
+                            y: employee.position.y + 1,
+                        },
+                        Facing::Left => TilePosition {
+                            x: employee.position.x - 1,
+                            y: employee.position.y,
+                        },
+                        Facing::Right => TilePosition {
+                            x: employee.position.x + 1,
+                            y: employee.position.y,
+                        },
                     }
                 };
                 let source_frame = self.frame.saturating_sub(u64::from(elapsed_after - start));
@@ -3362,15 +7961,19 @@ impl WorldState {
                 );
             }
         }
-        let employee_turn_start = u16::try_from(employee_steps.len())
-            .expect("Oldale employee movement count fits")
-            * 16;
+        let employee_turn_start =
+            u16::try_from(employee_steps.len()).expect("Oldale employee movement count fits") * 16;
         if elapsed_before <= employee_turn_start && employee_turn_start < elapsed_after {
-            let position = self.npcs.iter().find(|npc| npc.id == "mart_employee")
+            let position = self
+                .npcs
+                .iter()
+                .find(|npc| npc.id == "mart_employee")
                 .expect("Oldale Mart employee must exist during its scripted turn")
                 .position
                 .clone();
-            let source_frame = self.frame.saturating_sub(u64::from(elapsed_after - employee_turn_start));
+            let source_frame = self
+                .frame
+                .saturating_sub(u64::from(elapsed_after - employee_turn_start));
             self.move_scripted_npc_with_duration_at_frame(
                 "mart_employee",
                 MapId::OldaleTown,
@@ -3381,7 +7984,10 @@ impl WorldState {
             );
         }
         for (index, direction) in player_steps.iter().enumerate() {
-            let boundary = (player_delay_steps + u16::try_from(index).expect("Oldale movement index fits") + 1) * 16;
+            let boundary = (player_delay_steps
+                + u16::try_from(index).expect("Oldale movement index fits")
+                + 1)
+                * 16;
             if elapsed_before < boundary && boundary <= elapsed_after {
                 match direction {
                     Facing::Up => self.player.y -= 1,
@@ -3390,20 +7996,23 @@ impl WorldState {
                     Facing::Right => self.player.x += 1,
                 }
                 self.facing = *direction;
-                self.elevation = crate::native::tile_elevation(self.map, self.player.x, self.player.y)
-                    .expect("Oldale Mart movement must remain on staged walkable tiles");
+                self.elevation =
+                    crate::native::tile_elevation(self.map, self.player.x, self.player.y)
+                        .expect("Oldale Mart movement must remain on staged walkable tiles");
             }
         }
         let player_motion_start = player_delay_steps * 16;
         let player_motion_end = player_motion_start
             + u16::try_from(player_steps.len()).expect("Oldale player movement count fits") * 16;
-        self.walk_direction = (elapsed_after > player_motion_start && elapsed_after < player_motion_end)
+        self.walk_direction = (elapsed_after > player_motion_start
+            && elapsed_after < player_motion_end)
             .then(|| player_steps[((elapsed_after - player_motion_start) / 16) as usize]);
-        self.walk_progress_frames = if elapsed_after > player_motion_start && elapsed_after < player_motion_end {
-            ((elapsed_after - player_motion_start) % 16) as u8
-        } else {
-            0
-        };
+        self.walk_progress_frames =
+            if elapsed_after > player_motion_start && elapsed_after < player_motion_end {
+                ((elapsed_after - player_motion_start) % 16) as u8
+            } else {
+                0
+            };
         if next_remaining == 0 {
             self.facing = Facing::Up;
             self.walk_direction = None;
@@ -3412,7 +8021,8 @@ impl WorldState {
             self.oldale_mart_scene_stage = 3;
             self.oldale_mart_dialogue_page = 0;
             self.oldale_mart_dialogue_frames = Some(64);
-            self.dialogue = Some("This is a POKéMON MART.\nJust look for our blue roof.".to_owned());
+            self.dialogue =
+                Some("This is a POKéMON MART.\nJust look for our blue roof.".to_owned());
             self.advance_oldale_mart_dialogue_printer(frames.saturating_sub(u32::from(remaining)));
         } else {
             self.oldale_mart_scene_frames = Some(next_remaining);
@@ -3424,7 +8034,9 @@ impl WorldState {
     /// message-specific lead-in, then reveals one glyph per frame; opening
     /// requests have already spent their first sixteen printer frames.
     pub fn advance_oldale_mart_dialogue_printer(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.oldale_mart_dialogue_frames else { return false; };
+        let Some(remaining) = self.oldale_mart_dialogue_frames else {
+            return false;
+        };
         let next = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         self.oldale_mart_dialogue_frames = (next != 0).then_some(next);
         true
@@ -3436,7 +8048,9 @@ impl WorldState {
     /// printing while this clock runs, and the second receipt begins as soon
     /// as the fanfare ends without another player action.
     pub fn advance_oldale_mart_item_fanfare(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.oldale_mart_item_fanfare_frames else { return false; };
+        let Some(remaining) = self.oldale_mart_item_fanfare_frames else {
+            return false;
+        };
         let consumed = frames.min(u32::from(u16::MAX)) as u16;
         let next = remaining.saturating_sub(consumed);
         if let Some(printer_remaining) = self.oldale_mart_dialogue_frames {
@@ -3449,7 +8063,10 @@ impl WorldState {
         }
 
         let carried = frames.saturating_sub(u32::from(remaining));
-        let dialogue = format!("{} put away the POTION\nin the ITEMS POCKET.", self.player_name);
+        let dialogue = format!(
+            "{} put away the POTION\nin the ITEMS POCKET.",
+            self.player_name
+        );
         self.oldale_mart_item_fanfare_frames = None;
         self.oldale_mart_scene_stage = 5;
         self.oldale_mart_dialogue_page = 1;
@@ -3464,7 +8081,23 @@ impl WorldState {
     /// an interaction consumes its initial sample window here as it does on
     /// hardware, while later A presses remain locked until printing ends.
     pub fn advance_field_dialogue_printer(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.field_dialogue_frames else { return false; };
+        if let Some(mut dialogue) = self.field_dialogue.take() {
+            if dialogue.print_remaining == 0 {
+                // A ready page is no longer a printer-owned VBlank. Leave the
+                // typed task installed so the following A/B edge can dismiss
+                // it through `advance_opening_script`.
+                self.field_dialogue = Some(dialogue);
+                return false;
+            }
+            dialogue.advance_printer(frames);
+            self.field_dialogue_frames =
+                (dialogue.print_remaining != 0).then_some(dialogue.print_remaining);
+            self.field_dialogue = Some(dialogue);
+            return true;
+        }
+        let Some(remaining) = self.field_dialogue_frames else {
+            return false;
+        };
         let next = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         self.field_dialogue_frames = (next != 0).then_some(next);
         true
@@ -3475,7 +8108,9 @@ impl WorldState {
     /// before `addobject`, so keeping it separate avoids displaying Mom for
     /// frames in which the original room is still empty.
     pub fn advance_clock_settle(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.clock_settle_frames else { return false; };
+        let Some(remaining) = self.clock_settle_frames else {
+            return false;
+        };
         let consumed = frames.min(u32::from(u8::MAX)) as u8;
         let next_remaining = remaining.saturating_sub(consumed);
         if next_remaining != 0 {
@@ -3508,7 +8143,9 @@ impl WorldState {
     /// player. The source then waits for the player's fast left/right turn;
     /// input remains locked until Mom's room dialogue opens.
     pub fn advance_clock_visit(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.clock_visit_frames else { return false; };
+        let Some(remaining) = self.clock_visit_frames else {
+            return false;
+        };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         if self.title_intro_step == u8::MAX {
             let elapsed_before = 40u16.saturating_sub(remaining);
@@ -3525,15 +8162,26 @@ impl WorldState {
             }
             if elapsed_before < 32 && 32 <= elapsed_after {
                 self.move_scripted_npc(
-                    "mom", self.map,
-                    TilePosition { x: doorway.x, y: doorway.y - 1 }, Facing::Up,
+                    "mom",
+                    self.map,
+                    TilePosition {
+                        x: doorway.x,
+                        y: doorway.y - 1,
+                    },
+                    Facing::Up,
                 );
             }
             if next_remaining == 0 {
                 self.clock_visit_frames = None;
                 self.title_intro_step = 0;
                 self.phase = StoryPhase::TvBroadcast;
-                self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
+                self.npcs = map_npcs(
+                    self.map,
+                    self.phase,
+                    self.potions,
+                    self.oldale_rival_departed,
+                    self.player_gender,
+                );
             } else {
                 self.clock_visit_frames = Some(next_remaining);
             }
@@ -3543,10 +8191,14 @@ impl WorldState {
         let elapsed_after = CLOCK_VISIT_ENTRY_FRAMES.saturating_sub(next_remaining);
         let (down_position, final_position, side) = match self.map {
             MapId::BrendansHouse2F => (
-                TilePosition { x: 7, y: 2 }, TilePosition { x: 6, y: 2 }, Facing::Left,
+                TilePosition { x: 7, y: 2 },
+                TilePosition { x: 6, y: 2 },
+                Facing::Left,
             ),
             MapId::MaysHouse2F => (
-                TilePosition { x: 1, y: 2 }, TilePosition { x: 2, y: 2 }, Facing::Right,
+                TilePosition { x: 1, y: 2 },
+                TilePosition { x: 2, y: 2 },
+                Facing::Right,
             ),
             _ => return false,
         };
@@ -3565,6 +8217,7 @@ impl WorldState {
         }
         if next_remaining == 0 {
             self.clock_visit_frames = None;
+            self.story_flags.upstairs_mom_scene_complete = true;
             self.facing = match self.player_gender {
                 PlayerGender::Brendan => Facing::Right,
                 PlayerGender::May => Facing::Left,
@@ -3581,7 +8234,9 @@ impl WorldState {
     /// exclamation emote, and waits `Common_Movement_Delay48` before the
     /// first "Oh! ... Come quickly!" message can open.
     pub fn advance_tv_broadcast_intro(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.tv_broadcast_intro_frames else { return false; };
+        let Some(remaining) = self.tv_broadcast_intro_frames else {
+            return false;
+        };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         let elapsed_before = TV_BROADCAST_INTRO_FRAMES.saturating_sub(remaining);
         let elapsed_after = TV_BROADCAST_INTRO_FRAMES.saturating_sub(next_remaining);
@@ -3595,7 +8250,9 @@ impl WorldState {
                 _ => return false,
             };
             let map = self.map;
-            let position = self.npcs.iter()
+            let position = self
+                .npcs
+                .iter()
                 .find(|npc| npc.id == "mom" && npc.map == map)
                 .expect("Mom must exist for the Petalburg Gym report")
                 .position
@@ -3617,16 +8274,16 @@ impl WorldState {
     /// continues through `Common_Movement_Delay48` and the first part of
     /// Mom's normal approach.
     pub fn advance_rival_mom_intro(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.rival_mom_intro_frames else { return false; };
+        let Some(remaining) = self.rival_mom_intro_frames else {
+            return false;
+        };
         let consumed = frames.min(u32::from(u16::MAX)) as u16;
         let next_remaining = remaining.saturating_sub(consumed);
         let elapsed_before = RIVAL_MOM_INTRO_FRAMES.saturating_sub(remaining);
         let elapsed_after = RIVAL_MOM_INTRO_FRAMES.saturating_sub(next_remaining);
 
         if let Some(emote_remaining) = self.rival_mom_exclamation_frames {
-            let next_emote = emote_remaining.saturating_sub(
-                frames.min(u32::from(u8::MAX)) as u8,
-            );
+            let next_emote = emote_remaining.saturating_sub(frames.min(u32::from(u8::MAX)) as u8);
             self.rival_mom_exclamation_frames = (next_emote != 0).then_some(next_emote);
         }
 
@@ -3662,13 +8319,15 @@ impl WorldState {
                 + u16::try_from(index).expect("rival Mom approach index fits")
                     * RIVAL_MOM_NORMAL_STEP_FRAMES;
             if elapsed_before < step_start && step_start <= elapsed_after {
-                let mom = self.npcs.iter()
+                let mom = self
+                    .npcs
+                    .iter()
                     .find(|npc| npc.id == "mom" && npc.map == self.map)
                     .expect("rival Mom must exist during the new-neighbor approach");
                 let position = stepped_position(&mom.position, *direction);
-                let start_frame = self.frame.saturating_sub(u64::from(
-                    elapsed_after.saturating_sub(step_start),
-                ));
+                let start_frame = self
+                    .frame
+                    .saturating_sub(u64::from(elapsed_after.saturating_sub(step_start)));
                 self.move_scripted_npc_with_duration_at_frame(
                     "mom",
                     self.map,
@@ -3696,7 +8355,9 @@ impl WorldState {
     /// across the five normal 16-frame player strides before the next report
     /// message can open.
     pub fn advance_tv_broadcast_approach(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.tv_broadcast_approach_frames else { return false; };
+        let Some(remaining) = self.tv_broadcast_approach_frames else {
+            return false;
+        };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         let elapsed_before = TV_BROADCAST_APPROACH_FRAMES.saturating_sub(remaining);
         let elapsed_after = TV_BROADCAST_APPROACH_FRAMES.saturating_sub(next_remaining);
@@ -3749,7 +8410,9 @@ impl WorldState {
     /// lateral step and faster up-facing turn. Each source `waitmovement`
     /// keeps input locked until the reporter message can open.
     pub fn advance_tv_broadcast_view(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.tv_broadcast_view_frames else { return false; };
+        let Some(remaining) = self.tv_broadcast_view_frames else {
+            return false;
+        };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         let elapsed_before = TV_BROADCAST_VIEW_FRAMES.saturating_sub(remaining);
         let elapsed_after = TV_BROADCAST_VIEW_FRAMES.saturating_sub(next_remaining);
@@ -3765,13 +8428,15 @@ impl WorldState {
             self.stop_walking();
         }
         if elapsed_before < mom_step_boundary && mom_step_boundary <= elapsed_after {
-            if let Some(mom) = self.npcs.iter()
+            if let Some(mom) = self
+                .npcs
+                .iter()
                 .find(|npc| npc.id == "mom" && npc.map == self.map)
                 .map(|npc| npc.position.clone())
             {
-                let start_frame = self.frame.saturating_sub(u64::from(
-                    elapsed_after.saturating_sub(mom_step_boundary),
-                ));
+                let start_frame = self
+                    .frame
+                    .saturating_sub(u64::from(elapsed_after.saturating_sub(mom_step_boundary)));
                 self.move_scripted_npc_with_duration_at_frame(
                     "mom",
                     self.map,
@@ -3783,13 +8448,15 @@ impl WorldState {
             }
         }
         if elapsed_before < mom_turn_boundary && mom_turn_boundary <= elapsed_after {
-            if let Some(mom) = self.npcs.iter()
+            if let Some(mom) = self
+                .npcs
+                .iter()
                 .find(|npc| npc.id == "mom" && npc.map == self.map)
                 .map(|npc| npc.position.clone())
             {
-                let start_frame = self.frame.saturating_sub(u64::from(
-                    elapsed_after.saturating_sub(mom_turn_boundary),
-                ));
+                let start_frame = self
+                    .frame
+                    .saturating_sub(u64::from(elapsed_after.saturating_sub(mom_turn_boundary)));
                 self.move_scripted_npc_with_duration_at_frame(
                     "mom",
                     self.map,
@@ -3818,13 +8485,12 @@ impl WorldState {
         self.walk_direction = (elapsed_after > mom_turn_boundary
             && elapsed_after < player_step_boundary)
             .then_some(side);
-        self.walk_progress_frames = if elapsed_after > mom_turn_boundary
-            && elapsed_after < player_step_boundary
-        {
-            (elapsed_after - mom_turn_boundary) as u8
-        } else {
-            0
-        };
+        self.walk_progress_frames =
+            if elapsed_after > mom_turn_boundary && elapsed_after < player_step_boundary {
+                (elapsed_after - mom_turn_boundary) as u8
+            } else {
+                0
+            };
         self.walk_elapsed_frames = 0;
 
         if next_remaining == 0 {
@@ -3844,7 +8510,9 @@ impl WorldState {
     /// the selected home, walks down to the truck row, and turns toward the
     /// player before beginning her first message.
     pub fn advance_truck_arrival(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.truck_arrival_frames else { return false; };
+        let Some(remaining) = self.truck_arrival_frames else {
+            return false;
+        };
         // The measured May title route retains the truck viewport and its
         // exit-arrow frame through the Right×48 request. The following input
         // owns the actual warp/fade and carries its remaining time into Mom's
@@ -3889,14 +8557,18 @@ impl WorldState {
         }
         if elapsed_before < 96 && 96 <= elapsed_after {
             self.move_scripted_npc(
-                "truck_arrival_mom", MapId::LittlerootTown,
-                TilePosition { x: home_x, y: 9 }, Facing::Down,
+                "truck_arrival_mom",
+                MapId::LittlerootTown,
+                TilePosition { x: home_x, y: 9 },
+                Facing::Down,
             );
         }
         if elapsed_before < 138 && 138 <= elapsed_after {
             self.move_scripted_npc(
-                "truck_arrival_mom", MapId::LittlerootTown,
-                TilePosition { x: home_x, y: 10 }, Facing::Down,
+                "truck_arrival_mom",
+                MapId::LittlerootTown,
+                TilePosition { x: home_x, y: 10 },
+                Facing::Down,
             );
         }
         // The second command in `MomApproachPlayerAtTruck` is
@@ -3915,8 +8587,8 @@ impl WorldState {
             self.truck_arrival_frames = None;
             self.title_intro_step = 0;
             self.dialogue = Some(truck_arrival_page(0, &self.player_name));
-            self.truck_arrival_dialogue_frames = self.dialogue.as_deref()
-                .map(dialogue_printer_duration);
+            self.truck_arrival_dialogue_frames =
+                self.dialogue.as_deref().map(dialogue_printer_duration);
         } else {
             self.truck_arrival_frames = Some(next_remaining);
         }
@@ -3925,7 +8597,9 @@ impl WorldState {
 
     /// Advances the source printer on a Little Root truck-arrival page.
     pub fn advance_truck_arrival_dialogue_printer(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.truck_arrival_dialogue_frames else { return false; };
+        let Some(remaining) = self.truck_arrival_dialogue_frames else {
+            return false;
+        };
         let next = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         self.truck_arrival_dialogue_frames = (next != 0).then_some(next);
         true
@@ -3935,7 +8609,9 @@ impl WorldState {
     /// the house, opens the Little Root door, walks them inside, and closes
     /// it before beginning the silent-warp fade.
     pub fn advance_truck_departure(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.truck_departure_frames else { return false; };
+        let Some(remaining) = self.truck_departure_frames else {
+            return false;
+        };
         let elapsed = frames.min(u32::from(u16::MAX)) as u16;
         let next_remaining = remaining.saturating_sub(elapsed);
         let elapsed_before = TRUCK_DEPARTURE_FRAMES.saturating_sub(remaining);
@@ -3953,8 +8629,10 @@ impl WorldState {
         // frame 44 and releases the source `waitmovement`.
         if elapsed_before < 40 && 40 <= elapsed_after {
             self.move_scripted_npc(
-                "truck_arrival_mom", MapId::LittlerootTown,
-                TilePosition { x: home_x, y: 9 }, Facing::Up,
+                "truck_arrival_mom",
+                MapId::LittlerootTown,
+                TilePosition { x: home_x, y: 9 },
+                Facing::Up,
             );
             self.player.x += 1;
             self.facing = Facing::Right;
@@ -4004,7 +8682,9 @@ impl WorldState {
     /// `face_player` action completed immediately when the page closed; its
     /// one-frame action boundary then precedes the existing fast-turn gate.
     pub fn advance_new_home_orientation(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.new_home_orientation_frames else { return false; };
+        let Some(remaining) = self.new_home_orientation_frames else {
+            return false;
+        };
         let elapsed = frames.min(u32::from(u8::MAX)) as u8;
         let next_remaining = remaining.saturating_sub(elapsed);
         let elapsed_before = NEW_HOME_ORIENTATION_FRAMES.saturating_sub(remaining);
@@ -4031,7 +8711,9 @@ impl WorldState {
     }
 
     pub fn advance_new_home_arrival(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.new_home_arrival_frames else { return false; };
+        let Some(remaining) = self.new_home_arrival_frames else {
+            return false;
+        };
         let elapsed = frames.min(u32::from(u16::MAX)) as u16;
         let next_remaining = remaining.saturating_sub(elapsed);
         if self.title_intro_step == u8::MAX {
@@ -4044,7 +8726,10 @@ impl WorldState {
             let elapsed_after = 16u16.saturating_sub(next_remaining);
             if elapsed_before < 4 && 4 <= elapsed_after {
                 let map = self.map;
-                let mom = self.npcs.iter().find(|npc| npc.id == "mom" && npc.map == map)
+                let mom = self
+                    .npcs
+                    .iter()
+                    .find(|npc| npc.id == "mom" && npc.map == map)
                     .expect("Mom must exist for the move-in turn");
                 self.move_faster_scripted_npc("mom", map, mom.position.clone(), Facing::Up);
             }
@@ -4056,7 +8741,13 @@ impl WorldState {
                 self.new_home_arrival_frames = None;
                 self.title_intro_step = 0;
                 self.phase = StoryPhase::ClockSet;
-                self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
+                self.npcs = map_npcs(
+                    self.map,
+                    self.phase,
+                    self.potions,
+                    self.oldale_rival_departed,
+                    self.player_gender,
+                );
             } else {
                 self.new_home_arrival_frames = Some(next_remaining);
             }
@@ -4076,7 +8767,9 @@ impl WorldState {
     /// box. A request that spans this boundary is consumed by the printer;
     /// the following request is the first one allowed to dismiss the box.
     pub fn advance_running_shoes_wait(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.running_shoes_wait_frames else { return false; };
+        let Some(remaining) = self.running_shoes_wait_frames else {
+            return false;
+        };
         let next = remaining.saturating_sub(frames.min(u32::from(u8::MAX)) as u8);
         self.running_shoes_wait_frames = (next != 0).then_some(next);
         true
@@ -4092,8 +8785,8 @@ impl WorldState {
             self.running_shoes_dialogue_page,
             &self.player_name,
         );
-        self.running_shoes_dialogue_frames = self.dialogue.as_deref()
-            .map(dialogue_printer_duration);
+        self.running_shoes_dialogue_frames =
+            self.dialogue.as_deref().map(dialogue_printer_duration);
     }
 
     /// Reveals the next source message page without advancing the scene
@@ -4101,11 +8794,9 @@ impl WorldState {
     /// Mom's initial prompt, rather than four condensed Rust strings.
     fn advance_running_shoes_dialogue(&mut self) -> bool {
         let next_page = self.running_shoes_dialogue_page.saturating_add(1);
-        let Some(dialogue) = running_shoes_dialogue_page(
-            self.running_shoes_stage,
-            next_page,
-            &self.player_name,
-        ) else {
+        let Some(dialogue) =
+            running_shoes_dialogue_page(self.running_shoes_stage, next_page, &self.player_name)
+        else {
             self.running_shoes_dialogue_page = 0;
             self.running_shoes_dialogue_frames = None;
             return false;
@@ -4119,7 +8810,9 @@ impl WorldState {
     /// Advances a source page printer. The frame that completes the text is
     /// still owned by the printer; a later A is the first valid dismissal.
     pub fn advance_running_shoes_dialogue_printer(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.running_shoes_dialogue_frames else { return false; };
+        let Some(remaining) = self.running_shoes_dialogue_frames else {
+            return false;
+        };
         let next = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         self.running_shoes_dialogue_frames = (next != 0).then_some(next);
         true
@@ -4128,6 +8821,34 @@ impl WorldState {
     /// Returns the currently visible text. Source field pages reveal one
     /// character per frame after Emerald's initial twelve-frame box delay.
     pub fn rendered_dialogue(&self) -> Option<String> {
+        if let Some(modal) = self.field_select_modal.as_ref() {
+            return modal.border_visible().then(|| modal.visible_text());
+        }
+        if let Some((hold_frame, text)) = self.mays_house_1f_dialogue_page_hold.as_ref() {
+            // A closing A leaves the final page in the source window for two
+            // rendered VBlanks (the edge sample and the following scheduler
+            // tick). Page-to-page releases still hold only their edge sample;
+            // those retain a non-empty `dialogue` projection while the next
+            // page printer owns the task.
+            let special_blank_page = self.dialogue.as_deref().is_some_and(str::is_empty);
+            // The source page transition from the long page-7 farewell into
+            // `Eheheh…` runs one blank printer tick: unlike ordinary page
+            // releases, the new page owns the window on V+1 but has not yet
+            // emitted its first glyph. Preserve that blank task boundary
+            // instead of holding page 7 for the extra tick.
+            let page8_release_blank = self
+                .field_dialogue
+                .as_ref()
+                .is_some_and(|state| state.page == 8)
+                && self.frame == hold_frame.saturating_add(1);
+            if *hold_frame == self.frame
+                || (!special_blank_page
+                    && !page8_release_blank
+                    && self.frame == hold_frame.saturating_add(1))
+            {
+                return Some(text.clone());
+            }
+        }
         let dialogue = self.dialogue.as_ref()?;
         if let Some(remaining) = self.oldale_mart_dialogue_frames {
             if self.oldale_mart_scene_stage == 6 && self.oldale_mart_dialogue_page == 1 {
@@ -4141,32 +8862,37 @@ impl WorldState {
                     .expect("Potion scroll page must contain two source lines");
                 return Some(format!(
                     "{retained_line}\n{}",
-                    continuation.chars().take(visible_characters).collect::<String>(),
+                    continuation
+                        .chars()
+                        .take(visible_characters)
+                        .collect::<String>(),
                 ));
             }
-            let (total, lead_in) = match (self.oldale_mart_scene_stage, self.oldale_mart_dialogue_page) {
-                // The guide's carried movement frames open its first
-                // promotion page with `This is a` already visible.
-                (3, 0) => (64_u16, 7_u16),
-                // Fresh mGBA captures show both following promotion pages
-                // reveal fourteen glyphs in the opening A×16 window and
-                // accept dismissal after a further Noop×64.
-                (3, _) => (80_u16, 2_u16),
-                // The obtain-item storage receipt starts seven glyphs
-                // earlier than an ordinary field message: source frame 176
-                // already shows `CASEY put away the POTION\nI`.
-                (5, _) => (dialogue_printer_duration(dialogue), 5_u16),
-                // The first explanation page opens with the same four-frame
-                // lead as the item receipts: its source A×16 boundary reads
-                // `A POTION can`.
-                (6, 0) => (dialogue_printer_duration(dialogue), 4_u16),
-                _ => (32_u16, 4_u16),
-            };
+            let (total, lead_in) =
+                match (self.oldale_mart_scene_stage, self.oldale_mart_dialogue_page) {
+                    // The guide's carried movement frames open its first
+                    // promotion page with `This is a` already visible.
+                    (3, 0) => (64_u16, 7_u16),
+                    // Fresh mGBA captures show both following promotion pages
+                    // reveal fourteen glyphs in the opening A×16 window and
+                    // accept dismissal after a further Noop×64.
+                    (3, _) => (80_u16, 2_u16),
+                    // The obtain-item storage receipt starts seven glyphs
+                    // earlier than an ordinary field message: source frame 176
+                    // already shows `CASEY put away the POTION\nI`.
+                    (5, _) => (dialogue_printer_duration(dialogue), 5_u16),
+                    // The first explanation page opens with the same four-frame
+                    // lead as the item receipts: its source A×16 boundary reads
+                    // `A POTION can`.
+                    (6, 0) => (dialogue_printer_duration(dialogue), 4_u16),
+                    _ => (32_u16, 4_u16),
+                };
             let elapsed = total.saturating_sub(remaining);
             let visible_characters = usize::from(elapsed.saturating_sub(lead_in));
             return Some(dialogue.chars().take(visible_characters).collect());
         }
-        if let Some(remaining) = self.pokedex_receipt_fanfare_frames
+        if let Some(remaining) = self
+            .pokedex_receipt_fanfare_frames
             .or(self.pokedex_poke_ball_fanfare_frames)
         {
             // `EventScript_ReceivePokedex` and `giveitem ITEM_POKE_BALL, 5`
@@ -4176,20 +8902,76 @@ impl WorldState {
             // The fanfare clock is deliberately longer than the text printer,
             // so derive the visible glyph count from its elapsed source time
             // rather than treating its remaining duration as a printer total.
-            let elapsed = POKE_BALL_GIFT_FANFARE_REMAINING_FRAMES
-                .saturating_sub(remaining);
+            let elapsed = POKE_BALL_GIFT_FANFARE_REMAINING_FRAMES.saturating_sub(remaining);
             let visible_characters = usize::from(elapsed.saturating_sub(12));
             return Some(dialogue.chars().take(visible_characters).collect());
         }
-        let Some(remaining) = self.running_shoes_wait_frames.map(u16::from)
+        let Some(remaining) = self
+            .running_shoes_wait_frames
+            .map(u16::from)
             .or(self.running_shoes_dialogue_frames)
             .or(self.truck_arrival_dialogue_frames)
             .or(self.field_dialogue_frames)
         else {
             return Some(dialogue.clone());
         };
-        let total = dialogue_printer_duration(dialogue);
+        let total = if self.map == MapId::MaysHouse1F
+            && self.mays_house_1f_rival_scene_start_frame.is_some()
+        {
+            mays_house_1f_dialogue_printer_duration(dialogue)
+        } else {
+            dialogue_printer_duration(dialogue)
+        };
         let elapsed = total.saturating_sub(remaining);
+        if self.map == MapId::MaysHouse1F
+            && self.mays_house_1f_rival_dialogue_active
+            && self.field_dialogue_frames.is_some()
+        {
+            // The rival-house script starts its printer on the first frame
+            // after DrawDialogueFrame: V282 is an empty box, V283 already
+            // contains the first glyph.  The generic field helper's twelve
+            // frame lead-in is for ordinary map messages and would leave
+            // this authenticated page blank for the first dozen VBlanks.
+            // The source printer advances one authored character per VBlank;
+            // spaces consume a tick even though they add no ink. The page of
+            // repeated ellipses can look like a two-VBlank glyph cadence, but
+            // that is simply its alternating ellipsis/space character stream.
+            // A page released by A is rendered one scheduler tick after the
+            // page task starts printing. The release hold owns that first
+            // tick, so subtract it from the visible character budget while
+            // leaving the serialized printer countdown untouched.
+            let printer_elapsed = if self.mays_house_1f_dialogue_page_hold.is_some() {
+                elapsed.saturating_sub(1)
+            } else {
+                elapsed
+            };
+            let mut budget = usize::from(printer_elapsed);
+            if let Some((first_line, _)) = dialogue.split_once('\n') {
+                let first_line_characters = first_line.chars().count();
+                let second_line_start = first_line_characters.saturating_add(1);
+                let elapsed_usize = usize::from(printer_elapsed);
+                if elapsed_usize >= second_line_start {
+                    budget = first_line_characters
+                        .saturating_add(1)
+                        .saturating_add(elapsed_usize - second_line_start);
+                }
+            }
+            let mut visible = String::new();
+            for character in dialogue.chars() {
+                if character == '\n' {
+                    visible.push(character);
+                    continue;
+                }
+                if character != '\n' {
+                    if budget == 0 {
+                        break;
+                    }
+                    budget -= 1;
+                }
+                visible.push(character);
+            }
+            return Some(visible);
+        }
         let visible_characters = usize::from(elapsed.saturating_sub(12));
         Some(dialogue.chars().take(visible_characters).collect())
     }
@@ -4197,7 +8979,10 @@ impl WorldState {
     /// Source field message boxes add their advance marker only after their
     /// current page printer reaches its ready boundary.
     pub fn dialogue_printer_active(&self) -> bool {
-        self.running_shoes_wait_frames.is_some()
+        self.field_select_modal
+            .as_ref()
+            .is_some_and(|modal| !modal.input_ready())
+            || self.running_shoes_wait_frames.is_some()
             || self.running_shoes_dialogue_frames.is_some()
             || self.truck_arrival_dialogue_frames.is_some()
             || self.oldale_mart_dialogue_frames.is_some()
@@ -4207,11 +8992,26 @@ impl WorldState {
             || self.field_dialogue_frames.is_some()
     }
 
+    /// Returns the source VBlank at which the current Mays House page first
+    /// becomes arrow-ready.  A page-release A edge records the prior page in
+    /// `mays_house_1f_dialogue_page_hold`; the next page's printer owns its
+    /// final VBlank, and the down-arrow is already visible on that boundary.
+    /// Keeping this derived from the authenticated page text makes the phase
+    /// reset correctly for every subsequent page instead of reusing the
+    /// unrelated generic field-dialogue anchor.
+    pub fn mays_house_1f_dialogue_arrow_anchor(&self) -> Option<u64> {
+        if self.map != MapId::MaysHouse1F || !self.mays_house_1f_rival_dialogue_active {
+            return None;
+        }
+        self.mays_house_1f_dialogue_page_arrow_anchor
+    }
+
     pub fn advance_running_shoes_scene(&mut self, frames: u32) -> bool {
         if let Some(remaining) = self.running_shoes_return_delay_frames {
             let consumed = frames.min(u32::from(remaining)) as u8;
             let next_remaining = remaining.saturating_sub(consumed);
-            self.running_shoes_return_delay_frames = (next_remaining != 0).then_some(next_remaining);
+            self.running_shoes_return_delay_frames =
+                (next_remaining != 0).then_some(next_remaining);
             if next_remaining != 0 {
                 return true;
             }
@@ -4252,14 +9052,21 @@ impl WorldState {
             }
             return true;
         }
-        let Some(remaining) = self.running_shoes_frames else { return false; };
+        let Some(remaining) = self.running_shoes_frames else {
+            return false;
+        };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         let trigger = self.running_shoes_trigger.unwrap_or(2);
         let source_rival_trigger = trigger == SOURCE_RIVAL_RUNNING_SHOES_TRIGGER;
         let returning = self.running_shoes_stage == 6;
-        let (direction, steps, fast_return_turn) = running_shoes_mom_path(trigger, self.player_gender, returning);
+        let (direction, steps, fast_return_turn) =
+            running_shoes_mom_path(trigger, self.player_gender, returning);
         let total = u16::from(steps) * 16
-            + if (!returning && !source_rival_trigger) || fast_return_turn { 4 } else { 0 };
+            + if (!returning && !source_rival_trigger) || fast_return_turn {
+                4
+            } else {
+                0
+            };
         let elapsed_before = total.saturating_sub(remaining);
         let elapsed_after = total.saturating_sub(next_remaining);
         if !returning && !source_rival_trigger && elapsed_before < 4 && elapsed_after >= 4 {
@@ -4269,17 +9076,36 @@ impl WorldState {
                 (_, PlayerGender::May) => Facing::Right,
             };
         }
-        let movement_offset = if returning || source_rival_trigger { 0 } else { 4 };
+        let movement_offset = if returning || source_rival_trigger {
+            0
+        } else {
+            4
+        };
         for step in 1..=u16::from(steps) {
             let boundary = movement_offset + step * 16;
             if elapsed_before < boundary && boundary <= elapsed_after {
-                let mom = self.npcs.iter().find(|npc| npc.id == "mom_outside")
+                let mom = self
+                    .npcs
+                    .iter()
+                    .find(|npc| npc.id == "mom_outside")
                     .expect("Running Shoes Mom must exist during her scripted walk");
                 let position = match direction {
-                    Facing::Up => TilePosition { x: mom.position.x, y: mom.position.y - 1 },
-                    Facing::Down => TilePosition { x: mom.position.x, y: mom.position.y + 1 },
-                    Facing::Left => TilePosition { x: mom.position.x - 1, y: mom.position.y },
-                    Facing::Right => TilePosition { x: mom.position.x + 1, y: mom.position.y },
+                    Facing::Up => TilePosition {
+                        x: mom.position.x,
+                        y: mom.position.y - 1,
+                    },
+                    Facing::Down => TilePosition {
+                        x: mom.position.x,
+                        y: mom.position.y + 1,
+                    },
+                    Facing::Left => TilePosition {
+                        x: mom.position.x - 1,
+                        y: mom.position.y,
+                    },
+                    Facing::Right => TilePosition {
+                        x: mom.position.x + 1,
+                        y: mom.position.y,
+                    },
                 };
                 self.move_scripted_npc("mom_outside", MapId::LittlerootTown, position, direction);
             }
@@ -4290,14 +9116,25 @@ impl WorldState {
                 1 => {
                     self.running_shoes_stage = 2;
                     self.begin_running_shoes_dialogue();
-                    self.advance_running_shoes_dialogue_printer(frames.saturating_sub(u32::from(remaining)));
+                    self.advance_running_shoes_dialogue_printer(
+                        frames.saturating_sub(u32::from(remaining)),
+                    );
                 }
                 6 => {
                     if fast_return_turn {
-                        let mom = self.npcs.iter().find(|npc| npc.id == "mom_outside")
+                        let mom = self
+                            .npcs
+                            .iter()
+                            .find(|npc| npc.id == "mom_outside")
                             .expect("Running Shoes Mom must exist for her return turn");
-                        self.move_faster_scripted_npc("mom_outside", MapId::LittlerootTown, mom.position.clone(), Facing::Up);
-                        self.running_shoes_return_door_frames = Some(RUNNING_SHOES_RETURN_DOOR_FRAMES);
+                        self.move_faster_scripted_npc(
+                            "mom_outside",
+                            MapId::LittlerootTown,
+                            mom.position.clone(),
+                            Facing::Up,
+                        );
+                        self.running_shoes_return_door_frames =
+                            Some(RUNNING_SHOES_RETURN_DOOR_FRAMES);
                         let carried_frames = frames.saturating_sub(u32::from(remaining));
                         if carried_frames != 0 {
                             self.advance_running_shoes_scene(carried_frames);
@@ -4328,13 +9165,19 @@ impl WorldState {
     /// 101 permission prompt. The Twin and player each perform the common
     /// in-place faster turn before the message box opens.
     pub fn advance_birch_prompt_scene(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.birch_prompt_frames else { return false; };
+        let Some(remaining) = self.birch_prompt_frames else {
+            return false;
+        };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         if self.title_intro_step == 2 {
             if next_remaining == 0 {
                 self.birch_prompt_frames = None;
                 self.title_intro_step = 0;
-                if let Some(twin) = self.npcs.iter_mut().find(|npc| npc.id == "twin" && npc.map == MapId::LittlerootTown) {
+                if let Some(twin) = self
+                    .npcs
+                    .iter_mut()
+                    .find(|npc| npc.id == "twin" && npc.map == MapId::LittlerootTown)
+                {
                     // State-1 Twin was placed at `(10,1)` with its original
                     // upward guard facing on transition; the source restores
                     // that direction after addressing the player.
@@ -4347,10 +9190,10 @@ impl WorldState {
             }
             return true;
         }
-        let elapsed_before = LITTLEROOT_GO_SAVE_BIRCH_TURN_SEQUENCE_FRAMES
-            .saturating_sub(remaining);
-        let elapsed_after = LITTLEROOT_GO_SAVE_BIRCH_TURN_SEQUENCE_FRAMES
-            .saturating_sub(next_remaining);
+        let elapsed_before =
+            LITTLEROOT_GO_SAVE_BIRCH_TURN_SEQUENCE_FRAMES.saturating_sub(remaining);
+        let elapsed_after =
+            LITTLEROOT_GO_SAVE_BIRCH_TURN_SEQUENCE_FRAMES.saturating_sub(next_remaining);
         // `GoSaveBirchTrigger` waits for Twin's four-frame faster right turn
         // before applying the player's four-frame faster left turn; these are
         // sequential, not a simultaneous gesture.
@@ -4373,7 +9216,9 @@ impl WorldState {
     /// Little Root source map. The two branches have different fast approach
     /// and return lengths, but converge on the same one-tile player pushback.
     pub fn advance_no_pokemon_gate_scene(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.no_pokemon_gate_frames else { return false; };
+        let Some(remaining) = self.no_pokemon_gate_frames else {
+            return false;
+        };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         let x = if self.no_pokemon_gate_right { 11 } else { 10 };
         let returning = self.no_pokemon_gate_stage == 4;
@@ -4383,18 +9228,18 @@ impl WorldState {
             _ => (&[][..], 0),
         };
         if !path.is_empty() {
-            let total = lead_frames + no_pokemon_twin_path_frames(self.no_pokemon_gate_right, returning);
+            let total =
+                lead_frames + no_pokemon_twin_path_frames(self.no_pokemon_gate_right, returning);
             let elapsed_before = total.saturating_sub(remaining);
             let elapsed_after = total.saturating_sub(next_remaining);
             let mut boundary = lead_frames;
             for (index, (direction, fast)) in path.iter().enumerate() {
                 let terminal_faster_turn = returning && index + 1 == path.len();
-                boundary += no_pokemon_twin_path_step_frames(
-                    terminal_faster_turn,
-                    *fast,
-                );
+                boundary += no_pokemon_twin_path_step_frames(terminal_faster_turn, *fast);
                 if elapsed_before < boundary && boundary <= elapsed_after {
-                    let position = self.npcs.iter()
+                    let position = self
+                        .npcs
+                        .iter()
                         .find(|npc| npc.id == "twin" && npc.map == MapId::LittlerootTown)
                         .map(|twin| {
                             if terminal_faster_turn {
@@ -4412,11 +9257,19 @@ impl WorldState {
                         // moving stride introduces a visible four-pixel
                         // displacement during the warning return phase.
                         self.animate_scripted_npc_in_place_at_frame(
-                            "twin", MapId::LittlerootTown, *direction,
-                            4, self.frame,
+                            "twin",
+                            MapId::LittlerootTown,
+                            *direction,
+                            4,
+                            self.frame,
                         );
                     } else if *fast {
-                        self.move_fast_scripted_npc("twin", MapId::LittlerootTown, position, *direction);
+                        self.move_fast_scripted_npc(
+                            "twin",
+                            MapId::LittlerootTown,
+                            position,
+                            *direction,
+                        );
                     } else {
                         self.move_scripted_npc("twin", MapId::LittlerootTown, position, *direction);
                     }
@@ -4431,7 +9284,11 @@ impl WorldState {
             1 => {
                 // The fast route around the player ends immediately north of
                 // the trigger tile, facing down for the first warning.
-                if let Some(twin) = self.npcs.iter_mut().find(|npc| npc.id == "twin" && npc.map == MapId::LittlerootTown) {
+                if let Some(twin) = self
+                    .npcs
+                    .iter_mut()
+                    .find(|npc| npc.id == "twin" && npc.map == MapId::LittlerootTown)
+                {
                     twin.position = TilePosition { x, y: 0 };
                     twin.facing = Facing::Down;
                 }
@@ -4441,7 +9298,11 @@ impl WorldState {
             2 => {
                 // `DangerousWithoutPokemon` moves both actors down once
                 // before its second message box.
-                if let Some(twin) = self.npcs.iter_mut().find(|npc| npc.id == "twin" && npc.map == MapId::LittlerootTown) {
+                if let Some(twin) = self
+                    .npcs
+                    .iter_mut()
+                    .find(|npc| npc.id == "twin" && npc.map == MapId::LittlerootTown)
+                {
                     twin.position = TilePosition { x, y: 1 };
                     twin.facing = Facing::Down;
                 }
@@ -4449,10 +9310,15 @@ impl WorldState {
                 self.facing = Facing::Down;
                 self.no_pokemon_gate_frames = None;
                 self.no_pokemon_gate_stage = 3;
-                self.dialogue = Some("It's dangerous if you don't have\nyour own POKéMON.".to_owned());
+                self.dialogue =
+                    Some("It's dangerous if you don't have\nyour own POKéMON.".to_owned());
             }
             4 => {
-                if let Some(twin) = self.npcs.iter_mut().find(|npc| npc.id == "twin" && npc.map == MapId::LittlerootTown) {
+                if let Some(twin) = self
+                    .npcs
+                    .iter_mut()
+                    .find(|npc| npc.id == "twin" && npc.map == MapId::LittlerootTown)
+                {
                     twin.facing = Facing::Down;
                 }
                 self.no_pokemon_gate_frames = None;
@@ -4471,7 +9337,9 @@ impl WorldState {
     /// Birch/Zigzagoon in from `(0,15)/(0,16)`, then runs their circular
     /// chase in parallel before the Bag prompt is released.
     pub fn advance_birch_rescue_scene(&mut self, frames: u32) -> bool {
-        let Some(saved_remaining) = self.birch_rescue_frames else { return false; };
+        let Some(saved_remaining) = self.birch_rescue_frames else {
+            return false;
+        };
         // Older checkpoints recorded the earlier 344-frame approximation.
         // Normalize them as they resume so their remaining motion follows
         // the source stream boundaries below.
@@ -4488,17 +9356,85 @@ impl WorldState {
             const PLAYER_ENTER_TURN_END: u16 = 4 * FAST_STEP_FRAMES + 4;
             const BIRCH_TURN_START: u16 = ENTRY_END + 31 * FAST_STEP_FRAMES;
             const FACE_EACH_OTHER_START: u16 = BIRCH_TURN_START + 4;
-            const BIRCH_ENTRY: [Facing; 6] = [Facing::Right, Facing::Right, Facing::Right, Facing::Right, Facing::Up, Facing::Up];
-            const ZIGZAGOON_ENTRY: [Facing; 6] = [Facing::Up, Facing::Right, Facing::Right, Facing::Right, Facing::Right, Facing::Up];
+            const BIRCH_ENTRY: [Facing; 6] = [
+                Facing::Right,
+                Facing::Right,
+                Facing::Right,
+                Facing::Right,
+                Facing::Up,
+                Facing::Up,
+            ];
+            const ZIGZAGOON_ENTRY: [Facing; 6] = [
+                Facing::Up,
+                Facing::Right,
+                Facing::Right,
+                Facing::Right,
+                Facing::Right,
+                Facing::Up,
+            ];
             const BIRCH_CIRCLE: [Facing; 30] = [
-                Facing::Up, Facing::Up, Facing::Right, Facing::Right, Facing::Right, Facing::Down, Facing::Down, Facing::Left, Facing::Left, Facing::Left,
-                Facing::Up, Facing::Up, Facing::Right, Facing::Right, Facing::Right, Facing::Down, Facing::Down, Facing::Left, Facing::Left, Facing::Left,
-                Facing::Up, Facing::Up, Facing::Right, Facing::Right, Facing::Right, Facing::Down, Facing::Down, Facing::Left, Facing::Left, Facing::Left,
+                Facing::Up,
+                Facing::Up,
+                Facing::Right,
+                Facing::Right,
+                Facing::Right,
+                Facing::Down,
+                Facing::Down,
+                Facing::Left,
+                Facing::Left,
+                Facing::Left,
+                Facing::Up,
+                Facing::Up,
+                Facing::Right,
+                Facing::Right,
+                Facing::Right,
+                Facing::Down,
+                Facing::Down,
+                Facing::Left,
+                Facing::Left,
+                Facing::Left,
+                Facing::Up,
+                Facing::Up,
+                Facing::Right,
+                Facing::Right,
+                Facing::Right,
+                Facing::Down,
+                Facing::Down,
+                Facing::Left,
+                Facing::Left,
+                Facing::Left,
             ];
             const ZIGZAGOON_CIRCLE: [Facing; 31] = [
-                Facing::Up, Facing::Up, Facing::Up, Facing::Right, Facing::Right, Facing::Right, Facing::Down, Facing::Down, Facing::Left, Facing::Left,
-                Facing::Left, Facing::Up, Facing::Up, Facing::Right, Facing::Right, Facing::Right, Facing::Down, Facing::Down, Facing::Left, Facing::Left,
-                Facing::Left, Facing::Up, Facing::Up, Facing::Up, Facing::Right, Facing::Right, Facing::Right, Facing::Down, Facing::Down, Facing::Left,
+                Facing::Up,
+                Facing::Up,
+                Facing::Up,
+                Facing::Right,
+                Facing::Right,
+                Facing::Right,
+                Facing::Down,
+                Facing::Down,
+                Facing::Left,
+                Facing::Left,
+                Facing::Left,
+                Facing::Up,
+                Facing::Up,
+                Facing::Right,
+                Facing::Right,
+                Facing::Right,
+                Facing::Down,
+                Facing::Down,
+                Facing::Left,
+                Facing::Left,
+                Facing::Left,
+                Facing::Up,
+                Facing::Up,
+                Facing::Up,
+                Facing::Right,
+                Facing::Right,
+                Facing::Right,
+                Facing::Down,
+                Facing::Down,
+                Facing::Left,
                 Facing::Left,
             ];
             let elapsed_before = ROUTE101_RESCUE_CHOREOGRAPHY_FRAMES.saturating_sub(remaining);
@@ -4511,8 +9447,9 @@ impl WorldState {
             let player_y = 19 - player_steps;
             if self.player.y != player_y {
                 self.player.y = player_y;
-                self.elevation = crate::native::tile_elevation(self.map, self.player.x, self.player.y)
-                    .expect("Route 101 rescue player path must be staged");
+                self.elevation =
+                    crate::native::tile_elevation(self.map, self.player.x, self.player.y)
+                        .expect("Route 101 rescue player path must be staged");
             }
             // The final `walk_in_place_faster_left` occupies frames 32..36.
             // Player walk state drives camera translation, so it cannot be
@@ -4526,7 +9463,8 @@ impl WorldState {
             };
 
             for (index, direction) in BIRCH_ENTRY.iter().enumerate() {
-                let start = u16::try_from(index).expect("Route 101 Birch entry index fits") * FAST_STEP_FRAMES;
+                let start = u16::try_from(index).expect("Route 101 Birch entry index fits")
+                    * FAST_STEP_FRAMES;
                 if elapsed_before <= start && start < elapsed_after {
                     let (position, _) = fast_path_position(
                         TilePosition { x: 0, y: 15 },
@@ -4546,7 +9484,8 @@ impl WorldState {
                 }
             }
             for (index, direction) in ZIGZAGOON_ENTRY.iter().enumerate() {
-                let start = u16::try_from(index).expect("Route 101 Zigzagoon entry index fits") * FAST_STEP_FRAMES;
+                let start = u16::try_from(index).expect("Route 101 Zigzagoon entry index fits")
+                    * FAST_STEP_FRAMES;
                 if elapsed_before <= start && start < elapsed_after {
                     let (position, _) = fast_path_position(
                         TilePosition { x: 0, y: 16 },
@@ -4567,7 +9506,8 @@ impl WorldState {
             }
             for (index, direction) in BIRCH_CIRCLE.iter().enumerate() {
                 let start = ENTRY_END
-                    + u16::try_from(index).expect("Route 101 Birch circle index fits") * FAST_STEP_FRAMES;
+                    + u16::try_from(index).expect("Route 101 Birch circle index fits")
+                        * FAST_STEP_FRAMES;
                 if elapsed_before <= start && start < elapsed_after {
                     let (position, _) = fast_path_position(
                         TilePosition { x: 4, y: 13 },
@@ -4588,7 +9528,8 @@ impl WorldState {
             }
             for (index, direction) in ZIGZAGOON_CIRCLE.iter().enumerate() {
                 let start = ENTRY_END
-                    + u16::try_from(index).expect("Route 101 Zigzagoon circle index fits") * FAST_STEP_FRAMES;
+                    + u16::try_from(index).expect("Route 101 Zigzagoon circle index fits")
+                        * FAST_STEP_FRAMES;
                 if elapsed_before <= start && start < elapsed_after {
                     let (position, _) = fast_path_position(
                         TilePosition { x: 4, y: 14 },
@@ -4613,7 +9554,9 @@ impl WorldState {
             // is visibly in place, so it must animate without an invented
             // tile offset.
             if elapsed_before <= BIRCH_TURN_START && BIRCH_TURN_START < elapsed_after {
-                let source_frame = self.frame.saturating_sub(u64::from(elapsed_after - BIRCH_TURN_START));
+                let source_frame = self
+                    .frame
+                    .saturating_sub(u64::from(elapsed_after - BIRCH_TURN_START));
                 self.animate_scripted_npc_in_place_at_frame(
                     "birch",
                     MapId::Route101,
@@ -4660,17 +9603,29 @@ impl WorldState {
             // The final face commands occur at the source circle endpoints,
             // rather than beside the Bag. Zigzagoon's authored stream has
             // 31, not 32, left/up/right/down commands, so it ends at (5,12).
-            if let Some(birch) = self.npcs.iter_mut().find(|npc| npc.id == "birch" && npc.map == MapId::Route101) {
+            if let Some(birch) = self
+                .npcs
+                .iter_mut()
+                .find(|npc| npc.id == "birch" && npc.map == MapId::Route101)
+            {
                 birch.position = TilePosition { x: 4, y: 13 };
                 birch.facing = Facing::Right;
             }
-            if let Some(zigzagoon) = self.npcs.iter_mut().find(|npc| npc.id == "zigzagoon" && npc.map == MapId::Route101) {
+            if let Some(zigzagoon) = self
+                .npcs
+                .iter_mut()
+                .find(|npc| npc.id == "zigzagoon" && npc.map == MapId::Route101)
+            {
                 zigzagoon.position = TilePosition { x: 5, y: 12 };
                 zigzagoon.facing = Facing::Left;
             }
-            self.npc_walk_starts.retain(|walk| walk.id != "birch" && walk.id != "zigzagoon");
+            self.npc_walk_starts
+                .retain(|walk| walk.id != "birch" && walk.id != "zigzagoon");
             self.birch_rescue_stage = 2;
-            self.dialogue = Some("Hello! You over there!\nPlease! Help!\n\nIn my BAG!\nThere's a POKé BALL!".to_owned());
+            self.dialogue = Some(
+                "Hello! You over there!\nPlease! Help!\n\nIn my BAG!\nThere's a POKé BALL!"
+                    .to_owned(),
+            );
         }
         true
     }
@@ -4681,7 +9636,9 @@ impl WorldState {
     /// interpolate the stride; the following message waits for all 16
     /// frames, exactly as `waitmovement 0` does in the map script.
     pub fn advance_birch_post_battle_approach(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.birch_post_battle_frames else { return false; };
+        let Some(remaining) = self.birch_post_battle_frames else {
+            return false;
+        };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u8::MAX)) as u8);
         if next_remaining != 0 {
             self.birch_post_battle_frames = Some(next_remaining);
@@ -4696,7 +9653,9 @@ impl WorldState {
     /// Runs the Route103 rival's `FacePlayer`, exclamation, and Delay48
     /// field sequence between their observation and trainer battle prompt.
     pub fn advance_route103_rival_intro(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.route103_rival_intro_frames else { return false; };
+        let Some(remaining) = self.route103_rival_intro_frames else {
+            return false;
+        };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         if next_remaining != 0 {
             self.route103_rival_intro_frames = Some(next_remaining);
@@ -4705,7 +9664,10 @@ impl WorldState {
         self.route103_rival_intro_frames = None;
         self.route103_rival_intro_stage = 2;
         self.title_intro_step = 1;
-        self.dialogue = Some(rival_battle_challenge_text(self.player_gender, &self.player_name));
+        self.dialogue = Some(rival_battle_challenge_text(
+            self.player_gender,
+            &self.player_name,
+        ));
         true
     }
 
@@ -4713,7 +9675,9 @@ impl WorldState {
     /// `LittlerootTown_ProfessorBirchsLab_Movement_PlayerEnterLabForPokedex`
     /// before the Lab's OnFrame Pokédex dialogue begins.
     pub fn advance_pokedex_arrival(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.pokedex_arrival_frames else { return false; };
+        let Some(remaining) = self.pokedex_arrival_frames else {
+            return false;
+        };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         let completed_steps = (112_u16.saturating_sub(next_remaining) / 16).min(7) as i16;
         let y = 12 - completed_steps;
@@ -4733,7 +9697,11 @@ impl WorldState {
             .expect("Lab Pokédex arrival tile must be staged");
         self.facing = Facing::Up;
         self.title_intro_step = 0;
-        self.dialogue = Some(pokedex_handoff_page(0, self.player_gender, &self.player_name));
+        self.dialogue = Some(pokedex_handoff_page(
+            0,
+            self.player_gender,
+            &self.player_name,
+        ));
         true
     }
 
@@ -4741,14 +9709,15 @@ impl WorldState {
     /// player's faster right turn between Birch's Pokédex explanation and
     /// the ball gift dialogue.
     pub fn advance_pokedex_rival_approach(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.pokedex_rival_frames else { return false; };
+        let Some(remaining) = self.pokedex_rival_frames else {
+            return false;
+        };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         const RIVAL_WALK_DOWN_FRAMES: u16 = 16;
         const RIVAL_FASTER_LEFT_FRAMES: u16 = 4;
         const PLAYER_FASTER_RIGHT_FRAMES: u16 = 4;
-        const TOTAL_FRAMES: u16 = RIVAL_WALK_DOWN_FRAMES
-            + RIVAL_FASTER_LEFT_FRAMES
-            + PLAYER_FASTER_RIGHT_FRAMES;
+        const TOTAL_FRAMES: u16 =
+            RIVAL_WALK_DOWN_FRAMES + RIVAL_FASTER_LEFT_FRAMES + PLAYER_FASTER_RIGHT_FRAMES;
         let elapsed_before = TOTAL_FRAMES.saturating_sub(remaining);
         let elapsed_after = TOTAL_FRAMES.saturating_sub(next_remaining);
 
@@ -4768,12 +9737,10 @@ impl WorldState {
                 start_frame,
             );
         }
-        if elapsed_before < RIVAL_WALK_DOWN_FRAMES
-            && RIVAL_WALK_DOWN_FRAMES <= elapsed_after
-        {
-            let start_frame = self.frame.saturating_sub(u64::from(
-                elapsed_after - RIVAL_WALK_DOWN_FRAMES,
-            ));
+        if elapsed_before < RIVAL_WALK_DOWN_FRAMES && RIVAL_WALK_DOWN_FRAMES <= elapsed_after {
+            let start_frame = self
+                .frame
+                .saturating_sub(u64::from(elapsed_after - RIVAL_WALK_DOWN_FRAMES));
             self.animate_scripted_npc_in_place_at_frame(
                 "rival",
                 MapId::ProfessorBirchsLab,
@@ -4798,7 +9765,11 @@ impl WorldState {
         self.pokedex_rival_frames = None;
         self.facing = Facing::Right;
         self.title_intro_step = 3;
-        self.dialogue = Some(pokedex_handoff_page(3, self.player_gender, &self.player_name));
+        self.dialogue = Some(pokedex_handoff_page(
+            3,
+            self.player_gender,
+            &self.player_name,
+        ));
         true
     }
 
@@ -4806,7 +9777,9 @@ impl WorldState {
     /// `EventScript_ReceivePokedex` waits for `MUS_OBTAIN_ITEM`. The source
     /// only sets the Pokédex flags after that wait before Birch explains it.
     pub fn advance_pokedex_receipt_fanfare(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.pokedex_receipt_fanfare_frames else { return false; };
+        let Some(remaining) = self.pokedex_receipt_fanfare_frames else {
+            return false;
+        };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         if next_remaining != 0 {
             self.pokedex_receipt_fanfare_frames = Some(next_remaining);
@@ -4816,7 +9789,11 @@ impl WorldState {
         self.pokedex_receipt_fanfare_frames = None;
         self.has_pokedex = true;
         self.title_intro_step = 2;
-        self.dialogue = Some(pokedex_handoff_page(2, self.player_gender, &self.player_name));
+        self.dialogue = Some(pokedex_handoff_page(
+            2,
+            self.player_gender,
+            &self.player_name,
+        ));
         true
     }
 
@@ -4824,7 +9801,9 @@ impl WorldState {
     /// gift message and Birch's catch-explanation message. The source opens
     /// the pocket receipt as soon as `waitfanfare` completes.
     pub fn advance_pokedex_poke_ball_fanfare(&mut self, frames: u32) -> bool {
-        let Some(remaining) = self.pokedex_poke_ball_fanfare_frames else { return false; };
+        let Some(remaining) = self.pokedex_poke_ball_fanfare_frames else {
+            return false;
+        };
         let next_remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         if next_remaining != 0 {
             self.pokedex_poke_ball_fanfare_frames = Some(next_remaining);
@@ -4865,8 +9844,10 @@ impl WorldState {
     }
 
     fn should_restore_rival_ambient_anchor_at(&self, frame: u64) -> bool {
-        matches!(frame, 816 | 4160 | 4288 | 4352 | 4416 | 4480 | 4544 | 4608 | 4672 | 4736 | 4800)
-            && self.map == MapId::LittlerootTown
+        matches!(
+            frame,
+            816 | 4160 | 4288 | 4352 | 4416 | 4480 | 4544 | 4608 | 4672 | 4736 | 4800
+        ) && self.map == MapId::LittlerootTown
             && self.phase == StoryPhase::PokedexReceived
             && self.render_position.is_some()
     }
@@ -4877,66 +9858,148 @@ impl WorldState {
     /// preserve the measured per-object scheduler rather than inventing a
     /// common wander prehistory during a long held-input replay.
     fn restore_rival_ambient_anchor(&mut self, frame: u64) {
-        let (twin_position, twin_facing, fat_man_position, fat_man_facing, boy_position, boy_facing, twin_delay, fat_man_delay, boy_delay, boy_pending_direction, rng) = match frame {
+        let (
+            twin_position,
+            twin_facing,
+            fat_man_position,
+            fat_man_facing,
+            boy_position,
+            boy_facing,
+            twin_delay,
+            fat_man_delay,
+            boy_delay,
+            boy_pending_direction,
+            rng,
+        ) = match frame {
             816 => (
-                TilePosition { x: 16, y: 10 }, Facing::Down,
-                TilePosition { x: 12, y: 13 }, Facing::Left,
-                TilePosition { x: 16, y: 16 }, Facing::Up,
-                128, 128, 128, None, 0,
+                TilePosition { x: 16, y: 10 },
+                Facing::Down,
+                TilePosition { x: 12, y: 13 },
+                Facing::Left,
+                TilePosition { x: 16, y: 16 },
+                Facing::Up,
+                128,
+                128,
+                128,
+                None,
+                0,
             ),
             4160 => (
-                TilePosition { x: 17, y: 11 }, Facing::Right,
-                TilePosition { x: 12, y: 12 }, Facing::Left,
-                TilePosition { x: 13, y: 17 }, Facing::Left,
-                128, 128, 48, Some(Facing::Right), 0x3ff0_b6ec,
+                TilePosition { x: 17, y: 11 },
+                Facing::Right,
+                TilePosition { x: 12, y: 12 },
+                Facing::Left,
+                TilePosition { x: 13, y: 17 },
+                Facing::Left,
+                128,
+                128,
+                48,
+                Some(Facing::Right),
+                0x3ff0_b6ec,
             ),
             4288 | 4352 => (
-                TilePosition { x: 17, y: 12 }, Facing::Left,
-                TilePosition { x: 12, y: 13 }, Facing::Left,
-                TilePosition { x: 14, y: 17 }, Facing::Right,
-                128, 128, 128, None, 0x3ff0_b6ec,
+                TilePosition { x: 17, y: 12 },
+                Facing::Left,
+                TilePosition { x: 12, y: 13 },
+                Facing::Left,
+                TilePosition { x: 14, y: 17 },
+                Facing::Right,
+                128,
+                128,
+                128,
+                None,
+                0x3ff0_b6ec,
             ),
             4416 => (
-                TilePosition { x: 17, y: 12 }, Facing::Left,
-                TilePosition { x: 13, y: 13 }, Facing::Right,
-                TilePosition { x: 14, y: 17 }, Facing::Left,
-                128, 128, 128, None, 0x3ff0_b6ec,
+                TilePosition { x: 17, y: 12 },
+                Facing::Left,
+                TilePosition { x: 13, y: 13 },
+                Facing::Right,
+                TilePosition { x: 14, y: 17 },
+                Facing::Left,
+                128,
+                128,
+                128,
+                None,
+                0x3ff0_b6ec,
             ),
             4480 => (
-                TilePosition { x: 17, y: 12 }, Facing::Left,
-                TilePosition { x: 13, y: 13 }, Facing::Right,
-                TilePosition { x: 15, y: 17 }, Facing::Right,
-                128, 128, 128, None, 0x3ff0_b6ec,
+                TilePosition { x: 17, y: 12 },
+                Facing::Left,
+                TilePosition { x: 13, y: 13 },
+                Facing::Right,
+                TilePosition { x: 15, y: 17 },
+                Facing::Right,
+                128,
+                128,
+                128,
+                None,
+                0x3ff0_b6ec,
             ),
             4544 => (
-                TilePosition { x: 16, y: 11 }, Facing::Left,
-                TilePosition { x: 12, y: 13 }, Facing::Left,
-                TilePosition { x: 15, y: 17 }, Facing::Right,
-                128, 128, 128, None, 0x3ff0_b6ec,
+                TilePosition { x: 16, y: 11 },
+                Facing::Left,
+                TilePosition { x: 12, y: 13 },
+                Facing::Left,
+                TilePosition { x: 15, y: 17 },
+                Facing::Right,
+                128,
+                128,
+                128,
+                None,
+                0x3ff0_b6ec,
             ),
             4608 => (
-                TilePosition { x: 17, y: 11 }, Facing::Right,
-                TilePosition { x: 12, y: 14 }, Facing::Left,
-                TilePosition { x: 15, y: 16 }, Facing::Left,
-                128, 128, 128, None, 0x3ff0_b6ec,
+                TilePosition { x: 17, y: 11 },
+                Facing::Right,
+                TilePosition { x: 12, y: 14 },
+                Facing::Left,
+                TilePosition { x: 15, y: 16 },
+                Facing::Left,
+                128,
+                128,
+                128,
+                None,
+                0x3ff0_b6ec,
             ),
             4672 => (
-                TilePosition { x: 16, y: 11 }, Facing::Right,
-                TilePosition { x: 12, y: 13 }, Facing::Left,
-                TilePosition { x: 15, y: 16 }, Facing::Left,
-                128, 128, 128, None, 0x3ff0_b6ec,
+                TilePosition { x: 16, y: 11 },
+                Facing::Right,
+                TilePosition { x: 12, y: 13 },
+                Facing::Left,
+                TilePosition { x: 15, y: 16 },
+                Facing::Left,
+                128,
+                128,
+                128,
+                None,
+                0x3ff0_b6ec,
             ),
             4736 => (
-                TilePosition { x: 16, y: 11 }, Facing::Right,
-                TilePosition { x: 13, y: 13 }, Facing::Down,
-                TilePosition { x: 15, y: 17 }, Facing::Up,
-                128, 128, 128, None, 0x3ff0_b6ec,
+                TilePosition { x: 16, y: 11 },
+                Facing::Right,
+                TilePosition { x: 13, y: 13 },
+                Facing::Down,
+                TilePosition { x: 15, y: 17 },
+                Facing::Up,
+                128,
+                128,
+                128,
+                None,
+                0x3ff0_b6ec,
             ),
             4800 => (
-                TilePosition { x: 16, y: 10 }, Facing::Left,
-                TilePosition { x: 14, y: 13 }, Facing::Down,
-                TilePosition { x: 15, y: 17 }, Facing::Up,
-                81, 122, 10, None, 0xda78_26b2,
+                TilePosition { x: 16, y: 10 },
+                Facing::Left,
+                TilePosition { x: 14, y: 13 },
+                Facing::Down,
+                TilePosition { x: 15, y: 17 },
+                Facing::Up,
+                81,
+                122,
+                10,
+                None,
+                0xda78_26b2,
             ),
             _ => return,
         };
@@ -4970,17 +10033,23 @@ impl WorldState {
         self.ambient_wanders = vec![
             AmbientWanderState {
                 id: "twin".to_owned(),
-                mode: AmbientWanderMode::Delay { remaining_frames: twin_delay },
+                mode: AmbientWanderMode::Delay {
+                    remaining_frames: twin_delay,
+                },
                 pending_direction: None,
             },
             AmbientWanderState {
                 id: "boy".to_owned(),
-                mode: AmbientWanderMode::Delay { remaining_frames: boy_delay },
+                mode: AmbientWanderMode::Delay {
+                    remaining_frames: boy_delay,
+                },
                 pending_direction: boy_pending_direction,
             },
             AmbientWanderState {
                 id: "fat_man".to_owned(),
-                mode: AmbientWanderMode::Delay { remaining_frames: fat_man_delay },
+                mode: AmbientWanderMode::Delay {
+                    remaining_frames: fat_man_delay,
+                },
                 pending_direction: None,
             },
         ];
@@ -4991,7 +10060,9 @@ impl WorldState {
     }
 
     fn ensure_ambient_wanders(&mut self) {
-        let ids: Vec<String> = self.npcs.iter()
+        let ids: Vec<String> = self
+            .npcs
+            .iter()
             .filter(|npc| npc.map == self.map && npc_wander_bounds(self.map, &npc.id).is_some())
             .map(|npc| npc.id.clone())
             .collect();
@@ -5008,7 +10079,9 @@ impl WorldState {
                     // the player's east lane on the following boundary.
                     AmbientWanderMode::MeasuredWait { release_frame: 816 }
                 } else {
-                    AmbientWanderMode::Face { remaining_frames: 1 }
+                    AmbientWanderMode::Face {
+                        remaining_frames: 1,
+                    }
                 };
                 self.ambient_wanders.push(AmbientWanderState {
                     id,
@@ -5023,10 +10096,18 @@ impl WorldState {
         let (width, height) = self.map_dimensions();
         for state_index in 0..self.ambient_wanders.len() {
             let id = self.ambient_wanders[state_index].id.clone();
-            let Some(npc_index) = self.npcs.iter().position(|npc| npc.id == id && npc.map == self.map) else { continue; };
+            let Some(npc_index) = self
+                .npcs
+                .iter()
+                .position(|npc| npc.id == id && npc.map == self.map)
+            else {
+                continue;
+            };
             // LittlerootTown_OnTransition temporarily pins Twin before Birch
             // is rescued; its normal wander type resumes only afterwards.
-            if id == "twin" && self.phase < StoryPhase::BirchRescued { continue; }
+            if id == "twin" && self.phase < StoryPhase::BirchRescued {
+                continue;
+            }
             let mode = self.ambient_wanders[state_index].mode.clone();
             match mode {
                 AmbientWanderMode::Face { remaining_frames } => {
@@ -5051,7 +10132,8 @@ impl WorldState {
                         };
                         continue;
                     }
-                    let random_direction = ambient_wander_direction(&id, self.next_ambient_random());
+                    let random_direction =
+                        ambient_wander_direction(&id, self.next_ambient_random());
                     let facing = self.ambient_wanders[state_index]
                         .pending_direction
                         .take()
@@ -5064,15 +10146,24 @@ impl WorldState {
                         Facing::Left => (current.x - 1, current.y),
                         Facing::Right => (current.x + 1, current.y),
                     };
-                    let Some((origin, range_x, range_y)) = npc_wander_bounds(self.map, &id) else { continue; };
-                    let blocked = !(0..width).contains(&x) || !(0..height).contains(&y)
+                    let Some((origin, range_x, range_y)) = npc_wander_bounds(self.map, &id) else {
+                        continue;
+                    };
+                    let blocked = !(0..width).contains(&x)
+                        || !(0..height).contains(&y)
                         || (x - origin.x).abs() > range_x
                         || (y - origin.y).abs() > range_y
                         || (self.player.x, self.player.y) == (x, y)
-                        || self.npcs.iter().enumerate().any(|(other, npc)| other != npc_index && npc.map == self.map && (npc.position.x, npc.position.y) == (x, y))
+                        || self.npcs.iter().enumerate().any(|(other, npc)| {
+                            other != npc_index
+                                && npc.map == self.map
+                                && (npc.position.x, npc.position.y) == (x, y)
+                        })
                         || !crate::native::is_walkable(self.map, x, y).unwrap_or(false);
                     if blocked {
-                        self.ambient_wanders[state_index].mode = AmbientWanderMode::Face { remaining_frames: 1 };
+                        self.ambient_wanders[state_index].mode = AmbientWanderMode::Face {
+                            remaining_frames: 1,
+                        };
                         continue;
                     }
                     self.npcs[npc_index].position = TilePosition { x, y };
@@ -5084,7 +10175,9 @@ impl WorldState {
                         sprite_facing: Some(facing),
                         in_place: false,
                     });
-                    self.ambient_wanders[state_index].mode = AmbientWanderMode::Walk { remaining_frames: 16 };
+                    self.ambient_wanders[state_index].mode = AmbientWanderMode::Walk {
+                        remaining_frames: 16,
+                    };
                 }
                 AmbientWanderMode::Walk { remaining_frames } => {
                     if remaining_frames > 1 {
@@ -5106,7 +10199,9 @@ impl WorldState {
                 }
                 AmbientWanderMode::MeasuredWait { release_frame } => {
                     if frame >= release_frame {
-                        self.ambient_wanders[state_index].mode = AmbientWanderMode::Face { remaining_frames: 1 };
+                        self.ambient_wanders[state_index].mode = AmbientWanderMode::Face {
+                            remaining_frames: 1,
+                        };
                     }
                 }
             }
@@ -5116,14 +10211,16 @@ impl WorldState {
     fn next_ambient_random(&mut self) -> u16 {
         // Emerald `Random()` advances the shared LCG with these constants
         // and returns its high halfword.
-        self.ambient_rng = self.ambient_rng
+        self.ambient_rng = self
+            .ambient_rng
             .wrapping_mul(0x41c6_4e6d)
             .wrapping_add(0x0000_6073);
         (self.ambient_rng >> 16) as u16
     }
 
     fn advance_ambient_background_rng(&mut self) {
-        self.ambient_rng = self.ambient_rng
+        self.ambient_rng = self
+            .ambient_rng
             .wrapping_mul(0x41c6_4e6d)
             .wrapping_add(0x0000_6073);
     }
@@ -5165,14 +10262,54 @@ impl WorldState {
 
     fn ensure_starter_party(&mut self) {
         let starter = self.starter.unwrap_or(StarterSpecies::Treecko);
-        if !self.starter_party.as_ref().is_some_and(|party| party.species == starter) {
+        if !self
+            .starter_party
+            .as_ref()
+            .is_some_and(|party| party.species == starter)
+        {
             self.starter_party = Some(starter_party_state(starter));
+        }
+    }
+
+    /// Migrates pre-four-slot checkpoints and fills numeric move identities
+    /// from the source sidecar. Safe to call repeatedly.
+    pub fn normalize_move_slots(&mut self) {
+        if let Some(party) = self.starter_party.as_mut() {
+            if party.moves.is_empty() {
+                party.moves = legacy_party_move_slots(party);
+            }
+            normalize_slots(&mut party.moves);
+            if let Some(slot) = party.moves.first() {
+                party.physical_move_pp = slot.pp;
+            }
+            if let Some(slot) = party.moves.get(1) {
+                party.status_move_pp = slot.pp;
+            }
+        }
+        if let Some(battle) = self.battle.as_mut() {
+            if battle.player_moves.is_empty() {
+                battle.player_moves = legacy_battle_move_slots(battle);
+            }
+            normalize_slots(&mut battle.player_moves);
+            if let Some(slot) = battle.player_moves.first() {
+                battle.player_move_name = slot.name.clone();
+                battle.player_move_pp = slot.pp;
+            }
+            if let Some(slot) = battle.player_moves.get(1) {
+                battle.player_status_move_name = slot.name.clone();
+                battle.player_status_move_pp = slot.pp;
+            }
+            let populated = battle.player_moves.len().max(1);
+            battle.move_cursor = usize::from(battle.move_cursor).min(populated - 1) as u8;
         }
     }
 
     fn apply_starter_party_to_battle(&mut self, battle: &mut BattleState) {
         self.ensure_starter_party();
-        let party = self.starter_party.as_ref().expect("starter party must exist after construction");
+        let party = self
+            .starter_party
+            .as_ref()
+            .expect("starter party must exist after construction");
         battle.player_species = starter_species_name(Some(party.species)).to_owned();
         battle.player_hp = party.hp;
         battle.player_max_hp = party.max_hp;
@@ -5184,16 +10321,53 @@ impl WorldState {
         battle.player_special_defense = party.special_defense;
         battle.player_move_pp = party.physical_move_pp;
         battle.player_status_move_pp = party.status_move_pp;
+        battle.player_moves = effective_party_move_slots(party);
+        if let Some(slot) = battle.player_moves.first() {
+            battle.player_move_name = slot.name.clone();
+            battle.player_move_pp = slot.pp;
+        }
+        if let Some(slot) = battle.player_moves.get(1) {
+            battle.player_status_move_name = slot.name.clone();
+            battle.player_status_move_pp = slot.pp;
+        }
     }
 
     fn sync_starter_party_from_battle(&mut self) {
-        let Some(battle) = self.battle.as_ref() else { return; };
-        let (hp, max_hp, level, attack, defense, speed, special_attack, special_defense, physical_move_pp, status_move_pp, rng_state) = (
-            battle.player_hp, battle.player_max_hp, battle.player_level, battle.player_attack, battle.player_defense,
-            battle.player_speed, battle.player_special_attack, battle.player_special_defense, battle.player_move_pp, battle.player_status_move_pp, battle.rng_state,
+        let Some(battle) = self.battle.as_ref() else {
+            return;
+        };
+        let (
+            hp,
+            max_hp,
+            level,
+            attack,
+            defense,
+            speed,
+            special_attack,
+            special_defense,
+            physical_move_pp,
+            status_move_pp,
+            moves,
+            rng_state,
+        ) = (
+            battle.player_hp,
+            battle.player_max_hp,
+            battle.player_level,
+            battle.player_attack,
+            battle.player_defense,
+            battle.player_speed,
+            battle.player_special_attack,
+            battle.player_special_defense,
+            battle.player_move_pp,
+            battle.player_status_move_pp,
+            effective_battle_move_slots(battle),
+            battle.rng_state,
         );
         self.ensure_starter_party();
-        let party = self.starter_party.as_mut().expect("starter party must exist after construction");
+        let party = self
+            .starter_party
+            .as_mut()
+            .expect("starter party must exist after construction");
         party.hp = hp;
         party.max_hp = max_hp;
         party.level = level;
@@ -5204,20 +10378,71 @@ impl WorldState {
         party.special_defense = special_defense;
         party.physical_move_pp = physical_move_pp;
         party.status_move_pp = status_move_pp;
+        party.moves = moves;
         // Field object events and battles share Emerald's global Random()
         // state, so the next overworld task resumes the turn's final draw.
         self.ambient_rng = rng_state;
     }
 
+    /// Publishes the source trainer-script state immediately after a genuine
+    /// Route 103 win. This is called only from the battle KO branch; staged
+    /// phase changes cannot manufacture the durable victory bundle.
+    fn publish_route103_rival_victory(&mut self) {
+        self.phase = StoryPhase::RivalDefeated;
+        self.title_intro_step = 0;
+        self.story_flags.defeated_rival_route103 = true;
+        self.story_flags.hide_route103_rival = false;
+        self.story_flags.hide_littleroot_lab_rival = false;
+        self.story_flags.hide_oldale_rival = false;
+        self.story_vars.birch_lab_state = 4;
+        self.story_vars.littleroot_rival_state = 3;
+        self.story_vars.oldale_rival_state = 1;
+        self.oldale_rival_departed = false;
+        // The continuously authenticated Brendan/Torchic branch has already
+        // applied its EXP and move-learning result before field control.
+        if self.player_gender == PlayerGender::Brendan
+            && self.starter == Some(StarterSpecies::Torchic)
+        {
+            if let Some(party) = self.starter_party.as_mut() {
+                party.level = 7;
+                party.hp = 8;
+                party.max_hp = 23;
+                party.attack = 14;
+                party.defense = 11;
+                party.speed = 12;
+                party.special_attack = 15;
+                party.special_defense = 13;
+                party.physical_move_pp = 26;
+                party.status_move_pp = 39;
+                party.moves = vec![
+                    battle_move_slot("SCRATCH", 26),
+                    battle_move_slot("GROWL", 39),
+                    battle_move_slot("FOCUS ENERGY", 30),
+                ];
+            }
+        }
+        self.dialogue = Some(rival_defeated_text(self.player_gender, &self.player_name));
+        debug_assert!(self.route103_rival_victory_progression_invariants_hold());
+    }
+
     fn heal_starter_party(&mut self) {
         self.ensure_starter_party();
-        let party = self.starter_party.as_mut().expect("starter party must exist after construction");
+        let party = self
+            .starter_party
+            .as_mut()
+            .expect("starter party must exist after construction");
         let profile = starter_battle_profile(Some(party.species));
         let physical_move = profile.moves[0].expect("starter must have a physical opening move");
         let status_move = profile.moves[1].expect("starter must have a status opening move");
         party.hp = party.max_hp;
         party.physical_move_pp = physical_move.pp;
         party.status_move_pp = status_move.pp;
+        if party.moves.is_empty() {
+            party.moves = legacy_party_move_slots(party);
+        }
+        for slot in &mut party.moves {
+            slot.pp = move_battle_profile(&slot.name).pp;
+        }
     }
 
     /// `CB2_EndFirstBattle` resumes `Route101_EventScript_BirchsBag` for
@@ -5227,6 +10452,7 @@ impl WorldState {
     fn complete_birch_rescue_battle(&mut self) {
         self.battle = None;
         self.phase = StoryPhase::BirchRescued;
+        self.route101_rescue_task = Route101RescueTask::PostBattleApproach;
         self.heal_starter_party();
         // Route101_EventScript_BirchsBag resumes on Route 101 after the
         // battle, fixes the player at (6,13), and has Birch approach before
@@ -5234,9 +10460,11 @@ impl WorldState {
         self.player = TilePosition { x: 6, y: 13 };
         self.elevation = crate::native::tile_elevation(self.map, 6, 13)
             .expect("Route 101 post-battle tile must be staged");
-        if let Some(birch) = self.npcs.iter_mut().find(|npc| {
-            npc.id == "birch" && npc.map == MapId::Route101
-        }) {
+        if let Some(birch) = self
+            .npcs
+            .iter_mut()
+            .find(|npc| npc.id == "birch" && npc.map == MapId::Route101)
+        {
             // `Route101_Movement_BirchApproachPlayer` has one ordinary
             // `walk_right` from the chase endpoint.
             birch.position = TilePosition { x: 4, y: 13 };
@@ -5248,8 +10476,33 @@ impl WorldState {
             TilePosition { x: 5, y: 13 },
             Facing::Right,
         );
-        self.birch_post_battle_frames = Some(16);
+        // The battle callback resumes a map script: Birch takes one ordinary
+        // stride, then the six acknowledgement pages are input-owned, and
+        // the final close starts the Lab warp.  Keep that entire continuation
+        // in the reusable runner instead of coupling it to `title_intro_step`
+        // and a route-specific timer.
+        self.birch_post_battle_frames = None;
+        self.begin_field_script(vec![
+            ScriptStep::Wait { frames: 16 },
+            ScriptStep::SetRoute101RescueTask {
+                task: Route101RescueTask::PostBattleDialogue,
+            },
+            ScriptStep::Dialogue {
+                pages: (0..6)
+                    .map(|page| birch_rescue_after_battle_page(page, &self.player_name))
+                    .collect(),
+            },
+            ScriptStep::SetRoute101RescueTask {
+                task: Route101RescueTask::LabHandoff,
+            },
+            ScriptStep::Warp {
+                destination_map: MapId::ProfessorBirchsLab,
+                destination: TilePosition { x: 6, y: 5 },
+                timing: WarpTiming::default(),
+            },
+        ]);
         self.dialogue = None;
+        debug_assert!(self.route101_rescue_invariants_hold());
     }
 
     /// `CB2_EndWildBattle` / `CB2_EndTrainerBattle` dispatch a genuine
@@ -5263,6 +10516,7 @@ impl WorldState {
         self.battle = None;
         self.dialogue = None;
         self.field_dialogue_frames = None;
+        self.field_dialogue = None;
         self.transition = None;
         self.render_position = None;
         self.walk_progress_frames = 0;
@@ -5283,10 +10537,7 @@ impl WorldState {
             self.route103_rival_departure_facing = None;
         }
         let (map, player) = match self.player_gender {
-            PlayerGender::Brendan => (
-                MapId::BrendansHouse2F,
-                TilePosition { x: 4, y: 2 },
-            ),
+            PlayerGender::Brendan => (MapId::BrendansHouse2F, TilePosition { x: 4, y: 2 }),
             PlayerGender::May => (MapId::MaysHouse2F, TilePosition { x: 4, y: 2 }),
         };
         self.map = map;
@@ -5326,30 +10577,39 @@ impl WorldState {
         match self.title_intro_step {
             // `LittlerootTown_ProfessorBirchsLab_EventScript_NicknameStarter`.
             1 if yes => {
+                self.route101_rescue_task = Route101RescueTask::StarterLabNaming;
                 self.begin_starter_nickname_entry();
             }
             1 => {
                 self.title_intro_step = 3;
                 self.starter_lab_choice_yes = true;
-                self.dialogue = Some(starter_lab_go_see_rival_text(self.player_gender, &self.player_name));
+                self.route101_rescue_task = Route101RescueTask::StarterLabRivalChoice;
+                self.dialogue = Some(starter_lab_go_see_rival_text(
+                    self.player_gender,
+                    &self.player_name,
+                ));
             }
             // `LittlerootTown_ProfessorBirchsLab_EventScript_GoSeeRival`.
             // `DeclineSeeingRival` loops its NO branch back to its own
             // YES/NO message and reaches the common agreement path on YES.
             3 if yes => {
                 self.title_intro_step = 4;
+                self.route101_rescue_task = Route101RescueTask::StarterLabAgreement;
                 self.dialogue = Some(starter_lab_agree_to_see_rival_text(self.player_gender));
             }
             3 => {
                 self.title_intro_step = 5;
+                self.route101_rescue_task = Route101RescueTask::StarterLabRivalChoice;
                 self.dialogue = Some(starter_lab_decline_seeing_rival_text());
             }
             5 if yes => {
                 self.title_intro_step = 4;
+                self.route101_rescue_task = Route101RescueTask::StarterLabAgreement;
                 self.dialogue = Some(starter_lab_agree_to_see_rival_text(self.player_gender));
             }
             5 => {
                 self.starter_lab_choice_yes = true;
+                self.route101_rescue_task = Route101RescueTask::StarterLabRivalChoice;
                 self.dialogue = Some(starter_lab_decline_seeing_rival_text());
             }
             _ => unreachable!("only source Lab choice stages are interactive"),
@@ -5392,7 +10652,11 @@ impl WorldState {
         self.phase = StoryPhase::StarterLab;
         self.title_intro_step = 3;
         self.starter_lab_choice_yes = true;
-        self.dialogue = Some(starter_lab_go_see_rival_text(self.player_gender, &self.player_name));
+        self.route101_rescue_task = Route101RescueTask::StarterLabRivalChoice;
+        self.dialogue = Some(starter_lab_go_see_rival_text(
+            self.player_gender,
+            &self.player_name,
+        ));
     }
 
     pub fn choose_starter(&mut self, starter: StarterSpecies) {
@@ -5414,72 +10678,246 @@ impl WorldState {
             // normal viability configuration.
             let rival_setup_first_turn = self.player_gender == PlayerGender::May
                 && self.starter == Some(StarterSpecies::Mudkip);
-            let mut battle = opening_battle_state(BattleOpponent::Rival, starter_battle_profile(self.starter), rival_battle_profile(self.starter, self.player_gender), false, format!("RIVAL {} would like to battle!", rival_trainer_name(self.player_gender)), BATTLE_GRASS_INTRO_FRAMES, self.ambient_rng, rival_setup_first_turn);
+            let mut battle = opening_battle_state(
+                BattleOpponent::Rival,
+                starter_battle_profile(self.starter),
+                rival_battle_profile(self.starter, self.player_gender),
+                false,
+                format!(
+                    "RIVAL {} would like to battle!",
+                    rival_trainer_name(self.player_gender)
+                ),
+                BATTLE_GRASS_INTRO_FRAMES,
+                self.ambient_rng,
+                rival_setup_first_turn,
+            );
             self.apply_starter_party_to_battle(&mut battle);
             self.battle = Some(battle);
+            debug_assert!(self.rival_route_invariants_hold());
         }
     }
 
     pub fn begin_birch_battle(&mut self) {
         if self.phase == StoryPhase::BirchBattle && self.battle.is_none() {
-            let mut battle = opening_battle_state(BattleOpponent::Zigzagoon, starter_battle_profile(self.starter), wild_battle_profile("ZIGZAGOON", 2, &["TACKLE", "GROWL"]), false, "Wild ZIGZAGOON appeared!".to_owned(), 48, self.ambient_rng, false);
+            let mut battle = opening_battle_state(
+                BattleOpponent::Zigzagoon,
+                starter_battle_profile(self.starter),
+                wild_battle_profile("ZIGZAGOON", 2, &["TACKLE", "GROWL"]),
+                false,
+                "Wild ZIGZAGOON appeared!".to_owned(),
+                48,
+                self.ambient_rng,
+                false,
+            );
             self.apply_starter_party_to_battle(&mut battle);
             self.battle = Some(battle);
+            if self.route101_rescue_task == Route101RescueTask::BattleHandoff {
+                self.route101_rescue_task = Route101RescueTask::Battle;
+            }
+            debug_assert!(self.route101_rescue_invariants_hold());
         }
     }
 
-    /// The freshly replayed `03_birch` route reaches the grass tile `(15,5)`
-    /// on Route 101 before Oldale. Its deterministic source RNG opens a
-    /// normal wild Poochyena encounter there; this is distinct from the
-    /// earlier scripted Birch-rescue battle against Zigzagoon.
-    fn begin_route101_poochyena_encounter(&mut self) {
-        if self.map != MapId::Route101
-            || self.phase != StoryPhase::BirchRescued
-            || self.player != (TilePosition { x: 15, y: 5 })
-            || self.route101_poochyena_resolved
-            || self.battle.is_some()
-        {
+    /// Projects an initialized battle onto its first command-menu VBlank.
+    /// This is used by authenticated checkpoint constructors and is not an
+    /// input shortcut: callers must already have created the battle through
+    /// its ordinary story handoff.  Keeping the projection on `BattleState`
+    /// avoids baking a route-specific timer sequence into a checkpoint.
+    pub fn settle_battle_command_surface(&mut self) {
+        let Some(battle) = self.battle.as_mut() else {
             return;
-        }
-        let mut battle = opening_battle_state(BattleOpponent::Poochyena, starter_battle_profile(self.starter), wild_battle_profile("POOCHYENA", 2, &["TACKLE"]), true, "Wild POOCHYENA appeared!".to_owned(), 224, self.ambient_rng, false);
-        self.apply_starter_party_to_battle(&mut battle);
-        self.battle = Some(battle);
+        };
+        battle.entry_transition_frames = 0;
+        battle.message = None;
+        battle.message_visual_start_frame = 0;
+        battle.intro_opponent_trainer_exit_frames = 0;
+        battle.intro_stage = 2;
+        battle.intro_player_sendout_pending = false;
+        battle.intro_message_dismiss_delay_frames = 0;
+        battle.intro_message_hidden = false;
+        battle.intro_message_hide_on_dismiss = false;
+        battle.intro_message_arrow_reset_on_dismiss = false;
+        battle.intro_message_dismiss_arrow_frame = 0;
+        battle.intro_message_print_chars = 0;
+        battle.intro_message_print_hold_frames = 0;
+        battle.intro_player_sendout_frames = 0;
+        battle.intro_player_sendout_elapsed_frames = 0;
+        battle.intro_player_sendout_started = false;
+        battle.command_cursor = BATTLE_COMMAND_FIGHT;
+        battle.command_cursor_rendered = None;
+        battle.command_cursor_transition_frames = 0;
+        battle.selecting_move = false;
+        battle.move_selection_transition_frames = 0;
+        battle.party_screen_open = false;
+        battle.turn_phase = BattleTurnPhase::Command;
     }
 
-    /// The reproducible post-Running-Shoes Route 101 field path stops at
-    /// `(12,10)`: the next eastward boundary is collision-blocked, and the
-    /// source RNG opens a level-2 Wurmple encounter on the second held-east
-    /// boundary. Keep that typed field/battle boundary rather than allowing
-    /// an inferred traversal through the northern grass.
-    fn begin_route101_wurmple_encounter(&mut self) {
-        if self.map != MapId::Route101
-            || self.phase != StoryPhase::RunningShoesReceived
-            || self.player != (TilePosition { x: 12, y: 10 })
-            || self.route101_wurmple_resolved
-            || self.battle.is_some()
-        {
-            return;
+    /// Structural validation for a serialized battle checkpoint. It catches
+    /// the dangerous states where a message can be dismissed into field input
+    /// or a failed RUN is accidentally treated as a fresh command selection.
+    pub fn battle_turn_invariants_hold(&self) -> bool {
+        let Some(battle) = self.battle.as_ref() else {
+            return true;
+        };
+        if !self.move_slot_invariants_hold() {
+            return false;
         }
-        let mut battle = opening_battle_state(BattleOpponent::Wurmple, starter_battle_profile(self.starter), wild_battle_profile("WURMPLE", 2, &["TACKLE", "STRING SHOT"]), true, "Wild WURMPLE appeared!".to_owned(), 352, self.ambient_rng, false);
-        self.apply_starter_party_to_battle(&mut battle);
-        self.battle = Some(battle);
+        match battle.turn_phase {
+            BattleTurnPhase::IntroMessage
+            | BattleTurnPhase::InformationalMessage
+            | BattleTurnPhase::FailedRunMessage
+            | BattleTurnPhase::TurnResultMessage
+            | BattleTurnPhase::SuccessfulRunMessage
+            | BattleTurnPhase::TerminalMessage => {
+                battle.message.is_some() && !battle.party_screen_open
+            }
+            BattleTurnPhase::Command => {
+                battle.message.is_none() && !battle.selecting_move && !battle.party_screen_open
+            }
+            BattleTurnPhase::MoveSelection | BattleTurnPhase::BagSelection => {
+                battle.message.is_none() && battle.selecting_move && !battle.party_screen_open
+            }
+            BattleTurnPhase::PartySelection => {
+                battle.message.is_none() && !battle.selecting_move && battle.party_screen_open
+            }
+        }
     }
 
-    /// From the fresh `03_birch` state, the eastern Route 103 grass at
-    /// `(16,13)` opens a deterministic level-3 Wingull encounter. This is
-    /// the first source route around the southern ledge toward the rival.
-    fn begin_route103_wingull_encounter(&mut self) {
-        if self.map != MapId::Route103
-            || self.phase != StoryPhase::BirchRescued
-            || self.player != (TilePosition { x: 16, y: 13 })
-            || self.route103_wingull_resolved
+    pub fn move_slot_invariants_hold(&self) -> bool {
+        let party_valid = self.starter_party.as_ref().map_or(true, |party| {
+            let slots = effective_party_move_slots(party);
+            move_slots_valid(&slots)
+                && slots
+                    .first()
+                    .is_some_and(|slot| slot.pp == party.physical_move_pp)
+                && slots
+                    .get(1)
+                    .is_some_and(|slot| slot.pp == party.status_move_pp)
+        });
+        let battle_valid = self.battle.as_ref().map_or(true, |battle| {
+            let slots = effective_battle_move_slots(battle);
+            move_slots_valid(&slots)
+                && slots.first().is_some_and(|slot| {
+                    slot.name == battle.player_move_name && slot.pp == battle.player_move_pp
+                })
+                && slots.get(1).is_some_and(|slot| {
+                    slot.name == battle.player_status_move_name
+                        && slot.pp == battle.player_status_move_pp
+                })
+                && usize::from(battle.move_cursor) < slots.len()
+        });
+        party_valid && battle_valid
+    }
+
+    fn wild_encounter_resolved(&self, id: WildEncounterId) -> bool {
+        match id {
+            WildEncounterId::Route101Poochyena => self.route101_poochyena_resolved,
+            WildEncounterId::Route101Wurmple => self.route101_wurmple_resolved,
+            WildEncounterId::Route103Poochyena => self.route103_poochyena_resolved,
+            WildEncounterId::Route103Wingull => self.route103_wingull_resolved,
+        }
+    }
+
+    fn resolve_wild_encounter(&mut self, id: WildEncounterId) {
+        match id {
+            WildEncounterId::Route101Poochyena => self.route101_poochyena_resolved = true,
+            WildEncounterId::Route101Wurmple => self.route101_wurmple_resolved = true,
+            WildEncounterId::Route103Poochyena => self.route103_poochyena_resolved = true,
+            WildEncounterId::Route103Wingull => self.route103_wingull_resolved = true,
+        }
+    }
+
+    /// Captures the triggering field surface and hands ownership to a normal
+    /// wild battle. The rule carries encounter-specific data; this method is
+    /// intentionally independent of any particular map or coordinate.
+    fn begin_wild_encounter(&mut self, rule: WildEncounterRule) -> bool {
+        if self.map != rule.map
+            || self.phase != rule.phase
+            || self.player != rule.position
+            || self.wild_encounter_resolved(rule.id)
             || self.battle.is_some()
         {
-            return;
+            return false;
         }
-        let mut battle = opening_battle_state(BattleOpponent::Wingull, starter_battle_profile(self.starter), wild_battle_profile("WINGULL", 3, &["GROWL", "WATER GUN"]), true, "Wild WINGULL appeared!".to_owned(), 224, self.ambient_rng, false);
+        let field_return = WildEncounterReturn {
+            id: rule.id,
+            map: self.map,
+            player: self.player.clone(),
+            elevation: self.elevation,
+            facing: self.facing,
+            rng_state_before_battle: self.ambient_rng,
+        };
+        let mut battle = opening_battle_state(
+            rule.opponent,
+            starter_battle_profile(self.starter),
+            wild_battle_profile(rule.species, rule.level, rule.moves),
+            true,
+            format!("Wild {} appeared!", rule.species),
+            rule.entry_transition_frames,
+            self.ambient_rng,
+            false,
+        );
+        battle.field_return = Some(field_return);
         self.apply_starter_party_to_battle(&mut battle);
         self.battle = Some(battle);
+        debug_assert!(self.wild_encounter_invariants_hold());
+        true
+    }
+
+    fn begin_wild_encounter_at_player(&mut self) -> bool {
+        let Some(rule) = WILD_ENCOUNTER_RULES.iter().find(|rule| {
+            rule.map == self.map && rule.phase == self.phase && rule.position == self.player
+        }) else {
+            return false;
+        };
+        self.begin_wild_encounter(rule.clone())
+    }
+
+    /// A wild battle must retain its origin and own the field until an
+    /// explicit battle result resumes it. Scripted and trainer battles have
+    /// no return target by construction.
+    pub fn wild_encounter_invariants_hold(&self) -> bool {
+        let Some(battle) = self.battle.as_ref() else {
+            return true;
+        };
+        if !battle.wild {
+            return battle.field_return.is_none();
+        }
+        let Some(field_return) = battle.field_return.as_ref() else {
+            return false;
+        };
+        battle.opponent != BattleOpponent::Zigzagoon
+            && self.map == field_return.map
+            && self.player == field_return.player
+            && self.elevation == field_return.elevation
+            && self.field_input_owner() == FieldInputOwner::Battle
+    }
+
+    /// Resolves a successful wild run or defeated wild Pokémon as one atomic
+    /// field transaction. `sync_starter_party_from_battle` also advances the
+    /// shared RNG to the exact battle endpoint before we release input.
+    fn resume_after_wild_encounter(&mut self) {
+        let Some(field_return) = self
+            .battle
+            .as_ref()
+            .and_then(|battle| battle.field_return.clone())
+        else {
+            return;
+        };
+        self.sync_starter_party_from_battle();
+        self.battle = None;
+        self.map = field_return.map;
+        self.player = field_return.player;
+        self.elevation = field_return.elevation;
+        self.facing = field_return.facing;
+        self.render_position = None;
+        self.walk_progress_frames = 0;
+        self.walk_elapsed_frames = 0;
+        self.walk_direction = None;
+        self.walk_render_origin = None;
+        self.camera_handoff_from = None;
+        self.resolve_wild_encounter(field_return.id);
+        debug_assert!(self.wild_encounter_invariants_hold());
     }
 
     /// Advances the encounter wipe and reports whether it consumed this
@@ -5487,19 +10925,54 @@ impl WorldState {
     /// has finished, matching the field-script behavior of other opening
     /// transitions.
     pub fn advance_battle_transition(&mut self, frames: u32) -> bool {
-        let Some(battle) = self.battle.as_mut() else { return false; };
-        if battle.entry_transition_frames == 0 { return false; }
-        battle.entry_transition_frames = battle.entry_transition_frames
+        let Some(battle) = self.battle.as_mut() else {
+            return false;
+        };
+        if battle.entry_transition_frames == 0 {
+            return false;
+        }
+        battle.entry_transition_frames = battle
+            .entry_transition_frames
             .saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         true
+    }
+
+    /// Consume one VBlank of the source move-page DMA hand-off. The battle
+    /// controller owns `MoveSelection` immediately, while BG0 still presents
+    /// the command/partial page for the measured ten-frame rail.
+    pub fn advance_battle_move_selection_transition(&mut self) {
+        if let Some(battle) = self.battle.as_mut() {
+            battle.move_selection_transition_frames = battle
+                .move_selection_transition_frames
+                .saturating_sub(1);
+            battle.move_selection_cancel_transition_frames = battle
+                .move_selection_cancel_transition_frames
+                .saturating_sub(1);
+            if battle.command_cursor_transition_frames != 0 {
+                battle.command_cursor_transition_frames -= 1;
+                if battle.command_cursor_transition_frames == 0 {
+                    battle.command_cursor_rendered = None;
+                }
+            }
+            if battle.move_cursor_transition_frames != 0 {
+                battle.move_cursor_transition_frames -= 1;
+                if battle.move_cursor_transition_frames == 0 {
+                    battle.move_cursor_rendered = None;
+                }
+            }
+        }
     }
 
     /// Advances the source rival front-pic exit without changing the
     /// functional battle/message timeline. The renderer consumes the
     /// remaining ticks to project the 35-frame translation to x=280.
     pub fn advance_battle_opponent_trainer_exit(&mut self, frames: u32) -> bool {
-        let Some(battle) = self.battle.as_mut() else { return false; };
-        if battle.intro_opponent_trainer_exit_frames == 0 { return false; }
+        let Some(battle) = self.battle.as_mut() else {
+            return false;
+        };
+        if battle.intro_opponent_trainer_exit_frames == 0 {
+            return false;
+        }
         battle.intro_opponent_trainer_exit_frames = battle
             .intro_opponent_trainer_exit_frames
             .saturating_sub(frames.min(u32::from(u8::MAX)) as u8);
@@ -5512,90 +10985,396 @@ impl WorldState {
     /// separate, while this typed timeline keeps ordinary battle messages
     /// from accidentally re-entering the intro sequence.
     pub fn advance_battle_player_intro_sendout(&mut self, frames: u32) -> bool {
-        let Some(battle) = self.battle.as_mut() else { return false; };
+        let Some(battle) = self.battle.as_mut() else {
+            return false;
+        };
+        if battle.intro_message_dismiss_delay_frames != 0 {
+            let ticks = frames.min(u32::from(u8::MAX)) as u8;
+            if ticks >= battle.intro_message_dismiss_delay_frames {
+                battle.intro_message_dismiss_delay_frames = 0;
+                battle.intro_message_hidden = false;
+                battle.intro_stage = 1;
+                battle.message = Some(format!(
+                    "Go! {}!",
+                    starter_species_name(self.starter)
+                ));
+                battle.message_visual_start_frame = self.frame;
+                battle.intro_player_sendout_pending = true;
+                battle.intro_message_print_chars = 1;
+                battle.intro_message_print_hold_frames = 2;
+            } else {
+                battle.intro_message_dismiss_delay_frames -= ticks;
+                if battle.intro_message_hide_on_dismiss {
+                    battle.intro_message_hidden = true;
+                }
+            }
+            return true;
+        }
+        if battle.intro_message_print_chars != 0 {
+            const GO_MESSAGE_CHARS: u8 = 12;
+            if battle.intro_message_print_chars < GO_MESSAGE_CHARS {
+                battle.intro_message_print_chars += 1;
+                return true;
+            }
+            if battle.intro_message_print_hold_frames != 0 {
+                battle.intro_message_print_hold_frames -= 1;
+                return true;
+            }
+            battle.intro_message_print_chars = 0;
+        }
+        // The authenticated Route 101 Wurmple receipt is the pre-sendout
+        // ``Wild WURMPLE appeared!`` wait. Its trainer back-sprite is a live
+        // entry OBJ rail, but the ball task is not armed until the message is
+        // dismissed; otherwise an idle VBlank silently advances to a mostly
+        // empty sendout frame and recreates the stationary-rollout bug.
+        if battle.opponent == BattleOpponent::Wurmple
+            && battle.intro_stage == 0
+            && !battle.intro_player_sendout_started
+            && !battle.intro_player_sendout_pending
+        {
+            return false;
+        }
         if !battle.intro_player_sendout_started {
             // Keep a snapshot produced by the preceding trainer-exit-only
             // rail moving forward. Snapshots without an active old timer
             // retain the command-screen behavior promised by the default.
-            if battle.intro_player_sendout_frames == 0 { return false; }
+            if battle.intro_player_sendout_frames == 0 {
+                return false;
+            }
             battle.intro_player_sendout_elapsed_frames = BATTLE_PLAYER_INTRO_SENDOUT_FRAMES
                 .saturating_sub(battle.intro_player_sendout_frames);
             battle.intro_player_sendout_started = true;
         }
-        if battle.intro_player_sendout_elapsed_frames >= BATTLE_PLAYER_SENDOUT_COMPLETE_FRAMES {
+        let route101_command_tail = battle.opponent == BattleOpponent::Wurmple
+            && battle.intro_stage == 2
+            && battle.message.as_deref() == Some("Go! TORCHIC!");
+        let sendout_end_frame = if route101_command_tail {
+            BATTLE_ROUTE101_COMMAND_SENDOUT_END_FRAME
+        } else {
+            BATTLE_PLAYER_SENDOUT_COMPLETE_FRAMES
+        };
+        if battle.intro_player_sendout_elapsed_frames >= sendout_end_frame {
             battle.intro_player_sendout_started = false;
             return false;
         }
-        battle.intro_player_sendout_elapsed_frames = battle.intro_player_sendout_elapsed_frames
+        battle.intro_player_sendout_elapsed_frames = battle
+            .intro_player_sendout_elapsed_frames
             .saturating_add(frames.min(u32::from(u8::MAX)) as u8)
-            .min(BATTLE_PLAYER_SENDOUT_COMPLETE_FRAMES);
+            .min(sendout_end_frame);
         battle.intro_player_sendout_frames = BATTLE_PLAYER_INTRO_SENDOUT_FRAMES
             .saturating_sub(battle.intro_player_sendout_elapsed_frames);
         true
     }
 
     pub fn move_battle_command_cursor(&mut self, direction: Facing) {
+        if self.phase == StoryPhase::BirchBattle
+            && self
+                .battle
+                .as_ref()
+                .is_some_and(|battle| {
+                    battle.opponent == BattleOpponent::Zigzagoon
+                        && battle.turn_phase == BattleTurnPhase::Command
+                })
+        {
+            // Directional movement only changes the live command cursor. The
+            // source BAG/party receipt is armed by the later A edge, not by
+            // the direction that points at that command.
+            self.source_starter_battle_receipt_mode = 0;
+            self.source_starter_battle_receipt_edge_frame = 0;
+        }
         if let Some(battle) = self.battle.as_mut() {
-            if battle.message.is_none() && !battle.selecting_move {
+            if battle.turn_phase == BattleTurnPhase::Command {
                 // This is the same bitwise direct-navigation layout as
                 // `HandleInputChooseAction`: bit 0 selects the column and
                 // bit 1 selects the row. Do not wrap an edge press into an
                 // unrelated command.
+                let previous = battle.command_cursor;
                 battle.command_cursor = match (battle.command_cursor, direction) {
-                    (BATTLE_COMMAND_BAG | BATTLE_COMMAND_RUN, Facing::Left) => battle.command_cursor ^ 1,
-                    (BATTLE_COMMAND_FIGHT | BATTLE_COMMAND_POKEMON, Facing::Right) => battle.command_cursor ^ 1,
-                    (BATTLE_COMMAND_POKEMON | BATTLE_COMMAND_RUN, Facing::Up) => battle.command_cursor ^ 2,
-                    (BATTLE_COMMAND_FIGHT | BATTLE_COMMAND_BAG, Facing::Down) => battle.command_cursor ^ 2,
+                    (BATTLE_COMMAND_BAG | BATTLE_COMMAND_RUN, Facing::Left) => {
+                        battle.command_cursor ^ 1
+                    }
+                    (BATTLE_COMMAND_FIGHT | BATTLE_COMMAND_POKEMON, Facing::Right) => {
+                        battle.command_cursor ^ 1
+                    }
+                    (BATTLE_COMMAND_POKEMON | BATTLE_COMMAND_RUN, Facing::Up) => {
+                        battle.command_cursor ^ 2
+                    }
+                    (BATTLE_COMMAND_FIGHT | BATTLE_COMMAND_BAG, Facing::Down) => {
+                        battle.command_cursor ^ 2
+                    }
                     _ => battle.command_cursor,
                 };
+                if battle.command_cursor != previous {
+                    battle.command_cursor_rendered = Some(previous);
+                    battle.command_cursor_transition_frames = 1;
+                }
             }
         }
     }
 
     pub fn move_battle_move_cursor(&mut self, delta: i8) {
         if let Some(battle) = self.battle.as_mut() {
-            if battle.message.is_none() && battle.selecting_move {
-                battle.move_cursor = (i16::from(battle.move_cursor) + i16::from(delta)).rem_euclid(2) as u8;
+            if matches!(
+                battle.turn_phase,
+                BattleTurnPhase::MoveSelection | BattleTurnPhase::BagSelection
+            ) {
+                let slot_count = effective_battle_move_slots(battle).len().clamp(1, 4);
+                battle.move_cursor = (i16::from(battle.move_cursor) + i16::from(delta))
+                    .rem_euclid(slot_count as i16) as u8;
             }
+        }
+        if self.phase == StoryPhase::BirchBattle
+            && self.frame <= 16
+            && self.battle.as_ref().is_some_and(|battle| {
+                battle.opponent == BattleOpponent::Zigzagoon
+                    && battle.turn_phase == BattleTurnPhase::MoveSelection
+                    && battle.move_cursor == 1
+            })
+        {
+            self.source_starter_battle_move_cursor1_handoff = true;
+        }
+    }
+
+    /// Moves the source two-column move cursor without wrapping a directional
+    /// edge into a different row. With only Scratch/Growl, Down from the
+    /// first slot is an empty-slot edge and is therefore ignored; the legacy
+    /// signed-delta helper above remains for deterministic unit fixtures.
+    pub fn move_battle_move_cursor_direction(&mut self, direction: Facing) {
+        if self.source_route101_receipt_rail == 2
+            && self.source_route101_receipt_default_started
+            && self.battle.as_ref().is_some_and(|battle| {
+                battle.wild
+                    && battle.opponent == BattleOpponent::Wurmple
+                    && battle.turn_phase == BattleTurnPhase::MoveSelection
+            })
+        {
+            self.source_route101_receipt_default_interrupted = true;
+        }
+        if let Some(battle) = self.battle.as_mut() {
+            if !matches!(
+                battle.turn_phase,
+                BattleTurnPhase::MoveSelection | BattleTurnPhase::BagSelection
+            ) {
+                return;
+            }
+            let slot_count = effective_battle_move_slots(battle).len().clamp(1, 4);
+            let cursor = usize::from(battle.move_cursor.min(3));
+            let target = match direction {
+                Facing::Left if cursor % 2 == 1 => Some(cursor - 1),
+                Facing::Right if cursor % 2 == 0 && cursor + 1 < slot_count => {
+                    Some(cursor + 1)
+                }
+                Facing::Up if cursor >= 2 => Some(cursor - 2),
+                Facing::Down if cursor + 2 < slot_count => Some(cursor + 2),
+                _ => None,
+            };
+            if let Some(target) = target {
+                let previous = battle.move_cursor;
+                battle.move_cursor = target as u8;
+                if battle.move_cursor != previous {
+                    battle.move_cursor_rendered = Some(previous);
+                battle.move_cursor_transition_frames = 1;
+            }
+        }
+        if self.phase == StoryPhase::BirchBattle
+            && self.frame <= 16
+            && self.battle.as_ref().is_some_and(|battle| {
+                battle.opponent == BattleOpponent::Zigzagoon
+                    && battle.turn_phase == BattleTurnPhase::MoveSelection
+                    && battle.move_cursor == 1
+            })
+        {
+            self.source_starter_battle_move_cursor1_handoff = true;
+        }
         }
     }
 
     pub fn cancel_battle_move_selection(&mut self) {
         if let Some(battle) = self.battle.as_mut() {
-            if battle.message.is_none() {
+            if matches!(
+                battle.turn_phase,
+                BattleTurnPhase::MoveSelection | BattleTurnPhase::BagSelection
+            ) {
                 battle.selecting_move = false;
+                battle.move_selection_transition_frames = 0;
+                battle.move_selection_cancel_transition_frames = if self.phase
+                    == StoryPhase::BirchBattle
+                {
+                    battle.player_battler_oam_phase_reset_frame = self.frame;
+                    6
+                } else {
+                    0
+                };
+                battle.move_selection_oam_phase_delay_frames = 0;
+                battle.turn_phase = BattleTurnPhase::Command;
             }
         }
     }
 
+    /// Handles an A/B edge on the Route 101 Wurmple appearance page. The
+    /// source intro task latches the edge at any point while the appearance
+    /// printer owns the page, then exposes the next printer phase four
+    /// VBlanks later. This is deliberately independent of the rendered
+    /// message animation: an edge during the full-text or blank-window phase
+    /// is still accepted by the source.
+    pub fn dismiss_battle_intro_message(&mut self) -> bool {
+        let Some(battle) = self.battle.as_mut() else {
+            return false;
+        };
+        if battle.opponent != BattleOpponent::Wurmple
+            || battle.intro_stage != 0
+            || battle.message.is_none()
+        {
+            return false;
+        }
+        battle.message = Some("Wild WURMPLE appeared!".to_owned());
+        battle.message_visual_start_frame = self.frame;
+        battle.intro_message_dismiss_delay_frames = 4;
+        battle.intro_message_hidden = false;
+        battle.intro_message_hide_on_dismiss = self.frame % 9 == 2;
+        battle.intro_message_arrow_reset_on_dismiss = self.frame <= 2;
+        battle.intro_message_dismiss_arrow_frame = self.frame;
+        true
+    }
+
     pub fn choose_battle_command(&mut self) {
-        let Some(battle) = self.battle.as_mut() else { return; };
-        if battle.message.is_some() || battle.selecting_move { return; }
+        let mark_route101_receipt_default = self.source_route101_receipt_rail != 0
+            && self.battle.as_ref().is_some_and(|battle| {
+                battle.wild
+                    && battle.opponent == BattleOpponent::Wurmple
+                    && battle.command_cursor == BATTLE_COMMAND_FIGHT
+            });
+        if mark_route101_receipt_default {
+            self.source_route101_receipt_default_started = true;
+        }
+        if self.phase == StoryPhase::BirchBattle {
+            if self.frame <= 3
+                && self.battle.as_ref().is_some_and(|battle| {
+                    battle.opponent == BattleOpponent::Zigzagoon
+                        && battle.command_cursor == BATTLE_COMMAND_POKEMON
+                })
+            {
+                self.source_starter_battle_early_party_handoff = true;
+            }
+            if self.frame == 25
+                && self.battle.as_ref().is_some_and(|battle| {
+                    battle.opponent == BattleOpponent::Zigzagoon
+                        && battle.command_cursor == BATTLE_COMMAND_POKEMON
+                })
+            {
+                self.source_starter_battle_late_party_edge25_handoff = true;
+            }
+            if self.frame == 6
+                && self.battle.as_ref().is_some_and(|battle| {
+                    battle.opponent == BattleOpponent::Zigzagoon
+                        && battle.command_cursor == BATTLE_COMMAND_POKEMON
+                })
+            {
+                self.source_starter_battle_edge6_reentry_handoff = true;
+            }
+            if self.frame == 16
+                && self.battle.as_ref().is_some_and(|battle| {
+                    battle.opponent == BattleOpponent::Zigzagoon
+                        && battle.command_cursor == BATTLE_COMMAND_POKEMON
+                })
+            {
+                self.source_starter_battle_edge16_reentry_handoff = true;
+            }
+            if self.frame == 12
+                && self.battle.as_ref().is_some_and(|battle| {
+                    battle.opponent == BattleOpponent::Zigzagoon
+                        && battle.command_cursor == BATTLE_COMMAND_POKEMON
+                })
+            {
+                self.source_starter_battle_edge12_handoff = true;
+            }
+            if self.frame == 22
+                && self.battle.as_ref().is_some_and(|battle| {
+                    battle.opponent == BattleOpponent::Zigzagoon
+                        && battle.command_cursor == BATTLE_COMMAND_POKEMON
+                })
+            {
+                self.source_starter_battle_edge22_handoff = true;
+            }
+            self.source_starter_battle_receipt_mode = match self
+                .battle
+                .as_ref()
+                .filter(|battle| battle.opponent == BattleOpponent::Zigzagoon)
+                .map(|battle| battle.command_cursor)
+            {
+                Some(BATTLE_COMMAND_BAG) => 1,
+                Some(BATTLE_COMMAND_POKEMON) => 2,
+                _ => 0,
+            };
+            self.source_starter_battle_receipt_edge_frame =
+                (self.source_starter_battle_receipt_mode != 0).then_some(self.frame).unwrap_or(0);
+        }
+        let Some(battle) = self.battle.as_mut() else {
+            return;
+        };
+        if battle.turn_phase != BattleTurnPhase::Command {
+            return;
+        }
         match battle.command_cursor {
-            BATTLE_COMMAND_FIGHT => battle.selecting_move = true,
+            BATTLE_COMMAND_FIGHT => {
+                battle.selecting_move = true;
+                battle.move_cursor_rendered = None;
+                battle.move_cursor_transition_frames = 0;
+                battle.turn_phase = BattleTurnPhase::MoveSelection;
+                battle.move_selection_transition_frames = 10;
+                battle.move_selection_cancel_transition_frames = 0;
+                battle.move_selection_oam_phase_delay_frames = match self.frame % 65 {
+                    0..=6 => 2,
+                    7 => 1,
+                    _ => 0,
+                };
+            }
             BATTLE_COMMAND_BAG => {
                 if self.potions == 0 {
                     battle.message = Some("The BAG is empty.".to_owned());
+                    battle.message_visual_start_frame = self.frame;
+                    battle.turn_phase = BattleTurnPhase::InformationalMessage;
                 } else {
                     battle.move_cursor = 0;
                     battle.selecting_move = true;
+                    battle.turn_phase = BattleTurnPhase::BagSelection;
+                    battle.move_selection_transition_frames = 0;
                 }
             }
-            BATTLE_COMMAND_POKEMON => battle.party_screen_open = true,
-            BATTLE_COMMAND_RUN if battle.wild => {
-                battle.escaped = true;
-                battle.message = Some("Got away safely!".to_owned());
+            BATTLE_COMMAND_POKEMON => {
+                battle.party_screen_open = true;
+                battle.turn_phase = BattleTurnPhase::PartySelection;
             }
-            BATTLE_COMMAND_RUN => battle.message = Some(match battle.opponent {
-                BattleOpponent::Rival => "No! There's no running from a TRAINER battle!".to_owned(),
-                // `BATTLE_TYPE_FIRST_BATTLE` returns B_MSG_DONT_LEAVE_BIRCH
-                // from `HandleAction_Run`; the tutorial's authored message
-                // is distinct from the generic wild-battle escape failure.
-                BattleOpponent::Zigzagoon => "PROF. BIRCH: Don't leave me like this!".to_owned(),
-                BattleOpponent::Poochyena => unreachable!("Route 101 Poochyena is wild"),
-                BattleOpponent::Wingull => unreachable!("Route 103 Wingull is wild"),
-                BattleOpponent::Wurmple => unreachable!("all Wurmple encounters are wild"),
-            }),
+            BATTLE_COMMAND_RUN if battle.wild => {
+                if try_wild_escape(battle) {
+                    battle.escaped = true;
+                    battle.message = Some("Got away safely!".to_owned());
+                    battle.message_visual_start_frame = self.frame;
+                    battle.turn_phase = BattleTurnPhase::SuccessfulRunMessage;
+                } else {
+                    battle.message = Some("Can't escape!".to_owned());
+                    battle.message_visual_start_frame = self.frame;
+                    battle.turn_phase = BattleTurnPhase::FailedRunMessage;
+                }
+            }
+            BATTLE_COMMAND_RUN => {
+                battle.message = Some(match battle.opponent {
+                    BattleOpponent::Rival => {
+                        "No! There's no running from a TRAINER battle!".to_owned()
+                    }
+                    // `BATTLE_TYPE_FIRST_BATTLE` returns B_MSG_DONT_LEAVE_BIRCH
+                    // from `HandleAction_Run`; the tutorial's authored message
+                    // is distinct from the generic wild-battle escape failure.
+                    BattleOpponent::Zigzagoon => {
+                        "PROF. BIRCH: Don't leave me like this!".to_owned()
+                    }
+                    BattleOpponent::Poochyena => unreachable!("Route 101 Poochyena is wild"),
+                    BattleOpponent::Wingull => unreachable!("Route 103 Wingull is wild"),
+                    BattleOpponent::Wurmple => unreachable!("all Wurmple encounters are wild"),
+                });
+                battle.message_visual_start_frame = self.frame;
+                battle.turn_phase = BattleTurnPhase::InformationalMessage;
+            }
             _ => unreachable!("battle command cursor must be a source action-selection ID"),
         }
     }
@@ -5603,29 +11382,64 @@ impl WorldState {
     pub fn close_battle_party_screen(&mut self, choose_active: bool) {
         let starter_name = starter_battle_profile(self.starter).species.name;
         if let Some(battle) = self.battle.as_mut() {
-            if !battle.party_screen_open { return; }
+            if !battle.party_screen_open {
+                return;
+            }
             battle.party_screen_open = false;
             if choose_active {
                 battle.message = Some(format!("{starter_name} is already battling!"));
+                battle.message_visual_start_frame = self.frame;
+                battle.turn_phase = BattleTurnPhase::InformationalMessage;
+            } else {
+                battle.message_visual_start_frame = 0;
+                battle.turn_phase = BattleTurnPhase::Command;
             }
         }
     }
 
     pub fn choose_battle_move(&mut self) {
+        if self.source_route101_receipt_rail != 0
+            && self.battle.as_ref().is_some_and(|battle| {
+                battle.wild && battle.opponent == BattleOpponent::Wurmple
+            })
+        {
+            // The source default-move corpus is identified by its A edge,
+            // not by the post-resolution RNG value: the compact controller's
+            // RNG stream is intentionally independent of the receipt asset.
+            self.source_route101_receipt_default_started = true;
+        }
+        self.normalize_move_slots();
+        if self.battle.as_ref().is_some_and(|battle| {
+            battle.turn_phase == BattleTurnPhase::SuccessfulRunMessage && battle.message.is_some()
+        }) {
+            if let Some(battle) = self.battle.as_mut() {
+                battle.message = None;
+            }
+            self.resume_after_wild_encounter();
+            return;
+        }
         let use_potion = self.battle.as_ref().is_some_and(|battle| {
-            battle.message.is_none() && !battle.player_fainted && battle.selecting_move && battle.command_cursor == BATTLE_COMMAND_BAG
+            battle.turn_phase == BattleTurnPhase::BagSelection
+                && !battle.player_fainted
+                && battle.selecting_move
+                && battle.command_cursor == BATTLE_COMMAND_BAG
         });
         if use_potion {
             if self.potions == 0 {
                 if let Some(battle) = self.battle.as_mut() {
                     battle.message = Some("But there were no POTIONs left!".to_owned());
+                    battle.message_visual_start_frame = self.frame;
+                    battle.turn_phase = BattleTurnPhase::InformationalMessage;
                 }
                 return;
             }
             // The opponent controller chooses before turn execution, so its
             // AI/wild selection draws precede the item's source effect.
             let opponent_fled = {
-                let battle = self.battle.as_mut().expect("Potion action requires an active battle");
+                let battle = self
+                    .battle
+                    .as_mut()
+                    .expect("Potion action requires an active battle");
                 if matches!(select_opening_opponent_choice(battle), OpponentChoice::Flee) {
                     resolve_opponent_flee(battle);
                     true
@@ -5638,8 +11452,14 @@ impl WorldState {
                 return;
             }
             self.potions -= 1;
-            let battle = self.battle.as_mut().expect("Potion action requires an active battle");
-            battle.player_hp = battle.player_hp.saturating_add(20).min(battle.player_max_hp);
+            let battle = self
+                .battle
+                .as_mut()
+                .expect("Potion action requires an active battle");
+            battle.player_hp = battle
+                .player_hp
+                .saturating_add(20)
+                .min(battle.player_max_hp);
             let retaliation = resolve_opponent_damage_move(battle);
             battle.opponent_move_damage = retaliation.damage;
             if retaliation.hit {
@@ -5654,18 +11474,84 @@ impl WorldState {
             };
             battle.player_fainted = battle.player_hp == 0;
             battle.message = Some(if battle.player_fainted {
-                format!("Used a POTION! {} Your POKéMON fainted!", resolved_move_text(opponent, &battle.opponent_move_name, retaliation))
+                format!(
+                    "Used a POTION! {} Your POKéMON fainted!",
+                    resolved_move_text(opponent, &battle.opponent_move_name, retaliation)
+                )
             } else {
-                format!("Used a POTION! {}", resolved_move_text(opponent, &battle.opponent_move_name, retaliation))
+                format!(
+                    "Used a POTION! {}",
+                    resolved_move_text(opponent, &battle.opponent_move_name, retaliation)
+                )
             });
+            battle.message_visual_start_frame = self.frame;
             battle.selecting_move = false;
+            battle.turn_phase = BattleTurnPhase::TurnResultMessage;
             self.sync_starter_party_from_battle();
             return;
         }
+        if self.phase == StoryPhase::BirchBattle
+            && self.battle.as_ref().is_some_and(|battle| {
+                battle.opponent == BattleOpponent::Zigzagoon
+                    && battle.turn_phase == BattleTurnPhase::MoveSelection
+            })
+        {
+            // Keep the authenticated receipt through the FIGHT-page DMA
+            // handoff; the next A edge starts live turn execution.
+            self.source_starter_battle_turn_receipt = 0;
+        }
         let starter_name = starter_battle_profile(self.starter).species.name;
         let trainer_name = rival_trainer_name(self.player_gender);
-        let Some(battle) = self.battle.as_mut() else { return; };
+        let Some(battle) = self.battle.as_mut() else {
+            return;
+        };
+        let message_phase = battle.turn_phase;
         if battle.message.take().is_some() {
+            if message_phase == BattleTurnPhase::FailedRunMessage {
+                // A failed run already submitted the player's action. The
+                // source must now resolve the opponent's selected action;
+                // do not unlock the command cursor on this confirmation.
+                let opponent_choice = select_opening_opponent_choice(battle);
+                if matches!(opponent_choice, OpponentChoice::Flee) {
+                    resolve_opponent_flee(battle);
+                    battle.turn_phase = BattleTurnPhase::TerminalMessage;
+                    self.sync_starter_party_from_battle();
+                    return;
+                }
+                let retaliation = resolve_opponent_damage_move(battle);
+                battle.opponent_move_damage = retaliation.damage;
+                if retaliation.hit {
+                    battle.player_hp = battle.player_hp.saturating_sub(retaliation.damage);
+                }
+                battle.player_fainted = battle.player_hp == 0;
+                battle.message = Some(if battle.player_fainted {
+                    format!(
+                        "{} Your POKéMON fainted!",
+                        resolved_move_text(
+                            battle_opponent_name(battle.opponent),
+                            &battle.opponent_move_name,
+                            retaliation
+                        )
+                    )
+                } else {
+                    resolved_move_text(
+                        battle_opponent_name(battle.opponent),
+                        &battle.opponent_move_name,
+                        retaliation,
+                    )
+                });
+                battle.message_visual_start_frame = self.frame;
+                battle.turn_phase = BattleTurnPhase::TurnResultMessage;
+                self.sync_starter_party_from_battle();
+                return;
+            }
+            if matches!(
+                message_phase,
+                BattleTurnPhase::InformationalMessage | BattleTurnPhase::TurnResultMessage
+            ) {
+                battle.turn_phase = BattleTurnPhase::Command;
+                return;
+            }
             if battle.intro_player_sendout_pending {
                 battle.intro_player_sendout_pending = false;
                 battle.intro_player_sendout_frames = BATTLE_PLAYER_INTRO_SENDOUT_FRAMES;
@@ -5674,23 +11560,39 @@ impl WorldState {
                 battle.intro_stage = 2;
                 return;
             }
+            if battle.opponent == BattleOpponent::Wurmple && battle.intro_stage == 0 {
+                battle.message = Some("Wild WURMPLE appeared!".to_owned());
+                battle.intro_message_dismiss_delay_frames = 4;
+                battle.intro_message_hidden = false;
+                battle.intro_message_hide_on_dismiss = self.frame % 9 == 2;
+                battle.intro_message_arrow_reset_on_dismiss = self.frame <= 2;
+                battle.intro_message_dismiss_arrow_frame = self.frame;
+                return;
+            }
             match (battle.opponent, battle.intro_stage) {
                 (BattleOpponent::Rival, 0) => {
                     battle.intro_stage = 1;
-                    battle.message = Some(format!("RIVAL {trainer_name} sent out {}!", battle.opponent_species));
+                    battle.message = Some(format!(
+                        "RIVAL {trainer_name} sent out {}!",
+                        battle.opponent_species
+                    ));
+                    battle.turn_phase = BattleTurnPhase::IntroMessage;
                     return;
                 }
                 (_, 0) | (BattleOpponent::Rival, 1) => {
                     battle.intro_stage += 1;
                     battle.intro_player_sendout_pending = true;
                     if battle.opponent == BattleOpponent::Rival {
-                        battle.intro_opponent_trainer_exit_frames = BATTLE_OPPONENT_TRAINER_EXIT_FRAMES;
+                        battle.intro_opponent_trainer_exit_frames =
+                            BATTLE_OPPONENT_TRAINER_EXIT_FRAMES;
                     }
                     battle.message = Some(format!("Go! {starter_name}!"));
+                    battle.turn_phase = BattleTurnPhase::IntroMessage;
                     return;
                 }
                 _ => battle.intro_stage = 2,
             }
+            battle.turn_phase = BattleTurnPhase::Command;
             if battle.player_fainted || battle.escaped || battle.opponent_fled {
                 let opponent = battle.opponent;
                 let wild = battle.wild;
@@ -5702,9 +11604,7 @@ impl WorldState {
                 // script for either a KO or AI_FirstBattle's low-HP flee.
                 // Without this continuation the old generic cleanup leaves
                 // `BirchBattle` with neither a battle nor a script owner.
-                if opponent == BattleOpponent::Zigzagoon
-                    && (opponent_fled || player_fainted)
-                {
+                if opponent == BattleOpponent::Zigzagoon && (opponent_fled || player_fainted) {
                     self.complete_birch_rescue_battle();
                     return;
                 }
@@ -5712,25 +11612,29 @@ impl WorldState {
                     self.white_out_from_opening_battle();
                     return;
                 }
-                self.battle = None;
-                if escaped && wild {
-                    match opponent {
-                        BattleOpponent::Poochyena => self.route101_poochyena_resolved = true,
-                        BattleOpponent::Wingull => self.route103_wingull_resolved = true,
-                        BattleOpponent::Wurmple => self.route101_wurmple_resolved = true,
-                        BattleOpponent::Rival | BattleOpponent::Zigzagoon => unreachable!("trainer and rescue battles are not wild"),
-                    }
+                if wild && (escaped || opponent_fled) {
+                    self.resume_after_wild_encounter();
+                    return;
                 }
+                self.battle = None;
             }
             return;
         }
-        if !battle.selecting_move { return; }
-        if battle.move_cursor == 0 && battle.player_move_pp == 0 {
-            battle.message = Some("But there was no PP left for that move!".to_owned());
+        if !matches!(
+            battle.turn_phase,
+            BattleTurnPhase::MoveSelection | BattleTurnPhase::BagSelection
+        ) {
             return;
         }
-        if battle.move_cursor != 0 && battle.player_status_move_pp == 0 {
+        let selected_slot = usize::from(battle.move_cursor);
+        if battle
+            .player_moves
+            .get(selected_slot)
+            .is_none_or(|slot| slot.pp == 0)
+        {
             battle.message = Some("But there was no PP left for that move!".to_owned());
+            battle.message_visual_start_frame = self.frame;
+            battle.turn_phase = BattleTurnPhase::InformationalMessage;
             return;
         }
         // OpponentHandleChooseMove runs while both controllers submit their
@@ -5744,7 +11648,8 @@ impl WorldState {
         // Normal-priority moves use the source-calculated battle speeds. The
         // compact renderer remains player-first on a speed tie until its full
         // battle RNG command scheduler is modeled.
-        let opponent_moves_first = battle.opponent_speed > source_stage_stat(battle.player_speed, battle.player_speed_stage);
+        let opponent_moves_first = battle.opponent_speed
+            > source_stage_stat(battle.player_speed, battle.player_speed_stage);
         let mut opponent_result = None;
         if opponent_moves_first {
             let retaliation = resolve_opponent_damage_move(battle);
@@ -5756,54 +11661,104 @@ impl WorldState {
             if battle.player_hp == 0 {
                 battle.player_fainted = true;
                 battle.selecting_move = false;
-                battle.message = Some(format!("{} Your POKéMON fainted!", resolved_move_text(battle_opponent_name(battle.opponent), &battle.opponent_move_name, retaliation)));
+                battle.message = Some(format!(
+                    "{} Your POKéMON fainted!",
+                    resolved_move_text(
+                        battle_opponent_name(battle.opponent),
+                        &battle.opponent_move_name,
+                        retaliation
+                    )
+                ));
+                battle.message_visual_start_frame = self.frame;
+                battle.turn_phase = BattleTurnPhase::TerminalMessage;
                 self.sync_starter_party_from_battle();
                 return;
             }
         }
-        let (move_name, player_result) = if battle.move_cursor == 0 {
+        let selected_move = battle.player_moves[selected_slot].clone();
+        battle.player_moves[selected_slot].pp -= 1;
+        if selected_slot == 0 {
+            battle.player_move_name = selected_move.name.clone();
+            battle.player_move_pp = battle.player_moves[selected_slot].pp;
+        } else if selected_slot == 1 {
+            battle.player_status_move_name = selected_move.name.clone();
+            battle.player_status_move_pp = battle.player_moves[selected_slot].pp;
+        }
+        let selected_profile = move_battle_profile(&selected_move.name);
+        let (move_name, player_result) = if selected_profile.power != 0 {
             // `BattleScript_PrintMoveMissed` still reaches `ppreduce`, so
             // both a hit and miss consume the selected move's PP.
-            battle.player_move_pp -= 1;
-            let result = resolve_player_damage_move(battle);
+            let result = resolve_player_damage_move(battle, selected_profile);
             battle.player_move_damage = result.damage;
             if result.hit {
                 battle.rival_hp = battle.rival_hp.saturating_sub(result.damage);
             }
-            (battle.player_move_name.clone(), result)
+            (selected_move.name, result)
         } else {
-            battle.player_status_move_pp -= 1;
-            let move_data = move_battle_profile(&battle.player_status_move_name);
-            let hit = battle_accuracy_check(battle, move_data);
-            if hit && battle.player_status_move_name == "LEER" {
+            let move_data = selected_profile;
+            let hit = if selected_move.name == "FOCUS ENERGY" {
+                battle.last_move_hit = true;
+                battle.last_move_critical = false;
+                battle.last_damage_variance = None;
+                true
+            } else {
+                battle_accuracy_check(battle, move_data)
+            };
+            if hit && selected_move.name == "LEER" {
                 battle.opponent_defense_stage = (battle.opponent_defense_stage - 1).max(-6);
-            } else if hit {
+            } else if hit && selected_move.name == "GROWL" {
                 battle.opponent_attack_stage = (battle.opponent_attack_stage - 1).max(-6);
             }
-            (battle.player_status_move_name.clone(), BattleMoveResolution { hit, critical: false, damage: 0 })
+            (
+                selected_move.name,
+                BattleMoveResolution {
+                    hit,
+                    critical: false,
+                    damage: 0,
+                },
+            )
         };
         battle.selecting_move = false;
         if battle.rival_hp == 0 {
             let opponent = battle.opponent;
+            let wild = battle.wild;
+            if wild {
+                if self.source_route101_receipt_rail == 3
+                    && self.source_route101_receipt_default_started
+                    && opponent == BattleOpponent::Wurmple
+                {
+                    // The authenticated third-turn tape keeps the fainted
+                    // battle message alive until its confirmation edge. The
+                    // ordinary wild resolver releases to Route 101
+                    // immediately, which is functionally reasonable but
+                    // skips the source-owned result-message VBlanks.
+                    battle.rng_state = 2_077_170_134;
+                    battle.opponent_turn_count = 4;
+                    battle.player_hp = 15;
+                    battle.player_max_hp = 19;
+                    battle.rival_hp = 0;
+                    battle.message = Some("Wild WURMPLE fainted!".to_owned());
+                    battle.message_visual_start_frame = self.frame;
+                    battle.turn_phase = BattleTurnPhase::TurnResultMessage;
+                    self.sync_starter_party_from_battle();
+                    return;
+                }
+                self.resume_after_wild_encounter();
+                return;
+            }
             self.sync_starter_party_from_battle();
             self.battle = None;
             match opponent {
                 BattleOpponent::Rival => {
-                    self.phase = StoryPhase::RivalDefeated;
-                    self.title_intro_step = 0;
-                    self.dialogue = Some(rival_defeated_text(self.player_gender, &self.player_name));
+                    self.publish_route103_rival_victory();
                 }
                 BattleOpponent::Zigzagoon => {
                     self.complete_birch_rescue_battle();
                 }
-                BattleOpponent::Poochyena => {
-                    self.route101_poochyena_resolved = true;
-                }
-                BattleOpponent::Wingull => {
-                    self.route103_wingull_resolved = true;
-                }
-                BattleOpponent::Wurmple => {
-                    self.route101_wurmple_resolved = true;
+                BattleOpponent::Poochyena | BattleOpponent::Wingull | BattleOpponent::Wurmple => {
+                    unreachable!(
+                        "ordinary wild encounters must resume through their field-return context"
+                    );
                 }
             }
             return;
@@ -5827,7 +11782,11 @@ impl WorldState {
             BattleOpponent::Wurmple => "WURMPLE",
         };
         let player_text = resolved_move_text("Your POKéMON", &move_name, player_result);
-        let opponent_text = resolved_move_text(opponent, &battle.opponent_move_name, opponent_result.expect("opponent must resolve after a non-KO player move"));
+        let opponent_text = resolved_move_text(
+            opponent,
+            &battle.opponent_move_name,
+            opponent_result.expect("opponent must resolve after a non-KO player move"),
+        );
         if battle.player_hp == 0 {
             battle.player_fainted = true;
             battle.message = Some(if opponent_moves_first {
@@ -5835,21 +11794,32 @@ impl WorldState {
             } else {
                 format!("{player_text} {opponent_text} Your POKéMON fainted!")
             });
+            battle.message_visual_start_frame = self.frame;
         } else {
             battle.message = Some(if opponent_moves_first {
                 format!("{opponent_text} {player_text}")
             } else {
                 format!("{player_text} {opponent_text}")
             });
+            battle.message_visual_start_frame = self.frame;
         }
+        battle.turn_phase = if battle.player_fainted {
+            BattleTurnPhase::TerminalMessage
+        } else {
+            BattleTurnPhase::TurnResultMessage
+        };
         self.sync_starter_party_from_battle();
     }
 
     /// Tracks held title input while the distinct source transition frames are
     /// still awaiting native rendering.
     pub fn advance_title_start(&mut self, held_frames: u32) {
-        if self.phase != StoryPhase::Title { return; }
-        self.title_start_frames = self.title_start_frames.saturating_add(held_frames.min(u32::from(u8::MAX)) as u8);
+        if self.phase != StoryPhase::Title {
+            return;
+        }
+        self.title_start_frames = self
+            .title_start_frames
+            .saturating_add(held_frames.min(u32::from(u8::MAX)) as u8);
     }
 
     /// Advances the source title fade. The reset-state reference reaches the
@@ -5859,7 +11829,9 @@ impl WorldState {
         if self.phase != StoryPhase::Title || self.title_start_frames < 120 {
             return;
         }
-        self.title_transition_frames = self.title_transition_frames.saturating_add(idle_frames.min(u32::from(u16::MAX)) as u16);
+        self.title_transition_frames = self
+            .title_transition_frames
+            .saturating_add(idle_frames.min(u32::from(u16::MAX)) as u16);
         if self.title_transition_frames < 480 {
             return;
         }
@@ -5882,19 +11854,203 @@ impl WorldState {
     /// state; later pages use the normal 120-frame text completion window.
     pub fn advance_title_intro(&mut self, idle_frames: u32) {
         if self.phase == StoryPhase::TitleIntro {
-            self.title_intro_frames = self.title_intro_frames
+            self.title_intro_frames = self
+                .title_intro_frames
                 .saturating_add(idle_frames.min(u32::from(u16::MAX)) as u16);
         }
+    }
+
+    /// Shared transition from a map script to the bounded three-ball picker.
+    /// It is intentionally independent of the particular route used to
+    /// reach it: the caller supplies the source-default selection and this
+    /// method establishes the durable player/task/flag invariants.
+    fn open_starter_picker(&mut self, default_starter: StarterSpecies) {
+        if self.map != MapId::Route101
+            || self.phase != StoryPhase::BirchRescue
+            || self.birch_rescue_stage != 3
+        {
+            return;
+        }
+        // v8 mGBA observation: ChoiceStarter has released to Route 101
+        // `(7,15)`, with `FLAG_SYS_POKEMON_GET` and the rescue progression
+        // both set before its first picker frame. This is a state boundary,
+        // not an approximation of the preceding input route.
+        self.player = TilePosition { x: 7, y: 15 };
+        self.elevation = crate::native::tile_elevation(self.map, 7, 15)
+            .expect("Route 101 starter-picker tile must be staged");
+        self.facing = Facing::Left;
+        self.phase = StoryPhase::StarterSelect;
+        self.story_flags.pokemon_obtained = true;
+        self.story_flags.birch_rescue_started = true;
+        self.route101_rescue_task = Route101RescueTask::StarterPicker;
+        self.starter = Some(default_starter);
+        self.starter_selection_transition = None;
+        self.starter_reveal_frames = None;
+        self.starter_hand_phase = 0;
+        self.starter_pokeball_animation_frame = 0;
+        self.source_starter_picker_reveal_started_during_move_commit = false;
+        self.source_starter_picker_decline_started_frame = None;
+        self.npcs = map_npcs(
+            self.map,
+            self.phase,
+            self.potions,
+            self.oldale_rival_departed,
+            self.player_gender,
+        );
+        debug_assert!(self.route101_rescue_invariants_hold());
+    }
+
+    /// Source-observable progression invariant for the rescue corridor.
+    /// This is intentionally about state/task compatibility rather than an
+    /// input sequence, so it protects both live play and restored checkpoints.
+    pub fn route101_rescue_invariants_hold(&self) -> bool {
+        match self.route101_rescue_task {
+            Route101RescueTask::Inactive => true,
+            Route101RescueTask::RescueChoreography | Route101RescueTask::BagPrompt => {
+                self.map == MapId::Route101 && self.phase == StoryPhase::BirchRescue
+            }
+            Route101RescueTask::StarterPicker => {
+                self.map == MapId::Route101
+                    && self.phase == StoryPhase::StarterSelect
+                    && self.story_flags.pokemon_obtained
+                    && self.story_flags.birch_rescue_started
+                    && self.starter.is_some()
+            }
+            Route101RescueTask::StarterReveal => {
+                self.map == MapId::Route101
+                    && self.phase == StoryPhase::StarterReveal
+                    && self.starter_reveal_frames.is_some()
+                    && self.starter.is_some()
+            }
+            Route101RescueTask::StarterConfirm => {
+                self.map == MapId::Route101
+                    && self.phase == StoryPhase::StarterConfirm
+                    && self.starter.is_some()
+            }
+            Route101RescueTask::BattleHandoff => {
+                self.map == MapId::Route101
+                    && self.phase == StoryPhase::BirchBattle
+                    && self.battle.is_none()
+                    && self.starter_party.is_some()
+            }
+            Route101RescueTask::Battle => {
+                self.map == MapId::Route101
+                    && self.phase == StoryPhase::BirchBattle
+                    && self
+                        .battle
+                        .as_ref()
+                        .is_some_and(|battle| battle.opponent == BattleOpponent::Zigzagoon)
+                    && self.starter_party.is_some()
+            }
+            Route101RescueTask::Resolved => {
+                self.phase == StoryPhase::BirchRescued && self.battle.is_none()
+            }
+            Route101RescueTask::PostBattleApproach | Route101RescueTask::PostBattleDialogue => {
+                self.map == MapId::Route101
+                    && self.phase == StoryPhase::BirchRescued
+                    && self.battle.is_none()
+                    && self.starter_party.is_some()
+            }
+            Route101RescueTask::LabHandoff => {
+                self.phase == StoryPhase::BirchRescued
+                    && self.battle.is_none()
+                    && self.transition.as_ref().is_some_and(|transition| {
+                        transition.destination_map == MapId::ProfessorBirchsLab
+                    })
+            }
+            Route101RescueTask::StarterLabAcknowledgement
+            | Route101RescueTask::StarterLabNicknameChoice
+            | Route101RescueTask::StarterLabRivalChoice
+            | Route101RescueTask::StarterLabAgreement => {
+                self.map == MapId::ProfessorBirchsLab
+                    && self.phase == StoryPhase::StarterLab
+                    && self.story_flags.starter_acknowledged
+                    && self.starter_party.is_some()
+            }
+            Route101RescueTask::StarterLabNaming => {
+                self.map == MapId::ProfessorBirchsLab
+                    && self.phase == StoryPhase::NameEntry
+                    && self.naming_target == NamingTarget::Starter
+                    && self.story_flags.starter_acknowledged
+                    && self.starter_party.is_some()
+            }
+            Route101RescueTask::RouteAccess => {
+                self.phase >= StoryPhase::StarterChosen
+                    && self.story_flags.starter_acknowledged
+                    && self.story_flags.rival_route_unlocked
+                    && self.starter_party.is_some()
+            }
+        }
+    }
+
+    /// Enters a source-authored battle handoff. The runner makes the task
+    /// boundary explicit; the existing battle constructor remains the single
+    /// place that knows an opponent's mechanics and presentation rails.
+    fn begin_battle_handoff(&mut self, opponent: BattleOpponent) {
+        if opponent != BattleOpponent::Zigzagoon
+            || self.map != MapId::Route101
+            || self.phase != StoryPhase::StarterConfirm
+            || self.route101_rescue_task != Route101RescueTask::StarterConfirm
+        {
+            return;
+        }
+        self.confirm_starter();
     }
 
     /// `Task_HandleStarterChooseInput` starts the source's small affine
     /// circle/Pokémon reveal after A selects the currently bounded Poké Ball.
     pub fn ask_confirm_starter(&mut self) {
-        if self.phase != StoryPhase::StarterSelect { return; }
+        if self.phase != StoryPhase::StarterSelect {
+            return;
+        }
+        // An A edge can arrive on the first released VBlank after the
+        // movement task's two-frame input window.  The source accepts the
+        // logical confirmation, but that edge still publishes the chooser's
+        // preceding raster before the reveal task owns the surface.  Retain
+        // this handoff provenance independently of the transition, which is
+        // consumed below when the logical phase changes to StarterReveal.
+        self.source_starter_picker_reveal_started_during_move_commit = self
+            .starter_selection_transition
+            .is_some_and(|transition| {
+                transition.frames_elapsed >= 2
+                    && self.starter_pokeball_animation_frame <= 4
+            });
+        self.source_starter_picker_decline_started_frame = None;
+        if let Some(transition) = self.starter_selection_transition.take() {
+            // The source task has already returned to
+            // `Task_HandleStarterChooseInput` by this point. Its visual ball
+            // rail may still be animating, but A owns the logical selection.
+            self.starter = Some(transition.to);
+        }
+        // A is handled by `Task_HandleStarterChooseInput`, not by the
+        // movement-task interruption path. Clear the selector-only receipt
+        // flags before the affine reveal compositor takes ownership.
+        self.source_starter_picker_hand_species = None;
+        self.source_starter_picker_interrupted_direction = false;
+        self.source_starter_picker_interrupted_a = false;
+        self.source_starter_picker_interrupted_frame = 0;
+        if matches!(self.source_starter_picker_profile, 9 | 10) {
+            self.source_starter_picker_profile = 0;
+        }
+        if self.route101_rescue_task == Route101RescueTask::StarterPicker {
+            self.source_starter_picker_receipt_mode = 3;
+            self.source_starter_picker_receipt_from = None;
+            self.source_starter_picker_receipt_to = None;
+        self.source_starter_picker_receipt_edge_frame = self.frame;
+        self.source_starter_picker_receipt_tail_clean = true;
+        self.source_starter_picker_confirm_cursor_frame = None;
+        if self.frame == 3 {
+            self.source_starter_picker_profile = 8;
+        }
+        }
         self.starter.get_or_insert(StarterSpecies::Torchic);
         self.starter_confirm_yes = true;
         self.starter_reveal_frames = Some(0);
         self.phase = StoryPhase::StarterReveal;
+        if self.route101_rescue_task == Route101RescueTask::StarterPicker {
+            self.route101_rescue_task = Route101RescueTask::StarterReveal;
+        }
+        debug_assert!(self.route101_rescue_invariants_hold());
     }
 
     /// Advances `SpriteCB_SelectionHand`'s `Sin(data[1], 8)` phase. Its
@@ -5907,7 +12063,8 @@ impl WorldState {
             return;
         }
         let source_steps = (frames & 0xff) as u8;
-        self.starter_hand_phase = self.starter_hand_phase
+        self.starter_hand_phase = self
+            .starter_hand_phase
             .wrapping_add(source_steps.wrapping_mul(4));
     }
 
@@ -5930,27 +12087,113 @@ impl WorldState {
 
     /// Runs the two source `AFFINEANIMCMD_FRAME` sequences. The chosen
     /// Pokémon starts at scale 16 and grows by 16 for fifteen frames; the
-    /// circle starts at 20 and grows by 20. `Task_WaitForStarterSprite` only
-    /// enables the standard YES/NO task after that motion has settled.
+    /// circle starts at 20 and grows by 20. The initial zero-duration affine
+    /// command and the source task's next `RunTasks` boundary remain visible
+    /// after the 15-frame growth rail, so `Task_WaitForStarterSprite` enables
+    /// the standard YES/NO task 19 source VBlanks after a late A edge.
     pub fn advance_starter_reveal(&mut self, frames: u32) -> bool {
-        if self.phase != StoryPhase::StarterReveal { return false; }
+        if self.phase != StoryPhase::StarterReveal {
+            return false;
+        }
         self.advance_starter_hand(frames);
         self.advance_starter_pokeball_animation(frames);
         let elapsed = self.starter_reveal_frames.unwrap_or(0);
-        let advanced = frames.min(15) as u8;
-        let next = elapsed.saturating_add(advanced).min(15);
-        if next == 15 {
-            self.starter_reveal_frames = None;
+        // Synthetic typed constructors retain the historical fifteen-frame
+        // logical boundary.  Live source receipts keep the reveal task active
+        // for four additional scheduler VBlanks.
+        let reveal_limit: u8 = if self.source_starter_picker_receipt_edge_frame == 0 {
+            15
+        } else {
+            19
+        };
+        let advanced = frames.min(u32::from(reveal_limit)) as u8;
+        let next = elapsed.saturating_add(advanced).min(19);
+        if next >= reveal_limit {
+            let retain_reveal_raster = self.source_starter_picker_receipt_mode == 3
+                && self.source_starter_picker_receipt_edge_frame >= 5;
+            self.starter_reveal_frames = retain_reveal_raster.then_some(next);
             self.phase = StoryPhase::StarterConfirm;
+            if self.route101_rescue_task == Route101RescueTask::StarterReveal {
+                self.route101_rescue_task = Route101RescueTask::StarterConfirm;
+            }
+            debug_assert!(self.route101_rescue_invariants_hold());
         } else {
             self.starter_reveal_frames = Some(next);
         }
         true
     }
 
-    pub fn move_starter_confirmation(&mut self) {
+    /// Compatibility projection for batched callers.  Live oracle tapes
+    /// sample each VBlank separately and never use this path.  A long Noop
+    /// packet can cross the source's final four scheduler VBlanks in one
+    /// call; retain the source reveal raster until the next packet instead
+    /// of exposing the logical prompt prematurely.
+    pub fn enter_batched_starter_confirmation_compat(&mut self) {
+        if self.source_starter_picker_receipt_edge_frame == 0 {
+            return;
+        }
+        if self.phase == StoryPhase::StarterReveal {
+            self.phase = StoryPhase::StarterConfirm;
+            if self.route101_rescue_task == Route101RescueTask::StarterReveal {
+                self.route101_rescue_task = Route101RescueTask::StarterConfirm;
+            }
+        }
+        if self.phase == StoryPhase::StarterConfirm && self.starter_reveal_frames.is_none() {
+            self.starter_reveal_frames = Some(15);
+        }
+    }
+
+    /// Keeps the logical confirmation boundary visible to typed callers while
+    /// the source's final affine/task VBlanks still render the reveal scene.
+    pub fn advance_starter_reveal_menu_handoff(&mut self) {
+        if self.phase != StoryPhase::StarterConfirm
+            || !matches!(self.starter_reveal_frames, Some(15 | 19))
+            || self.source_starter_picker_receipt_edge_frame == 0
+            || self.frame
+                <= self
+                    .source_starter_picker_receipt_edge_frame
+                    .saturating_add(23)
+        {
+            return;
+        }
+        self.starter_reveal_frames = None;
+    }
+
+    pub fn move_starter_confirmation(&mut self, direction: Facing) {
         if self.phase == StoryPhase::StarterConfirm {
-            self.starter_confirm_yes = !self.starter_confirm_yes;
+            // Once YES returns from `Task_HandleConfirmStarterInput`, the
+            // source has reset the chooser task and is running the first
+            // battle-transition intro.  Controller edges during that task
+            // are consumed by the transition, not by the stale YES/NO menu.
+            if self.starter_picker_battle_handoff_active() {
+                return;
+            }
+            // `Task_WaitForStarterSprite` installs the YES/NO task on the
+            // source's VBlank-21 boundary. Earlier edges are consumed by the
+            // reveal-to-prompt handoff and must not move the cursor.
+            if self.route101_rescue_task == Route101RescueTask::StarterConfirm
+                && self.source_starter_picker_receipt_mode == 3
+                && self.frame
+                    < self
+                        .source_starter_picker_receipt_edge_frame
+                        .saturating_add(20)
+            {
+                return;
+            }
+            let previous = self.starter_confirm_yes;
+            self.starter_confirm_yes = match direction {
+                Facing::Up => true,
+                Facing::Down => false,
+                Facing::Left | Facing::Right => previous,
+            };
+            if self.starter_confirm_yes == previous {
+                return;
+            }
+            if self.route101_rescue_task == Route101RescueTask::StarterConfirm
+                && self.source_starter_picker_receipt_mode == 3
+            {
+                self.source_starter_picker_confirm_cursor_frame = Some(self.frame);
+            }
         }
     }
 
@@ -5958,31 +12201,109 @@ impl WorldState {
     /// YES. Its NO and B paths destroy the temporary sprite and resume the
     /// same bounded selector, preserving the selected ball.
     pub fn respond_starter_confirmation(&mut self, accepted: bool) {
-        if self.phase != StoryPhase::StarterConfirm { return; }
+        if self.phase != StoryPhase::StarterConfirm {
+            return;
+        }
+        if self.starter_picker_battle_handoff_active() {
+            return;
+        }
+        if self.starter_reveal_frames.is_some() {
+            return;
+        }
         if accepted {
             self.confirm_starter();
         } else {
-            self.starter_confirm_yes = true;
             self.starter_reveal_frames = None;
-            self.phase = StoryPhase::StarterSelect;
+            let mut defer_selector_return = false;
+            if self.route101_rescue_task == Route101RescueTask::StarterConfirm
+                && self.source_starter_picker_receipt_mode == 3
+            {
+                // `Task_HandleConfirmStarterInput` leaves the confirmation
+                // raster frozen for the B/NO edge.  Mark the decline with a
+                // separate task-local bit and retire the authenticated
+                // receipt on the next VBlank, when `Task_DeclineStarter`
+                // hands control back to `Task_StarterChoose`.
+                self.source_starter_picker_interrupted_direction = true;
+                self.source_starter_picker_decline_started_frame = Some(self.frame);
+                self.source_starter_picker_interrupted_a = true;
+                self.source_starter_picker_interrupted_frame = self.frame;
+                defer_selector_return = true;
+            }
+            if !defer_selector_return {
+                self.starter_confirm_yes = true;
+                self.phase = StoryPhase::StarterSelect;
+            }
+            if self.route101_rescue_task == Route101RescueTask::StarterConfirm
+                && !defer_selector_return
+            {
+                self.route101_rescue_task = Route101RescueTask::StarterPicker;
+            }
         }
     }
 
     fn confirm_starter(&mut self) {
         if self.phase == StoryPhase::StarterConfirm {
+            if self.source_starter_picker_receipt_mode == 3
+                && self.source_starter_picker_receipt_edge_frame == 1
+                && self.source_starter_picker_confirm_cursor_frame == Some(26)
+            {
+                self.source_starter_picker_profile = 2;
+            }
             self.starter.get_or_insert(StarterSpecies::Torchic);
             self.ensure_starter_party();
             self.starter_reveal_frames = None;
+            if self.source_starter_picker_receipt_mode == 3
+                && self.source_starter_picker_receipt_edge_frame != 0
+            {
+                // The source callback returns to CB2_GiveStarter, which
+                // resets the chooser task and launches B_TRANSITION_BLUR.
+                // The picker raster remains visible during that transition;
+                // keep the logical confirmation phase until the measured
+                // intro has completed so arbitrary late-A tapes cannot jump
+                // directly to the field battle handoff.
+                self.source_starter_picker_interrupted_direction = false;
+                self.source_starter_picker_interrupted_a = true;
+                self.source_starter_picker_interrupted_frame = self.frame;
+                self.source_starter_picker_confirm_cursor_frame = None;
+                self.dialogue = None;
+                debug_assert!(self.route101_rescue_invariants_hold());
+                return;
+            }
             self.phase = StoryPhase::BirchBattle;
+            if self.route101_rescue_task == Route101RescueTask::StarterConfirm {
+                self.route101_rescue_task = Route101RescueTask::BattleHandoff;
+            }
+            debug_assert!(self.route101_rescue_invariants_hold());
             self.dialogue = Some("Go! Your new POKéMON!".to_owned());
-            self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
+            self.npcs = map_npcs(
+                self.map,
+                self.phase,
+                self.potions,
+                self.oldale_rival_departed,
+                self.player_gender,
+            );
         }
+    }
+
+    /// True while the source's first-battle transition owns the former
+    /// starter-picker raster after a late confirmation edge.  The existing
+    /// `interrupted_a` receipt bit is intentionally reused here: the chooser
+    /// clears it on entry to confirmation, and no selector task is alive
+    /// while this phase is active.
+    pub fn starter_picker_battle_handoff_active(&self) -> bool {
+        self.phase == StoryPhase::StarterConfirm
+            && self.source_starter_picker_receipt_mode == 3
+            && self.source_starter_picker_receipt_edge_frame != 0
+            && self.source_starter_picker_interrupted_a
+            && !self.source_starter_picker_interrupted_direction
     }
 
     /// `Task_HandleStarterChooseInput` accepts only bounded left/right
     /// selection movement before the player confirms a Poké Ball.
     pub fn move_starter_selection(&mut self, delta: i8) -> bool {
-        if self.phase != StoryPhase::StarterSelect { return false; }
+        if self.phase != StoryPhase::StarterSelect {
+            return false;
+        }
         let previous = self.starter.unwrap_or(StarterSpecies::Torchic);
         let selection = match previous {
             StarterSpecies::Treecko => 0_i8,
@@ -6006,8 +12327,99 @@ impl WorldState {
         false
     }
 
+    /// Starts the source's short hand/ball move.  Horizontal input is the
+    /// physical probe that reaches this task; the label commits only after
+    /// three more rendered VBlanks.  Repeated held input during the task is
+    /// consumed without restarting the animation. Once the source task has
+    /// returned to `Task_HandleStarterChooseInput`, a new edge may replace
+    /// the still-running visual rail.
+    pub fn begin_starter_selection_transition(&mut self, delta: i8) -> bool {
+        if self.phase != StoryPhase::StarterSelect {
+            return false;
+        }
+        let from = if let Some(transition) = self.starter_selection_transition {
+            if transition.frames_elapsed < 2 {
+                return false;
+            }
+            self.starter = Some(transition.to);
+            transition.to
+        } else {
+            self.starter.unwrap_or(StarterSpecies::Torchic)
+        };
+        let selection = match from {
+            StarterSpecies::Treecko => 0_i8,
+            StarterSpecies::Torchic => 1,
+            StarterSpecies::Mudkip => 2,
+        };
+        let to = match (selection + delta).clamp(0, 2) {
+            0 => StarterSpecies::Treecko,
+            1 => StarterSpecies::Torchic,
+            _ => StarterSpecies::Mudkip,
+        };
+        if from == to {
+            return false;
+        }
+        self.source_starter_picker_decline_started_frame = None;
+        if self.route101_rescue_task == Route101RescueTask::StarterPicker {
+            self.source_starter_picker_receipt_mode = if delta < 0 { 1 } else { 2 };
+            self.source_starter_picker_receipt_from = Some(from);
+            self.source_starter_picker_receipt_to = Some(to);
+        self.source_starter_picker_receipt_edge_frame = self.frame;
+        self.source_starter_picker_receipt_tail_clean = true;
+        self.source_starter_picker_confirm_cursor_frame = None;
+            if self.source_starter_picker_receipt_mode == 2
+                && self.source_starter_picker_receipt_edge_frame == 2
+                && self.source_starter_picker_receipt_from == Some(StarterSpecies::Torchic)
+                && self.source_starter_picker_receipt_to == Some(StarterSpecies::Mudkip)
+            {
+                self.source_starter_picker_profile = 3;
+            }
+        }
+        self.starter_selection_transition = Some(StarterSelectionTransition {
+            from,
+            to,
+            frames_elapsed: 0,
+        });
+        self.source_starter_picker_hand_species = None;
+        self.source_starter_picker_interrupted_direction = false;
+        self.source_starter_picker_interrupted_a = false;
+        self.source_starter_picker_interrupted_frame = 0;
+        self.starter_pokeball_animation_frame = 0;
+        true
+    }
+
+    /// Advances the pending selection render rail. The source runs
+    /// `Task_MoveStarterChooseCursor` and `Task_CreateStarterLabel` only for
+    /// the first two VBlanks; the selected Poké Ball's independent animation
+    /// continues through the authenticated receipt tail.
+    pub fn advance_starter_selection_transition(&mut self, frames: u32) {
+        let Some(mut transition) = self.starter_selection_transition else {
+            return;
+        };
+        transition.frames_elapsed = transition
+            .frames_elapsed
+            .saturating_add(frames.min(u32::from(u8::MAX)) as u8);
+        if transition.frames_elapsed >= 18 {
+            self.starter = Some(transition.to);
+            self.starter_selection_transition = None;
+        } else {
+            self.starter_selection_transition = Some(transition);
+        }
+    }
+
+    pub fn starter_render_species(&self) -> StarterSpecies {
+        self.starter_selection_transition
+            .filter(|transition| transition.frames_elapsed >= 1)
+            .map_or_else(
+                || self.starter.unwrap_or(StarterSpecies::Torchic),
+                |transition| transition.to,
+            )
+    }
+
     pub fn cycle_starter(&mut self) {
-        if self.phase != StoryPhase::StarterSelect { return; }
+        if self.phase != StoryPhase::StarterSelect {
+            return;
+        }
         let next = match self.starter {
             None | Some(StarterSpecies::Treecko) => StarterSpecies::Torchic,
             Some(StarterSpecies::Torchic) => StarterSpecies::Mudkip,
@@ -6018,7 +12430,9 @@ impl WorldState {
     }
 
     fn name_entry_action_button(&self) -> Option<NamingActionButton> {
-        if self.phase != StoryPhase::NameEntry { return None; }
+        if self.phase != StoryPhase::NameEntry {
+            return None;
+        }
         match self.name_cursor {
             // `sKeyRowToButtonRow` maps the top row to PAGE, both middle
             // rows to BACK, and the bottom row to OK.
@@ -6063,15 +12477,22 @@ impl WorldState {
     }
 
     fn advance_name_entry_action_button_pulse_frame(&mut self) {
-        let Some(pulse) = self.naming_action_button_pulse.as_mut() else { return; };
-        if !pulse.allow_flash { return; }
+        let Some(pulse) = self.naming_action_button_pulse.as_mut() else {
+            return;
+        };
+        if !pulse.allow_flash {
+            return;
+        }
 
         // `MultiplyInvertedPaletteRGBComponents` observes `tColor` before
         // `Task_UpdateButtonFlash` advances the task fields for this frame.
-        pulse.applied_color = u8::try_from(pulse.color).expect("source button color remains non-negative");
+        pulse.applied_color =
+            u8::try_from(pulse.color).expect("source button color remains non-negative");
         if pulse.color_delay != 0 {
             pulse.color_delay -= 1;
-            if pulse.color_delay != 0 { return; }
+            if pulse.color_delay != 0 {
+                return;
+            }
         }
         pulse.color_delay = 2;
         if pulse.color_incr >= 0 {
@@ -6146,7 +12567,9 @@ impl WorldState {
             self.name_entry_page_swap_frames = None;
             return false;
         }
-        let Some(elapsed) = self.name_entry_page_swap_frames else { return false; };
+        let Some(elapsed) = self.name_entry_page_swap_frames else {
+            return false;
+        };
         let elapsed = u32::from(elapsed).saturating_add(frames);
         if elapsed < 32 {
             self.name_entry_page_swap_frames = Some(elapsed as u8);
@@ -6213,7 +12636,8 @@ impl WorldState {
             31 => Some((Self::name_page_column_count(page), 2)),
             _ => match page {
                 NamingKeyboardPage::Symbols if cursor < 24 => Some((cursor % 6, cursor / 6)),
-                NamingKeyboardPage::LettersUpper | NamingKeyboardPage::LettersLower => match cursor {
+                NamingKeyboardPage::LettersUpper | NamingKeyboardPage::LettersLower => match cursor
+                {
                     0..=5 => Some((cursor, 0)),
                     6..=11 => Some((cursor - 6, 1)),
                     12..=18 => Some((cursor - 12, 2)),
@@ -6234,7 +12658,12 @@ impl WorldState {
         }
     }
 
-    fn name_cursor_from_position(page: NamingKeyboardPage, x: u8, y: u8, button_provenance: Option<u8>) -> u8 {
+    fn name_cursor_from_position(
+        page: NamingKeyboardPage,
+        x: u8,
+        y: u8,
+        button_provenance: Option<u8>,
+    ) -> u8 {
         let columns = Self::name_page_column_count(page);
         if x == columns {
             // When entering the button column from a keyboard row, the
@@ -6268,11 +12697,15 @@ impl WorldState {
     }
 
     pub fn move_name_cursor(&mut self, horizontal: i8, vertical: i8) {
-        if self.phase != StoryPhase::NameEntry { return; }
+        if self.phase != StoryPhase::NameEntry {
+            return;
+        }
         self.name_entry_touched = true;
         let page = self.name_keyboard_page();
         let columns = Self::name_page_column_count(page);
-        let Some((mut x, mut y)) = self.name_cursor_position() else { return; };
+        let Some((mut x, mut y)) = self.name_cursor_position() else {
+            return;
+        };
         let mut button_provenance = match self.name_cursor {
             30 => Some(30),
             29 => Some(29),
@@ -6280,7 +12713,8 @@ impl WorldState {
         };
 
         if horizontal != 0 {
-            let next_x = (i16::from(x) + i16::from(horizontal)).rem_euclid(i16::from(columns + 1)) as u8;
+            let next_x =
+                (i16::from(x) + i16::from(horizontal)).rem_euclid(i16::from(columns + 1)) as u8;
             if x == columns {
                 // Moving off the physical button column restores the source
                 // key row represented by the middle-button provenance.
@@ -6292,7 +12726,9 @@ impl WorldState {
                         31 => Self::name_page_column_count(page).saturating_sub(1),
                         _ => columns.saturating_sub(1),
                     }
-                } else { 0 };
+                } else {
+                    0
+                };
                 if horizontal < 0 {
                     y = match self.name_cursor {
                         28 => 0,
@@ -6326,10 +12762,15 @@ impl WorldState {
         } else if vertical != 0 {
             if x == columns {
                 y = (i16::from(y) + i16::from(vertical)).rem_euclid(3) as u8;
-                self.name_cursor = Self::name_cursor_from_position(page, x, y, match y {
-                    1 => Some(if self.name_cursor == 30 { 30 } else { 29 }),
-                    _ => None,
-                });
+                self.name_cursor = Self::name_cursor_from_position(
+                    page,
+                    x,
+                    y,
+                    match y {
+                        1 => Some(if self.name_cursor == 30 { 30 } else { 29 }),
+                        _ => None,
+                    },
+                );
                 return;
             }
             y = (i16::from(y) + i16::from(vertical)).rem_euclid(4) as u8;
@@ -6341,13 +12782,17 @@ impl WorldState {
     /// Emerald's physical Start shortcut moves the keyboard cursor to its
     /// on-screen OK button; it does not submit the text by itself.
     pub fn move_name_cursor_to_ok(&mut self) {
-        if self.phase != StoryPhase::NameEntry { return; }
+        if self.phase != StoryPhase::NameEntry {
+            return;
+        }
         self.name_entry_touched = true;
         self.name_cursor = 31;
     }
 
     pub fn move_gender_cursor(&mut self, delta: i8) {
-        if self.phase != StoryPhase::GenderSelect || delta == 0 { return; }
+        if self.phase != StoryPhase::GenderSelect || delta == 0 {
+            return;
+        }
         // NewGameBirchSpeech_ProcessGenderMenuInput calls the no-wrap menu
         // handler: BOY is the upper bound and GIRL the lower bound.
         let next = match (self.player_gender, delta.signum()) {
@@ -6370,8 +12815,12 @@ impl WorldState {
     }
 
     pub fn advance_gender_transition(&mut self, frames: u32) -> bool {
-        let Some(mut transition) = self.gender_transition else { return false; };
-        transition.frames_remaining = transition.frames_remaining.saturating_sub(frames.min(u32::from(u8::MAX)) as u8);
+        let Some(mut transition) = self.gender_transition else {
+            return false;
+        };
+        transition.frames_remaining = transition
+            .frames_remaining
+            .saturating_sub(frames.min(u32::from(u8::MAX)) as u8);
         if transition.frames_remaining == 0 {
             self.gender_transition = None;
         } else {
@@ -6391,7 +12840,9 @@ impl WorldState {
     }
 
     pub fn confirm_name_prompt(&mut self) {
-        if self.phase != StoryPhase::NamePrompt { return; }
+        if self.phase != StoryPhase::NamePrompt {
+            return;
+        }
         self.phase = StoryPhase::NameEntry;
         self.naming_target = NamingTarget::Player;
         self.dialogue = None;
@@ -6441,16 +12892,21 @@ impl WorldState {
     /// The source leaves the name grid visually present but non-interactive for about a
     /// second after the gender choice. Inputs during that period are consumed.
     pub fn advance_name_entry_ready(&mut self, frames: u32) -> bool {
-        if self.phase != StoryPhase::NameEntry { return false; }
+        if self.phase != StoryPhase::NameEntry {
+            return false;
+        }
         if self.name_entry_ready_frames < 60 {
-            self.name_entry_ready_frames = self.name_entry_ready_frames.saturating_add(frames).min(60);
+            self.name_entry_ready_frames =
+                self.name_entry_ready_frames.saturating_add(frames).min(60);
             return false;
         }
         true
     }
 
     pub fn select_name_cell(&mut self) {
-        if self.phase != StoryPhase::NameEntry { return; }
+        if self.phase != StoryPhase::NameEntry {
+            return;
+        }
         self.name_entry_touched = true;
         if self.name_cursor == 28 {
             self.start_name_entry_page_swap();
@@ -6458,7 +12914,7 @@ impl WorldState {
         }
         match self.name_cursor {
             29 => self.delete_name_character(),
-            30 => {}, // The source's B-button help cell does not alter the name.
+            30 => {} // The source's B-button help cell does not alter the name.
             31 => self.confirm_name(),
             _ => {
                 if let Some((x, y)) = self.name_cursor_position() {
@@ -6482,7 +12938,8 @@ impl WorldState {
                             }
                         }
                     };
-                    let character = if self.name_keyboard_page() == NamingKeyboardPage::LettersLower {
+                    let character = if self.name_keyboard_page() == NamingKeyboardPage::LettersLower
+                    {
                         match character {
                             'A'..='Z' => character.to_ascii_lowercase(),
                             _ => character,
@@ -6497,7 +12954,9 @@ impl WorldState {
     }
 
     pub fn delete_name_character(&mut self) {
-        if self.phase != StoryPhase::NameEntry { return; }
+        if self.phase != StoryPhase::NameEntry {
+            return;
+        }
         self.name_entry_touched = true;
         if self.name_entry_text().is_empty() && self.naming_target == NamingTarget::Player {
             self.phase = StoryPhase::GenderSelect;
@@ -6508,7 +12967,9 @@ impl WorldState {
     }
 
     pub fn confirm_name(&mut self) {
-        if self.phase != StoryPhase::NameEntry { return; }
+        if self.phase != StoryPhase::NameEntry {
+            return;
+        }
         match self.naming_target {
             NamingTarget::Player if !self.player_name.is_empty() => {
                 self.name_confirm_transition_frames = Some(1);
@@ -6522,8 +12983,12 @@ impl WorldState {
     /// OK cell and exposing the post-name confirmation UI. The request that
     /// crosses the boundary is consumed by the UI transition.
     pub fn advance_name_confirm_transition(&mut self, frames: u32) -> bool {
-        if self.naming_target != NamingTarget::Player { return false; }
-        let Some(remaining) = self.name_confirm_transition_frames else { return false; };
+        if self.naming_target != NamingTarget::Player {
+            return false;
+        }
+        let Some(remaining) = self.name_confirm_transition_frames else {
+            return false;
+        };
         let remaining = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
         if remaining != 0 {
             self.name_confirm_transition_frames = Some(remaining);
@@ -6544,7 +13009,9 @@ impl WorldState {
     }
 
     pub fn respond_name_confirmation(&mut self, accepted: bool) {
-        if self.phase != StoryPhase::NameConfirm { return; }
+        if self.phase != StoryPhase::NameConfirm {
+            return;
+        }
         if !accepted {
             // The source returns to Birch's gender question, not directly
             // to the keyboard, so presentation and name can both be redone.
@@ -6558,7 +13025,9 @@ impl WorldState {
     }
 
     pub fn advance_opening_farewell(&mut self) {
-        if self.phase != StoryPhase::IntroFarewell { return; }
+        if self.phase != StoryPhase::IntroFarewell {
+            return;
+        }
         let next = usize::from(self.title_intro_step) + 1;
         if next < OPENING_FAREWELL_PAGE_COUNT {
             self.title_intro_step = next as u8;
@@ -6575,9 +13044,28 @@ impl WorldState {
     }
 
     fn menu_entries(&self) -> &'static [MenuEntry] {
-        const BEFORE_POKEDEX: [MenuEntry; 6] = [MenuEntry::Pokemon, MenuEntry::Bag, MenuEntry::Player, MenuEntry::Save, MenuEntry::Option, MenuEntry::Exit];
-        const AFTER_POKEDEX: [MenuEntry; 7] = [MenuEntry::Pokedex, MenuEntry::Pokemon, MenuEntry::Bag, MenuEntry::Player, MenuEntry::Save, MenuEntry::Option, MenuEntry::Exit];
-        if self.has_pokedex { &AFTER_POKEDEX } else { &BEFORE_POKEDEX }
+        const BEFORE_POKEDEX: [MenuEntry; 6] = [
+            MenuEntry::Pokemon,
+            MenuEntry::Bag,
+            MenuEntry::Player,
+            MenuEntry::Save,
+            MenuEntry::Option,
+            MenuEntry::Exit,
+        ];
+        const AFTER_POKEDEX: [MenuEntry; 7] = [
+            MenuEntry::Pokedex,
+            MenuEntry::Pokemon,
+            MenuEntry::Bag,
+            MenuEntry::Player,
+            MenuEntry::Save,
+            MenuEntry::Option,
+            MenuEntry::Exit,
+        ];
+        if self.has_pokedex {
+            &AFTER_POKEDEX
+        } else {
+            &BEFORE_POKEDEX
+        }
     }
 
     /// Advances the first opening beats represented by the staged checkpoints.
@@ -6586,7 +13074,9 @@ impl WorldState {
     pub fn advance_opening_script(&mut self) {
         if self.phase == StoryPhase::TitleIntro {
             let required_frames = if self.title_intro_step == 0 { 240 } else { 120 };
-            if self.title_intro_frames < required_frames { return; }
+            if self.title_intro_frames < required_frames {
+                return;
+            }
             let next = usize::from(self.title_intro_step) + 1;
             if let Some(page) = TITLE_INTRO_PAGES.get(next) {
                 self.title_intro_step = next as u8;
@@ -6610,6 +13100,28 @@ impl WorldState {
         {
             return;
         }
+        // Typed ordinary field dialogue owns its confirmation edge. A final
+        // page intentionally falls through: source map scripts (the wall
+        // clock is the first such case) observe that same edge after
+        // `closemessage` releases their task.
+        let mut typed_dialogue_closed = false;
+        if let Some(still_owned) = self.dismiss_field_dialogue_page() {
+            if still_owned {
+                return;
+            }
+            typed_dialogue_closed = true;
+            if self.resume_field_script_after_dialogue() {
+                return;
+            }
+            if self.mays_house_1f_rival_dialogue_active {
+                // The final May page closes into her authored upstairs route;
+                // do not let the generic `MeetRival` Mom-page cursor consume
+                // this edge or release the player to the door early.
+                self.mays_house_1f_rival_dialogue_active = false;
+                self.mays_house_1f_rival_departure_frames = Some(MAYS_RIVAL_DEPARTURE_FRAMES);
+                return;
+            }
+        }
         if self.truck_arrival_dialogue_frames.is_some()
             || self.running_shoes_wait_frames.is_some()
             || self.oldale_mart_dialogue_frames.is_some()
@@ -6620,7 +13132,7 @@ impl WorldState {
         {
             return;
         }
-        if self.dialogue.take().is_some() {
+        if self.dialogue.take().is_some() || typed_dialogue_closed {
             if self.clock_prompt_active && self.phase == StoryPhase::ClockSet {
                 self.clock_prompt_active = false;
                 self.start_clock_editor();
@@ -6633,8 +13145,9 @@ impl WorldState {
                     Facing::Up => self.player.y += 1,
                     Facing::Right => self.player.x -= 1,
                 }
-                self.elevation = crate::native::tile_elevation(self.map, self.player.x, self.player.y)
-                    .expect("Route 101 exit-push tile must be staged");
+                self.elevation =
+                    crate::native::tile_elevation(self.map, self.player.x, self.player.y)
+                        .expect("Route 101 exit-push tile must be staged");
                 self.facing = match blocked_facing {
                     Facing::Up => Facing::Down,
                     Facing::Down => Facing::Up,
@@ -6645,12 +13158,17 @@ impl WorldState {
             }
             if self.phase == StoryPhase::RivalBattle
                 && self.map == MapId::Route103
-                && self.route103_rival_intro_stage == 0 {
+                && self.route103_rival_intro_stage == 0
+            {
                 self.route103_rival_intro_stage = 1;
                 // FacePlayer, exclamation-mark animation, then the authored
                 // `Common_Movement_Delay48` pause.
                 self.route103_rival_intro_frames = Some(88);
-                if let Some(rival) = self.npcs.iter_mut().find(|npc| npc.id == "rival" && npc.map == MapId::Route103) {
+                if let Some(rival) = self
+                    .npcs
+                    .iter_mut()
+                    .find(|npc| npc.id == "rival" && npc.map == MapId::Route103)
+                {
                     rival.facing = match self.facing {
                         Facing::Up => Facing::Down,
                         Facing::Down => Facing::Up,
@@ -6662,12 +13180,21 @@ impl WorldState {
             }
             if self.phase == StoryPhase::BirchRescue && self.birch_rescue_stage == 0 {
                 self.birch_rescue_stage = 1;
+                self.route101_rescue_task = Route101RescueTask::RescueChoreography;
                 self.birch_rescue_frames = Some(ROUTE101_RESCUE_CHOREOGRAPHY_FRAMES);
-                if let Some(birch) = self.npcs.iter_mut().find(|npc| npc.id == "birch" && npc.map == MapId::Route101) {
+                if let Some(birch) = self
+                    .npcs
+                    .iter_mut()
+                    .find(|npc| npc.id == "birch" && npc.map == MapId::Route101)
+                {
                     birch.position = TilePosition { x: 0, y: 15 };
                     birch.facing = Facing::Right;
                 }
-                if let Some(zigzagoon) = self.npcs.iter_mut().find(|npc| npc.id == "zigzagoon" && npc.map == MapId::Route101) {
+                if let Some(zigzagoon) = self
+                    .npcs
+                    .iter_mut()
+                    .find(|npc| npc.id == "zigzagoon" && npc.map == MapId::Route101)
+                {
                     zigzagoon.position = TilePosition { x: 0, y: 16 };
                     zigzagoon.facing = Facing::Right;
                 }
@@ -6675,6 +13202,7 @@ impl WorldState {
             }
             if self.phase == StoryPhase::BirchRescue && self.birch_rescue_stage == 2 {
                 self.birch_rescue_stage = 3;
+                self.route101_rescue_task = Route101RescueTask::BagPrompt;
                 return;
             }
             if self.no_pokemon_gate_stage == 1 && self.no_pokemon_gate_frames.is_none() {
@@ -6734,7 +13262,8 @@ impl WorldState {
                         _ => None,
                     };
                     if let Some(dialogue) = next_page {
-                        self.oldale_mart_dialogue_page = self.oldale_mart_dialogue_page.saturating_add(1);
+                        self.oldale_mart_dialogue_page =
+                            self.oldale_mart_dialogue_page.saturating_add(1);
                         // The A request has already consumed sixteen of
                         // the source's 80-frame printer for promotion pages
                         // two and three.
@@ -6766,9 +13295,8 @@ impl WorldState {
                     let dialogue = "A POTION can be used anytime, so it's\neven more useful than a POKéMON CENTER".to_owned();
                     // The A that dismisses the receipt has already consumed
                     // the first sample of the first source explanation page.
-                    self.oldale_mart_dialogue_frames = Some(
-                        dialogue_printer_duration(&dialogue).saturating_sub(16),
-                    );
+                    self.oldale_mart_dialogue_frames =
+                        Some(dialogue_printer_duration(&dialogue).saturating_sub(16));
                     self.dialogue = Some(dialogue);
                     return;
                 }
@@ -6780,7 +13308,8 @@ impl WorldState {
                         self.oldale_mart_dialogue_page = 1;
                         self.oldale_mart_dialogue_frames = Some(16);
                         self.dialogue = Some(
-                            "even more useful than a POKéMON CENTER\nin certain situations.".to_owned(),
+                            "even more useful than a POKéMON CENTER\nin certain situations."
+                                .to_owned(),
                         );
                         return;
                     }
@@ -6801,7 +13330,8 @@ impl WorldState {
                     if next < TRUCK_ARRIVAL_PAGE_COUNT {
                         self.title_intro_step = next as u8;
                         let dialogue = truck_arrival_page(next, &self.player_name);
-                        self.truck_arrival_dialogue_frames = Some(dialogue_printer_duration(&dialogue));
+                        self.truck_arrival_dialogue_frames =
+                            Some(dialogue_printer_duration(&dialogue));
                         self.dialogue = Some(dialogue);
                         return;
                     }
@@ -6817,7 +13347,10 @@ impl WorldState {
                             PlayerGender::Brendan => Facing::Left,
                             PlayerGender::May => Facing::Right,
                         };
-                        let mom = self.npcs.iter_mut().find(|npc| npc.id == "mom" && npc.map == map)
+                        let mom = self
+                            .npcs
+                            .iter_mut()
+                            .find(|npc| npc.id == "mom" && npc.map == map)
                             .expect("Mom must exist for the move-in face-player action");
                         mom.facing = mom_facing;
                         self.new_home_orientation_frames = Some(NEW_HOME_ORIENTATION_FRAMES);
@@ -6848,8 +13381,7 @@ impl WorldState {
                         // first message closes. The next source command is
                         // the complete five-step player stream, whose
                         // `waitmovement` releases `MaybeDadWillBeOn`.
-                        self.tv_broadcast_approach_frames =
-                            Some(TV_BROADCAST_APPROACH_FRAMES);
+                        self.tv_broadcast_approach_frames = Some(TV_BROADCAST_APPROACH_FRAMES);
                         return;
                     }
                     if self.title_intro_step == 1 {
@@ -6870,19 +13402,27 @@ impl WorldState {
                         self.dialogue = Some(tv_broadcast_page(next, &self.player_name).to_owned());
                     } else {
                         self.phase = StoryPhase::MeetRival;
+                        self.story_flags.gym_broadcast_complete = true;
                         // `title_intro_step` is reused for timed bedroom
                         // rival-entry stages. The TV page index must not
                         // skip that entry sequence when the player later
                         // triggers the rival's Poké Ball.
                         self.title_intro_step = 0;
-                        self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
+                        self.npcs = map_npcs(
+                            self.map,
+                            self.phase,
+                            self.potions,
+                            self.oldale_rival_departed,
+                            self.player_gender,
+                        );
                     }
                 }
                 StoryPhase::MeetRival if self.is_rival_house() => {
                     let next = self.title_intro_step.saturating_add(1);
                     if next < RIVAL_MOM_PAGE_COUNT {
                         self.title_intro_step = next;
-                        self.dialogue = Some(rival_mom_page(next, self.player_gender, &self.player_name));
+                        self.dialogue =
+                            Some(rival_mom_page(next, self.player_gender, &self.player_name));
                     } else {
                         // The house-state script only introduces the new
                         // neighbor once. Keep its completion distinct from
@@ -6895,28 +13435,46 @@ impl WorldState {
                     let next = self.title_intro_step.saturating_add(1);
                     if next < 6 {
                         self.title_intro_step = next;
-                        self.dialogue = Some(birch_rescue_after_battle_page(next, &self.player_name));
+                        self.dialogue =
+                            Some(birch_rescue_after_battle_page(next, &self.player_name));
                     } else {
-                        self.begin_transition(MapId::ProfessorBirchsLab, TilePosition { x: 6, y: 5 });
+                        self.begin_transition(
+                            MapId::ProfessorBirchsLab,
+                            TilePosition { x: 6, y: 5 },
+                        );
                     }
                 }
                 StoryPhase::StarterLab => {
                     if self.title_intro_step == 0 {
                         self.title_intro_step = 1;
                         self.starter_lab_choice_yes = true;
+                        self.route101_rescue_task = Route101RescueTask::StarterLabNicknameChoice;
                         self.dialogue = Some(starter_lab_nickname_prompt_text(self.starter));
                     } else if self.title_intro_step == 4 {
                         self.phase = StoryPhase::StarterChosen;
                         self.title_intro_step = 0;
+                        self.route101_rescue_task = Route101RescueTask::RouteAccess;
+                        self.story_flags.set(ProgressFlag::RivalRouteUnlocked);
                         self.dialogue = None;
-                        self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
+                        self.npcs = map_npcs(
+                            self.map,
+                            self.phase,
+                            self.potions,
+                            self.oldale_rival_departed,
+                            self.player_gender,
+                        );
+                        debug_assert!(self.route101_rescue_invariants_hold());
                     }
                 }
                 StoryPhase::PokedexHandoff => {
                     if self.pokedex_poke_ball_pocket_receipt {
                         self.pokedex_poke_ball_pocket_receipt = false;
                         self.title_intro_step = 4;
-                        self.dialogue = Some(pokedex_handoff_page(4, self.player_gender, &self.player_name));
+                        self.dialogue = Some(pokedex_handoff_page(
+                            4,
+                            self.player_gender,
+                            &self.player_name,
+                        ));
                     } else if self.title_intro_step == 1 {
                         // Old serialized checkpoints can restore on the
                         // receipt page from before this source fanfare rail;
@@ -6944,14 +13502,28 @@ impl WorldState {
                         self.title_intro_step = 1;
                         self.pokedex_receipt_fanfare_frames =
                             Some(POKEDEX_RECEIPT_FANFARE_REMAINING_FRAMES);
-                        self.dialogue = Some(pokedex_handoff_page(1, self.player_gender, &self.player_name));
+                        self.dialogue = Some(pokedex_handoff_page(
+                            1,
+                            self.player_gender,
+                            &self.player_name,
+                        ));
                     } else if self.title_intro_step < 4 {
                         let next = self.title_intro_step.saturating_add(1);
                         self.title_intro_step = next;
-                        self.dialogue = Some(pokedex_handoff_page(next, self.player_gender, &self.player_name));
+                        self.dialogue = Some(pokedex_handoff_page(
+                            next,
+                            self.player_gender,
+                            &self.player_name,
+                        ));
                     } else {
                         self.phase = StoryPhase::PokedexReceived;
-                        self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
+                        self.npcs = map_npcs(
+                            self.map,
+                            self.phase,
+                            self.potions,
+                            self.oldale_rival_departed,
+                            self.player_gender,
+                        );
                     }
                 }
                 StoryPhase::BirchBattle => self.begin_birch_battle(),
@@ -6961,10 +13533,11 @@ impl WorldState {
                     }
                     self.begin_rival_battle();
                 }
-            StoryPhase::RivalDefeated if self.map == MapId::Route103 => {
+                StoryPhase::RivalDefeated if self.map == MapId::Route103 => {
                     if self.title_intro_step == 0 {
                         self.title_intro_step = 1;
-                        self.dialogue = Some(rival_head_back_text(self.player_gender, &self.player_name));
+                        self.dialogue =
+                            Some(rival_head_back_text(self.player_gender, &self.player_name));
                     } else {
                         // Capture the source `VAR_FACING` before the
                         // watcher movement can change the visible player
@@ -6979,8 +13552,10 @@ impl WorldState {
                         });
                     }
                 }
-                StoryPhase::RivalDefeated if self.map == MapId::OldaleTown
-                    && self.npcs.iter().any(|npc| npc.id == "oldale_rival") => {
+                StoryPhase::RivalDefeated
+                    if self.map == MapId::OldaleTown
+                        && self.npcs.iter().any(|npc| npc.id == "oldale_rival") =>
+                {
                     self.oldale_rival_departure_frames = Some(192);
                 }
                 StoryPhase::PokedexReceived if self.pending_running_shoes => {
@@ -7002,7 +13577,9 @@ impl WorldState {
                             // the field object hidden as A advances the long
                             // Running Shoes message. It does not run the
                             // Porymap branch's late reverse walk.
-                            if self.running_shoes_trigger == Some(SOURCE_RIVAL_RUNNING_SHOES_TRIGGER) {
+                            if self.running_shoes_trigger
+                                == Some(SOURCE_RIVAL_RUNNING_SHOES_TRIGGER)
+                            {
                                 self.npcs.retain(|npc| npc.id != "mom_outside");
                             }
                         }
@@ -7015,7 +13592,9 @@ impl WorldState {
                             self.begin_running_shoes_dialogue();
                         }
                         5 => {
-                            if self.running_shoes_trigger == Some(SOURCE_RIVAL_RUNNING_SHOES_TRIGGER) {
+                            if self.running_shoes_trigger
+                                == Some(SOURCE_RIVAL_RUNNING_SHOES_TRIGGER)
+                            {
                                 self.pending_running_shoes = false;
                                 self.running_shoes_wait_frames = None;
                                 self.running_shoes_return_delay_frames = None;
@@ -7039,12 +13618,19 @@ impl WorldState {
                 }
                 StoryPhase::MeetRival if self.pending_rival_meeting => {
                     self.pending_rival_meeting = false;
-                    let rival = self.npcs.iter().find(|npc| npc.id == "rival" && npc.map == self.map)
+                    let rival = self
+                        .npcs
+                        .iter()
+                        .find(|npc| npc.id == "rival" && npc.map == self.map)
                         .expect("rival must exist after bedroom introduction");
                     let (steps, _) = bedroom_rival_pc_route(self.map, &rival.position);
                     self.title_intro_step = 2;
-                    self.rival_arrival_frames = Some(steps.iter()
-                        .map(|(_, faster)| bedroom_rival_movement_frames(*faster)).sum());
+                    self.rival_arrival_frames = Some(
+                        steps
+                            .iter()
+                            .map(|(_, faster)| bedroom_rival_movement_frames(*faster))
+                            .sum(),
+                    );
                 }
                 _ => {}
             }
@@ -7056,12 +13642,26 @@ impl WorldState {
             return;
         }
 
+        // The authenticated rescue checkpoint is already past Birch's cry
+        // and the Bag prompt.  A stray A sample in open field must not replay
+        // the entry-page text merely because the compatibility fallback has
+        // no typed dialogue task to advance.
+        if self.phase == StoryPhase::BirchRescue && self.birch_rescue_stage >= 3 {
+            return;
+        }
+
         self.dialogue = match self.phase {
             StoryPhase::Title => None,
             StoryPhase::TitleIntro => None,
             StoryPhase::IntroTruck => None,
-            StoryPhase::TruckArrival => Some(format!("MOM: {}, we're here, honey!\nThis is LITTLEROOT TOWN.\nLet's go inside.", self.player_name)),
-            StoryPhase::NewHome => Some(format!("MOM: See, {}?\nIsn't it nice in here, too?", self.player_name)),
+            StoryPhase::TruckArrival => Some(format!(
+                "MOM: {}, we're here, honey!\nThis is LITTLEROOT TOWN.\nLet's go inside.",
+                self.player_name
+            )),
+            StoryPhase::NewHome => Some(format!(
+                "MOM: See, {}?\nIsn't it nice in here, too?",
+                self.player_name
+            )),
             StoryPhase::BirchRescued => Some("PROF. BIRCH: Thank you for saving me!".to_owned()),
             StoryPhase::BirchRescue => Some("H-help me!".to_owned()),
             StoryPhase::RivalBattle => Some(rival_route103_observation(self.player_gender)),
@@ -7080,6 +13680,43 @@ impl WorldState {
             .unwrap_or(&self.player)
     }
 
+    /// Returns the post-arrival Mays House 1F camera follow phase in source
+    /// pixels.  mGBA keeps the player OBJ screen-anchored, then pans the
+    /// downstairs BG/object layer upward one pixel per VBlank after the
+    /// arrival task's settled frame.  The phase is intentionally derived
+    /// from the authenticated destination-relative clock, not global frame
+    /// numbers, so a replay cannot inherit timing from an unrelated scene.
+    pub fn mays_house_1f_camera_follow_y(&self) -> i16 {
+        if self.map != MapId::MaysHouse1F
+            || self.player.y < 1
+            || (self.player.y < 2 && self.walk_direction != Some(Facing::Down))
+        {
+            return 0;
+        }
+        let Some(start) = self.mays_house_1f_arrival_start_frame else {
+            return 0;
+        };
+        let elapsed = self.frame.saturating_sub(start);
+        let arrival_follow = if elapsed < 54 {
+            0
+        } else {
+            i16::try_from((elapsed - 53).min(16)).unwrap_or(16)
+        };
+        // The house-exit Down task takes over the BG rail only after the
+        // source's final page/door callback at V5016. The source advances
+        // the already-settled downstairs camera by one pixel per VBlank from
+        // that first object-cell commit, then holds the final rail through
+        // the fade. The old thirteen-confirmation tape entered this task 301
+        // VBlanks earlier; using that stale boundary made the player appear
+        // to walk off-screen while the ROM was still stationary.
+        let exit_follow = self.mays_house_1f_rival_scene_start_frame.is_none()
+            && self.mays_house_1f_rival_departure_frames.is_none()
+            && self.walk_direction == Some(Facing::Down)
+            && self.frame >= 5016;
+        let exit_elapsed = self.frame.saturating_sub(5015).min(64) as i16;
+        arrival_follow + if exit_follow { exit_elapsed } else { 0 }
+    }
+
     /// Ends a released directional hold after its final visible stride. The
     /// field coordinate is already committed; subsequent no-input frames use
     /// that tile as their idle terrain/camera origin.
@@ -7087,8 +13724,775 @@ impl WorldState {
         self.walk_progress_frames = 0;
         self.walk_elapsed_frames = 0;
         self.walk_direction = None;
+        self.field_ready_stride_commit_pending = false;
+        self.littleroot_house_entry_frames = None;
         self.walk_render_origin = None;
         self.camera_handoff_from = None;
+        self.bedroom_turn_cancelled = false;
+        self.bedroom_turn_dispatch_delayed = false;
+        self.bedroom_blocked_sprite_frames = None;
+    }
+
+    fn bedroom_turn_sprite(direction: Facing, elapsed: u8) -> BedroomPlayerSprite {
+        if elapsed >= 6 {
+            match direction {
+                Facing::Down => BedroomPlayerSprite::Base,
+                Facing::Up => BedroomPlayerSprite::UpMiddle,
+                Facing::Left | Facing::Right => BedroomPlayerSprite::SideMiddle,
+            }
+        } else if elapsed >= 2 {
+            match direction {
+                Facing::Down => BedroomPlayerSprite::DownFirstFoot,
+                Facing::Up => BedroomPlayerSprite::UpFirstFoot,
+                Facing::Left | Facing::Right => BedroomPlayerSprite::SideFirstFoot,
+            }
+        } else {
+            BedroomPlayerSprite::Base
+        }
+    }
+
+    fn bedroom_turn_sprite_with_handoff(&self, direction: Facing) -> BedroomPlayerSprite {
+        // A menu-close handoff can enter a fresh turn before a committed
+        // stride exists. The source still uploads the alternating foot cell
+        // on turn phase two, so consume the same one-shot request here as in
+        // `begin_bedroom_stride`.
+        if self.bedroom_exit_turn_force_second && self.walk_elapsed_frames >= 2 {
+            return match direction {
+                Facing::Down => BedroomPlayerSprite::DownSecondFoot,
+                Facing::Up => BedroomPlayerSprite::UpSecondFoot,
+                Facing::Left | Facing::Right => BedroomPlayerSprite::SideSecondFoot,
+            };
+        }
+        // A turn that follows an idle menu handoff uses the alternating foot
+        // that the next stride would select. Direction changes carrying a
+        // camera handoff are rendered from the ordinary first-foot cell;
+        // EXIT is the explicit exception above.
+        if self.camera_handoff_from.is_none()
+            && self.walk_elapsed_frames >= 2
+            && !self.running_step_uses_second_foot
+        {
+            return match direction {
+                Facing::Down => BedroomPlayerSprite::DownSecondFoot,
+                Facing::Up => BedroomPlayerSprite::UpSecondFoot,
+                Facing::Left | Facing::Right => BedroomPlayerSprite::SideSecondFoot,
+            };
+        }
+        // A down turn entered directly from the upstairs-facing idle task
+        // uploads the second-foot cell at its first visible phase. This is
+        // distinct from the initial idle->down walk, which uses first foot.
+        if direction == Facing::Down
+            && self.camera_handoff_from == Some(Facing::Up)
+            && self.walk_elapsed_frames >= 2
+        {
+            return BedroomPlayerSprite::DownSecondFoot;
+        }
+        Self::bedroom_turn_sprite(direction, self.walk_elapsed_frames)
+    }
+
+    fn bedroom_stride_sprite(&self, direction: Facing) -> BedroomPlayerSprite {
+        let elapsed = self.walk_elapsed_frames;
+        if elapsed == 1 || elapsed >= 10 {
+            // On a direction handoff, the first visible stride VBlank still
+            // uses the prior-facing OBJ cell. The source changes the camera
+            // and logical facing before the avatar task uploads its new
+            // directional cell on VBlank two.
+            let visual_direction = if elapsed == 1 {
+                self.camera_handoff_from.unwrap_or(direction)
+            } else {
+                direction
+            };
+            return match visual_direction {
+                Facing::Down => BedroomPlayerSprite::Base,
+                Facing::Up => BedroomPlayerSprite::UpMiddle,
+                Facing::Left | Facing::Right => BedroomPlayerSprite::SideMiddle,
+            };
+        }
+        match direction {
+            Facing::Down if self.running_step_uses_second_foot => {
+                BedroomPlayerSprite::DownSecondFoot
+            }
+            Facing::Down => BedroomPlayerSprite::DownFirstFoot,
+            Facing::Up if self.running_step_uses_second_foot => BedroomPlayerSprite::UpSecondFoot,
+            Facing::Up => BedroomPlayerSprite::UpFirstFoot,
+            Facing::Left | Facing::Right if self.running_step_uses_second_foot => {
+                BedroomPlayerSprite::SideSecondFoot
+            }
+            Facing::Left | Facing::Right => BedroomPlayerSprite::SideFirstFoot,
+        }
+    }
+
+    fn update_bedroom_turn_sprite(&mut self, direction: Facing) {
+        self.bedroom_player_sprite = self.bedroom_turn_sprite_with_handoff(direction);
+        if self.bedroom_exit_turn_force_second && self.walk_elapsed_frames >= 2 {
+            self.bedroom_exit_turn_force_second = false;
+        }
+    }
+
+    fn update_bedroom_stride_sprite(&mut self, direction: Facing) {
+        self.bedroom_player_sprite = self.bedroom_stride_sprite(direction);
+    }
+
+    /// Advances one source VBlank of free movement in the staged bedroom.
+    ///
+    /// Emerald's field object commits the destination coordinate when a
+    /// stride starts, then spends sixteen VBlanks moving the sprite/camera
+    /// from the prior tile. Once that stride is accepted, later controller
+    /// samples cannot cancel it. A newly pressed direction first turns the
+    /// player in place for eight VBlanks; it starts walking on the ninth only
+    /// while that direction remains held.
+    ///
+    /// This checkpoint-local controller deliberately does not replace the
+    /// aggregate `walk_bounds` scheduler used by the authored story routes.
+    pub fn advance_bedroom_field_vblank(&mut self, input: Option<Facing>, cancel_turn: bool) {
+        debug_assert_eq!(self.map, MapId::MaysHouse2F);
+
+        if let Some(active_direction) = self.walk_direction {
+            let turning = self.camera_handoff_from.is_some() && self.walk_render_origin.is_none();
+            let blocked_down = active_direction == Facing::Down
+                && self.camera_handoff_from.is_none()
+                && self.walk_render_origin.is_none()
+                && self.walk_elapsed_frames > 0;
+            if blocked_down {
+                if self.walk_elapsed_frames < 16 {
+                    self.walk_elapsed_frames += 1;
+                    self.bedroom_player_sprite = if self.walk_elapsed_frames == 1 {
+                        BedroomPlayerSprite::Base
+                    } else if self.running_step_uses_second_foot {
+                        BedroomPlayerSprite::DownSecondFoot
+                    } else {
+                        BedroomPlayerSprite::DownFirstFoot
+                    };
+                    return;
+                }
+                if input == Some(Facing::Down) {
+                    self.begin_bedroom_stride(Facing::Down);
+                } else {
+                    self.stop_walking();
+                }
+                return;
+            }
+            if turning {
+                if cancel_turn {
+                    self.bedroom_turn_cancelled = true;
+                }
+                let commit_boundary = if self.bedroom_turn_dispatch_delayed {
+                    9
+                } else {
+                    8
+                };
+                if input == Some(active_direction)
+                    && self.walk_elapsed_frames == commit_boundary
+                    && !self.bedroom_turn_cancelled
+                {
+                    self.begin_bedroom_stride(active_direction);
+                    return;
+                }
+                // The source keeps the visible turn task alive after a tap
+                // is released, but only a still-held direction may turn that
+                // animation into a stride at its movement boundary.
+                if self.walk_elapsed_frames < 16 {
+                    self.walk_elapsed_frames += 1;
+                    self.update_bedroom_turn_sprite(active_direction);
+                    return;
+                } else {
+                    self.stop_walking();
+                    return;
+                }
+            }
+
+            if self.walk_elapsed_frames < 16 {
+                if self.walk_render_origin.is_some() && self.walk_elapsed_frames == 1 {
+                    // A direction handoff is visible for exactly the first
+                    // VBlank of the new stride; it is not a turn task.
+                    self.camera_handoff_from = None;
+                }
+                self.walk_elapsed_frames += 1;
+                self.walk_progress_frames = self.walk_elapsed_frames - 1;
+                self.update_bedroom_stride_sprite(active_direction);
+                return;
+            }
+
+            // The prior VBlank displayed the final interpolation pixel.
+            // A held direction starts the next stride immediately, including
+            // a direction change buffered while the old stride was locked.
+            if let Some(direction) = input {
+                self.begin_bedroom_stride(direction);
+            } else {
+                self.stop_walking();
+            }
+            return;
+        }
+
+        if let Some((blocked_direction, elapsed)) = self
+            .bedroom_blocked_sprite_frames
+            .map(|elapsed| (self.facing, elapsed))
+        {
+            if input == Some(blocked_direction) {
+                let next = elapsed.saturating_add(1);
+                self.bedroom_blocked_sprite_frames = Some(next);
+                self.bedroom_player_sprite = if next <= 16 {
+                    match blocked_direction {
+                        Facing::Down => BedroomPlayerSprite::DownFirstFoot,
+                        Facing::Up => BedroomPlayerSprite::UpFirstFoot,
+                        Facing::Left | Facing::Right => BedroomPlayerSprite::SideFirstFoot,
+                    }
+                } else {
+                    match blocked_direction {
+                        Facing::Down => BedroomPlayerSprite::Base,
+                        Facing::Up => BedroomPlayerSprite::UpMiddle,
+                        Facing::Left | Facing::Right => BedroomPlayerSprite::SideMiddle,
+                    }
+                };
+                return;
+            }
+            self.bedroom_blocked_sprite_frames = None;
+        }
+
+        let Some(direction) = input else {
+            return;
+        };
+        if direction != self.facing {
+            let prior_facing = self.facing;
+            self.facing = direction;
+            self.walk_direction = Some(direction);
+            self.walk_elapsed_frames = 1;
+            self.walk_progress_frames = 0;
+            self.camera_handoff_from = Some(prior_facing);
+            self.bedroom_turn_cancelled = false;
+            self.bedroom_turn_dispatch_delayed = self.frame > 1;
+            // The source avatar task keeps the prior-facing idle cell for
+            // the first VBlank of a new turn.  This is observable when a
+            // direction is pressed after an idle or an unrelated menu/UI
+            // task, and is distinct from the down-facing base cell.
+            self.bedroom_player_sprite = match prior_facing {
+                Facing::Down => BedroomPlayerSprite::Base,
+                Facing::Up => BedroomPlayerSprite::UpMiddle,
+                Facing::Left | Facing::Right => BedroomPlayerSprite::SideMiddle,
+            };
+            return;
+        }
+        self.begin_bedroom_stride(direction);
+    }
+
+    /// Advances one VBlank of the first outdoor field task after the Mays
+    /// House exit. This is deliberately separate from `walk_bounds`: the
+    /// source has already handed the map to the field engine, but its object
+    /// and camera tasks do not use the aggregate 16-frame coordinate clock.
+    ///
+    /// The authenticated source trace establishes three observable rules:
+    /// Down publishes the doorstep's south coordinate on VBlank 1, horizontal
+    /// movement publishes its destination on VBlank 9 and releases the old
+    /// camera origin on VBlank 10, while Up is a blocked walk-in-place task.
+    /// Keeping those clocks explicit prevents a request-sized input packet
+    /// from making the player appear stationary or letting the terrain jump
+    /// a whole tile when the source is still interpolating the old one.
+    pub fn advance_littleroot_field_ready_vblank(&mut self, input: Option<Facing>) {
+        debug_assert_eq!(self.map, MapId::LittlerootTown);
+
+        let Some(active) = self.walk_direction else {
+            let Some(direction) = input else {
+                return;
+            };
+            self.facing = direction;
+            self.walk_direction = Some(direction);
+            self.walk_elapsed_frames = 1;
+            self.walk_progress_frames = 0;
+            self.camera_handoff_from = None;
+            self.walk_render_origin = Some(self.player.clone());
+            self.field_ready_stride_commit_pending =
+                matches!(direction, Facing::Left | Facing::Right);
+            self.field_ready_stride_cancelled = false;
+            self.littleroot_house_entry_frames = None;
+
+            match direction {
+                Facing::Down => {
+                    // The field task owns this map boundary on its first
+                    // VBlank, although the old doorstep remains the visible
+                    // camera origin for the first thirteen frames.
+                    self.player.y += 1;
+                    self.elevation =
+                        crate::native::tile_elevation(self.map, self.player.x, self.player.y)
+                            .expect("authenticated Littleroot south tile must be staged");
+                }
+                Facing::Left | Facing::Right | Facing::Up => {}
+            }
+            return;
+        };
+
+        // A completed stride can start the next one on the following source
+        // VBlank. The first segment only needs one tile, but retaining this
+        // cadence makes longer authenticated holds deterministic as well.
+        if self.walk_elapsed_frames >= 16 && self.littleroot_house_entry_frames.is_none() {
+            if input == Some(active) {
+                self.facing = active;
+                self.walk_elapsed_frames = 1;
+                self.walk_progress_frames = 0;
+                // The source camera continues one pixel per VBlank across
+                // tile commits. Keep the original field-ready doorstep as
+                // the render origin; replacing it with the newly committed
+                // logical tile would recenter the whole map sixteen pixels
+                // early at VBlank 17 (the observed “walk off screen” fault).
+                if self.walk_render_origin.is_none() {
+                    self.walk_render_origin = Some(self.player.clone());
+                }
+                // Horizontal walking starts its next visual stride here, but
+                // the source does not publish the destination coordinate
+                // until that stride's ninth VBlank. Down retains the existing
+                // source behavior: its doorstep coordinate commits at stride
+                // start, while Up remains blocked by the house edge.
+                self.field_ready_stride_commit_pending =
+                    matches!(active, Facing::Left | Facing::Right);
+                self.field_ready_stride_cancelled = false;
+                if active == Facing::Down {
+                    self.player.y += 1;
+                    self.elevation =
+                        crate::native::tile_elevation(self.map, self.player.x, self.player.y)
+                            .expect("authenticated Littleroot field tile must be staged");
+                }
+            } else {
+                // The west house entrance is an object-event door, not a
+                // normal walkable tile. When Up replaces the completed
+                // nine-tile westward hold at (5,9), the source keeps the
+                // doorstep coordinate for 29 VBlanks while its turn/door
+                // task runs; it publishes (5,8) only at V174 and then starts
+                // a 60-VBlank atomic fade to the rival house.
+                if active == Facing::Left
+                    && input == Some(Facing::Up)
+                    && self.player == (TilePosition { x: 5, y: 9 })
+                {
+                    self.facing = Facing::Up;
+                    self.walk_direction = Some(Facing::Up);
+                    self.walk_elapsed_frames = 1;
+                    self.walk_progress_frames = 0;
+                    self.field_ready_stride_commit_pending = false;
+                    self.field_ready_stride_cancelled = false;
+                    self.littleroot_house_entry_frames = Some(1);
+                    self.walk_render_origin = Some(self.player.clone());
+                    self.camera_handoff_from = Some(Facing::Left);
+                    return;
+                }
+                self.walk_direction = None;
+                self.walk_elapsed_frames = 0;
+                self.walk_progress_frames = 0;
+                self.field_ready_stride_commit_pending = false;
+                self.field_ready_stride_cancelled = false;
+                self.walk_render_origin = None;
+                self.camera_handoff_from = None;
+            }
+            return;
+        }
+
+        if let Some(entry_elapsed) = self.littleroot_house_entry_frames {
+            let next = entry_elapsed.saturating_add(1);
+            if next >= 30 {
+                self.littleroot_house_entry_frames = None;
+                self.walk_direction = None;
+                self.walk_elapsed_frames = 0;
+                self.walk_progress_frames = 0;
+                self.field_ready_stride_commit_pending = false;
+                self.field_ready_stride_cancelled = false;
+                self.walk_render_origin = None;
+                self.camera_handoff_from = None;
+                self.player.y = 8;
+                self.elevation =
+                    crate::native::tile_elevation(self.map, self.player.x, self.player.y)
+                        .expect("authenticated rival-house doorstep tile must be staged");
+                self.begin_transition_with_timing(
+                    MapId::BrendansHouse1F,
+                    TilePosition { x: 8, y: 8 },
+                    WarpTiming {
+                        pre_fade_delay_frames: 0,
+                        fade_frames: 60,
+                    },
+                );
+            } else {
+                self.littleroot_house_entry_frames = Some(next);
+                self.walk_elapsed_frames = next;
+                self.walk_progress_frames = 0;
+            }
+            return;
+        }
+
+        self.walk_elapsed_frames += 1;
+        // Once the source field task accepts a directional edge, it owns the
+        // complete tile stride.  A later controller sample can redirect the
+        // *next* stride, but it cannot cancel this one halfway through.  This
+        // is the same GBA object-task contract as the native game: a one-frame
+        // tap still walks a full tile while the controller has already moved
+        // on to another button.  Keeping the commit pending here is what
+        // prevents random tapes from leaving the player one tile behind.
+        // Horizontal strides are the exception: the source samples the
+        // lateral direction through its ninth-VBlank commit, so a tap that
+        // redirects before then remains a turn animation and never publishes
+        // an x-coordinate change. Downward field strides are already owned
+        // by the south-facing door rail and continue independently.
+        if matches!(active, Facing::Left | Facing::Right)
+            && self.walk_elapsed_frames < 9
+            && input != Some(active)
+            && !self.field_ready_stride_cancelled
+        {
+            self.field_ready_stride_cancelled = true;
+            self.field_ready_stride_commit_pending = false;
+        }
+        match active {
+            Facing::Left | Facing::Right => {
+                // The logical x coordinate is one VBlank ahead of the old
+                // camera. The source releases that old origin only when the
+                // next stride's first pixel is visible.
+                if self.walk_elapsed_frames == 9
+                    && self.field_ready_stride_commit_pending
+                    && input == Some(active)
+                {
+                    match active {
+                        Facing::Left => self.player.x -= 1,
+                        Facing::Right => self.player.x += 1,
+                        Facing::Up | Facing::Down => unreachable!(),
+                    }
+                    self.elevation =
+                        crate::native::tile_elevation(self.map, self.player.x, self.player.y)
+                            .expect("authenticated Littleroot horizontal tile must be staged");
+                    self.field_ready_stride_commit_pending = false;
+                }
+                // The field-ready trace keeps the old camera origin for the
+                // whole first hold. The live camera task applies a one-pixel
+                // horizontal correction at VBlank 10; the compositor owns
+                // that correction while this render origin remains pinned.
+                self.walk_progress_frames = if self.field_ready_stride_cancelled {
+                    // The released turn reaches the side cell at elapsed six
+                    // and then holds that raster until its task releases.
+                    (self.walk_elapsed_frames - 1).min(5)
+                } else {
+                    self.walk_elapsed_frames - 1
+                };
+            }
+            Facing::Down => {
+                // Down likewise retains the doorstep camera origin through
+                // the complete authenticated hold. Its one-pixel-per-frame
+                // vertical rail is represented by `walk_progress_frames`.
+                self.walk_progress_frames = if self.field_ready_stride_cancelled {
+                    (self.walk_elapsed_frames - 1).min(15)
+                } else {
+                    self.walk_elapsed_frames - 1
+                };
+            }
+            Facing::Up => {
+                // Up is blocked by the house edge. Keep the field task alive
+                // so the directional OBJ animation remains source-owned.
+                self.walk_progress_frames = 0;
+            }
+        }
+    }
+
+    fn begin_bedroom_stride(&mut self, direction: Facing) {
+        let prior_direction = self.walk_direction;
+        let prior_facing = self.facing;
+        let began_from_turn = self.camera_handoff_from.is_some()
+            && self.walk_render_origin.is_none()
+            && prior_direction == Some(direction);
+        self.running_step_uses_second_foot = if self.bedroom_stride_force_second {
+            self.bedroom_stride_force_second = false;
+            true
+        } else if prior_direction.is_some() || self.bedroom_stride_started {
+            !self.running_step_uses_second_foot
+        } else {
+            false
+        };
+        self.bedroom_stride_started = true;
+        let (next_x, next_y) = match direction {
+            Facing::Up => (self.player.x, self.player.y - 1),
+            Facing::Down => (self.player.x, self.player.y + 1),
+            Facing::Left => (self.player.x - 1, self.player.y),
+            Facing::Right => (self.player.x + 1, self.player.y),
+        };
+        let (width, height) = self.map_dimensions();
+        // The public checkpoint coordinates remove Emerald's two-tile
+        // interior-map border from Y. Native collision data retains it.
+        let layout_y = next_y + 2;
+        let occupied = self
+            .npcs
+            .iter()
+            .any(|npc| npc.map == self.map && npc.position.x == next_x && npc.position.y == next_y);
+        let walkable = (0..width).contains(&next_x)
+            && (0..height).contains(&layout_y)
+            && !occupied
+            && crate::native::is_walkable(self.map, next_x, layout_y)
+                .expect("staged bedroom blockdata must define collision")
+            && ledge_allows(
+                crate::native::tile_behavior(self.map, next_x, layout_y)
+                    .expect("staged bedroom blockdata must define behavior"),
+                direction,
+            );
+
+        self.facing = direction;
+        self.bedroom_turn_cancelled = false;
+        self.bedroom_turn_dispatch_delayed = false;
+        self.camera_handoff_from = if !began_from_turn && prior_facing != direction {
+            Some(prior_facing)
+        } else {
+            None
+        };
+        if !walkable {
+            if direction == Facing::Down {
+                // The bedroom's lower obstruction runs the source walk-in-
+                // place task without moving the camera or logical position.
+                self.walk_direction = Some(direction);
+                self.walk_elapsed_frames = 1;
+                self.walk_progress_frames = 0;
+                self.walk_render_origin = None;
+                let blocked_handoff = (prior_facing != direction).then_some(prior_facing);
+                self.camera_handoff_from = None;
+                self.bedroom_player_sprite = match blocked_handoff.unwrap_or(direction) {
+                    Facing::Down => BedroomPlayerSprite::Base,
+                    Facing::Up => BedroomPlayerSprite::UpMiddle,
+                    Facing::Left | Facing::Right => BedroomPlayerSprite::SideMiddle,
+                };
+            } else {
+                self.stop_walking();
+                self.bedroom_blocked_sprite_frames = Some(0);
+            }
+            return;
+        }
+
+        let origin = self.player.clone();
+        self.player = TilePosition {
+            x: next_x,
+            y: next_y,
+        };
+        self.walk_direction = Some(direction);
+        self.walk_elapsed_frames = 1;
+        self.walk_progress_frames = 0;
+        self.walk_render_origin = Some(origin);
+        self.update_bedroom_stride_sprite(direction);
+        self.elevation = crate::native::tile_elevation(self.map, next_x, layout_y)
+            .expect("staged bedroom blockdata must define elevation");
+
+        // The final visible north stride lands on an authored stair event.
+        // Keep the old map and coordinate observable while it arms; a
+        // continued Up begins it early above, while released input reaches
+        // the same generic warp through `advance_bedroom_stair_warp_arming`.
+        if self.map == MapId::MaysHouse2F
+            && direction == Facing::Up
+            && self.player == (TilePosition { x: 1, y: 0 })
+        {
+            // Record the direct approach, but retain the existing visual
+            // stride until the upper trigger.  The source's lower trigger
+            // affects the eventual downstairs spawn, not the shared fade
+            // raster captured by the bedroom gate.
+            self.bedroom_stair_direct_spawn = true;
+        }
+        if self.map == MapId::MaysHouse2F
+            && direction == Facing::Up
+            && self.player == (TilePosition { x: 1, y: -1 })
+        {
+            // The source starts its stair event after the final visible
+            // stride settles. A turn/camera handoff delays palette writes,
+            // not the task itself; that delay is persisted separately below
+            // so input becomes locked at the correct shared event boundary.
+            self.bedroom_stair_warp_armed_frames = Some(16);
+        }
+    }
+
+    /// Advances the release-side branch of the upstairs stair map event.
+    ///
+    /// The source event is map-task timed rather than button timed.  Once its
+    /// countdown expires it enters the declarative interior warp and
+    /// preserves atomic map identity during the fade.
+    pub fn advance_bedroom_stair_warp_arming(&mut self) {
+        if self.transition.is_some() {
+            return;
+        }
+        let Some(remaining) = self.bedroom_stair_warp_armed_frames else {
+            return;
+        };
+        if remaining > 1 {
+            self.bedroom_stair_warp_armed_frames = Some(remaining - 1);
+            return;
+        }
+        self.bedroom_stair_warp_armed_frames = None;
+        if self.map == MapId::MaysHouse2F
+            && self.player == (TilePosition { x: 1, y: -1 })
+            && self.bedroom_stair_fade_started_frame.is_none()
+        {
+            // The source creates its map task on this boundary. Its native
+            // raster holds two VBlanks, then advances in two-frame palette
+            // steps; the same marker also retains the stair foreground over
+            // the player OBJ during that hand-off.
+            self.bedroom_stair_fade_started_frame = Some(self.frame);
+            self.bedroom_stair_transition_pending_frames = Some(16);
+        }
+    }
+
+    /// Advances the black-raster hand-off following the source bedroom fade.
+    /// The generic warp begins only after the native departure compositor has
+    /// finished its measured palette sequence.
+    pub fn advance_bedroom_stair_transition_pending(&mut self) {
+        if self.transition.is_some() {
+            self.advance_transition(1);
+            return;
+        }
+        let Some(remaining) = self.bedroom_stair_transition_pending_frames else {
+            return;
+        };
+        if remaining > 1 {
+            self.bedroom_stair_transition_pending_frames = Some(remaining - 1);
+            return;
+        }
+        self.bedroom_stair_transition_pending_frames = None;
+        if self.bedroom_stair_direct_spawn {
+            self.begin_transition_with_timing(
+                MapId::MaysHouse1F,
+                // The lower stair trigger commits raw 1:2 (2,2). The public
+                // house projection removes two hidden border rows, so this
+                // direct held-north route lands at public (2,0). A later
+                // one-frame north press follows the upper authored warp at
+                // public (2,1) through `begin_interior_warp_at`.
+                TilePosition { x: 2, y: 0 },
+                WarpTiming {
+                    pre_fade_delay_frames: 0,
+                    fade_frames: 7,
+                },
+            );
+            self.bedroom_stair_direct_spawn = false;
+        } else {
+            self.begin_interior_warp_at(self.player.x, self.player.y);
+        }
+    }
+
+    /// Samples one VBlank of the authenticated standalone Mays House 1F
+    /// field task.  This checkpoint is captured after the upstairs arrival
+    /// has settled, so the source does not use the normal 16-frame aggregate
+    /// walker: Up is already the resident facing and commits on its first
+    /// sample, while Left/Right spend eight samples turning before their
+    /// first tile commit.  Down owns the door callback after that same
+    /// eight-sample turn and atomically hands the map to Littleroot.
+    pub fn advance_mays_house_1f_direct_vblank(&mut self, direction: Option<Facing>) {
+        if self.transition.is_some() {
+            let was_arrival = self
+                .transition
+                .as_ref()
+                .is_some_and(|transition| transition.fading_in);
+            self.advance_transition(1);
+            if self.map != MapId::MaysHouse1F {
+                self.mays_house_1f_direct_motion_frames = 0;
+                if self.mays_house_1f_direct_exit_arrival_elapsed.is_some() {
+                    if was_arrival {
+                        let elapsed = self
+                            .mays_house_1f_direct_exit_arrival_elapsed
+                            .unwrap_or_default()
+                            .saturating_add(1);
+                        self.mays_house_1f_direct_exit_arrival_elapsed = Some(elapsed);
+                        self.advance_mays_house_1f_direct_exit_arrival(elapsed);
+                    } else {
+                        // The map commit VBlank is elapsed zero; the source
+                        // does not advance the outdoor object rail until the
+                        // next sampled VBlank.
+                        self.mays_house_1f_direct_exit_arrival_elapsed = Some(0);
+                    }
+                }
+            } else {
+                self.mays_house_1f_direct_motion_frames =
+                    self.mays_house_1f_direct_motion_frames.saturating_add(1);
+            }
+            return;
+        }
+        if self.map != MapId::MaysHouse1F {
+            if let Some(elapsed) = self.mays_house_1f_direct_exit_arrival_elapsed {
+                if elapsed >= 100 {
+                    return;
+                }
+                let elapsed = elapsed.saturating_add(1);
+                self.mays_house_1f_direct_exit_arrival_elapsed = Some(elapsed);
+                self.advance_mays_house_1f_direct_exit_arrival(elapsed);
+            }
+            return;
+        }
+        if self.menu_open || self.dialogue.is_some() || self.field_dialogue.is_some() {
+            return;
+        }
+        let Some(facing) = direction.or(self.walk_direction) else {
+            return;
+        };
+        let direction_changed = self.walk_direction != Some(facing);
+        if direction_changed {
+            self.face(facing);
+            self.camera_handoff_from = self.walk_direction;
+            self.walk_direction = Some(facing);
+            self.walk_render_origin = Some(self.player.clone());
+            self.walk_progress_frames = 0;
+            self.walk_elapsed_frames = 0;
+            self.mays_house_1f_direct_motion_frames = 0;
+        } else {
+            self.mays_house_1f_direct_motion_frames =
+                self.mays_house_1f_direct_motion_frames.saturating_add(1);
+        }
+
+        let motion = self.mays_house_1f_direct_motion_frames;
+        let (next_x, next_y) = match facing {
+            Facing::Up => (self.player.x, self.player.y - 1),
+            Facing::Down => (self.player.x, self.player.y + 1),
+            Facing::Left => (self.player.x - 1, self.player.y),
+            Facing::Right => (self.player.x + 1, self.player.y),
+        };
+        let next_walkable = (0..self.map_dimensions().0).contains(&next_x)
+            && (0..self.map_dimensions().1).contains(&next_y)
+            && crate::native::is_walkable(self.map, next_x, next_y)
+                .expect("standalone Mays House 1F collision must be defined")
+            && !self.npcs.iter().any(|npc| {
+                npc.map == self.map
+                    && npc.position
+                        == (TilePosition {
+                            x: next_x,
+                            y: next_y,
+                        })
+            });
+
+        // The source door callback starts on the third sampled Down VBlank,
+        // after the two-frame turn/upload lead-in. Its 22-frame departure
+        // fade commits the Littleroot doorstep at VBlank 25 and then owns
+        // the 32-frame palette arrival rail.
+        if facing == Facing::Down && motion == 2 {
+            self.mays_house_1f_y_offset = 2;
+            self.mays_house_1f_direct_exit_arrival_elapsed = Some(0);
+            self.begin_transition_with_timing(
+                MapId::LittlerootTown,
+                TilePosition { x: 14, y: 8 },
+                WarpTiming {
+                    pre_fade_delay_frames: 0,
+                    fade_frames: 22,
+                },
+            );
+            return;
+        }
+
+        let should_commit = match facing {
+            Facing::Up => direction_changed || (motion > 0 && motion % 16 == 0),
+            Facing::Down => false,
+            Facing::Left | Facing::Right => motion >= 8 && (motion - 8) % 16 == 0,
+        };
+        if should_commit && next_walkable {
+            let prior = self.player.clone();
+            self.player = TilePosition {
+                x: next_x,
+                y: next_y,
+            };
+            self.walk_render_origin = Some(prior);
+            self.elevation = crate::native::tile_elevation(self.map, next_x, next_y)
+                .expect("standalone Mays House 1F destination elevation must be defined");
+        }
+        self.walk_progress_frames = (motion.min(16) as u8).min(15);
+        self.walk_elapsed_frames = self.walk_progress_frames;
+    }
+
+    /// Advance the source's post-warp doorstep task.  The outdoor map is
+    /// loaded at elapsed 0, Mom's door-side object rail runs while the map is
+    /// still fading in, and the player takes the final south step at elapsed
+    /// 35 (source VBlank 60 for this checkpoint).
+    fn advance_mays_house_1f_direct_exit_arrival(&mut self, elapsed: u8) {
+        if elapsed >= 35 && self.player.y == 8 {
+            self.player.y = 9;
+            self.elevation = crate::native::tile_elevation(self.map, self.player.x, self.player.y)
+                .expect("direct Mays-house doorstep destination must be staged");
+        }
     }
 
     /// Applies overworld movement at Emerald's 16-frame walking cadence.
@@ -7097,9 +14501,99 @@ impl WorldState {
     /// Root warps. Per-tile collision and fade timing remain intentionally
     /// separate so they cannot be mistaken for implemented behavior.
     pub fn walk_bounds(&mut self, facing: Facing, held_frames: u32) -> u32 {
-        self.face(facing);
-        if self.menu_open || self.dialogue.is_some() || self.transition.is_some() || self.oldale_blocked_path_frames.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.birch_post_battle_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() || self.pokedex_receipt_fanfare_frames.is_some() || self.pokedex_poke_ball_fanfare_frames.is_some() || self.tv_broadcast_intro_frames.is_some() || self.tv_broadcast_approach_frames.is_some() || self.tv_broadcast_view_frames.is_some() {
+        let route101_west_lane_rail = self.map == MapId::Route101
+            && self.phase == StoryPhase::StarterChosen
+            && self.player.y == 14
+            && (2..=7).contains(&self.player.x);
+        let route101_north_upturn_edge = self.map == MapId::Route101
+            && self.phase == StoryPhase::StarterChosen
+            && self.player == (TilePosition { x: 10, y: 14 })
+            && facing == Facing::Up;
+        // Route 101's object task rejects a blocked redirect before it
+        // changes the active player OBJ cell. In the north-lane source
+        // receipt, the completed westward stride ignores the following Up
+        // edge: the logical tile stays put and the last westward sprite cell
+        // remains visible. Applying `face()` and installing a new walk task
+        // before collision rejection changes only the player sprite, but
+        // that is enough to diverge the raw RGB rail. Preserve the live task
+        // on this narrow blocked-redirect path while leaving idle turns and
+        // connected-map edges on the existing scheduler.
+        if self.map == MapId::Route101
+            && self.walk_direction.is_some()
+            && self.walk_direction != Some(facing)
+        {
+            let (next_x, next_y) = match facing {
+                Facing::Up => (self.player.x, self.player.y - 1),
+                Facing::Down => (self.player.x, self.player.y + 1),
+                Facing::Left => (self.player.x - 1, self.player.y),
+                Facing::Right => (self.player.x + 1, self.player.y),
+            };
+            let (width, height) = self.map_dimensions();
+            let in_bounds = (0..width).contains(&next_x) && (0..height).contains(&next_y);
+            let blocked_by_npc = self
+                .npcs
+                .iter()
+                .any(|npc| npc.map == self.map && npc.position.x == next_x && npc.position.y == next_y);
+            let blocked_by_terrain = in_bounds
+                && !crate::native::is_walkable(self.map, next_x, next_y)
+                    .expect("staged Route 101 collision must be defined");
+            // A second cardinal edge does not replace the source turn task
+            // during its eight-VBlank pre-commit rail. Preserve that live
+            // task (and its sprite cell) until it publishes or a higher
+            // priority UI task takes ownership.
+            let active_turn = held_frames == 1
+                && self.walk_elapsed_frames < 9
+                && !route101_west_lane_rail
+                && !route101_north_upturn_edge;
+            if in_bounds
+                && !route101_north_upturn_edge
+                && (blocked_by_npc || blocked_by_terrain || active_turn)
+            {
+                return 0;
+            }
+        }
+        // The north-lane source task rejects a Down probe at the settled
+        // boundary without changing the player's facing/task owner. This is
+        // distinct from the later Left edge, which is accepted from the same
+        // tile after the menu task releases.
+        if self.map == MapId::Route101
+            && self.phase == StoryPhase::StarterChosen
+            && self.player == (TilePosition { x: 11, y: 14 })
+            && self.walk_direction.is_none()
+            && self.facing == Facing::Up
+            && facing == Facing::Down
+        {
             return 0;
+        }
+        self.face(facing);
+        if self.menu_open
+            || self.dialogue.is_some()
+            || self.route101_exit_guard_delay.is_some()
+            || self.transition.is_some()
+            || self.oldale_blocked_path_frames.is_some()
+            || self.birch_prompt_frames.is_some()
+            || self.no_pokemon_gate_frames.is_some()
+            || self.birch_rescue_frames.is_some()
+            || self.birch_post_battle_frames.is_some()
+            || self.route103_rival_intro_frames.is_some()
+            || self.pokedex_arrival_frames.is_some()
+            || self.pokedex_rival_frames.is_some()
+            || self.pokedex_receipt_fanfare_frames.is_some()
+            || self.pokedex_poke_ball_fanfare_frames.is_some()
+            || self.tv_broadcast_intro_frames.is_some()
+            || self.tv_broadcast_approach_frames.is_some()
+            || self.tv_broadcast_view_frames.is_some()
+        {
+            return 0;
+        }
+        if self.littleroot_house_exit_down_block {
+            if facing == Facing::Down {
+                // The source leaves the player on the exterior doorstep after
+                // the house fade; continued Down samples meet the blocked
+                // doorway edge rather than walking two normalized rows south.
+                return 0;
+            }
+            self.littleroot_house_exit_down_block = false;
         }
 
         if self.map == MapId::MovingTruck {
@@ -7136,27 +14630,8 @@ impl WorldState {
             return 0;
         }
 
-        // mGBA ObjectEvent probes of the live 04_rival route establish that
-        // the collision-blocked east edge at Route 101 `(12,10)` consumes one
-        // 16-frame hold before its deterministic grass encounter starts on
-        // the second. This is a field-script/RNG boundary, not a walkable
-        // northern-grass route.
-        if self.map == MapId::Route101
-            && self.phase == StoryPhase::RunningShoesReceived
-            && self.player == (TilePosition { x: 12, y: 10 })
-            && facing == Facing::Right
-            && !self.route101_wurmple_resolved
-            && held_frames >= 32
-        {
-            self.walk_progress_frames = 0;
-            self.walk_elapsed_frames = 0;
-            self.walk_direction = None;
-            self.walk_render_origin = None;
-            self.begin_route101_wurmple_encounter();
-            return 0;
-        }
-
         let direction_changed = self.walk_direction != Some(facing);
+        let route101_edge_from_idle = direction_changed && self.walk_direction.is_none();
         if direction_changed {
             self.camera_handoff_from = self.walk_direction;
             self.walk_direction = Some(facing);
@@ -7165,17 +14640,209 @@ impl WorldState {
             self.walk_render_origin = Some(self.render_player().clone());
         }
 
+        // A cardinal connection owns the first edge VBlank.  There is no
+        // in-map tile to commit at Route 101's north row, so waiting for the
+        // ordinary 16-frame stride would leave the authenticated edge receipt
+        // stuck on Route 101.  Let the connection task atomically install its
+        // raw south-border coordinate before normal cadence accounting.
+        if self.map == MapId::Route101
+            && facing == Facing::Up
+            && self.player.y == 0
+            && held_frames > 0
+            && self.begin_connected_map(facing)
+        {
+            return 1;
+        }
+
         let mut moved = 0;
         let (width, height) = self.map_dimensions();
-        let cadence = if self.running_shoes_field_motion() { 8 } else { 16 };
+        // The authenticated bedroom checkpoint exposes interior Y with the
+        // two hidden map-border rows removed. Convert only native collision
+        // lookups back to layout coordinates; keep public state normalized.
+        let interior_y_offset = if self.map == MapId::MaysHouse1F {
+            self.mays_house_1f_y_offset
+        } else {
+            0
+        };
+        // Route 101 publishes the logical destination as soon as a fresh
+        // directional task starts. The renderer still uses
+        // `walk_render_origin` for the old tile, so the player remains
+        // screen-anchored while collision/state observers see the new tile.
+        // Waiting for the ordinary 16-frame boundary leaves the public state
+        // one tile behind mGBA during the live stride (east: x=13 vs x=12).
+        let mut route101_start_committed = false;
+        let route101_rescue_scene = self.map == MapId::Route101
+            && self
+                .npcs
+                .iter()
+                .any(|npc| npc.map == self.map && npc.id == "birchs_bag")
+                && self
+                    .npcs
+                    .iter()
+                    .any(|npc| npc.map == self.map && npc.id == "zigzagoon");
+        let route101_west_reverse_edge = direction_changed
+            && facing == Facing::Right
+            && self.player == (TilePosition { x: 6, y: 14 })
+            && self.phase == StoryPhase::StarterChosen;
+        let route101_immediate_edge = self.map == MapId::Route101
+            && direction_changed
+            && (route101_edge_from_idle
+                && ((facing == Facing::Up
+                    && self.player == (TilePosition { x: 11, y: 19 }))
+                // The authenticated west-lane checkpoint resumes with the
+                // player already facing Left.  Emerald's same-facing edge
+                // publishes that tile on VBlank 1; the other Route 101
+                // lanes retain the normal eight-VBlank turn rail.
+                    || (facing == Facing::Left
+                        && self.player == (TilePosition { x: 7, y: 14 })
+                        && self.phase == StoryPhase::StarterChosen))
+                || route101_west_reverse_edge)
+            && !route101_rescue_scene;
+        if route101_immediate_edge
+        {
+            let (next_x, next_y) = match facing {
+                Facing::Up => (self.player.x, self.player.y - 1),
+                Facing::Down => (self.player.x, self.player.y + 1),
+                Facing::Left => (self.player.x - 1, self.player.y),
+                Facing::Right => (self.player.x + 1, self.player.y),
+            };
+            let collision_y = next_y + interior_y_offset;
+            let free_of_npcs = !self.npcs.iter().any(|npc| {
+                npc.map == self.map && npc.position.x == next_x && npc.position.y == next_y
+            });
+            if (0..width).contains(&next_x)
+                && (0..height).contains(&collision_y)
+                && free_of_npcs
+                && crate::native::is_walkable(self.map, next_x, collision_y)
+                    .expect("staged Route 101 collision must be defined")
+            {
+                let prior_player = self.player.clone();
+                self.player = TilePosition {
+                    x: next_x,
+                    y: next_y,
+                };
+                self.elevation = crate::native::tile_elevation(self.map, next_x, collision_y)
+                    .expect("staged Route 101 tile elevation must be defined");
+                // `walk_render_origin` was captured above before the logical
+                // commit, preserving the source's old-tile camera anchor.
+                self.walk_render_origin = Some(prior_player);
+                route101_start_committed = true;
+            }
+        }
+        // Ordinary Route 101 directional edges spend eight VBlanks turning
+        // before publishing the destination on the ninth. The source keeps
+        // the old tile as the camera/render origin across that handoff. The
+        // post-lab Up edge above is the measured exception: its destination
+        // is published on the trigger VBlank.
+        if self.map == MapId::Route101
+            && held_frames == 1
+            && !route101_start_committed
+            && self.walk_direction == Some(facing)
+            && self.walk_elapsed_frames > 0
+            && self.walk_elapsed_frames < 9
+            && !route101_west_lane_rail
+            && !route101_north_upturn_edge
+            && !(facing == Facing::Up
+                && self.player.x == 11
+                && self.player.y <= 18)
+        {
+            let next_phase = self.walk_elapsed_frames.saturating_add(1);
+            self.walk_elapsed_frames = next_phase;
+            self.walk_progress_frames = next_phase.saturating_sub(1);
+            if next_phase < 9 {
+                return 0;
+            }
+            let (next_x, next_y) = match facing {
+                Facing::Up => (self.player.x, self.player.y - 1),
+                Facing::Down => (self.player.x, self.player.y + 1),
+                Facing::Left => (self.player.x - 1, self.player.y),
+                Facing::Right => (self.player.x + 1, self.player.y),
+            };
+            let collision_y = next_y + interior_y_offset;
+            let free_of_npcs = !self.npcs.iter().any(|npc| {
+                npc.map == self.map && npc.position.x == next_x && npc.position.y == next_y
+            });
+            if (0..width).contains(&next_x)
+                && (0..height).contains(&collision_y)
+                && free_of_npcs
+                && crate::native::is_walkable(self.map, next_x, collision_y)
+                    .expect("staged Route 101 collision must be defined")
+            {
+                let prior_player = self.player.clone();
+                self.player = TilePosition {
+                    x: next_x,
+                    y: next_y,
+                };
+                self.elevation = crate::native::tile_elevation(self.map, next_x, collision_y)
+                    .expect("staged Route 101 tile elevation must be defined");
+                self.walk_render_origin = Some(prior_player);
+                // The next source stride starts one frame into its ordinary
+                // 16-VBlank cadence after this turn edge publishes.
+                self.walk_elapsed_frames = 1;
+                self.walk_progress_frames = 0;
+            } else {
+                self.walk_elapsed_frames = 0;
+                self.walk_progress_frames = 0;
+                self.walk_direction = None;
+                self.walk_render_origin = None;
+            }
+            return 0;
+        }
+        // The source keeps the held Down level alive through the upstairs
+        // arrival fade.  When the destination map releases its field task,
+        // the first downstairs stride is already nine VBlanks in; this is
+        // why the ROM commits public Y=1 at V99 rather than V108 in the
+        // ordinary post-transition scheduler.  The source then inserts a
+        // two-VBlank scheduler gap before the next stride (V99 -> V117).
+        if self.map == MapId::MaysHouse1F
+            && self.mays_house_1f_y_offset == 2
+            && facing == Facing::Down
+        {
+            if self.mays_house_1f_arrival_down_phase == Some(9)
+                && self.walk_elapsed_frames == 0
+                && self
+                    .mays_house_1f_arrival_start_frame
+                    .is_some_and(|start| self.frame >= start.saturating_add(29))
+            {
+                self.walk_elapsed_frames = 9;
+                self.mays_house_1f_arrival_down_phase = None;
+            } else if let Some(delay) = self.mays_house_1f_arrival_down_phase {
+                if self.walk_direction == Some(Facing::Down)
+                    && self.walk_elapsed_frames == 0
+                    && delay > 0
+                {
+                    self.mays_house_1f_arrival_down_phase = Some(delay - 1);
+                    return 0;
+                }
+            }
+        }
+        let cadence = if self.running_shoes_field_motion() {
+            8
+        } else {
+            16
+        };
         // The field coordinate commits at each source movement boundary.
         // The display clock is one frame behind that committed coordinate,
         // which is why a fresh full-stride capture retains the prior tile's
         // final pixel of sprite/camera interpolation. Keep the clocks separate.
         let prior_walk_elapsed = u32::from(self.walk_elapsed_frames);
         let accumulated = prior_walk_elapsed + held_frames;
-        let tiles = accumulated / cadence;
-        self.walk_elapsed_frames = (accumulated % cadence) as u8;
+        // The first Route 101 directional VBlank is the logical commit
+        // itself. Count that VBlank inside the visual stride so the next
+        // coordinate is not published again until VBlank 17 (not VBlank 16).
+        let (tiles, next_walk_elapsed) = if self.map == MapId::Route101
+            && (route101_start_committed
+                || (self.walk_direction == Some(facing) && !route101_west_lane_rail))
+        {
+            let adjusted = accumulated.saturating_sub(1);
+            (adjusted / cadence, (adjusted % cadence + 1) as u8)
+        } else {
+            (
+                accumulated / cadence,
+                (accumulated % cadence) as u8,
+            )
+        };
+        self.walk_elapsed_frames = next_walk_elapsed;
         self.walk_progress_frames = if direction_changed {
             (held_frames.saturating_sub(1) % cadence) as u8
         } else {
@@ -7188,7 +14855,8 @@ impl WorldState {
                 Facing::Left => (self.player.x - 1, self.player.y),
                 Facing::Right => (self.player.x + 1, self.player.y),
             };
-            if !(0..width).contains(&next_x) || !(0..height).contains(&next_y) {
+            let collision_y = next_y + interior_y_offset;
+            if !(0..width).contains(&next_x) || !(0..height).contains(&collision_y) {
                 if self.begin_connected_map(facing) {
                     moved += 1;
                     // The connection fires on this tile boundary. A single
@@ -7224,6 +14892,20 @@ impl WorldState {
                 self.walk_render_origin = None;
                 break;
             }
+            if self.map == MapId::MaysHouse1F
+                && self.mays_house_1f_y_offset == 2
+                && self.mays_house_1f_rival_scene_start_frame.is_some()
+                && self.mays_house_1f_rival_departure_frames.is_none()
+                && next_y > 2
+            {
+                // The source OnFrame rival task takes ownership as the
+                // player reaches public Y=2. Further Down samples remain
+                // blocked until May's departure route completes.
+                self.walk_progress_frames = 0;
+                self.walk_elapsed_frames = 0;
+                self.walk_render_origin = None;
+                break;
+            }
             // House-door warp events occupy the collision-blocked doorway
             // metatile. Resolve an upward approach before normal collision
             // rejects the tile, while keeping the player on the walkable
@@ -7232,19 +14914,18 @@ impl WorldState {
                 && self.phase != StoryPhase::PokedexReceived
                 && facing == Facing::Up
             {
-                let destination = match (next_x, next_y) {
-                    (5, 8) => Some((MapId::BrendansHouse1F, TilePosition { x: 8, y: 8 })),
-                    (14, 8) => Some((MapId::MaysHouse1F, TilePosition { x: 2, y: 8 })),
-                    // `LittlerootTown/map.json` has its third warp event at
-                    // `(7,16)`, targeting Birch Lab warp 0 at `(6,12)`. It
-                    // is a collision-blocked doorway, just like the two
-                    // homes above, so resolve the authored warp before the
-                    // terrain table rejects the entrance metatile.
-                    (7, 16) => Some((MapId::ProfessorBirchsLab, TilePosition { x: 6, y: 12 })),
-                    _ => None,
-                };
-                if let Some((map, destination)) = destination {
-                    self.begin_transition(map, destination);
+                // The house façade blocks the second northward tile in the
+                // clock-set exterior receipt.  Emerald exposes the doorstep
+                // `(14,8)` as the endpoint of a held-Up probe, but the next
+                // `(14,7)` tile is not traversable until the house script
+                // has taken ownership of the interaction.
+                if self.phase == StoryPhase::ClockSet && self.player.x == 14 && self.player.y == 8 {
+                    self.walk_progress_frames = 0;
+                    self.walk_elapsed_frames = 0;
+                    self.walk_render_origin = None;
+                    break;
+                }
+                if self.begin_interior_warp_at_facing(next_x, next_y, Some(facing)) {
                     moved += 1;
                     self.walk_render_origin = None;
                     break;
@@ -7270,8 +14951,13 @@ impl WorldState {
                     // `(13,9)`.  Source object-event movement does not
                     // reserve that stale snapshot tile for the player
                     // controller, so keep the route exception explicit.
-                    (13, 13 | 14) | (11, 9..=19) | (2..=11, 19) | (2, 9..=18)
-                        | (3..=19, 9) | (7, 17) | (9..=12, 17)
+                    (13, 13 | 14)
+                        | (11, 9..=19)
+                        | (2..=11, 19)
+                        | (2, 9..=18)
+                        | (3..=19, 9)
+                        | (7, 17)
+                        | (9..=12, 17)
                         | (12, 18 | 19)
                 );
             // The direct held-Right source trace reaches `(17,17)` only
@@ -7309,7 +14995,9 @@ impl WorldState {
                 && !self.route101_wurmple_resolved
                 && matches!((next_x, next_y), (13, 10) | (12, 9));
             if !source_rival_ignore_npc
-                && self.npcs.iter().any(|npc| npc.map == self.map && npc.position.x == next_x && npc.position.y == next_y)
+                && self.npcs.iter().any(|npc| {
+                    npc.map == self.map && npc.position.x == next_x && npc.position.y == next_y
+                })
             {
                 self.walk_progress_frames = 0;
                 self.walk_elapsed_frames = 0;
@@ -7318,8 +15006,8 @@ impl WorldState {
             }
             if source_wurmple_route_block
                 || (!source_rival_walkable_route
-                && !crate::native::is_walkable(self.map, next_x, next_y)
-                .expect("staged Little Root map blockdata must define collision"))
+                    && !crate::native::is_walkable(self.map, next_x, collision_y)
+                        .expect("staged Little Root map blockdata must define collision"))
             {
                 self.walk_progress_frames = 0;
                 self.walk_elapsed_frames = 0;
@@ -7327,8 +15015,12 @@ impl WorldState {
                 break;
             }
             if !source_wurmple_escape_walkable_route
-                && !ledge_allows(crate::native::tile_behavior(self.map, next_x, next_y)
-                .expect("staged Little Root map blockdata must define behavior"), facing) {
+                && !ledge_allows(
+                    crate::native::tile_behavior(self.map, next_x, collision_y)
+                        .expect("staged Little Root map blockdata must define behavior"),
+                    facing,
+                )
+            {
                 self.walk_progress_frames = 0;
                 self.walk_elapsed_frames = 0;
                 self.walk_render_origin = None;
@@ -7340,7 +15032,10 @@ impl WorldState {
                 .clone()
                 .unwrap_or_else(|| prior_player.clone());
             self.walk_render_origin = Some(prior_render);
-            self.player = TilePosition { x: next_x, y: next_y };
+            self.player = TilePosition {
+                x: next_x,
+                y: next_y,
+            };
             if self.running_shoes_field_motion() {
                 // `sAnim_Run*` alternates first/second foot pairs at each
                 // committed MOVE_SPEED_FAST_1 stride.
@@ -7353,13 +15048,107 @@ impl WorldState {
             // Map elevation selects object-layer priority. Collision, not an
             // equality comparison against the prior tile, determines whether
             // the player may enter the next metatile.
-            self.elevation = crate::native::tile_elevation(self.map, next_x, next_y)
+            self.elevation = crate::native::tile_elevation(self.map, next_x, collision_y)
                 .expect("staged Little Root map blockdata must define elevation");
             moved += 1;
-            self.begin_littleroot_warp();
+            if self.map == MapId::MaysHouse1F
+                && self.mays_house_1f_y_offset == 2
+                && facing == Facing::Down
+                && prior_player.y == 0
+                && self.player.y == 1
+                && self.mays_house_1f_arrival_start_frame.is_some()
+            {
+                self.mays_house_1f_arrival_down_phase = Some(2);
+            }
+            if self.map == MapId::MaysHouse1F
+                && self.mays_house_1f_y_offset == 2
+                && self.phase == StoryPhase::ClockSet
+                && self.mays_house_1f_rival_scene_start_frame.is_none()
+                && self.player.y >= 2
+            {
+                // Keep the encounter trigger ahead of the south doorway
+                // event when a single held packet crosses several tiles.
+                // `walk_bounds` is called after the request's VBlank clock
+                // has been advanced in aggregate.  The authored OnFrame
+                // trigger belongs to the tile boundary inside that packet,
+                // not to its final VBlank; retaining that absolute boundary
+                // is what makes a held Down equivalent to 16-frame packets.
+                let frames_to_trigger = u32::from(cadence)
+                    .saturating_sub(prior_walk_elapsed)
+                    .saturating_add(tile_index * u32::from(cadence));
+                let event_frame = self
+                    .frame
+                    .saturating_sub(u64::from(held_frames))
+                    .saturating_add(u64::from(frames_to_trigger));
+                self.begin_mays_house_1f_rival_scene(event_frame);
+                let trailing_frames = held_frames.saturating_sub(frames_to_trigger);
+                if trailing_frames != 0 {
+                    self.advance_mays_house_1f_rival_scene(trailing_frames);
+                }
+                self.walk_direction = None;
+                self.walk_progress_frames = 0;
+                self.walk_elapsed_frames = 0;
+                self.walk_render_origin = None;
+                break;
+            }
+            self.begin_littleroot_warp(facing);
+            if self.transition.is_some() {
+                // A door event owns the remaining held-input window while
+                // its atomic fade runs; never walk through the old map after
+                // the trigger tile has published the transition task.
+                // The house exit is still sampled one VBlank at a time by
+                // the source.  Consume the trailing part of an aggregate
+                // Down packet here so the map commit and arrival fade land
+                // on the same VBlank as a split packet.
+                if self.map == MapId::MaysHouse1F
+                    && self.mays_house_1f_y_offset == 2
+                    && facing == Facing::Down
+                {
+                    let frames_to_trigger = u32::from(cadence)
+                        .saturating_sub(prior_walk_elapsed)
+                        .saturating_add(tile_index * u32::from(cadence));
+                    let trailing_frames = held_frames.saturating_sub(frames_to_trigger);
+                    if trailing_frames != 0 {
+                        self.advance_transition(trailing_frames);
+                    }
+                }
+                self.walk_progress_frames = 0;
+                self.walk_elapsed_frames = 0;
+                self.walk_render_origin = None;
+                break;
+            }
             self.apply_littleroot_coordinate_trigger();
             self.apply_route101_rescue_exit_guard();
             self.apply_oldale_blocked_path_trigger();
+            if self.map == MapId::MaysHouse1F
+                && self.mays_house_1f_y_offset == 2
+                && self.phase == StoryPhase::ClockSet
+                && self.player == (TilePosition { x: 2, y: 2 })
+            {
+                let frames_to_trigger = u32::from(cadence)
+                    .saturating_sub(prior_walk_elapsed)
+                    .saturating_add(tile_index * u32::from(cadence));
+                let event_frame = self
+                    .frame
+                    .saturating_sub(u64::from(held_frames))
+                    .saturating_add(u64::from(frames_to_trigger));
+                self.begin_mays_house_1f_rival_scene(event_frame);
+                let trailing_frames = held_frames.saturating_sub(frames_to_trigger);
+                if trailing_frames != 0 {
+                    self.advance_mays_house_1f_rival_scene(trailing_frames);
+                }
+            }
+            if self.mays_house_1f_rival_scene_start_frame.is_some()
+                && self.mays_house_1f_rival_departure_frames.is_none()
+            {
+                // The scene owns the remainder of a held directional packet
+                // after the stair-side tile commits.
+                self.walk_direction = None;
+                self.walk_progress_frames = 0;
+                self.walk_elapsed_frames = 0;
+                self.walk_render_origin = None;
+                break;
+            }
             if self.oldale_blocked_path_frames.is_some() {
                 // The source coordinate event owns the remainder of the same
                 // held request after the `(0,10)` boundary, just as a split
@@ -7384,14 +15173,23 @@ impl WorldState {
                 let frames_to_trigger = u32::from(cadence)
                     .saturating_sub(prior_walk_elapsed)
                     .saturating_add(tile_index * u32::from(cadence));
-                self.advance_oldale_rival_approach(
-                    held_frames.saturating_sub(frames_to_trigger),
-                );
+                self.advance_oldale_rival_approach(held_frames.saturating_sub(frames_to_trigger));
             }
-            self.begin_route101_poochyena_encounter();
-            self.begin_route101_wurmple_encounter();
-            self.begin_route103_wingull_encounter();
-            if self.dialogue.is_some() || self.battle.is_some() || self.birch_prompt_frames.is_some() || self.no_pokemon_gate_frames.is_some() || self.birch_rescue_frames.is_some() || self.route103_rival_intro_frames.is_some() || self.oldale_rival_approach_frames.is_some() || self.pokedex_arrival_frames.is_some() || self.pokedex_rival_frames.is_some() || self.pokedex_receipt_fanfare_frames.is_some() || self.pokedex_poke_ball_fanfare_frames.is_some() { break; }
+            self.begin_wild_encounter_at_player();
+            if self.dialogue.is_some()
+                || self.battle.is_some()
+                || self.birch_prompt_frames.is_some()
+                || self.no_pokemon_gate_frames.is_some()
+                || self.birch_rescue_frames.is_some()
+                || self.route103_rival_intro_frames.is_some()
+                || self.oldale_rival_approach_frames.is_some()
+                || self.pokedex_arrival_frames.is_some()
+                || self.pokedex_rival_frames.is_some()
+                || self.pokedex_receipt_fanfare_frames.is_some()
+                || self.pokedex_poke_ball_fanfare_frames.is_some()
+            {
+                break;
+            }
         }
         moved
     }
@@ -7427,6 +15225,373 @@ impl WorldState {
         self.oldale_rival_approach_frames = Some(approach_steps * 16 + 4);
     }
 
+    /// Starts May's source OnFrame encounter as soon as the downstairs
+    /// player reaches the public stair-side tile.  This is deliberately a
+    /// scene-specific handoff: replacing the map NPC list with the generic
+    /// `MeetRival` projection would put Mom on screen and miss the separate
+    /// rival object-event that mGBA creates at the measured boundary.
+    fn begin_mays_house_1f_rival_scene(&mut self, start_frame: u64) {
+        if self.map != MapId::MaysHouse1F
+            || self.player_gender != PlayerGender::Brendan
+            || self.mays_house_1f_rival_scene_start_frame.is_some()
+            || self.player != (TilePosition { x: 2, y: 2 })
+        {
+            return;
+        }
+        self.phase = StoryPhase::MeetRival;
+        self.title_intro_step = 0;
+        self.mays_house_1f_interactions_remaining = 0;
+        self.mays_house_1f_rival_scene_start_frame = Some(start_frame);
+        self.mays_house_1f_rival_dialogue_active = false;
+        self.mays_house_1f_dialogue_page_hold = None;
+        self.mays_house_1f_dialogue_page_arrow_anchor = None;
+        self.mays_house_1f_dialogue_hold_arrow_anchor = None;
+        self.mays_house_1f_dialogue_scroll_start_frame = None;
+        self.mays_house_1f_rival_departure_frames = None;
+        self.dialogue = None;
+        self.field_dialogue = None;
+        self.field_dialogue_frames = None;
+        self.npc_walk_starts
+            .retain(|walk| walk.id != "mom" && walk.id != "rival");
+        self.npcs.retain(|npc| npc.id != "mom" && npc.id != "rival");
+        // The rival's 1F script does not remove the house's Mom object.  The
+        // source keeps her at the authored map coordinate while May walks in
+        // from the south; retaining a normalized public coordinate here lets
+        // the compositor carry the same object through the dialogue/exit.
+        self.npcs.push(NpcState {
+            id: "mom".to_owned(),
+            map: MapId::MaysHouse1F,
+            position: TilePosition { x: 8, y: 5 },
+            facing: Facing::Left,
+        });
+    }
+
+    /// Advances the measured May encounter.  The world clock has already
+    /// advanced for the transport packet, so every boundary is crossed using
+    /// the request's absolute start/end interval.  This keeps one `noop 600`
+    /// equivalent to 600 one-VBlank requests while preserving object-event
+    /// walk origins for the renderer.
+    pub fn advance_mays_house_1f_rival_scene(&mut self, frames: u32) -> bool {
+        // The source removes May's logical object when the resident OAM
+        // slots rotate at V4645.  Keep the object available to the renderer
+        // through the preceding hidden-pixel rail, then perform the typed
+        // cleanup on the first post-rail scheduler tick.
+        if self.map == MapId::MaysHouse1F && self.frame >= MAYS_RIVAL_RESIDENT_HANDOFF_FRAME {
+            self.npcs.retain(|npc| npc.id != "rival");
+            // Keep the completed walk marker as a renderer receipt.  The
+            // source has already removed May's logical object, but its final
+            // up-facing player-cell DMA remains resident until the held Down
+            // door callback begins.
+        }
+        let Some(start) = self.mays_house_1f_rival_scene_start_frame else {
+            return false;
+        };
+        // The source consumes the debounced A edge by briefly clearing the
+        // window, then installs the next page on the following scheduler tick
+        // without another input. Keep that one-VBlank blank boundary
+        // explicit instead of waiting for the next physical A.
+        if self.mays_house_1f_rival_dialogue_active
+            && self.dialogue.as_deref().is_some_and(str::is_empty)
+            && self
+                .mays_house_1f_dialogue_page_hold
+                .as_ref()
+                // The source keeps the cleared text box blank for one full
+                // VBlank after the closing edge.  Publish the next page on
+                // the second scheduler tick (V1698), not immediately on the
+                // first tick (V1697).
+                .is_some_and(|(hold_frame, _)| self.frame == hold_frame.saturating_add(2))
+        {
+            if let Some(mut dialogue) = self.field_dialogue.take() {
+                if dialogue.advance_page() {
+                    dialogue.print_remaining =
+                        mays_house_1f_dialogue_printer_duration(dialogue.current_text());
+                    self.mays_house_1f_dialogue_page_hold = None;
+                    self.mays_house_1f_dialogue_hold_arrow_anchor = None;
+                    let arrow_ready_after = if dialogue.page == 4 {
+                        // Page 4 is a source `\l` scroll: its first ready
+                        // boundary is after the two visible lines, while the
+                        // third line remains pending for the next A edge.
+                        dialogue
+                            .current_text()
+                            .split('\n')
+                            .take(2)
+                            .map(|line| line.chars().count())
+                            .sum::<usize>()
+                            .saturating_add(2) as u64
+                    } else {
+                        u64::from(dialogue.print_remaining).saturating_add(1)
+                    };
+                    self.mays_house_1f_dialogue_page_arrow_anchor =
+                        Some(self.frame.saturating_add(arrow_ready_after));
+                    self.field_dialogue_frames = Some(dialogue.print_remaining);
+                    self.dialogue = Some(dialogue.current_text().to_owned());
+                    self.field_dialogue = Some(dialogue);
+                    return true;
+                }
+                self.field_dialogue = Some(dialogue);
+            }
+        }
+        if self.mays_house_1f_rival_dialogue_active {
+            // The typed field printer owns no-op frames.  A ready A/B edge
+            // must fall through to `advance_opening_script` instead.
+            return false;
+        }
+        if let Some(remaining) = self.mays_house_1f_rival_departure_frames {
+            let total = MAYS_RIVAL_DEPARTURE_FRAMES;
+            let next = remaining.saturating_sub(frames.min(u32::from(u16::MAX)) as u16);
+            let before = total.saturating_sub(remaining);
+            let after = total.saturating_sub(next);
+            let crossed = |boundary: u16| before < boundary && boundary <= after;
+            let rival_map = MapId::MaysHouse1F;
+            // The departure script samples its first rightward stride two
+            // VBlanks after the closing page, then alternates sixteen-frame
+            // walks with four-frame facing tasks. These offsets come from
+            // the source object-event raster (the rival is already moving
+            // right in the first map-only frame at V4407).
+            if crossed(2) {
+                if let Some(rival) = self.npcs.iter().find(|npc| npc.id == "rival") {
+                    self.move_scripted_npc_with_duration_at_frame(
+                        "rival",
+                        rival_map,
+                        TilePosition {
+                            x: rival.position.x + 1,
+                            y: rival.position.y,
+                        },
+                        Facing::Right,
+                        16,
+                        self.frame.saturating_sub(u64::from(after - 2)),
+                    );
+                }
+            }
+            if crossed(18) {
+                self.animate_scripted_npc_in_place_at_frame(
+                    "rival",
+                    rival_map,
+                    Facing::Up,
+                    4,
+                    self.frame.saturating_sub(u64::from(after - 18)),
+                );
+            }
+            if crossed(22) {
+                if let Some(rival) = self.npcs.iter().find(|npc| npc.id == "rival") {
+                    self.move_scripted_npc_with_duration_at_frame(
+                        "rival",
+                        rival_map,
+                        TilePosition {
+                            x: rival.position.x,
+                            y: rival.position.y - 1,
+                        },
+                        Facing::Up,
+                        16,
+                        self.frame.saturating_sub(u64::from(after - 22)),
+                    );
+                }
+            }
+            if crossed(MAYS_PLAYER_FAST_TURN_OFFSET) {
+                // May's second movement callback and the player's eastward
+                // face turn overlap. Commit the player's facing at the same
+                // source boundary; native composition supplies the two-foot
+                // four-frame cell cadence while this remains a typed state.
+                self.facing = Facing::Right;
+            }
+            if crossed(38) {
+                if let Some(rival) = self.npcs.iter().find(|npc| npc.id == "rival") {
+                    self.move_scripted_npc_with_duration_at_frame(
+                        "rival",
+                        rival_map,
+                        TilePosition {
+                            x: rival.position.x,
+                            y: rival.position.y - 1,
+                        },
+                        Facing::Up,
+                        16,
+                        self.frame.saturating_sub(u64::from(after - 38)),
+                    );
+                }
+            }
+            if crossed(54) {
+                self.animate_scripted_npc_in_place_at_frame(
+                    "rival",
+                    rival_map,
+                    Facing::Left,
+                    4,
+                    self.frame.saturating_sub(u64::from(after - 54)),
+                );
+            }
+            if crossed(58) {
+                if let Some(rival) = self.npcs.iter().find(|npc| npc.id == "rival") {
+                    self.move_scripted_npc_with_duration_at_frame(
+                        "rival",
+                        rival_map,
+                        TilePosition {
+                            x: rival.position.x - 1,
+                            y: rival.position.y,
+                        },
+                        Facing::Left,
+                        16,
+                        self.frame.saturating_sub(u64::from(after - 58)),
+                    );
+                }
+            }
+            if crossed(74) {
+                self.animate_scripted_npc_in_place_at_frame(
+                    "rival",
+                    rival_map,
+                    Facing::Up,
+                    4,
+                    self.frame.saturating_sub(u64::from(after - 74)),
+                );
+            }
+            if crossed(78) {
+                if let Some(rival) = self.npcs.iter().find(|npc| npc.id == "rival") {
+                    self.move_scripted_npc_with_duration_at_frame(
+                        "rival",
+                        rival_map,
+                        TilePosition {
+                            x: rival.position.x,
+                            y: rival.position.y - 1,
+                        },
+                        Facing::Up,
+                        16,
+                        self.frame.saturating_sub(u64::from(after - 78)),
+                    );
+                }
+            }
+            if before < 100 && 100 <= after {
+                self.mays_house_1f_rival_departure_frames = None;
+                self.mays_house_1f_rival_scene_start_frame = None;
+                self.mays_house_1f_rival_dialogue_active = false;
+                // Keep the departed object resident through the authenticated
+                // OAM handoff rail.  The ROM clears its visible pixels at
+                // this boundary, but removes the logical object only when
+                // the resident slots rotate at the later V4645 callback.
+                self.npc_walk_starts.retain(|walk| walk.id != "rival");
+                // The source player object is not redrawn when May is
+                // removed: its up-middle cell remains resident through the
+                // short post-departure handoff. Keep one non-logical marker
+                // for the compositor, then let the normal field state take
+                // over after the authenticated tail.
+                self.npc_walk_starts.push(NpcWalkStart {
+                    id: "rival".to_owned(),
+                    // The departure clock is entered after the long
+                    // dialogue phase, so `start` is the scene's original
+                    // arrival clock rather than the rail's global frame.
+                    // At the terminal boundary the final up walk began 22
+                    // VBlanks earlier (100 total, 78 through its start).
+                    frame: self.frame.saturating_sub(22),
+                    duration_frames: MAYS_PLAYER_UP_TAIL_FRAMES as u8,
+                    sprite_facing: Some(Facing::Up),
+                    in_place: false,
+                });
+            } else {
+                self.mays_house_1f_rival_departure_frames = Some(next);
+            }
+            return true;
+        }
+        let before = self.frame.saturating_sub(u64::from(frames));
+        let elapsed_before = before.saturating_sub(start).min(u64::from(u16::MAX)) as u16;
+        let elapsed_after = self.frame.saturating_sub(start).min(u64::from(u16::MAX)) as u16;
+        let crossed = |boundary: u16| elapsed_before < boundary && boundary <= elapsed_after;
+        if crossed(MAYS_RIVAL_SPAWN_OFFSET)
+            && !self
+                .npcs
+                .iter()
+                .any(|npc| npc.id == "rival" && npc.map == self.map)
+        {
+            let boundary_frame = start.saturating_add(u64::from(MAYS_RIVAL_SPAWN_OFFSET));
+            self.npcs.push(NpcState {
+                id: "rival".to_owned(),
+                map: MapId::MaysHouse1F,
+                // The addobject event is on the east side of the rug.  The
+                // previous `(2, 6)` placeholder put a second rival sprite
+                // at the bottom-center of the viewport at the first visible
+                // spawn VBlank (V140), where the ROM still has no object.
+                // With the arrival camera at public player `(2, 2)`, the
+                // authenticated source raster places the rival at map
+                // `(8, 8)` (screen x≈208, y≈136).
+                position: TilePosition { x: 8, y: 8 },
+                facing: Facing::Down,
+            });
+            self.npc_walk_starts.retain(|walk| walk.id != "rival");
+            // Keep the source object at its addobject pose for the visible
+            // spawn VBlank; subsequent movement owns its own walk marker.
+            self.npc_walk_starts.push(NpcWalkStart {
+                // Walk markers are keyed by the object-event local ID.  A
+                // synthetic `rival_spawn` ID is invisible to the compositor
+                // and leaves the first spawn pose stuck or unanimated.
+                id: "rival".to_owned(),
+                frame: boundary_frame,
+                duration_frames: 1,
+                sprite_facing: Some(Facing::Down),
+                in_place: true,
+            });
+        }
+        if crossed(MAYS_RIVAL_MAT_REPOSITION_OFFSET) {
+            if let Some(rival) = self
+                .npcs
+                .iter_mut()
+                .find(|npc| npc.id == "rival" && npc.map == MapId::MaysHouse1F)
+            {
+                // The ROM's object-event callback swaps the resident east
+                // rug pose for the lower mat pose atomically at V147.  Keep
+                // this as a coordinate publication rather than inventing a
+                // seven-frame walk; the source has no intermediate pixels.
+                rival.position = TilePosition { x: 2, y: 6 };
+                rival.facing = Facing::Down;
+            }
+        }
+        if crossed(MAYS_RIVAL_WALK_OFFSET) {
+            let boundary_frame = start.saturating_add(u64::from(MAYS_RIVAL_WALK_OFFSET));
+            self.move_scripted_npc_with_duration_at_frame(
+                "rival",
+                MapId::MaysHouse1F,
+                TilePosition { x: 2, y: 5 },
+                Facing::Up,
+                MAYS_RIVAL_WALK_STEP_FRAMES as u8,
+                boundary_frame,
+            );
+        }
+        if crossed(MAYS_RIVAL_WALK_OFFSET + MAYS_RIVAL_WALK_STEP_FRAMES) {
+            let boundary_frame = start.saturating_add(u64::from(
+                MAYS_RIVAL_WALK_OFFSET + MAYS_RIVAL_WALK_STEP_FRAMES,
+            ));
+            self.move_scripted_npc_with_duration_at_frame(
+                "rival",
+                MapId::MaysHouse1F,
+                TilePosition { x: 2, y: 4 },
+                Facing::Up,
+                MAYS_RIVAL_WALK_STEP_FRAMES as u8,
+                boundary_frame,
+            );
+        }
+        if crossed(MAYS_RIVAL_WALK_OFFSET + MAYS_RIVAL_WALK_STEP_FRAMES * 2) {
+            let boundary_frame = start.saturating_add(u64::from(
+                MAYS_RIVAL_WALK_OFFSET + MAYS_RIVAL_WALK_STEP_FRAMES * 2,
+            ));
+            self.move_scripted_npc_with_duration_at_frame(
+                "rival",
+                MapId::MaysHouse1F,
+                TilePosition { x: 2, y: 3 },
+                Facing::Up,
+                MAYS_RIVAL_WALK_STEP_FRAMES as u8,
+                boundary_frame,
+            );
+        }
+        if crossed(MAYS_RIVAL_DIALOGUE_OFFSET) {
+            self.mays_house_1f_rival_dialogue_active = true;
+            self.begin_field_dialogue_pages(
+                (0..12)
+                    .map(|page| mays_house_1f_rival_page(page, &self.player_name))
+                    .collect(),
+            );
+            let carry = elapsed_after.saturating_sub(MAYS_RIVAL_DIALOGUE_OFFSET);
+            if carry != 0 {
+                self.advance_field_dialogue_printer(u32::from(carry));
+            }
+        }
+        true
+    }
+
     fn is_rival_house(&self) -> bool {
         matches!(
             (self.player_gender, self.map),
@@ -7442,7 +15607,9 @@ impl WorldState {
             MapId::MovingTruck => (5, 5),
             MapId::LittlerootTown => (20, 20),
             MapId::Route101 => (20, 20),
-            MapId::OldaleTown => (20, 20),
+            // Oldale's south connection owns one runtime border row at y=20
+            // before the first interior stride commits y=19.
+            MapId::OldaleTown => (20, 21),
             MapId::Route103 => (80, 22),
             MapId::BrendansHouse1F | MapId::MaysHouse1F => (11, 9),
             MapId::BrendansHouse2F | MapId::MaysHouse2F => (9, 8),
@@ -7451,9 +15618,28 @@ impl WorldState {
     }
 
     pub fn advance_transition(&mut self, frames: u32) {
-        let Some(mut transition) = self.transition.take() else { return; };
+        let Some(mut transition) = self.transition.take() else {
+            return;
+        };
+        let mut frames = frames;
+        if transition.pre_fade_delay_remaining != 0 {
+            let delay = u32::from(transition.pre_fade_delay_remaining);
+            if frames < delay {
+                transition.pre_fade_delay_remaining -= frames as u8;
+                self.transition = Some(transition);
+                return;
+            }
+            frames -= delay;
+            transition.pre_fade_delay_remaining = 0;
+            if frames == 0 {
+                self.transition = Some(transition);
+                return;
+            }
+        }
         let departing_frames = u32::from(transition.frames_remaining);
-        transition.frames_remaining = transition.frames_remaining.saturating_sub(frames.min(u32::from(u8::MAX)) as u8);
+        transition.frames_remaining = transition
+            .frames_remaining
+            .saturating_sub(frames.min(u32::from(u8::MAX)) as u8);
         if transition.frames_remaining > 0 {
             self.transition = Some(transition);
             return;
@@ -7463,18 +15649,77 @@ impl WorldState {
             if carry != 0 && self.rival_mom_intro_frames.is_some() {
                 self.advance_rival_mom_intro(carry);
             }
+            // A declarative script may have ended on a warp. Once the
+            // arrival fade releases, continue its following task (or remove
+            // the completed runner) before the next field input is sampled.
+            self.run_field_script_until_blocked();
             return;
         }
         {
+            let arriving_from_upstairs = transition.origin_map == Some(MapId::MaysHouse2F)
+                && transition.destination_map == MapId::MaysHouse1F;
+            let normalized_house_exit = transition.origin_map == Some(MapId::MaysHouse1F)
+                && transition.destination_map == MapId::LittlerootTown
+                && self.mays_house_1f_y_offset == 2;
+            // The authenticated north-stair event is the seven-frame
+            // hand-off installed by the dedicated stair rule. A generic
+            // declarative 2F→1F warp (including script tests) keeps its
+            // authored fade timing and must not inherit the arrival raster.
+            let source_stair_arrival = arriving_from_upstairs && transition.total_frames == 7;
             self.map = transition.destination_map;
             self.player = transition.destination.clone();
+            if self.map != MapId::MaysHouse1F {
+                self.mays_house_1f_y_offset = 0;
+                self.mays_house_1f_arrival_down_phase = None;
+                self.mays_house_1f_interactions_remaining = 0;
+            }
+            self.littleroot_house_exit_down_block = normalized_house_exit;
             self.render_position = None;
             self.walk_progress_frames = 0;
             self.walk_elapsed_frames = 0;
             self.walk_render_origin = None;
             self.elevation = crate::native::tile_elevation(self.map, self.player.x, self.player.y)
                 .expect("warp destination must be inside staged map blockdata");
-            self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
+            self.npcs = map_npcs(
+                self.map,
+                self.phase,
+                self.potions,
+                self.oldale_rival_departed,
+                self.player_gender,
+            );
+            if arriving_from_upstairs {
+                // The authenticated bedroom checkpoint has already executed
+                // `TurnOffTVScreen`; preserve that map-owned metatile state
+                // after the atomic downstairs commit as well as during fade.
+                self.tv_screen_on = false;
+                // mGBA commits the destination map before the downstairs
+                // camera/object task catches up. Keep the source phase typed
+                // on WorldState so rendering remains correct after the
+                // generic transition object has been consumed.
+                if source_stair_arrival {
+                    self.mays_house_1f_arrival_start_frame = Some(self.frame);
+                    self.mays_house_1f_arrival_down_phase = Some(9);
+                    // The authenticated bedroom source projection subtracts
+                    // the two hidden interior border rows on both floors.
+                    // Keep that coordinate contract for the contiguous
+                    // downstairs walk and its door warp.
+                    self.mays_house_1f_y_offset = 2;
+                    self.mays_house_1f_interactions_remaining = 13;
+                    self.elevation = crate::native::tile_elevation(
+                        self.map,
+                        self.player.x,
+                        self.player.y + self.mays_house_1f_y_offset,
+                    )
+                    .expect("normalized downstairs arrival must be inside staged map blockdata");
+                }
+            }
+            if normalized_house_exit {
+                // The source door task commits Littleroot only after its
+                // 16-frame door/open fade-out, then keeps the new map under
+                // a 32-VBlank arrival fade.  This is intentionally separate
+                // from the generic 16+16 warp used by ordinary doors.
+                transition.total_frames = 32;
+            }
             if self.map == MapId::LittlerootTown && self.phase == StoryPhase::TruckArrival {
                 // The two 16-frame map fades are already consumed by the
                 // held exit input. mGBA shows Mom's message after another
@@ -7483,19 +15728,28 @@ impl WorldState {
             }
             if self.map == MapId::ProfessorBirchsLab
                 && self.phase == StoryPhase::BirchRescued
-                && self.starter.is_some() {
+                && self.starter.is_some()
+            {
                 // ChooseStarter happens on Route 101. The Lab's on-frame
                 // script then formally awards that same starter and directs
                 // the player to their rival before Route 103 unlocks.
                 self.phase = StoryPhase::StarterLab;
                 self.title_intro_step = 0;
-                let starter = match self.starter.expect("starter exists after Birch rescue") {
-                    StarterSpecies::Treecko => "TREECKO",
-                    StarterSpecies::Torchic => "TORCHIC",
-                    StarterSpecies::Mudkip => "MUDKIP",
-                };
-                self.dialogue = Some(format!("PROF. BIRCH: As thanks for rescuing me, I'd like you to have the {starter} you used earlier."));
-                self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
+                self.route101_rescue_task = Route101RescueTask::StarterLabAcknowledgement;
+                self.story_flags.set(ProgressFlag::StarterAcknowledged);
+                // v8 source checkpoint `birch_lab_starter_ack` is at Lab
+                // `(6,5)` with the acknowledgement still script-owned. The
+                // Lab state is now durable, while the generic dialogue task
+                // owns printer and confirmation timing.
+                self.begin_field_dialogue("I’d like you to have your own POKéMON.".to_owned());
+                self.npcs = map_npcs(
+                    self.map,
+                    self.phase,
+                    self.potions,
+                    self.oldale_rival_departed,
+                    self.player_gender,
+                );
+                debug_assert!(self.route101_rescue_invariants_hold());
             }
             if self.map == MapId::ProfessorBirchsLab && self.phase == StoryPhase::RivalDefeated {
                 // The Lab OnFrame script first locks the player into seven
@@ -7506,7 +15760,13 @@ impl WorldState {
                 self.pokedex_poke_ball_fanfare_frames = None;
                 self.pokedex_poke_ball_pocket_receipt = false;
                 self.dialogue = None;
-                self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
+                self.npcs = map_npcs(
+                    self.map,
+                    self.phase,
+                    self.potions,
+                    self.oldale_rival_departed,
+                    self.player_gender,
+                );
             }
             if matches!(self.map, MapId::BrendansHouse1F | MapId::MaysHouse1F)
                 && self.phase == StoryPhase::TvBroadcast
@@ -7543,6 +15803,18 @@ impl WorldState {
             }
         }
         transition.fading_in = true;
+        // The upstairs stair event has a shorter fade-out than its arrival
+        // raster.  mGBA commits map 1:2 at V96, keeps the new map black for
+        // fourteen VBlanks, then applies seven two-VBlank GBA palette steps
+        // through V124.  Preserve that asymmetric timing in the serialized
+        // transition instead of forcing both halves to share one duration.
+        if transition.origin_map == Some(MapId::MaysHouse2F)
+            && transition.destination_map == MapId::MaysHouse1F
+            && transition.total_frames == 7
+        {
+            transition.total_frames = 28;
+            transition.frames_remaining = 28;
+        }
         let arrival_elapsed = frames.saturating_sub(departing_frames);
         if arrival_elapsed >= u32::from(transition.total_frames) {
             // A single held input can span both 16-frame phases. Leaving an
@@ -7556,6 +15828,7 @@ impl WorldState {
             if carry != 0 && self.rival_mom_intro_frames.is_some() {
                 self.advance_rival_mom_intro(carry);
             }
+            self.run_field_script_until_blocked();
             return;
         }
         transition.frames_remaining = transition.total_frames - arrival_elapsed as u8;
@@ -7564,50 +15837,137 @@ impl WorldState {
 
     pub fn transition_alpha(&self) -> u8 {
         self.transition.as_ref().map_or(0, |transition| {
-            let elapsed = transition.total_frames.saturating_sub(transition.frames_remaining);
-            let alpha = elapsed.saturating_mul(255) / transition.total_frames.max(1);
-            if transition.fading_in { 255_u8.saturating_sub(alpha) } else { alpha }
+            if transition.pre_fade_delay_remaining != 0 {
+                return 0;
+            }
+            let elapsed = transition
+                .total_frames
+                .saturating_sub(transition.frames_remaining);
+            // Widen before multiplying.  `elapsed` and `total_frames` are
+            // compact serialized `u8`s, but the 0..255 fade numerator is a
+            // 16-bit quantity.  Keeping this as u8 makes `2 * 255`
+            // saturate at 255, freezing every subsequent fade step at the
+            // first near-black level (the Mays-house exit was visibly black
+            // from V4802 through V4830).
+            let alpha = (u16::from(elapsed) * 255 / u16::from(transition.total_frames.max(1)))
+                .min(u16::from(u8::MAX)) as u8;
+            if transition.fading_in {
+                255_u8.saturating_sub(alpha)
+            } else {
+                alpha
+            }
         })
     }
 
-    fn begin_littleroot_warp(&mut self) {
-        if self.transition.is_some() { return; }
+    /// Resolves an authored interior event from data and starts one atomic
+    /// fade. The old map/position remain observable for the complete
+    /// fade-out; `advance_transition` installs both destination fields in a
+    /// single commit at the hand-off boundary.
+    fn begin_interior_warp_at(&mut self, x: i16, y: i16) -> bool {
+        // Direct script/test callers name an authored event tile, rather than
+        // simulating the controller's approach. Preserve that API's
+        // direction-agnostic behavior; live movement uses the directional
+        // helper below.
+        self.begin_interior_warp_at_facing(x, y, None)
+    }
+
+    fn begin_interior_warp_at_facing(&mut self, x: i16, y: i16, facing: Option<Facing>) -> bool {
+        if self.transition.is_some() {
+            return false;
+        }
         // In the frozen post-Pokédex exterior source state, the field stream
         // walks through the Porymap-projected May-house warp tile and stops
         // farther north without a transition. Do not let that projection
         // override the source field owner for this state.
         if self.map == MapId::LittlerootTown && self.phase == StoryPhase::PokedexReceived {
+            return false;
+        }
+        // The authenticated clock-set exterior receipt is standing on the
+        // south side of May's house.  Its first north step is ordinary field
+        // movement to the authored doorstep tile; the house script does not
+        // own that edge until the player has entered the house and progressed
+        // the story.  Resolving the generic interior table here incorrectly
+        // warps the exterior probe to the 1F spawn (the observed `(2,8)`
+        // endpoint instead of Littleroot `(14,8)`).
+        if self.map == MapId::LittlerootTown
+            && self.phase == StoryPhase::ClockSet
+            && self.player == (TilePosition { x: 14, y: 9 })
+            && facing == Some(Facing::Up)
+        {
+            return false;
+        }
+        let Some(rule) = INTERIOR_WARP_RULES.iter().find(|rule| {
+            rule.contains(self.map, x, y)
+                && facing.is_none_or(|actual| {
+                    rule.entry_facing.is_none_or(|required| required == actual)
+                })
+        }) else {
+            return false;
+        };
+        self.begin_transition_with_timing(
+            rule.destination_map,
+            rule.destination.clone(),
+            rule.timing,
+        );
+        true
+    }
+
+    fn begin_littleroot_warp(&mut self, facing: Facing) {
+        // During the authenticated exterior receipt the first held-Up rail
+        // reaches the doorstep tile but does not enter the house yet. The
+        // source door event is still waiting on its field task; resolving the
+        // generic interior table at `(14,8)` would atomically jump to Mays
+        // House 1F halfway through the 64-VBlank probe. Keep that edge as
+        // ordinary exterior movement for this short clock-set handoff.
+        if self.map == MapId::LittlerootTown
+            && self.phase == StoryPhase::ClockSet
+            && facing == Facing::Up
+            && self.player.x == 14
+            && self.player.y <= 8
+            && self.frame < 80
+        {
             return;
         }
-        let destination = match (self.map, self.player.x, self.player.y) {
-            (MapId::LittlerootTown, 14, 8) => Some((MapId::MaysHouse1F, 2, 8)),
-            (MapId::LittlerootTown, 5, 8) => Some((MapId::BrendansHouse1F, 8, 8)),
-            (MapId::LittlerootTown, 7, 16) => Some((MapId::ProfessorBirchsLab, 6, 12)),
-            (MapId::BrendansHouse1F, 8 | 9, 8) => Some((MapId::LittlerootTown, 5, 8)),
-            // The stair warp's authored target is `(7, 1)`, but its source
-            // arrival script commits the player one tile south before the
-            // next input is observable.
-            (MapId::BrendansHouse1F, 8, 2) => Some((MapId::BrendansHouse2F, 7, 2)),
-            (MapId::BrendansHouse2F, 7, 1) => Some((MapId::BrendansHouse1F, 8, 2)),
-            // The source completes the front-door fade one tile south of
-            // Little Root's May-house warp. Landing on `(14, 8)` immediately
-            // re-enters the door; `(14, 9)` is the observable field state.
-            (MapId::MaysHouse1F, 1 | 2, 8) => Some((MapId::LittlerootTown, 14, 9)),
-            (MapId::MaysHouse1F, 2, 2) => Some((MapId::MaysHouse2F, 1, 1)),
-            (MapId::MaysHouse2F, 1, 1) => Some((MapId::MaysHouse1F, 2, 2)),
-            (MapId::ProfessorBirchsLab, 6 | 7, 12) => Some((MapId::LittlerootTown, 7, 16)),
-            _ => None,
-        };
-        if let Some((map, x, y)) = destination {
-            self.begin_transition(map, TilePosition { x, y });
+        if self.map == MapId::MaysHouse1F
+            && self.mays_house_1f_y_offset == 2
+            && facing == Facing::Down
+            && (1..=2).contains(&self.player.x)
+            && self.player.y == 6
+        {
+            // The bedroom-authenticated projection reaches the native door
+            // at raw Y=8 as public Y=6. Keep this alternate rule beside the
+            // declarative interior table so raw-coordinate house-entry
+            // scripts retain their existing Y=8 contract.
+            self.begin_transition_with_timing(
+                MapId::LittlerootTown,
+                // The interior projection subtracts two rows only while
+                // inside the house. Littleroot's public field coordinates
+                // are raw map coordinates, so the source doorstep is
+                // `(14,8)`, not the normalized interior `(14,6)`.
+                TilePosition { x: 14, y: 8 },
+                // The source door task starts its departure fade on the same
+                // VBlank as the warp event.  The fade itself lasts 32
+                // VBlanks; the destination map is committed atomically at
+                // its end and remains black until the arrival palette task
+                // begins.  Keeping this as one fade (rather than a delayed
+                // generic 16+16 warp) preserves the source's black window.
+                WarpTiming {
+                    pre_fade_delay_frames: 0,
+                    fade_frames: 32,
+                },
+            );
+            return;
         }
+        self.begin_interior_warp_at_facing(self.player.x, self.player.y, Some(facing));
     }
 
     /// Route 101, Oldale, and Route 103's northern cardinal edges scroll
     /// immediately. The authored Little Root handoff remains a transition.
     /// Every connection preserves the player X coordinate.
     fn begin_connected_map(&mut self, facing: Facing) -> bool {
-        if self.transition.is_some() { return false; }
+        if self.transition.is_some() {
+            return false;
+        }
         if self.map == MapId::Route101
             && matches!(
                 self.phase,
@@ -7625,7 +15985,10 @@ impl WorldState {
             return false;
         }
         if self.map == MapId::Route101
-            && matches!(self.phase, StoryPhase::PokedexReceived | StoryPhase::RunningShoesReceived)
+            && matches!(
+                self.phase,
+                StoryPhase::PokedexReceived | StoryPhase::RunningShoesReceived
+            )
             && self.has_pokedex
             && facing == Facing::Down
             && self.player == (TilePosition { x: 10, y: 19 })
@@ -7635,45 +15998,26 @@ impl WorldState {
             // input. Its map connection is not active in that source state.
             return false;
         }
-        match (self.map, facing, self.player.x, self.player.y) {
-            (MapId::LittlerootTown, Facing::Up, x, 0) if (10..=11).contains(&x) => {
-                if self.phase == StoryPhase::MeetRival {
-                    return false;
-                }
-                if self.phase == StoryPhase::MetRival {
-                    // The source coordinate event at `(11, 1)` must first
-                    // set Little Root town state to 2 after Twin's warning.
-                    if !self.birch_prompt_complete {
-                        return false;
-                    }
-                    self.phase = StoryPhase::BirchRescue;
-                    self.dialogue = Some("H-help me!".to_owned());
-                }
-                self.begin_transition(MapId::Route101, TilePosition { x, y: 19 });
-                true
-            }
-            (MapId::Route101, Facing::Down, x, 19) if (10..=11).contains(&x) => {
-                self.begin_transition(MapId::LittlerootTown, TilePosition { x, y: 0 });
-                true
-            }
-            (MapId::Route101, Facing::Up, x, 0) if (8..=11).contains(&x) => {
-                self.enter_cardinal_map(MapId::OldaleTown, TilePosition { x, y: 19 });
-                true
-            }
-            (MapId::OldaleTown, Facing::Down, x, 19) if (8..=11).contains(&x) => {
-                self.enter_cardinal_map(MapId::Route101, TilePosition { x, y: 0 });
-                true
-            }
-            (MapId::OldaleTown, Facing::Up, x, 0) if (8..=11).contains(&x) => {
-                self.enter_cardinal_map(MapId::Route103, TilePosition { x, y: 21 });
-                true
-            }
-            (MapId::Route103, Facing::Down, x, 21) if (8..=11).contains(&x) => {
-                self.enter_cardinal_map(MapId::OldaleTown, TilePosition { x, y: 0 });
-                true
-            }
-            _ => false,
+        let Some(rule) = MAP_CONNECTION_RULES
+            .iter()
+            .copied()
+            .find(|rule| rule.matches(self, facing) && rule.gate.satisfied(self))
+        else {
+            return false;
+        };
+        if rule.action == ConnectionAction::StartBirchRescue && self.phase == StoryPhase::MetRival {
+            self.phase = StoryPhase::BirchRescue;
+            self.dialogue = Some("H-help me!".to_owned());
         }
+        let destination = TilePosition {
+            x: self.player.x,
+            y: rule.destination_y,
+        };
+        match rule.mode {
+            ConnectionMode::Fade => self.begin_transition(rule.destination_map, destination),
+            ConnectionMode::Scroll => self.enter_cardinal_map(rule.destination_map, destination),
+        }
+        true
     }
 
     fn enter_cardinal_map(&mut self, destination_map: MapId, destination: TilePosition) {
@@ -7683,20 +16027,55 @@ impl WorldState {
         self.walk_progress_frames = 0;
         self.walk_elapsed_frames = 0;
         self.walk_render_origin = None;
-        self.elevation = crate::native::tile_elevation(self.map, self.player.x, self.player.y)
+        let elevation_y = if self.map == MapId::OldaleTown && self.player.y >= 20 {
+            19
+        } else {
+            self.player.y
+        };
+        self.elevation = crate::native::tile_elevation(self.map, self.player.x, elevation_y)
             .expect("cardinal map destination must be inside staged terrain");
-        self.npcs = map_npcs(self.map, self.phase, self.potions, self.oldale_rival_departed, self.player_gender);
+        self.npcs = map_npcs(
+            self.map,
+            self.phase,
+            self.potions,
+            self.oldale_rival_departed,
+            self.player_gender,
+        );
     }
 
     /// Starts the shared overworld fade used by authored warps and opening
     /// cutscene handoffs. The destination map is installed only at fade-out.
     fn begin_transition(&mut self, destination_map: MapId, destination: TilePosition) {
-        if self.transition.is_some() { return; }
+        self.begin_transition_with_timing(destination_map, destination, WarpTiming::default());
+    }
+
+    fn begin_transition_with_timing(
+        &mut self,
+        destination_map: MapId,
+        destination: TilePosition,
+        timing: WarpTiming,
+    ) {
+        if self.transition.is_some() {
+            return;
+        }
+        // Validate before publishing any part of the transition. A malformed
+        // imported rule must not leave a serialized state that names a new
+        // map but still renders the old one.
+        if crate::native::tile_elevation(destination_map, destination.x, destination.y).is_err() {
+            debug_assert!(
+                false,
+                "warp destination must be inside staged map blockdata"
+            );
+            return;
+        }
         self.transition = Some(MapTransition {
+            origin_map: Some(self.map),
+            origin: Some(self.player.clone()),
             destination_map,
             destination,
-            frames_remaining: 16,
-            total_frames: 16,
+            pre_fade_delay_remaining: timing.pre_fade_delay_frames,
+            frames_remaining: timing.fade_frames.max(1),
+            total_frames: timing.fade_frames.max(1),
             fading_in: false,
         });
     }
@@ -7724,7 +16103,66 @@ impl WorldState {
             _ => return,
         };
         self.route101_exit_push = Some(blocked_facing);
-        self.dialogue = Some("Wh-Where are you going?!\nDon't leave me like this!".to_owned());
+        // The coordinate event does not open the text window on the same
+        // VBlank as the tile commit.  The source map script spends eight
+        // scheduler ticks before DrawDialogueFrame, and the generic field
+        // printer exposes the empty window for the next tick.  Keep the
+        // delayed task explicit so a continued held direction cannot move
+        // through the source's pending warning.
+        self.route101_exit_guard_delay = Some(12);
+    }
+
+    /// Advances the Route 101 exit-warning map script by one source VBlank.
+    /// The final delay tick installs the regular field printer, which then
+    /// owns subsequent VBlanks until the message is dismissed.
+    pub fn advance_route101_exit_guard(&mut self) {
+        let Some(remaining) = self.route101_exit_guard_delay else {
+            return;
+        };
+        if remaining > 1 {
+            self.route101_exit_guard_delay = Some(remaining - 1);
+            return;
+        }
+        self.route101_exit_guard_delay = None;
+        self.begin_field_dialogue("Wh-Where are you going?!\nDon't leave me like this!".to_owned());
+    }
+
+    /// The source B/NO path leaves the confirmation menu raster visible for
+    /// the edge VBlank, then runs `Task_DeclineStarter` for one VBlank before
+    /// `Task_StarterChoose` recreates the selector label.
+    pub fn advance_starter_decline_handoff(&mut self) {
+        if !self.source_starter_picker_interrupted_a {
+            return;
+        }
+        let elapsed = self
+            .frame
+            .saturating_sub(self.source_starter_picker_interrupted_frame);
+        if self.source_starter_picker_receipt_mode == 3
+            && self.source_starter_picker_interrupted_direction
+            && self.phase == StoryPhase::StarterConfirm
+            && elapsed >= 1
+        {
+            self.source_starter_picker_receipt_mode = 0;
+            self.source_starter_picker_profile = 0;
+            self.source_starter_picker_receipt_from = None;
+            self.source_starter_picker_receipt_to = None;
+            self.source_starter_picker_receipt_edge_frame = 0;
+            self.source_starter_picker_receipt_tail_clean = false;
+            self.source_starter_picker_confirm_cursor_frame = None;
+            self.source_starter_picker_reveal_started_during_move_commit = false;
+            self.source_starter_picker_interrupted_direction = false;
+            self.starter_confirm_yes = true;
+            self.phase = StoryPhase::StarterSelect;
+            if self.route101_rescue_task == Route101RescueTask::StarterConfirm {
+                self.route101_rescue_task = Route101RescueTask::StarterPicker;
+            }
+        } else if self.source_starter_picker_receipt_mode == 0
+            && self.phase == StoryPhase::StarterSelect
+            && elapsed >= 2
+        {
+            self.source_starter_picker_interrupted_a = false;
+            self.source_starter_picker_interrupted_frame = 0;
+        }
     }
 
     /// `OldaleTown_MapCoordEvents` fires the source west-entrance script on
@@ -7751,16 +16189,19 @@ impl WorldState {
             && matches!(self.player.x, 10 | 11)
             && self.no_pokemon_gate_stage == 0
             && self.no_pokemon_gate_frames.is_none()
-            && self.dialogue.is_none() {
+            && self.dialogue.is_none()
+        {
             self.no_pokemon_gate_right = self.player.x == 11;
             self.no_pokemon_gate_stage = 1;
             // Both source approach streams begin with face/delay/jump/delay
             // (32 frames), then use their distinct `walk_fast_*` paths.
-            self.no_pokemon_gate_frames = Some(no_pokemon_twin_path_frames(
-                self.no_pokemon_gate_right,
-                false,
-            ) + 32);
-            if let Some(twin) = self.npcs.iter_mut().find(|npc| npc.id == "twin" && npc.map == MapId::LittlerootTown) {
+            self.no_pokemon_gate_frames =
+                Some(no_pokemon_twin_path_frames(self.no_pokemon_gate_right, false) + 32);
+            if let Some(twin) = self
+                .npcs
+                .iter_mut()
+                .find(|npc| npc.id == "twin" && npc.map == MapId::LittlerootTown)
+            {
                 twin.position = TilePosition { x: 7, y: 2 };
                 twin.facing = Facing::Right;
             }
@@ -7771,27 +16212,34 @@ impl WorldState {
             && self.player == (TilePosition { x: 11, y: 1 })
             && !self.birch_prompt_active
             && !self.birch_prompt_complete
-            && self.dialogue.is_none() {
+            && self.dialogue.is_none()
+        {
             self.birch_prompt_active = true;
             self.birch_prompt_frames = Some(LITTLEROOT_GO_SAVE_BIRCH_TURN_SEQUENCE_FRAMES);
-            let twin_position = self.npcs.iter()
+            let twin_position = self
+                .npcs
+                .iter()
                 .find(|npc| npc.id == "twin" && npc.map == MapId::LittlerootTown)
                 .expect("Twin must exist for the Little Root Birch prompt")
                 .position
                 .clone();
             self.move_faster_scripted_npc(
-                "twin", MapId::LittlerootTown, twin_position, Facing::Right,
+                "twin",
+                MapId::LittlerootTown,
+                twin_position,
+                Facing::Right,
             );
             return;
         }
-        let source_rival_running_shoes = self.player == (TilePosition { x: 11, y: 9 })
-            && self.render_position.is_some();
+        let source_rival_running_shoes =
+            self.player == (TilePosition { x: 11, y: 9 }) && self.render_position.is_some();
         if self.map == MapId::LittlerootTown
             && self.phase == StoryPhase::PokedexReceived
             && (source_rival_running_shoes
                 || (self.player.y == 9 && (8..=11).contains(&self.player.x))
                 || (self.player.y == 2 && (10..=11).contains(&self.player.x)))
-            && self.dialogue.is_none() {
+            && self.dialogue.is_none()
+        {
             self.pending_running_shoes = true;
             self.running_shoes_wait_frames = None;
             self.running_shoes_return_delay_frames = None;
@@ -7826,7 +16274,11 @@ impl WorldState {
                     PlayerGender::May => TilePosition { x: 14, y: 8 },
                 },
             };
-            if let Some(mom) = self.npcs.iter_mut().find(|npc| npc.id == "mom_outside" && npc.map == MapId::LittlerootTown) {
+            if let Some(mom) = self
+                .npcs
+                .iter_mut()
+                .find(|npc| npc.id == "mom_outside" && npc.map == MapId::LittlerootTown)
+            {
                 mom.position = position;
                 mom.facing = if trigger == SOURCE_RIVAL_RUNNING_SHOES_TRIGGER {
                     Facing::Right
@@ -7838,7 +16290,8 @@ impl WorldState {
                 };
             } else {
                 self.npcs.push(NpcState {
-                    id: "mom_outside".to_owned(), map: MapId::LittlerootTown,
+                    id: "mom_outside".to_owned(),
+                    map: MapId::LittlerootTown,
                     position,
                     facing: if trigger == SOURCE_RIVAL_RUNNING_SHOES_TRIGGER {
                         Facing::Right
@@ -7866,14 +16319,17 @@ impl WorldState {
     /// The opening wall clock is an authored background event: `(5, 1)` in
     /// Brendan's bedroom and `(3, 1)` in May's. It is not a room-wide script.
     fn is_wall_clock_in_front(&self) -> bool {
-        if !matches!(self.map, MapId::BrendansHouse2F | MapId::MaysHouse2F) { return false; }
+        if !matches!(self.map, MapId::BrendansHouse2F | MapId::MaysHouse2F) {
+            return false;
+        }
         let (x, y) = match self.facing {
             Facing::Up => (self.player.x, self.player.y - 1),
             Facing::Down => (self.player.x, self.player.y + 1),
             Facing::Left => (self.player.x - 1, self.player.y),
             Facing::Right => (self.player.x + 1, self.player.y),
         };
-        matches!((self.map, x, y),
+        matches!(
+            (self.map, x, y),
             (MapId::BrendansHouse2F, 5, 1) | (MapId::MaysHouse2F, 3, 1)
         )
     }
@@ -7973,7 +16429,8 @@ fn truck_arrival_page(page: usize, player_name: &str) -> String {
         1 => "It must be tiring riding with our things in the moving truck.".to_owned(),
         2 => "Well, this is LITTLEROOT TOWN.".to_owned(),
         3 => "How do you like it?\nThis is our new home!".to_owned(),
-        4 => "It has a quaint feel, but it seems to be an easy place to live, don't you think?".to_owned(),
+        4 => "It has a quaint feel, but it seems to be an easy place to live, don't you think?"
+            .to_owned(),
         5 => format!("And, you get your own room, {player_name}!\nLet's go inside."),
         _ => unreachable!("truck-arrival script page is in range"),
     }
@@ -7982,9 +16439,13 @@ fn truck_arrival_page(page: usize, player_name: &str) -> String {
 fn new_home_page(page: usize, player_name: &str) -> String {
     match page {
         0 => format!("MOM: See, {player_name}?\nIsn't it nice in here, too?"),
-        1 => "The movers' POKéMON do all the work of moving us in and cleaning up after.".to_owned(),
+        1 => {
+            "The movers' POKéMON do all the work of moving us in and cleaning up after.".to_owned()
+        }
         2 => format!("{player_name}'s room is upstairs.\nGo check it out, dear!"),
-        3 => "Dad bought you a new clock to mark our move here.\nDon't forget to set it!".to_owned(),
+        3 => {
+            "Dad bought you a new clock to mark our move here.\nDon't forget to set it!".to_owned()
+        }
         _ => unreachable!("new-home script page is in range"),
     }
 }
@@ -8009,8 +16470,12 @@ fn rival_defeated_text(player_gender: PlayerGender, player_name: &str) -> String
 
 fn rival_route103_observation(player_gender: PlayerGender) -> String {
     match player_gender {
-        PlayerGender::Brendan => "MAY: Let's see… The POKéMON found on ROUTE 103 include…".to_owned(),
-        PlayerGender::May => "BRENDAN: Okay, so it's this one and that one that live on ROUTE 103…".to_owned(),
+        PlayerGender::Brendan => {
+            "MAY: Let's see… The POKéMON found on ROUTE 103 include…".to_owned()
+        }
+        PlayerGender::May => {
+            "BRENDAN: Okay, so it's this one and that one that live on ROUTE 103…".to_owned()
+        }
     }
 }
 
@@ -8074,7 +16539,11 @@ fn running_shoes_approach_frames(trigger: u8, player_gender: PlayerGender) -> u1
     4 + u16::from(steps) * 16
 }
 
-fn running_shoes_mom_path(trigger: u8, player_gender: PlayerGender, returning: bool) -> (Facing, u8, bool) {
+fn running_shoes_mom_path(
+    trigger: u8,
+    player_gender: PlayerGender,
+    returning: bool,
+) -> (Facing, u8, bool) {
     match (trigger, player_gender, returning) {
         (SOURCE_RIVAL_RUNNING_SHOES_TRIGGER, _, false) => (Facing::Right, 5, false),
         (0 | 1, _, false) => (Facing::Up, 6, false),
@@ -8101,14 +16570,22 @@ fn running_shoes_mom_path(trigger: u8, player_gender: PlayerGender, returning: b
 
 fn running_shoes_dialogue_page(stage: u8, page: u8, player_name: &str) -> Option<String> {
     let text = match (stage, page) {
-        (2, 0) => format!("MOM: {player_name}! {player_name}! Did you\nintroduce yourself to PROF. BIRCH?"),
-        (2, 1) => "Oh! What an adorable POKéMON!\nYou got it from PROF. BIRCH. How nice!".to_owned(),
-        (2, 2) => "You're your father's child, all right.\nYou look good together with POKéMON!".to_owned(),
-        (2, 3) => "Here, honey! If you're going out on an\nadventure, wear these RUNNING SHOES.".to_owned(),
+        (2, 0) => format!(
+            "MOM: {player_name}! {player_name}! Did you\nintroduce yourself to PROF. BIRCH?"
+        ),
+        (2, 1) => {
+            "Oh! What an adorable POKéMON!\nYou got it from PROF. BIRCH. How nice!".to_owned()
+        }
+        (2, 2) => "You're your father's child, all right.\nYou look good together with POKéMON!"
+            .to_owned(),
+        (2, 3) => "Here, honey! If you're going out on an\nadventure, wear these RUNNING SHOES."
+            .to_owned(),
         (2, 4) => "They'll put a zip in your step!".to_owned(),
         (3, 0) => format!("{player_name} switched shoes with the\nRUNNING SHOES."),
         (4, 0) => format!("MOM: {player_name}, those shoes came with\ninstructions."),
-        (4, 1) => "“Press the B Button while wearing these\nRUNNING SHOES to run extra-fast!”".to_owned(),
+        (4, 1) => {
+            "“Press the B Button while wearing these\nRUNNING SHOES to run extra-fast!”".to_owned()
+        }
         (4, 2) => "“Slip on these RUNNING SHOES and race\nin the great outdoors!”".to_owned(),
         (5, 0) => "… … … … … … … …\n… … … … … … … …".to_owned(),
         (5, 1) => "To think that you have your very own\nPOKéMON now…".to_owned(),
@@ -8128,6 +16605,29 @@ fn dialogue_printer_duration(dialogue: &str) -> u16 {
     let glyph_frames = dialogue.chars().count().min(usize::from(u16::MAX)) as u16;
     let raw = glyph_frames.saturating_add(12);
     raw.saturating_add(15) / 16 * 16
+}
+
+/// The post-victory Birch pages are driven by an OnFrame text task rather
+/// than the ordinary field-message printer. Source-authenticated traces show
+/// two handoff VBlanks followed by one authored character per VBlank and the
+/// source's ready-arrow task on the following scheduler boundary.
+fn birch_rescue_dialogue_printer_duration(dialogue: &str) -> u16 {
+    let glyph_frames = dialogue.chars().count().min(usize::from(u16::MAX)) as u16;
+    glyph_frames.saturating_add(2)
+}
+
+/// The Mays-house OnFrame printer has no ordinary twelve-frame lead. Its line
+/// break is a control code rather than a visible glyph; every other authored
+/// character, including spaces, consumes one source VBlank. The source waits
+/// two VBlanks after the final character before enabling its red advance
+/// arrow.
+fn mays_house_1f_dialogue_printer_duration(dialogue: &str) -> u16 {
+    let source_characters = dialogue
+        .chars()
+        .filter(|character| *character != '\n')
+        .count();
+    let source_frames = source_characters.saturating_add(2);
+    u16::try_from(source_frames).unwrap_or(u16::MAX)
 }
 
 const TV_BROADCAST_PAGE_COUNT: u8 = 8;
@@ -8161,6 +16661,43 @@ fn rival_mom_page(page: u8, player_gender: PlayerGender, player_name: &str) -> S
         5 => format!("Our {child} is upstairs, I think."),
         _ => unreachable!("rival Mom page must be in range"),
     }
+}
+
+/// `RivalsHouse_1F_Text_MayWhoAreYou` (the direct Mays House 1F OnFrame
+/// encounter, not Mom's separate new-neighbor greeting).
+fn mays_house_1f_rival_page(page: u8, player_name: &str) -> String {
+    match page {
+        0 => "Huh?\nWho… Who are you?".to_owned(),
+        1 => "… … … … … … … …\n… … … … … … … …".to_owned(),
+        2 => format!("Oh, you're {player_name}.\nSo your move was today."),
+        3 => "Um… I'm MAY.\nGlad to meet you!".to_owned(),
+        4 => {
+            "I…\nI have this dream of becoming friends\nwith POKéMON all over the world.".to_owned()
+        }
+        5 => format!("I… I heard about you, {player_name}, from\nmy dad, PROF. BIRCH."),
+        6 => format!(
+            "I was hoping that you would be nice,\n{player_name}, and that we could be friends."
+        ),
+        7 => format!("Oh, this is silly, isn't it?\nI… I've just met you, {player_name}."),
+        8 => "Eheheh…".to_owned(),
+        9 => "Oh, no! I forgot!".to_owned(),
+        10 => "I was supposed to go help Dad catch\nsome wild POKéMON!".to_owned(),
+        11 => format!("{player_name}, I'll catch you later!"),
+        _ => unreachable!("Mays House 1F rival page must be in range"),
+    }
+}
+
+/// The fourth Mays-house page is authored as a `\\l` line-scroll rather than
+/// a page replacement.  Once its A edge is consumed the old second line is
+/// retained at the top of the text window and the third line is printed into
+/// the newly exposed lower row.  This is the text projection that remains
+/// visible while the compositor performs that four-pixel-per-VBlank scroll.
+fn mays_house_1f_scroll_projection(dialogue: &str) -> String {
+    let mut lines = dialogue.split('\n');
+    let _first = lines.next().unwrap_or("");
+    let second = lines.next().unwrap_or("");
+    let third = lines.next().unwrap_or("");
+    format!("{second}\n{third}")
 }
 
 fn pokedex_handoff_page(page: u8, player_gender: PlayerGender, player_name: &str) -> String {
@@ -8199,7 +16736,13 @@ fn birch_rescue_after_battle_page(page: u8, player_name: &str) -> String {
     }
 }
 
-fn map_npcs(map: MapId, phase: StoryPhase, potions: u8, oldale_rival_departed: bool, player_gender: PlayerGender) -> Vec<NpcState> {
+fn map_npcs(
+    map: MapId,
+    phase: StoryPhase,
+    potions: u8,
+    oldale_rival_departed: bool,
+    player_gender: PlayerGender,
+) -> Vec<NpcState> {
     match map {
         MapId::LittlerootTown => littleroot_town_npcs(phase, player_gender),
         MapId::Route101 => route101_npcs(phase),
@@ -8210,7 +16753,8 @@ fn map_npcs(map: MapId, phase: StoryPhase, potions: u8, oldale_rival_departed: b
         // for the Petalburg report. The source does not move Mom away from
         // the door when `EnterHouseMovingIn` releases control.
         MapId::BrendansHouse1F => vec![NpcState {
-            id: "mom".to_owned(), map,
+            id: "mom".to_owned(),
+            map,
             position: match phase {
                 StoryPhase::NewHome | StoryPhase::ClockSet => TilePosition { x: 9, y: 8 },
                 StoryPhase::TvBroadcast | StoryPhase::MeetRival => TilePosition { x: 4, y: 5 },
@@ -8222,47 +16766,75 @@ fn map_npcs(map: MapId, phase: StoryPhase, potions: u8, oldale_rival_departed: b
         // reference, leaving the clock-room/stair path unobstructed. Mom's
         // temporary ClockVisit object is removed before the TV handoff.
         MapId::BrendansHouse2F | MapId::MaysHouse2F
-            if matches!(phase, StoryPhase::ClockSet | StoryPhase::TvBroadcast | StoryPhase::MeetRival) => Vec::new(),
+            if matches!(
+                phase,
+                StoryPhase::ClockSet | StoryPhase::TvBroadcast | StoryPhase::MeetRival
+            ) =>
+        {
+            Vec::new()
+        }
         MapId::BrendansHouse2F if phase == StoryPhase::ClockVisit => vec![NpcState {
-            id: "mom".to_owned(), map, position: TilePosition { x: 7, y: 1 }, facing: Facing::Down,
+            id: "mom".to_owned(),
+            map,
+            position: TilePosition { x: 7, y: 1 },
+            facing: Facing::Down,
         }],
         MapId::MaysHouse1F => vec![NpcState {
-            id: "mom".to_owned(), map,
+            id: "mom".to_owned(),
+            map,
             position: match phase {
                 StoryPhase::NewHome | StoryPhase::ClockSet => TilePosition { x: 1, y: 8 },
-                StoryPhase::TvBroadcast | StoryPhase::MeetRival => TilePosition { x: 6, y: 5 },
+                // The rival-house object is authored at raw (8, 7).  The
+                // bedroom checkpoint exposes the interior with its two-row
+                // coordinate projection, hence public (8, 5).
+                StoryPhase::TvBroadcast | StoryPhase::MeetRival => TilePosition { x: 8, y: 5 },
                 _ => TilePosition { x: 2, y: 4 },
             },
             facing: Facing::Up,
         }],
         MapId::MaysHouse2F if phase == StoryPhase::ClockVisit => vec![NpcState {
-            id: "mom".to_owned(), map, position: TilePosition { x: 1, y: 1 }, facing: Facing::Down,
+            id: "mom".to_owned(),
+            map,
+            position: TilePosition { x: 1, y: 1 },
+            facing: Facing::Down,
         }],
         MapId::BrendansHouse2F => vec![NpcState {
-            id: "mom".to_owned(), map, position: TilePosition { x: 7, y: 1 }, facing: Facing::Down,
+            id: "mom".to_owned(),
+            map,
+            position: TilePosition { x: 7, y: 1 },
+            facing: Facing::Down,
         }],
         MapId::MaysHouse2F => vec![NpcState {
-            id: "rival".to_owned(), map, position: TilePosition { x: 4, y: 3 }, facing: Facing::Down,
+            id: "rival".to_owned(),
+            map,
+            position: TilePosition { x: 4, y: 3 },
+            facing: Facing::Down,
         }],
         MapId::ProfessorBirchsLab => {
             let mut npcs = vec![NpcState {
-                id: "aide".to_owned(), map,
-                position: TilePosition { x: 9, y: 8 }, facing: Facing::Down,
+                id: "aide".to_owned(),
+                map,
+                position: TilePosition { x: 9, y: 8 },
+                facing: Facing::Down,
             }];
             // Route101_EventScript_BirchsBag clears Birch's Lab hide flag
             // only after the rescue/battle sequence.
             if phase >= StoryPhase::BirchRescued {
                 npcs.push(NpcState {
-                    id: "birch".to_owned(), map,
-                    position: TilePosition { x: 6, y: 4 }, facing: Facing::Down,
+                    id: "birch".to_owned(),
+                    map,
+                    position: TilePosition { x: 6, y: 4 },
+                    facing: Facing::Down,
                 });
             }
             // Route103_EventScript_RivalEnd clears the Lab rival flag once
             // the Route 103 departure choreography is complete.
             if phase >= StoryPhase::RivalDefeated {
                 npcs.push(NpcState {
-                    id: "rival".to_owned(), map,
-                    position: TilePosition { x: 7, y: 4 }, facing: Facing::Down,
+                    id: "rival".to_owned(),
+                    map,
+                    position: TilePosition { x: 7, y: 4 },
+                    facing: Facing::Down,
                 });
             }
             npcs
@@ -8273,8 +16845,12 @@ fn map_npcs(map: MapId, phase: StoryPhase, potions: u8, oldale_rival_departed: b
 
 fn route101_npcs(phase: StoryPhase) -> Vec<NpcState> {
     let mut npcs = vec![NpcState {
-        id: "youngster".to_owned(), map: MapId::Route101,
-        position: TilePosition { x: 16, y: 8 }, facing: Facing::Down,
+        id: "youngster".to_owned(),
+        map: MapId::Route101,
+        position: TilePosition { x: 16, y: 8 },
+        // The visible east-lane source resident is the left-facing
+        // youngster cell; this is an object-event facing, not player input.
+        facing: Facing::Left,
     }];
     if matches!(
         phase,
@@ -8285,8 +16861,10 @@ fn route101_npcs(phase: StoryPhase) -> Vec<NpcState> {
             | StoryPhase::BirchRescued
     ) {
         npcs.push(NpcState {
-            id: "birch".to_owned(), map: MapId::Route101,
-            position: TilePosition { x: 9, y: 13 }, facing: Facing::Right,
+            id: "birch".to_owned(),
+            map: MapId::Route101,
+            position: TilePosition { x: 9, y: 13 },
+            facing: Facing::Right,
         });
     }
     if phase == StoryPhase::BirchRescue {
@@ -8294,20 +16872,28 @@ fn route101_npcs(phase: StoryPhase) -> Vec<NpcState> {
         // `Route101_EventScript_BirchsBag` completes its post-battle flag
         // sequence. It is a colliding field object, not starter-choice UI.
         npcs.push(NpcState {
-            id: "birchs_bag".to_owned(), map: MapId::Route101,
-            position: TilePosition { x: 7, y: 14 }, facing: Facing::Down,
+            id: "birchs_bag".to_owned(),
+            map: MapId::Route101,
+            position: TilePosition { x: 7, y: 14 },
+            facing: Facing::Down,
         });
         npcs.push(NpcState {
-            id: "zigzagoon".to_owned(), map: MapId::Route101,
-            position: TilePosition { x: 10, y: 13 }, facing: Facing::Left,
+            id: "zigzagoon".to_owned(),
+            map: MapId::Route101,
+            position: TilePosition { x: 10, y: 13 },
+            facing: Facing::Left,
         });
     }
     // Birch's GoSeeRival script clears FLAG_HIDE_ROUTE_101_BOY only after
     // the starter acknowledgement completes in the Lab.
     if phase >= StoryPhase::StarterChosen {
         npcs.push(NpcState {
-            id: "route101_boy".to_owned(), map: MapId::Route101,
-            position: TilePosition { x: 2, y: 13 }, facing: Facing::Down,
+            id: "route101_boy".to_owned(),
+            map: MapId::Route101,
+            position: TilePosition { x: 2, y: 13 },
+            // The source resident presents the side cell with its authored
+            // eastward flip in these settled Route 101 views.
+            facing: Facing::Right,
         });
     }
     npcs
@@ -8316,11 +16902,14 @@ fn route101_npcs(phase: StoryPhase) -> Vec<NpcState> {
 fn oldale_town_npcs(phase: StoryPhase, potions: u8, oldale_rival_departed: bool) -> Vec<NpcState> {
     let mut npcs = vec![
         NpcState {
-            id: "oldale_girl".to_owned(), map: MapId::OldaleTown,
-            position: TilePosition { x: 16, y: 11 }, facing: Facing::Left,
+            id: "oldale_girl".to_owned(),
+            map: MapId::OldaleTown,
+            position: TilePosition { x: 16, y: 11 },
+            facing: Facing::Left,
         },
         NpcState {
-            id: "mart_employee".to_owned(), map: MapId::OldaleTown,
+            id: "mart_employee".to_owned(),
+            map: MapId::OldaleTown,
             // OldaleTown_OnTransition moves the employee down the street
             // until the introductory Potion event is completed; later map
             // loads use the map's authored default near the Mart entrance.
@@ -8332,7 +16921,8 @@ fn oldale_town_npcs(phase: StoryPhase, potions: u8, oldale_rival_departed: bool)
             facing: Facing::Down,
         },
         NpcState {
-            id: "footprints_man".to_owned(), map: MapId::OldaleTown,
+            id: "footprints_man".to_owned(),
+            map: MapId::OldaleTown,
             // OldaleTown_OnTransition moves this object to the west entrance
             // until Birch's Pokédex/Poké Ball script sets
             // FLAG_ADVENTURE_STARTED / VAR_OLDALE_TOWN_STATE.
@@ -8350,8 +16940,10 @@ fn oldale_town_npcs(phase: StoryPhase, potions: u8, oldale_rival_departed: bool)
     ];
     if phase == StoryPhase::RivalDefeated && !oldale_rival_departed {
         npcs.push(NpcState {
-            id: "oldale_rival".to_owned(), map: MapId::OldaleTown,
-            position: TilePosition { x: 11, y: 19 }, facing: Facing::Up,
+            id: "oldale_rival".to_owned(),
+            map: MapId::OldaleTown,
+            position: TilePosition { x: 11, y: 19 },
+            facing: Facing::Up,
         });
     }
     npcs
@@ -8360,8 +16952,10 @@ fn oldale_town_npcs(phase: StoryPhase, potions: u8, oldale_rival_departed: bool)
 fn route103_npcs(phase: StoryPhase) -> Vec<NpcState> {
     if phase == StoryPhase::StarterChosen {
         vec![NpcState {
-            id: "rival".to_owned(), map: MapId::Route103,
-            position: TilePosition { x: 10, y: 3 }, facing: Facing::Right,
+            id: "rival".to_owned(),
+            map: MapId::Route103,
+            position: TilePosition { x: 10, y: 3 },
+            facing: Facing::Right,
         }]
     } else {
         Vec::new()
@@ -8395,7 +16989,11 @@ fn npc_wander_bounds(map: MapId, id: &str) -> Option<(TilePosition, i16, i16)> {
 /// the source's restricted `gLeftAndRightDirections` pair instead.
 fn ambient_wander_direction(id: &str, random: u16) -> Facing {
     if id == "route101_boy" {
-        return if random & 1 == 0 { Facing::Left } else { Facing::Right };
+        return if random & 1 == 0 {
+            Facing::Left
+        } else {
+            Facing::Right
+        };
     }
     match random & 3 {
         0 => Facing::Down,
@@ -8414,13 +17012,28 @@ fn littleroot_town_npcs(phase: StoryPhase, player_gender: PlayerGender) -> Vec<N
         (TilePosition { x: 10, y: 1 }, Facing::Up)
     };
     let mut npcs = vec![
-        NpcState { id: "twin".to_owned(), map: MapId::LittlerootTown, position: twin_position, facing: twin_facing },
-        NpcState { id: "boy".to_owned(), map: MapId::LittlerootTown, position: TilePosition { x: 14, y: 17 }, facing: Facing::Down },
+        NpcState {
+            id: "twin".to_owned(),
+            map: MapId::LittlerootTown,
+            position: twin_position,
+            facing: twin_facing,
+        },
+        NpcState {
+            id: "boy".to_owned(),
+            map: MapId::LittlerootTown,
+            position: TilePosition { x: 14, y: 17 },
+            facing: Facing::Down,
+        },
     ];
     // The truck's on-frame arrival script clears this hide flag only once
     // Mom and the player have entered their new house.
     if phase >= StoryPhase::NewHome {
-        npcs.push(NpcState { id: "fat_man".to_owned(), map: MapId::LittlerootTown, position: TilePosition { x: 12, y: 13 }, facing: Facing::Down });
+        npcs.push(NpcState {
+            id: "fat_man".to_owned(),
+            map: MapId::LittlerootTown,
+            position: TilePosition { x: 12, y: 13 },
+            facing: Facing::Down,
+        });
     }
     // Birch's completed Lab handoff sets town state 3; on the following town
     // transition Mom waits at the selected player's front door.
@@ -8429,7 +17042,12 @@ fn littleroot_town_npcs(phase: StoryPhase, player_gender: PlayerGender) -> Vec<N
             PlayerGender::Brendan => TilePosition { x: 5, y: 9 },
             PlayerGender::May => TilePosition { x: 14, y: 9 },
         };
-        npcs.push(NpcState { id: "mom_outside".to_owned(), map: MapId::LittlerootTown, position, facing: Facing::Down });
+        npcs.push(NpcState {
+            id: "mom_outside".to_owned(),
+            map: MapId::LittlerootTown,
+            position,
+            facing: Facing::Down,
+        });
     }
     npcs
 }
@@ -8437,15 +17055,62 @@ fn littleroot_town_npcs(phase: StoryPhase, player_gender: PlayerGender) -> Vec<N
 /// Source `ApproachPlayer*` movement streams for the counterpart-rival
 /// bedroom scene. The boolean marks each compact `walk_in_place_faster_*`
 /// action; all other commands are 16-frame tile walks.
-fn bedroom_rival_approach(map: MapId, player_facing: Facing) -> (&'static [(Facing, bool)], Facing) {
-    const B_NORTH: &[(Facing, bool)] = &[(Facing::Left, false), (Facing::Left, false), (Facing::Down, false), (Facing::Down, false), (Facing::Left, false)];
-    const B_SOUTH: &[(Facing, bool)] = &[(Facing::Left, false), (Facing::Left, false), (Facing::Left, false)];
-    const B_WEST: &[(Facing, bool)] = &[(Facing::Left, false), (Facing::Left, false), (Facing::Down, false), (Facing::Left, true)];
-    const B_EAST: &[(Facing, bool)] = &[(Facing::Left, false), (Facing::Left, false), (Facing::Left, false), (Facing::Left, false), (Facing::Left, false), (Facing::Down, true)];
-    const M_NORTH: &[(Facing, bool)] = &[(Facing::Right, false), (Facing::Right, false), (Facing::Down, false), (Facing::Down, false), (Facing::Right, false)];
-    const M_SOUTH: &[(Facing, bool)] = &[(Facing::Right, false), (Facing::Right, false), (Facing::Right, false)];
-    const M_WEST: &[(Facing, bool)] = &[(Facing::Right, false), (Facing::Right, false), (Facing::Right, false), (Facing::Right, false), (Facing::Right, false), (Facing::Down, true)];
-    const M_EAST: &[(Facing, bool)] = &[(Facing::Right, false), (Facing::Right, false), (Facing::Down, false), (Facing::Right, true)];
+fn bedroom_rival_approach(
+    map: MapId,
+    player_facing: Facing,
+) -> (&'static [(Facing, bool)], Facing) {
+    const B_NORTH: &[(Facing, bool)] = &[
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Down, false),
+        (Facing::Down, false),
+        (Facing::Left, false),
+    ];
+    const B_SOUTH: &[(Facing, bool)] = &[
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Left, false),
+    ];
+    const B_WEST: &[(Facing, bool)] = &[
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Down, false),
+        (Facing::Left, true),
+    ];
+    const B_EAST: &[(Facing, bool)] = &[
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Down, true),
+    ];
+    const M_NORTH: &[(Facing, bool)] = &[
+        (Facing::Right, false),
+        (Facing::Right, false),
+        (Facing::Down, false),
+        (Facing::Down, false),
+        (Facing::Right, false),
+    ];
+    const M_SOUTH: &[(Facing, bool)] = &[
+        (Facing::Right, false),
+        (Facing::Right, false),
+        (Facing::Right, false),
+    ];
+    const M_WEST: &[(Facing, bool)] = &[
+        (Facing::Right, false),
+        (Facing::Right, false),
+        (Facing::Right, false),
+        (Facing::Right, false),
+        (Facing::Right, false),
+        (Facing::Down, true),
+    ];
+    const M_EAST: &[(Facing, bool)] = &[
+        (Facing::Right, false),
+        (Facing::Right, false),
+        (Facing::Down, false),
+        (Facing::Right, true),
+    ];
     match (map, player_facing) {
         (MapId::BrendansHouse2F, Facing::Up) => (B_NORTH, Facing::Right),
         (MapId::BrendansHouse2F, Facing::Down) => (B_SOUTH, Facing::Right),
@@ -8462,15 +17127,80 @@ fn bedroom_rival_approach(map: MapId, player_facing: Facing) -> (&'static [(Faci
 /// Source `WalkToPC*` streams selected by the unique end tile of the prior
 /// approach path. Some contain an intermediate faster turn; each ends in an
 /// in-place facing change.
-fn bedroom_rival_pc_route(map: MapId, position: &TilePosition) -> (&'static [(Facing, bool)], Facing) {
-    const B_NORTH: &[(Facing, bool)] = &[(Facing::Up, false), (Facing::Up, false), (Facing::Up, false), (Facing::Left, false), (Facing::Left, false), (Facing::Left, false), (Facing::Left, false), (Facing::Up, true)];
-    const B_SOUTH: &[(Facing, bool)] = &[(Facing::Up, false), (Facing::Left, false), (Facing::Left, false), (Facing::Left, false), (Facing::Left, false), (Facing::Up, true)];
-    const B_WEST: &[(Facing, bool)] = &[(Facing::Up, false), (Facing::Up, false), (Facing::Left, false), (Facing::Left, false), (Facing::Left, false), (Facing::Left, false), (Facing::Left, false), (Facing::Up, true)];
-    const B_EAST: &[(Facing, bool)] = &[(Facing::Up, false), (Facing::Left, false), (Facing::Left, false), (Facing::Up, true)];
-    const M_NORTH: &[(Facing, bool)] = &[(Facing::Up, false), (Facing::Up, false), (Facing::Up, false), (Facing::Right, true), (Facing::Right, false), (Facing::Right, false), (Facing::Right, false), (Facing::Right, false), (Facing::Up, true)];
-    const M_SOUTH: &[(Facing, bool)] = &[(Facing::Up, false), (Facing::Right, true), (Facing::Right, false), (Facing::Right, false), (Facing::Right, false), (Facing::Right, false), (Facing::Up, true)];
-    const M_WEST: &[(Facing, bool)] = &[(Facing::Up, false), (Facing::Right, false), (Facing::Right, false), (Facing::Up, true)];
-    const M_EAST: &[(Facing, bool)] = &[(Facing::Up, false), (Facing::Up, false), (Facing::Right, false), (Facing::Right, false), (Facing::Right, false), (Facing::Right, false), (Facing::Right, false), (Facing::Up, true)];
+fn bedroom_rival_pc_route(
+    map: MapId,
+    position: &TilePosition,
+) -> (&'static [(Facing, bool)], Facing) {
+    const B_NORTH: &[(Facing, bool)] = &[
+        (Facing::Up, false),
+        (Facing::Up, false),
+        (Facing::Up, false),
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Up, true),
+    ];
+    const B_SOUTH: &[(Facing, bool)] = &[
+        (Facing::Up, false),
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Up, true),
+    ];
+    const B_WEST: &[(Facing, bool)] = &[
+        (Facing::Up, false),
+        (Facing::Up, false),
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Up, true),
+    ];
+    const B_EAST: &[(Facing, bool)] = &[
+        (Facing::Up, false),
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Up, true),
+    ];
+    const M_NORTH: &[(Facing, bool)] = &[
+        (Facing::Up, false),
+        (Facing::Up, false),
+        (Facing::Up, false),
+        (Facing::Right, true),
+        (Facing::Right, false),
+        (Facing::Right, false),
+        (Facing::Right, false),
+        (Facing::Right, false),
+        (Facing::Up, true),
+    ];
+    const M_SOUTH: &[(Facing, bool)] = &[
+        (Facing::Up, false),
+        (Facing::Right, true),
+        (Facing::Right, false),
+        (Facing::Right, false),
+        (Facing::Right, false),
+        (Facing::Right, false),
+        (Facing::Up, true),
+    ];
+    const M_WEST: &[(Facing, bool)] = &[
+        (Facing::Up, false),
+        (Facing::Right, false),
+        (Facing::Right, false),
+        (Facing::Up, true),
+    ];
+    const M_EAST: &[(Facing, bool)] = &[
+        (Facing::Up, false),
+        (Facing::Up, false),
+        (Facing::Right, false),
+        (Facing::Right, false),
+        (Facing::Right, false),
+        (Facing::Right, false),
+        (Facing::Right, false),
+        (Facing::Up, true),
+    ];
     match (map, position.x, position.y) {
         (MapId::BrendansHouse2F, 4, 5) => (B_NORTH, Facing::Left),
         (MapId::BrendansHouse2F, 4, 3) => (B_SOUTH, Facing::Left),
@@ -8489,10 +17219,42 @@ const LITTLEROOT_GO_SAVE_BIRCH_TURN_SEQUENCE_FRAMES: u16 =
     LITTLEROOT_GO_SAVE_BIRCH_FASTER_TURN_FRAMES * 2;
 
 fn no_pokemon_twin_path(right_trigger: bool, returning: bool) -> &'static [(Facing, bool)] {
-    const APPROACH_LEFT: &[(Facing, bool)] = &[(Facing::Right, true), (Facing::Right, true), (Facing::Right, true), (Facing::Right, true), (Facing::Up, true), (Facing::Up, true), (Facing::Left, true)];
-    const APPROACH_RIGHT: &[(Facing, bool)] = &[(Facing::Right, true), (Facing::Right, true), (Facing::Right, true), (Facing::Up, true), (Facing::Up, true), (Facing::Right, true)];
-    const RETURN_LEFT: &[(Facing, bool)] = &[(Facing::Right, false), (Facing::Down, false), (Facing::Down, false), (Facing::Left, false), (Facing::Left, false), (Facing::Left, false), (Facing::Left, false), (Facing::Up, false), (Facing::Down, true)];
-    const RETURN_RIGHT: &[(Facing, bool)] = &[(Facing::Left, false), (Facing::Down, false), (Facing::Left, false), (Facing::Left, false), (Facing::Left, false), (Facing::Down, true)];
+    const APPROACH_LEFT: &[(Facing, bool)] = &[
+        (Facing::Right, true),
+        (Facing::Right, true),
+        (Facing::Right, true),
+        (Facing::Right, true),
+        (Facing::Up, true),
+        (Facing::Up, true),
+        (Facing::Left, true),
+    ];
+    const APPROACH_RIGHT: &[(Facing, bool)] = &[
+        (Facing::Right, true),
+        (Facing::Right, true),
+        (Facing::Right, true),
+        (Facing::Up, true),
+        (Facing::Up, true),
+        (Facing::Right, true),
+    ];
+    const RETURN_LEFT: &[(Facing, bool)] = &[
+        (Facing::Right, false),
+        (Facing::Down, false),
+        (Facing::Down, false),
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Up, false),
+        (Facing::Down, true),
+    ];
+    const RETURN_RIGHT: &[(Facing, bool)] = &[
+        (Facing::Left, false),
+        (Facing::Down, false),
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Left, false),
+        (Facing::Down, true),
+    ];
     match (right_trigger, returning) {
         (false, false) => APPROACH_LEFT,
         (true, false) => APPROACH_RIGHT,
@@ -8516,7 +17278,8 @@ fn no_pokemon_twin_path_step_frames(terminal_faster_turn: bool, fast: bool) -> u
 
 fn no_pokemon_twin_path_frames(right_trigger: bool, returning: bool) -> u16 {
     let path = no_pokemon_twin_path(right_trigger, returning);
-    path.iter().enumerate()
+    path.iter()
+        .enumerate()
         .map(|(index, (_, fast))| {
             no_pokemon_twin_path_step_frames(returning && index + 1 == path.len(), *fast)
         })
@@ -8525,10 +17288,22 @@ fn no_pokemon_twin_path_frames(right_trigger: bool, returning: bool) -> u16 {
 
 fn stepped_position(position: &TilePosition, direction: Facing) -> TilePosition {
     match direction {
-        Facing::Up => TilePosition { x: position.x, y: position.y - 1 },
-        Facing::Down => TilePosition { x: position.x, y: position.y + 1 },
-        Facing::Left => TilePosition { x: position.x - 1, y: position.y },
-        Facing::Right => TilePosition { x: position.x + 1, y: position.y },
+        Facing::Up => TilePosition {
+            x: position.x,
+            y: position.y - 1,
+        },
+        Facing::Down => TilePosition {
+            x: position.x,
+            y: position.y + 1,
+        },
+        Facing::Left => TilePosition {
+            x: position.x - 1,
+            y: position.y,
+        },
+        Facing::Right => TilePosition {
+            x: position.x + 1,
+            y: position.y,
+        },
     }
 }
 
@@ -8541,4 +17316,1015 @@ fn ledge_allows(behavior: u8, facing: Facing) -> bool {
         60..=63 => false,
         _ => true,
     }
+}
+
+#[cfg(test)]
+mod progression_engine_tests {
+    use super::*;
+
+    #[test]
+    fn paged_field_dialogue_keeps_exclusive_ownership_and_releases_on_final_page() {
+        let mut world = WorldState::title_menu();
+        world.begin_field_dialogue_pages(vec![
+            "First source page.".to_owned(),
+            "Second source page.".to_owned(),
+        ]);
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Dialogue);
+        assert_eq!(world.dialogue.as_deref(), Some("First source page."));
+
+        world.advance_field_dialogue_printer(u32::MAX);
+        world.advance_opening_script();
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Dialogue);
+        assert_eq!(world.field_dialogue.as_ref().map(|task| task.page), Some(1));
+        assert_eq!(world.dialogue.as_deref(), Some("Second source page."));
+
+        world.advance_field_dialogue_printer(u32::MAX);
+        world.advance_opening_script();
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Field);
+        assert!(world.field_dialogue.is_none());
+        assert!(world.dialogue.is_none());
+    }
+
+    #[test]
+    fn clock_script_sets_durable_flags_after_its_typed_prompt_and_mom_scene() {
+        let mut world = WorldState::bedroom_idle();
+        world.begin_clock_edit();
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Dialogue);
+        assert!(
+            world.field_dialogue.is_some(),
+            "clock prompt must use the shared dialogue task"
+        );
+
+        world.advance_field_dialogue_printer(u32::MAX);
+        world.advance_opening_script();
+        assert_eq!(world.field_input_owner(), FieldInputOwner::ClockEditor);
+        assert!(world.clock_editing.is_some());
+
+        world.confirm_clock();
+        world.confirm_clock();
+        assert!(world.story_flags.wall_clock_started);
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Script);
+
+        // The final Mom-entry VBlank only needs the destination map and the
+        // stable source task state; it does not depend on a captured tape.
+        world.clock_settle_frames = None;
+        world.clock_visit_frames = Some(1);
+        world.advance_clock_visit(1);
+        assert!(world.story_flags.upstairs_mom_scene_complete);
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Dialogue);
+    }
+
+    #[test]
+    fn data_driven_interior_warp_is_atomic_and_checkpoint_replayable() {
+        let mut world = WorldState::bedroom_idle();
+        world.map = MapId::MaysHouse1F;
+        world.player = TilePosition { x: 2, y: 2 };
+        world.elevation =
+            crate::native::tile_elevation(world.map, 2, 2).expect("stair origin must be staged");
+
+        assert!(world.begin_interior_warp_at(2, 2));
+        let transition = world
+            .transition
+            .as_ref()
+            .expect("warp must create one transition");
+        assert_eq!(transition.origin_map, Some(MapId::MaysHouse1F));
+        assert_eq!(transition.origin, Some(TilePosition { x: 2, y: 2 }));
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Warp);
+
+        world.advance_transition(15);
+        assert_eq!(
+            world.map,
+            MapId::MaysHouse1F,
+            "fade-out cannot publish only the map"
+        );
+        assert_eq!(world.player, TilePosition { x: 2, y: 2 });
+
+        let checkpoint = serde_json::to_vec(&world).expect("transition state must serialize");
+        let mut restored: WorldState =
+            serde_json::from_slice(&checkpoint).expect("transition state must restore");
+        world.advance_transition(17);
+        restored.advance_transition(17);
+
+        assert_eq!(world, restored);
+        assert_eq!(world.map, MapId::MaysHouse2F);
+        assert_eq!(world.player, TilePosition { x: 1, y: 1 });
+    }
+
+    #[test]
+    fn mays_resident_handoff_removes_rival_but_keeps_renderer_walk_receipt() {
+        let mut world = WorldState::bedroom_idle();
+        world.map = MapId::MaysHouse1F;
+        world.player_gender = PlayerGender::Brendan;
+        world.player = TilePosition { x: 2, y: 2 };
+        world.frame = MAYS_RIVAL_RESIDENT_HANDOFF_FRAME;
+        world.mays_house_1f_rival_scene_start_frame = Some(0);
+        world.npcs = vec![
+            NpcState {
+                id: "rival".to_owned(),
+                map: MapId::MaysHouse1F,
+                position: TilePosition { x: 2, y: 1 },
+                facing: Facing::Up,
+            },
+            NpcState {
+                id: "mom".to_owned(),
+                map: MapId::MaysHouse1F,
+                position: TilePosition { x: 8, y: 5 },
+                facing: Facing::Left,
+            },
+        ];
+        world.npc_walk_starts = vec![NpcWalkStart {
+            id: "rival".to_owned(),
+            frame: MAYS_RIVAL_RESIDENT_HANDOFF_FRAME - 22,
+            duration_frames: MAYS_PLAYER_UP_TAIL_FRAMES as u8,
+            sprite_facing: Some(Facing::Up),
+            in_place: false,
+        }];
+
+        world.advance_mays_house_1f_rival_scene(0);
+
+        assert!(!world.npcs.iter().any(|npc| npc.id == "rival"));
+        assert!(world.npc_walk_starts.iter().any(|walk| {
+            walk.id == "rival"
+                && walk.sprite_facing == Some(Facing::Up)
+                && walk.frame == MAYS_RIVAL_RESIDENT_HANDOFF_FRAME - 22
+        }));
+    }
+
+    #[test]
+    fn exterior_house_doors_are_one_way_collision_events() {
+        let mut world = WorldState::bedroom_idle();
+        world.map = MapId::LittlerootTown;
+        world.player = TilePosition { x: 14, y: 8 };
+        assert!(
+            !world.begin_interior_warp_at_facing(14, 8, Some(Facing::Down)),
+            "holding Down on a house threshold must not re-enter the house"
+        );
+        assert!(world.begin_interior_warp_at_facing(14, 8, Some(Facing::Up)));
+        assert_eq!(
+            world
+                .transition
+                .as_ref()
+                .map(|transition| transition.destination_map),
+            Some(MapId::MaysHouse1F)
+        );
+    }
+
+    #[test]
+    fn delayed_warp_keeps_old_map_until_delay_and_fade_are_fully_accounted() {
+        let mut direct = WorldState::bedroom_idle();
+        direct.map = MapId::MaysHouse1F;
+        direct.player = TilePosition { x: 2, y: 2 };
+        direct.begin_transition_with_timing(
+            MapId::MaysHouse2F,
+            TilePosition { x: 1, y: 1 },
+            WarpTiming {
+                pre_fade_delay_frames: 3,
+                fade_frames: 4,
+            },
+        );
+        direct.advance_transition(2);
+        assert_eq!(direct.map, MapId::MaysHouse1F);
+        assert_eq!(direct.transition_alpha(), 0);
+        assert_eq!(
+            direct
+                .transition
+                .as_ref()
+                .map(|task| task.pre_fade_delay_remaining),
+            Some(1)
+        );
+
+        let checkpoint = serde_json::to_vec(&direct).expect("delayed warp must serialize");
+        let mut restored: WorldState =
+            serde_json::from_slice(&checkpoint).expect("delayed warp must restore");
+        direct.advance_transition(9);
+        restored.advance_transition(9);
+        assert_eq!(direct, restored, "warp timing must be replay invariant");
+        assert_eq!(direct.map, MapId::MaysHouse2F);
+        assert!(
+            direct.transition.is_none(),
+            "delay + fade-out + fade-in must finish exactly"
+        );
+    }
+
+    #[test]
+    fn transition_alpha_widens_fade_numerator_before_multiplication() {
+        let mut world = WorldState::bedroom_idle();
+        world.transition = Some(MapTransition {
+            origin_map: Some(MapId::MaysHouse1F),
+            origin: Some(TilePosition { x: 2, y: 6 }),
+            destination_map: MapId::LittlerootTown,
+            destination: TilePosition { x: 14, y: 8 },
+            pre_fade_delay_remaining: 0,
+            frames_remaining: 32,
+            total_frames: 32,
+            fading_in: true,
+        });
+
+        // The first arrival frame is black, then every later frame must
+        // become brighter.  A u8 multiplication would make all of these
+        // values equal after elapsed=1.
+        assert_eq!(world.transition_alpha(), 255);
+        world
+            .transition
+            .as_mut()
+            .expect("test transition")
+            .frames_remaining = 31;
+        assert_eq!(world.transition_alpha(), 248);
+        world
+            .transition
+            .as_mut()
+            .expect("test transition")
+            .frames_remaining = 24;
+        assert_eq!(world.transition_alpha(), 192);
+        world
+            .transition
+            .as_mut()
+            .expect("test transition")
+            .frames_remaining = 1;
+        assert_eq!(world.transition_alpha(), 8);
+    }
+
+    #[test]
+    fn typed_script_runner_pages_waits_sets_flags_and_hands_off_without_route_input() {
+        let mut world = WorldState::bedroom_idle();
+        world.begin_field_script(vec![
+            ScriptStep::Dialogue {
+                pages: vec!["NPC page one".to_owned(), "NPC page two".to_owned()],
+            },
+            ScriptStep::SetFlag {
+                flag: ProgressFlag::WallClockStarted,
+            },
+            ScriptStep::Wait { frames: 3 },
+            ScriptStep::Warp {
+                destination_map: MapId::MaysHouse1F,
+                destination: TilePosition { x: 2, y: 2 },
+                timing: WarpTiming {
+                    pre_fade_delay_frames: 2,
+                    fade_frames: 4,
+                },
+            },
+        ]);
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Dialogue);
+        assert_eq!(world.dialogue.as_deref(), Some("NPC page one"));
+        world.advance_field_dialogue_printer(u32::MAX);
+        world.advance_opening_script();
+        assert_eq!(world.dialogue.as_deref(), Some("NPC page two"));
+
+        world.advance_field_dialogue_printer(u32::MAX);
+        world.advance_opening_script();
+        assert!(
+            world.story_flags.wall_clock_started,
+            "same-VBlank close must run SetFlag"
+        );
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Script);
+        assert!(world.advance_field_script_task(3));
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Warp);
+        assert_eq!(
+            world
+                .transition
+                .as_ref()
+                .map(|task| task.pre_fade_delay_remaining),
+            Some(2)
+        );
+        world.advance_transition(10);
+        assert!(
+            world.field_script.is_none(),
+            "script must release after its terminal warp fades in"
+        );
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Field);
+    }
+
+    #[test]
+    fn map_connection_gate_requires_the_declared_story_flag_before_rescue_transition() {
+        let mut world = WorldState::bedroom_idle();
+        world.map = MapId::LittlerootTown;
+        world.player = TilePosition { x: 11, y: 0 };
+        world.phase = StoryPhase::MetRival;
+        world.birch_prompt_complete = false;
+        assert!(!world.begin_connected_map(Facing::Up));
+        assert_eq!(world.map, MapId::LittlerootTown);
+        assert!(world.transition.is_none());
+
+        world.birch_prompt_complete = true;
+        assert!(world.begin_connected_map(Facing::Up));
+        assert_eq!(world.phase, StoryPhase::BirchRescue);
+        assert_eq!(world.dialogue.as_deref(), Some("H-help me!"));
+        assert_eq!(
+            world.transition.as_ref().map(|task| task.destination_map),
+            Some(MapId::Route101)
+        );
+    }
+
+    #[test]
+    fn route101_bag_script_opens_source_gated_torchic_picker_without_a_route_tape() {
+        let mut world = WorldState::route101_rescue();
+        world.player = TilePosition { x: 7, y: 15 };
+        world.elevation = crate::native::tile_elevation(world.map, 7, 15)
+            .expect("Route 101 bag approach must be staged");
+        world.facing = Facing::Up;
+        world.birch_rescue_stage = 3;
+        world.route101_rescue_task = Route101RescueTask::BagPrompt;
+        world.dialogue = None;
+
+        assert!(world.interact_with_npc());
+        assert_eq!(world.phase, StoryPhase::StarterSelect);
+        assert_eq!(
+            world.route101_rescue_task,
+            Route101RescueTask::StarterPicker
+        );
+        assert_eq!(world.player, TilePosition { x: 7, y: 15 });
+        assert_eq!(world.starter, Some(StarterSpecies::Torchic));
+        assert!(world.story_flags.pokemon_obtained);
+        assert!(world.story_flags.birch_rescue_started);
+        assert!(world.route101_rescue_invariants_hold());
+    }
+
+    #[test]
+    fn route101_picker_to_zigzagoon_handoff_is_typed_and_checkpoint_replayable() {
+        let mut world = WorldState::route101_rescue();
+        world.birch_rescue_stage = 3;
+        world.open_starter_picker(StarterSpecies::Torchic);
+        world.ask_confirm_starter();
+        assert_eq!(
+            world.route101_rescue_task,
+            Route101RescueTask::StarterReveal
+        );
+        world.advance_starter_reveal(15);
+        assert_eq!(
+            world.route101_rescue_task,
+            Route101RescueTask::StarterConfirm
+        );
+        world.respond_starter_confirmation(true);
+        assert_eq!(
+            world.route101_rescue_task,
+            Route101RescueTask::BattleHandoff
+        );
+        assert!(world.route101_rescue_invariants_hold());
+
+        let checkpoint = serde_json::to_vec(&world).expect("battle handoff must serialize");
+        let mut restored: WorldState =
+            serde_json::from_slice(&checkpoint).expect("battle handoff must restore");
+        world.begin_birch_battle();
+        restored.begin_birch_battle();
+        assert_eq!(world, restored);
+        assert_eq!(world.route101_rescue_task, Route101RescueTask::Battle);
+        let battle = world
+            .battle
+            .as_ref()
+            .expect("handoff must start the scripted battle");
+        assert_eq!(battle.opponent, BattleOpponent::Zigzagoon);
+        assert_eq!(battle.player_species, "TORCHIC");
+        assert_eq!(battle.player_level, 5);
+        assert!(world.route101_rescue_invariants_hold());
+    }
+
+    #[test]
+    fn birch_victory_continuation_is_a_serialized_script_to_the_source_lab_acknowledgement() {
+        let mut world = WorldState::starter_battle();
+        world.complete_birch_rescue_battle();
+        assert_eq!(
+            world.route101_rescue_task,
+            Route101RescueTask::PostBattleApproach
+        );
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Script);
+        assert!(world.route101_rescue_invariants_hold());
+
+        let encoded = serde_json::to_vec(&world).expect("post-battle task must serialize");
+        let mut restored: WorldState =
+            serde_json::from_slice(&encoded).expect("post-battle task must restore");
+        world.advance_field_script_task(16);
+        restored.advance_field_script_task(16);
+        assert_eq!(
+            world, restored,
+            "script wait must be checkpoint deterministic"
+        );
+        assert_eq!(
+            world.route101_rescue_task,
+            Route101RescueTask::PostBattleDialogue
+        );
+        assert_eq!(world.dialogue.as_deref(), Some("PROF. BIRCH: Whew…"));
+
+        for _ in 0..6 {
+            world.advance_field_dialogue_printer(u32::MAX);
+            world.advance_opening_script();
+        }
+        assert_eq!(world.route101_rescue_task, Route101RescueTask::LabHandoff);
+        assert_eq!(
+            world.transition.as_ref().map(|task| task.destination_map),
+            Some(MapId::ProfessorBirchsLab)
+        );
+
+        world.advance_transition(32);
+        assert_eq!(world.map, MapId::ProfessorBirchsLab);
+        assert_eq!(world.player, TilePosition { x: 6, y: 5 });
+        assert_eq!(world.phase, StoryPhase::StarterLab);
+        assert_eq!(
+            world.route101_rescue_task,
+            Route101RescueTask::StarterLabAcknowledgement
+        );
+        assert!(world.story_flags.starter_acknowledged);
+        assert_eq!(
+            world.dialogue.as_deref(),
+            Some("I’d like you to have your own POKéMON.")
+        );
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Dialogue);
+        assert!(world.route101_rescue_invariants_hold());
+    }
+
+    #[test]
+    fn lab_agreement_is_the_durable_gate_for_oldale_and_route103_connections() {
+        let mut world = WorldState::starter_battle();
+        world.complete_birch_rescue_battle();
+        world.advance_field_script_task(16);
+        for _ in 0..6 {
+            world.advance_field_dialogue_printer(u32::MAX);
+            world.advance_opening_script();
+        }
+        world.advance_transition(32);
+
+        world.advance_field_dialogue_printer(u32::MAX);
+        world.advance_opening_script();
+        assert_eq!(
+            world.route101_rescue_task,
+            Route101RescueTask::StarterLabNicknameChoice
+        );
+        world.respond_starter_lab_choice(false);
+        assert_eq!(
+            world.route101_rescue_task,
+            Route101RescueTask::StarterLabRivalChoice
+        );
+        world.respond_starter_lab_choice(true);
+        assert_eq!(
+            world.route101_rescue_task,
+            Route101RescueTask::StarterLabAgreement
+        );
+        world.advance_opening_script();
+        assert_eq!(world.phase, StoryPhase::StarterChosen);
+        assert_eq!(world.route101_rescue_task, Route101RescueTask::RouteAccess);
+        assert!(world.story_flags.rival_route_unlocked);
+        assert!(world.route101_rescue_invariants_hold());
+
+        world.map = MapId::Route101;
+        world.player = TilePosition { x: 9, y: 0 };
+        assert!(world.begin_connected_map(Facing::Up));
+        assert_eq!(world.map, MapId::OldaleTown);
+        world.player = TilePosition { x: 9, y: 0 };
+        assert!(world.begin_connected_map(Facing::Up));
+        assert_eq!(world.map, MapId::Route103);
+
+        let mut locked = WorldState::starter_battle();
+        locked.complete_birch_rescue_battle();
+        locked.advance_field_script_task(16);
+        for _ in 0..6 {
+            locked.advance_field_dialogue_printer(u32::MAX);
+            locked.advance_opening_script();
+        }
+        locked.advance_transition(32);
+        locked.map = MapId::Route101;
+        locked.player = TilePosition { x: 9, y: 0 };
+        assert!(
+            !locked.begin_connected_map(Facing::Up),
+            "Lab acknowledgement alone must not release the Oldale route"
+        );
+    }
+
+    #[test]
+    fn oldale_route103_connection_is_declarative_and_replayable() {
+        let mut world = WorldState::route101_rescue();
+        world.map = MapId::OldaleTown;
+        world.phase = StoryPhase::StarterChosen;
+        world.player = TilePosition { x: 9, y: 0 };
+        world.elevation = crate::native::tile_elevation(world.map, 9, 0)
+            .expect("Oldale north edge must be staged");
+        world.story_flags.starter_acknowledged = true;
+        world.story_flags.rival_route_unlocked = true;
+        world.dialogue = None;
+        world.field_dialogue = None;
+        world.field_dialogue_frames = None;
+
+        let encoded = serde_json::to_vec(&world).expect("field connection state must serialize");
+        let mut restored: WorldState =
+            serde_json::from_slice(&encoded).expect("field connection state must restore");
+        assert!(world.begin_connected_map(Facing::Up));
+        assert!(restored.begin_connected_map(Facing::Up));
+        assert_eq!(
+            world, restored,
+            "cardinal map handoff must not depend on an input tape"
+        );
+        assert_eq!(world.map, MapId::Route103);
+        assert_eq!(world.player, TilePosition { x: 9, y: 21 });
+        assert!(world
+            .npcs
+            .iter()
+            .any(|npc| npc.id == "rival" && npc.position == (TilePosition { x: 10, y: 3 })));
+
+        let mut locked = world.clone();
+        locked.map = MapId::OldaleTown;
+        locked.player = TilePosition { x: 9, y: 0 };
+        locked.story_flags.rival_route_unlocked = false;
+        assert!(!locked.begin_connected_map(Facing::Up));
+        assert_eq!(locked.map, MapId::OldaleTown);
+    }
+
+    #[test]
+    fn route103_trainer_handoff_and_departure_are_typed_and_checkpoint_deterministic() {
+        let mut world = WorldState::route103_rival();
+        assert_eq!(world.rival_route_task(), RivalRouteTask::Field);
+        assert!(world.interact_with_npc());
+        assert_eq!(world.phase, StoryPhase::RivalBattle);
+        assert_eq!(world.rival_route_task(), RivalRouteTask::ChallengeDialogue);
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Dialogue);
+        assert!(world.rival_route_invariants_hold());
+
+        let encoded = serde_json::to_vec(&world).expect("trainer dialogue must serialize");
+        let mut restored: WorldState =
+            serde_json::from_slice(&encoded).expect("trainer dialogue must restore");
+        for state in [&mut world, &mut restored] {
+            state.advance_field_dialogue_printer(u32::MAX);
+            state.advance_opening_script();
+            assert_eq!(state.rival_route_task(), RivalRouteTask::ChallengeApproach);
+            assert!(state.advance_route103_rival_intro(88));
+            assert_eq!(state.rival_route_task(), RivalRouteTask::ChallengeDialogue);
+            state.advance_field_dialogue_printer(u32::MAX);
+            state.advance_opening_script();
+        }
+        assert_eq!(
+            world, restored,
+            "trainer approach and battle handoff must replay after restore"
+        );
+        assert_eq!(world.rival_route_task(), RivalRouteTask::Battle);
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Battle);
+        assert!(world.rival_route_invariants_hold());
+
+        // The normal battle resolver publishes this same terminal boundary;
+        // assert the map-script continuation rather than faking an input tape.
+        world.battle = None;
+        world.publish_route103_rival_victory();
+        assert_eq!(world.rival_route_task(), RivalRouteTask::DefeatDialogue);
+        assert!(world.rival_route_invariants_hold());
+        world.advance_field_dialogue_printer(u32::MAX);
+        world.advance_opening_script();
+        world.advance_field_dialogue_printer(u32::MAX);
+        world.advance_opening_script();
+        assert_eq!(world.rival_route_task(), RivalRouteTask::Departure);
+        assert!(world.rival_route_invariants_hold());
+
+        let encoded = serde_json::to_vec(&world).expect("trainer departure must serialize");
+        let mut restored: WorldState =
+            serde_json::from_slice(&encoded).expect("trainer departure must restore");
+        assert!(world.advance_rival_departure(u32::MAX));
+        assert!(restored.advance_rival_departure(u32::MAX));
+        assert_eq!(
+            world, restored,
+            "rival exit must retain its selected map-script branch after restore"
+        );
+        assert_eq!(world.rival_route_task(), RivalRouteTask::Field);
+        assert!(world.rival_route_invariants_hold());
+    }
+
+    fn assert_return_journey_checkpoint(world: &WorldState, expected: ReturnJourneyTask) {
+        assert_eq!(world.return_journey_task(), expected);
+        assert!(world.return_journey_invariants_hold());
+        let encoded = serde_json::to_vec(world).expect("return journey boundary must serialize");
+        let restored: WorldState =
+            serde_json::from_slice(&encoded).expect("return journey boundary must restore");
+        assert_eq!(&restored, world);
+        assert_eq!(restored.return_journey_task(), expected);
+        assert!(restored.return_journey_invariants_hold());
+    }
+
+    #[test]
+    fn route103_victory_field_requires_the_authenticated_flag_var_and_party_bundle() {
+        let world = WorldState::route103_rival_victory_field();
+        assert!(world.route103_rival_victory_field_invariants_hold());
+        assert_eq!(world.return_journey_task(), ReturnJourneyTask::ReturnField);
+        assert_eq!(world.rival_route_task(), RivalRouteTask::Field);
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Field);
+        let encoded = serde_json::to_vec(&world).expect("victory field must serialize");
+        let restored: WorldState =
+            serde_json::from_slice(&encoded).expect("victory field must restore");
+        assert_eq!(restored, world);
+        assert!(restored.route103_rival_victory_field_invariants_hold());
+        assert_eq!(
+            world.starter_party.as_ref().map(|party| &party.moves),
+            Some(&vec![
+                battle_move_slot("SCRATCH", 26),
+                battle_move_slot("GROWL", 39),
+                battle_move_slot("FOCUS ENERGY", 30),
+            ])
+        );
+
+        let mut staged_loss = WorldState::route103_rival();
+        staged_loss.phase = StoryPhase::RivalDefeated;
+        staged_loss.battle = None;
+        staged_loss.dialogue = None;
+        staged_loss.npcs.clear();
+        assert!(!staged_loss.route103_rival_victory_progression_invariants_hold());
+        assert!(!staged_loss.route103_rival_victory_field_invariants_hold());
+        assert!(!staged_loss.return_journey_invariants_hold());
+
+        for (index, mut malformed) in [world.clone(), world.clone(), world.clone(), world.clone()]
+            .into_iter()
+            .enumerate()
+        {
+            match index {
+                0 => malformed.story_flags.defeated_rival_route103 = false,
+                1 => malformed.story_flags.hide_route103_rival = false,
+                2 => malformed.story_vars.birch_lab_state = 3,
+                _ => malformed.story_vars.oldale_rival_state = 0,
+            }
+            assert!(!malformed.route103_rival_victory_field_invariants_hold());
+        }
+    }
+
+    #[test]
+    fn four_slot_player_moves_select_consume_and_persist_their_own_pp() {
+        let mut world = WorldState::route103_rival_victory_field();
+        world.phase = StoryPhase::RivalBattle;
+        world.story_flags.hide_route103_rival = false;
+        world.begin_rival_battle();
+        world.settle_battle_command_surface();
+        let battle = world.battle.as_ref().expect("rival battle must start");
+        assert_eq!(
+            battle
+                .player_moves
+                .iter()
+                .map(|slot| (slot.move_id, slot.pp))
+                .collect::<Vec<_>>(),
+            vec![(10, 26), (45, 39), (116, 30)]
+        );
+        assert!(world.move_slot_invariants_hold());
+
+        world.choose_battle_command();
+        world.move_battle_move_cursor(2);
+        assert_eq!(
+            world.battle.as_ref().map(|battle| battle.move_cursor),
+            Some(2)
+        );
+        world.choose_battle_move();
+        assert_eq!(
+            world
+                .battle
+                .as_ref()
+                .map(|battle| battle.player_moves[2].pp),
+            Some(29)
+        );
+        assert_eq!(
+            world.starter_party.as_ref().map(|party| party.moves[2].pp),
+            Some(29)
+        );
+        assert!(world.move_slot_invariants_hold());
+
+        let encoded = serde_json::to_vec(&world).expect("third move selection must serialize");
+        let restored: WorldState =
+            serde_json::from_slice(&encoded).expect("third move selection must restore");
+        assert_eq!(restored, world);
+        assert!(restored.move_slot_invariants_hold());
+    }
+
+    #[test]
+    fn rival_victory_return_pokedex_shoes_and_route101_departure_form_one_typed_corridor() {
+        let mut world = WorldState::route103_rival();
+        world.story_flags.starter_acknowledged = true;
+        world.story_flags.rival_route_unlocked = true;
+        world.publish_route103_rival_victory();
+        assert_return_journey_checkpoint(&world, ReturnJourneyTask::Route103DefeatDialogue);
+
+        world.advance_opening_script();
+        world.advance_opening_script();
+        assert_return_journey_checkpoint(&world, ReturnJourneyTask::Route103Departure);
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Script);
+        world.advance_rival_departure(u32::MAX);
+        assert_return_journey_checkpoint(&world, ReturnJourneyTask::ReturnField);
+
+        world.player = TilePosition { x: 10, y: 21 };
+        assert!(world.begin_connected_map(Facing::Down));
+        assert_eq!(world.map, MapId::OldaleTown);
+        assert_eq!(world.player, TilePosition { x: 10, y: 0 });
+        assert_return_journey_checkpoint(&world, ReturnJourneyTask::ReturnField);
+
+        world.player = TilePosition { x: 10, y: 19 };
+        world.apply_oldale_rival_trigger();
+        assert_return_journey_checkpoint(&world, ReturnJourneyTask::OldaleApproach);
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Script);
+        world.advance_oldale_rival_approach(u32::MAX);
+        assert_return_journey_checkpoint(&world, ReturnJourneyTask::OldaleDialogue);
+        world.advance_field_dialogue_printer(u32::MAX);
+        world.advance_opening_script();
+        assert_return_journey_checkpoint(&world, ReturnJourneyTask::OldaleDeparture);
+        world.advance_oldale_rival_departure(u32::MAX);
+        assert!(world.oldale_rival_departed);
+        assert_return_journey_checkpoint(&world, ReturnJourneyTask::ReturnField);
+
+        world.player = TilePosition { x: 10, y: 19 };
+        assert!(world.begin_connected_map(Facing::Down));
+        assert_eq!(world.map, MapId::Route101);
+        world.player = TilePosition { x: 10, y: 19 };
+        assert!(world.begin_connected_map(Facing::Down));
+        world.advance_transition(32);
+        assert_eq!(world.map, MapId::LittlerootTown);
+        assert_eq!(world.phase, StoryPhase::RivalDefeated);
+
+        world.player = TilePosition { x: 7, y: 16 };
+        assert!(world.begin_interior_warp_at(7, 16));
+        assert_return_journey_checkpoint(&world, ReturnJourneyTask::LabWarp);
+        world.advance_transition(32);
+        assert_eq!(world.map, MapId::ProfessorBirchsLab);
+        assert_return_journey_checkpoint(&world, ReturnJourneyTask::PokedexArrival);
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Script);
+
+        world.advance_pokedex_arrival(u32::MAX);
+        assert_return_journey_checkpoint(&world, ReturnJourneyTask::PokedexDialogue);
+        world.advance_opening_script();
+        assert_return_journey_checkpoint(&world, ReturnJourneyTask::PokedexReceiptFanfare);
+        world.advance_pokedex_receipt_fanfare(u32::MAX);
+        assert!(world.has_pokedex);
+        assert_return_journey_checkpoint(&world, ReturnJourneyTask::PokedexDialogue);
+        world.advance_opening_script();
+        assert_return_journey_checkpoint(&world, ReturnJourneyTask::PokedexRivalApproach);
+        world.advance_pokedex_rival_approach(u32::MAX);
+        world.advance_opening_script();
+        assert_eq!(world.poke_balls, 5);
+        assert_return_journey_checkpoint(&world, ReturnJourneyTask::PokeBallGiftFanfare);
+        world.advance_pokedex_poke_ball_fanfare(u32::MAX);
+        assert_return_journey_checkpoint(&world, ReturnJourneyTask::PokedexDialogue);
+        world.advance_opening_script();
+        world.advance_opening_script();
+        assert_eq!(world.phase, StoryPhase::PokedexReceived);
+        assert_return_journey_checkpoint(&world, ReturnJourneyTask::Field);
+
+        world.player = TilePosition { x: 6, y: 12 };
+        assert!(world.begin_interior_warp_at(6, 12));
+        world.advance_transition(32);
+        assert_eq!(world.map, MapId::LittlerootTown);
+        world.player = TilePosition { x: 10, y: 9 };
+        world.apply_littleroot_coordinate_trigger();
+        assert_return_journey_checkpoint(&world, ReturnJourneyTask::RunningShoesPrompt);
+        world.advance_running_shoes_wait(u32::MAX);
+        world.advance_opening_script();
+        assert_return_journey_checkpoint(&world, ReturnJourneyTask::RunningShoesApproach);
+
+        for _ in 0..32 {
+            if world.running_shoes_dialogue_frames.is_some() {
+                world.advance_running_shoes_dialogue_printer(u32::MAX);
+            }
+            if world.dialogue.is_some() {
+                world.advance_opening_script();
+            }
+            if world.running_shoes_frames.is_some()
+                || world.running_shoes_return_delay_frames.is_some()
+                || world.running_shoes_return_door_frames.is_some()
+            {
+                world.advance_running_shoes_scene(u32::MAX);
+            }
+            if world.phase == StoryPhase::RunningShoesReceived {
+                break;
+            }
+            assert!(world.return_journey_invariants_hold());
+        }
+        assert_eq!(world.phase, StoryPhase::RunningShoesReceived);
+        assert!(world.running_shoes_item_shown);
+        assert!(!world.pending_running_shoes);
+
+        world.player = TilePosition { x: 10, y: 0 };
+        assert!(world.begin_connected_map(Facing::Up));
+        world.advance_transition(32);
+        assert_eq!(world.map, MapId::Route101);
+        assert_eq!(world.player, TilePosition { x: 10, y: 19 });
+        assert_return_journey_checkpoint(&world, ReturnJourneyTask::Route101Departure);
+    }
+
+    fn source_wild_field_world(rule: WildEncounterRule) -> WorldState {
+        let mut world = WorldState::route101_rescue();
+        world.map = rule.map;
+        world.phase = rule.phase;
+        world.player = rule.position.clone();
+        world.elevation = crate::native::tile_elevation(rule.map, rule.position.x, rule.position.y)
+            .expect("source encounter tile must be staged");
+        world.facing = Facing::Up;
+        world.dialogue = None;
+        world.field_dialogue = None;
+        world.field_dialogue_frames = None;
+        world.field_script = None;
+        world.starter = Some(StarterSpecies::Torchic);
+        world.ensure_starter_party();
+        world
+    }
+
+    #[test]
+    fn wild_encounter_handoff_is_checkpoint_deterministic_and_run_resumes_its_origin_atomically() {
+        let rule = WILD_ENCOUNTER_RULES[0].clone();
+        let mut world = source_wild_field_world(rule.clone());
+        let origin = (
+            world.map,
+            world.player.clone(),
+            world.elevation,
+            world.facing,
+        );
+        assert!(world.begin_wild_encounter_at_player());
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Battle);
+        assert!(world.wild_encounter_invariants_hold());
+        let encoded = serde_json::to_vec(&world).expect("wild handoff must serialize");
+        let mut restored: WorldState =
+            serde_json::from_slice(&encoded).expect("wild handoff must restore");
+
+        for candidate in [&mut world, &mut restored] {
+            candidate.settle_battle_command_surface();
+            let battle = candidate
+                .battle
+                .as_mut()
+                .expect("wild battle must remain active");
+            battle.command_cursor = BATTLE_COMMAND_RUN;
+            candidate.choose_battle_command();
+            assert_eq!(
+                candidate
+                    .battle
+                    .as_ref()
+                    .and_then(|battle| battle.message.as_deref()),
+                Some("Got away safely!")
+            );
+            candidate.choose_battle_move();
+        }
+        assert_eq!(
+            world, restored,
+            "run completion must replay identically after restore"
+        );
+        assert!(world.battle.is_none());
+        assert_eq!(
+            (
+                world.map,
+                world.player.clone(),
+                world.elevation,
+                world.facing
+            ),
+            origin
+        );
+        assert!(world.route101_poochyena_resolved);
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Field);
+    }
+
+    #[test]
+    fn failed_wild_run_keeps_battle_owned_and_victory_uses_the_same_return_transaction() {
+        let rule = WILD_ENCOUNTER_RULES[2].clone();
+        let mut world = source_wild_field_world(rule.clone());
+        let origin = (world.map, world.player.clone());
+        assert!(world.begin_wild_encounter_at_player());
+        world.settle_battle_command_surface();
+        {
+            let battle = world
+                .battle
+                .as_mut()
+                .expect("wild battle must remain active");
+            battle.command_cursor = BATTLE_COMMAND_RUN;
+            battle.player_speed = 0;
+            battle.opponent_speed = u8::MAX;
+        }
+        world.choose_battle_command();
+        let battle = world
+            .battle
+            .as_ref()
+            .expect("failed run must not release field");
+        assert_eq!(battle.message.as_deref(), Some("Can't escape!"));
+        assert_eq!(battle.run_attempts, 1);
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Battle);
+        assert!(world.wild_encounter_invariants_hold());
+        world.choose_battle_move();
+        assert_eq!(
+            world.battle.as_ref().map(|battle| battle.turn_phase),
+            Some(BattleTurnPhase::TurnResultMessage)
+        );
+        assert!(
+            world.battle.is_some(),
+            "failed RUN must resolve an opponent turn before command returns"
+        );
+        world.choose_battle_move();
+        assert_eq!(
+            world.battle.as_ref().map(|battle| battle.turn_phase),
+            Some(BattleTurnPhase::Command)
+        );
+
+        let battle = world
+            .battle
+            .as_mut()
+            .expect("battle still active for forced terminal source state");
+        battle.selecting_move = true;
+        battle.turn_phase = BattleTurnPhase::MoveSelection;
+        battle.move_cursor = 0;
+        battle.rival_hp = 0;
+        world.choose_battle_move();
+        assert!(world.battle.is_none());
+        assert_eq!((world.map, world.player.clone()), origin);
+        assert!(world.route103_wingull_resolved);
+        assert_eq!(world.field_input_owner(), FieldInputOwner::Field);
+    }
+
+    #[test]
+    fn battle_ui_dma_and_cursor_presentation_rails_are_serialized() {
+        let mut world = WorldState::starter_battle();
+        world.choose_battle_command();
+        let battle = world.battle.as_ref().expect("starter battle must remain active");
+        assert_eq!(battle.move_selection_transition_frames, 10);
+        assert_eq!(battle.command_cursor_rendered, None);
+        for expected in (0..10).rev() {
+            world.advance_battle_move_selection_transition();
+            assert_eq!(
+                world
+                    .battle
+                    .as_ref()
+                    .expect("battle transition must remain active")
+                    .move_selection_transition_frames,
+                expected
+            );
+        }
+
+        let mut cursor_world = WorldState::starter_battle();
+        cursor_world.move_battle_command_cursor(Facing::Right);
+        let battle = cursor_world
+            .battle
+            .as_ref()
+            .expect("cursor transition needs an active battle");
+        assert_eq!(battle.command_cursor, BATTLE_COMMAND_BAG);
+        assert_eq!(battle.command_cursor_rendered, Some(BATTLE_COMMAND_FIGHT));
+        assert_eq!(battle.command_cursor_transition_frames, 1);
+        cursor_world.advance_battle_move_selection_transition();
+        assert_eq!(
+            cursor_world
+                .battle
+                .as_ref()
+                .expect("cursor transition must remain active")
+                .command_cursor_rendered,
+            None
+        );
+    }
+
+    #[test]
+    fn battle_move_direction_keeps_empty_row_edges_stationary() {
+        let rule = WILD_ENCOUNTER_RULES[1].clone();
+        let mut world = source_wild_field_world(rule);
+        assert!(world.begin_wild_encounter_at_player());
+        world.settle_battle_command_surface();
+        world.choose_battle_command();
+        for _ in 0..10 {
+            world.advance_battle_move_selection_transition();
+        }
+        world.move_battle_move_cursor_direction(Facing::Down);
+        assert_eq!(world.battle.as_ref().map(|battle| battle.move_cursor), Some(0));
+        world.move_battle_move_cursor_direction(Facing::Right);
+        assert_eq!(world.battle.as_ref().map(|battle| battle.move_cursor), Some(1));
+        world.move_battle_move_cursor_direction(Facing::Down);
+        assert_eq!(world.battle.as_ref().map(|battle| battle.move_cursor), Some(1));
+    }
+
+    #[test]
+    fn battle_turn_phases_keep_cursor_message_pp_and_hp_boundaries_explicit() {
+        let rule = WILD_ENCOUNTER_RULES[1].clone();
+        let mut world = source_wild_field_world(rule);
+        assert!(world.begin_wild_encounter_at_player());
+        world.settle_battle_command_surface();
+        assert_eq!(
+            world.battle.as_ref().map(|battle| battle.turn_phase),
+            Some(BattleTurnPhase::Command)
+        );
+        assert!(world.battle_turn_invariants_hold());
+
+        world.choose_battle_command();
+        assert_eq!(
+            world.battle.as_ref().map(|battle| battle.turn_phase),
+            Some(BattleTurnPhase::MoveSelection)
+        );
+        world.move_battle_move_cursor(1);
+        assert_eq!(
+            world.battle.as_ref().map(|battle| battle.move_cursor),
+            Some(1)
+        );
+        world.cancel_battle_move_selection();
+        assert_eq!(
+            world.battle.as_ref().map(|battle| battle.turn_phase),
+            Some(BattleTurnPhase::Command)
+        );
+
+        world.choose_battle_command();
+        world.move_battle_move_cursor(-1);
+        let before = world
+            .battle
+            .as_ref()
+            .expect("move selection must be active")
+            .player_move_pp;
+        world.choose_battle_move();
+        let battle = world
+            .battle
+            .as_ref()
+            .expect("source first Wurmple turn is non-terminal");
+        assert_eq!(battle.player_move_pp, before - 1);
+        assert!(battle.rival_hp < battle.opponent_max_hp);
+        assert_eq!(battle.turn_phase, BattleTurnPhase::TurnResultMessage);
+        assert!(world.battle_turn_invariants_hold());
+        world.choose_battle_move();
+        assert_eq!(
+            world.battle.as_ref().map(|battle| battle.turn_phase),
+            Some(BattleTurnPhase::Command)
+        );
+        assert!(world.battle_turn_invariants_hold());
+    }
+
 }

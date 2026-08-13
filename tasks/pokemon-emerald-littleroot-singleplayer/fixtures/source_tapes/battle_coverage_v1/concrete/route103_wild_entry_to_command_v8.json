@@ -1,0 +1,17 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "route103_wild_entry_to_command_v8",
+  "coverage_segment": "route103_wild_encounter",
+  "description": "Dismiss the authenticated deterministic Route 103 wild-battle entry text with a released A edge and settle at the native battle command surface.",
+  "program": [
+    { "buttons": ["a"], "frames": 1 },
+    { "buttons": [], "frames": 180 }
+  ],
+  "source_assertions": {
+    "terminal_source_position": { "map_group": 0, "map_number": 18, "player_x": 7, "player_y": 6 },
+    "terminal_observability": {
+      "palette_fade": { "active": false },
+      "callbacks": { "main_callback1": "0x08039ef1", "main_callback2": "0x08038421" }
+    }
+  }
+}

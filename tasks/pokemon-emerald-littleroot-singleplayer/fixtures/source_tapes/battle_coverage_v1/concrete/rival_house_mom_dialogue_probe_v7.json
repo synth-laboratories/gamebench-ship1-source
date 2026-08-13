@@ -1,0 +1,19 @@
+{
+  "schema": "gamebench.pokemon_emerald.source_tape_request.v1",
+  "id": "rival_house_mom_dialogue_probe_v7",
+  "status": "candidate_unvalidated",
+  "description": "Bounded source diagnostic for the neighboring-house Mom event. This is retained as a per-VBlank timing probe, not a completion tape.",
+  "program": [
+    {"buttons": ["left"], "frames": 96},
+    {"buttons": ["up"], "frames": 32},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300}
+  ]
+}

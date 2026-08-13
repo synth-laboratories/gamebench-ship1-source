@@ -1,0 +1,12 @@
+{
+  "schema": "gamebench.pokemon_emerald.continuous_battle_tape.v1",
+  "id": "starter_battle_continuous_smoke",
+  "purpose": "prove one-load, no-reload, every-VBlank battle-memory sampling",
+  "markers": [
+    {"vblank": 0, "label": "loaded_command_boundary"},
+    {"vblank": 4, "label": "terminal_smoke_boundary"}
+  ],
+  "program": [
+    {"buttons": [], "frames": 4}
+  ]
+}

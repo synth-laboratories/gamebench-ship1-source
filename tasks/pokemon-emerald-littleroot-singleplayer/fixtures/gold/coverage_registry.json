@@ -1,0 +1,127 @@
+{
+  "schema": "gamebench.pokemon_emerald.coverage_registry.v1",
+  "description": "Declarative scoped-route inventory. This is a coverage plan, not implementation evidence.",
+  "segments": [
+    {
+      "id": "title_new_game",
+      "name": "Title / new-game setup",
+      "checkpoint": "title_menu",
+      "oracle_checkpoints": ["title_menu"],
+      "frozen_source_state_contains": "splits/00_init/00_init.state"
+    },
+    {
+      "id": "truck_arrival",
+      "name": "Truck arrival",
+      "checkpoint": "truck_arrival",
+      "oracle_checkpoints": ["truck_arrival"],
+      "frozen_source_state_contains": "splits/01_tutorial/01_tutorial.state"
+    },
+    {
+      "id": "bedroom",
+      "name": "New home / bedroom",
+      "checkpoint": "bedroom_idle",
+      "oracle_checkpoints": ["bedroom_idle"],
+      "oracle_checkpoint_prefixes": ["mays_house_"],
+      "frozen_source_state_contains": "splits/02_starter/02_starter.state",
+      "oracle_state_sha256": "34ae4afe4285efbc61c2345a2927b66097ea97b40636f42e32226f5a586e6e6e"
+    },
+    {
+      "id": "birch_encounter",
+      "name": "Birch encounter",
+      "checkpoint": "birch_lab_exterior",
+      "oracle_checkpoints": ["birch_lab_exterior"],
+      "frozen_source_state_contains": "splits/03_birch/03_birch.state"
+    },
+    {
+      "id": "outside_birch_lab",
+      "name": "Outside Birch's Lab / rival-house progression",
+      "checkpoint": "rival_outside_lab",
+      "oracle_checkpoints": ["outside_lab_pokedex"],
+      "frozen_source_state_contains": "splits/04_rival/04_rival.state"
+    },
+    {
+      "id": "route101_rescue",
+      "name": "Route 101 rescue and starter battle",
+      "checkpoint": "route101_rescue",
+      "oracle_checkpoints": ["route101_rescue", "starter_picker", "starter_battle", "zigzagoon_after_turn_one", "zigzagoon_after_turn_two", "zigzagoon_victory_handoff"],
+      "oracle_checkpoint_prefixes": ["zigzagoon_"]
+    },
+    {
+      "id": "route103_rival",
+      "name": "Route 103 rival battle",
+      "checkpoint": "route103_rival",
+      "oracle_checkpoints": [
+        "route103_south_entry",
+        "route103_wild_field_resume",
+        "route103_rival_adjacent",
+        "route103_rival_battle_entry",
+        "route103_rival_battle_command",
+        "route103_rival_victory_field"
+      ],
+      "oracle_checkpoint_prefixes": ["route103_"],
+      "oracle_checkpoint_excluded_prefixes": ["route103_post_rival_"]
+    },
+    {
+      "id": "running_shoes",
+      "name": "Running Shoes event / Route 101 departure",
+      "checkpoint": "running_shoes",
+      "oracle_checkpoints": [
+        "running_shoes_trigger_active",
+        "running_shoes_granted",
+        "running_shoes_departure"
+      ]
+    },
+    {
+      "id": "new_home_clock_tv",
+      "name": "New-home clock and TV sequence",
+      "checkpoint": "clock_tv_downstairs",
+      "oracle_checkpoints": ["clock_tv_downstairs"],
+      "source_trace_ids": ["bedroom_clock_and_tv_v1", "downstairs_to_littleroot_v1"]
+    },
+    {
+      "id": "littleroot_town",
+      "name": "Littleroot town traversal and Brendan's house",
+      "checkpoint": "littleroot_post_lab",
+      "oracle_checkpoints": ["littleroot_exterior", "littleroot_post_lab"],
+      "oracle_checkpoint_prefixes": ["littleroot_", "brendans_house_"],
+      "oracle_checkpoint_excluded_prefixes": ["littleroot_post_rival_", "littleroot_post_pokedex_"],
+      "source_trace_ids": ["bedroom_to_littleroot_exterior_v7"]
+    },
+    {
+      "id": "birch_lab_acknowledgement",
+      "name": "Birch Lab starter acknowledgement",
+      "checkpoint": "birch_lab_starter_ack",
+      "oracle_checkpoints": ["birch_lab_starter_ack", "birch_lab_receive_starter_page", "birch_lab_nickname_prompt", "birch_lab_field_ready"],
+      "oracle_checkpoint_prefixes": ["birch_lab_"],
+      "oracle_checkpoint_excluded_prefixes": ["birch_lab_post_rival_", "birch_lab_pokedex_", "birch_lab_pokeball_", "birch_lab_post_pokedex_"]
+    },
+    {
+      "id": "oldale_town",
+      "name": "Oldale Town connection and scripted rival approach",
+      "checkpoint": null,
+      "oracle_checkpoints": ["oldale_town", "route101_post_victory_r2"],
+      "oracle_checkpoint_prefixes": ["route101_post_lab", "route101_north_", "route101_west_", "route101_mid_", "route101_east_", "route101_wild_", "route101_post_victory_", "oldale_u", "oldale_l"]
+    },
+    {
+      "id": "route103_return",
+      "name": "Route 103 return and Pokédex handoff",
+      "checkpoint": null,
+      "oracle_checkpoints": [
+        "return_pokedex",
+        "route103_post_rival_south_exit",
+        "oldale_post_rival_north_entry",
+        "oldale_post_rival_departure",
+        "route101_post_rival_north_entry",
+        "route101_return_wild_resume",
+        "route101_post_rival_south_edge",
+        "littleroot_post_rival_north_entry",
+        "birch_lab_post_rival_entry",
+        "birch_lab_pokedex_received",
+        "birch_lab_pokeballs_received",
+        "birch_lab_post_pokedex_field_ready",
+        "littleroot_post_pokedex_lab_exit"
+      ],
+      "oracle_checkpoint_prefixes": ["route103_post_rival_", "oldale_post_rival_", "route101_post_rival_", "route101_return_", "littleroot_post_rival_", "birch_lab_post_rival_", "birch_lab_pokedex_", "birch_lab_pokeball_", "birch_lab_post_pokedex_", "littleroot_post_pokedex_"]
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "route101_wild_run_from_command_v8",
+  "coverage_segment": "route101_wild_encounter",
+  "description": "At the authenticated Route 101 wild battle command menu, navigate FIGHT→BAG→RUN using released one-VBlank edges, activate RUN, and wait through the native outcome. Terminal ownership distinguishes escape from rejection.",
+  "program": [
+    { "buttons": ["right"], "frames": 1 }, { "buttons": [], "frames": 30 },
+    { "buttons": ["down"], "frames": 1 }, { "buttons": [], "frames": 31 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 1200 }
+  ],
+  "source_assertions": { "terminal_source_position": { "map_group": 0, "map_number": 16, "player_x": 13, "player_y": 9 }, "terminal_observability": { "palette_fade": { "active": false } } }
+}

@@ -1,0 +1,13 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "birch_lab_receive_to_nickname_prompt_v8",
+  "coverage_segment": "birch_lab_acknowledgement",
+  "description": "From the authenticated final receive-starter message page, acknowledge it once and wait through the native obtain fanfare to the settled nickname YES/NO prompt. Source-only evidence.",
+  "program": [
+    { "buttons": ["a"], "frames": 1 },
+    { "buttons": [], "frames": 600 }
+  ],
+  "source_assertions": {
+    "terminal_source_position": { "map_group": 1, "map_number": 4, "player_x": 6, "player_y": 5 }
+  }
+}

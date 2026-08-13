@@ -1,0 +1,15 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "route103_wild_run_from_command_v8",
+  "coverage_segment": "route103_wild_encounter",
+  "description": "At the authenticated Route 103 wild-battle command surface, navigate FIGHT→BAG→RUN using released one-VBlank edges, activate RUN, and observe the native outcome without presupposing escape.",
+  "program": [
+    { "buttons": ["right"], "frames": 1 }, { "buttons": [], "frames": 30 },
+    { "buttons": ["down"], "frames": 1 }, { "buttons": [], "frames": 31 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 1200 }
+  ],
+  "source_assertions": {
+    "terminal_source_position": { "map_group": 0, "map_number": 18, "player_x": 7, "player_y": 6 },
+    "terminal_observability": { "palette_fade": { "active": false } }
+  }
+}

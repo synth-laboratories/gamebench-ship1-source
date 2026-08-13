@@ -1,0 +1,29 @@
+{
+  "schema": "gamebench.pokemon_emerald.source_tape_request.v1",
+  "id": "littleroot_to_route101_rescue_ready_v7",
+  "coverage_segment": "route101_rescue",
+  "description": "Pinned-source route from the staged source branch through the Littleroot twin prompt and Route 101 rescue opening. The four town acknowledgements and the three rescue acknowledgements are intentionally separated by measured source waits; the endpoint is the first returned field-control state after VAR_ROUTE101_STATE becomes 2.",
+  "program": [
+    {"buttons": ["left"], "frames": 48},
+    {"buttons": ["up"], "frames": 128},
+    {"buttons": [], "frames": 500},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 500},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 500},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 500},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 500},
+    {"buttons": ["up"], "frames": 64},
+    {"buttons": [], "frames": 240},
+    {"buttons": ["up"], "frames": 16},
+    {"buttons": ["down"], "frames": 16},
+    {"buttons": [], "frames": 500},
+    {"buttons": ["a"], "frames": 1},
+    {"buttons": [], "frames": 1200},
+    {"buttons": ["a"], "frames": 1},
+    {"buttons": [], "frames": 100},
+    {"buttons": ["a"], "frames": 1},
+    {"buttons": [], "frames": 100}
+  ],
+  "source_assertions": {
+    "terminal_source_position": {"map_group": 0, "map_number": 16, "player_x": 11, "player_y": 15}
+  }
+}

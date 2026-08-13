@@ -1,0 +1,25 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "zigzagoon_command_held_right_v8",
+  "coverage_segment": "route101_zigzagoon_command_hold",
+  "description": "Hold Right for 48 source VBlanks at the first battle command menu, then release. This isolates physical held-level behavior from repeated directional press edges; the trace records every VBlank. Source-only evidence.",
+  "program": [
+    { "buttons": ["right"], "frames": 48 },
+    { "buttons": [], "frames": 16 }
+  ],
+  "source_assertions": {
+    "terminal_source_position": {
+      "map_group": 0,
+      "map_number": 16,
+      "player_x": 7,
+      "player_y": 15
+    },
+    "terminal_observability": {
+      "active_tasks": { "count": 0 },
+      "callbacks": {
+        "main_callback1": "0x08039ef1",
+        "main_callback2": "0x08038421"
+      }
+    }
+  }
+}

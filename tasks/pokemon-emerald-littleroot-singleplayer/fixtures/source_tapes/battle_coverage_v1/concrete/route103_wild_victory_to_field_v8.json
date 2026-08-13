@@ -1,0 +1,20 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "route103_wild_victory_to_field_v8",
+  "coverage_segment": "route103_wild_encounter",
+  "description": "At the authenticated Route 103 Poochyena defeat text phase, acknowledge the final native experience/result message and settle at the expected field resumption boundary.",
+  "program": [
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 180 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 180 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 180 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 180 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 180 }
+  ],
+  "source_assertions": {
+    "terminal_source_position": { "map_group": 0, "map_number": 18, "player_x": 7, "player_y": 6 },
+    "terminal_observability": {
+      "palette_fade": { "active": false },
+      "callbacks": { "main_callback1": "0x08085e05", "main_callback2": "0x08085e5d" }
+    }
+  }
+}

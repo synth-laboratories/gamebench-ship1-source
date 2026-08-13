@@ -1,0 +1,16 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "route101_post_lab_north_lane_pulses_v8",
+  "coverage_segment": "oldale_connection",
+  "description": "Live validation of the first static-decomp Route 101 segment: five individually released 16-VBlank Up pulses from (11,19) to the collision lane at (11,14). Source-only; the static plan is only a proposal until this replay receipt validates it.",
+  "program": [
+    { "buttons": ["up"], "frames": 16 }, { "buttons": [], "frames": 16 },
+    { "buttons": ["up"], "frames": 16 }, { "buttons": [], "frames": 16 },
+    { "buttons": ["up"], "frames": 16 }, { "buttons": [], "frames": 16 },
+    { "buttons": ["up"], "frames": 16 }, { "buttons": [], "frames": 16 },
+    { "buttons": ["up"], "frames": 16 }, { "buttons": [], "frames": 300 }
+  ],
+  "source_assertions": {
+    "terminal_source_position": { "map_group": 0, "map_number": 16, "player_x": 11, "player_y": 14 }
+  }
+}

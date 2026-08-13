@@ -1,0 +1,23 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "birch_lab_return_to_pokedex_receipt_v8",
+  "coverage_segment": "post_rival_return",
+  "description": "From the authenticated active Birch Lab return cutscene, use printer-aware released A edges; the first five occur during movement, the sixth advances Birch's offer, and the seventh completes the native Pokédex fanfare and receipt flags.",
+  "program": [
+    { "buttons": [], "frames": 300 }, { "buttons": ["a"], "frames": 1 },
+    { "buttons": [], "frames": 300 }, { "buttons": ["a"], "frames": 1 },
+    { "buttons": [], "frames": 300 }, { "buttons": ["a"], "frames": 1 },
+    { "buttons": [], "frames": 300 }, { "buttons": ["a"], "frames": 1 },
+    { "buttons": [], "frames": 300 }, { "buttons": ["a"], "frames": 1 },
+    { "buttons": [], "frames": 300 }, { "buttons": ["a"], "frames": 1 },
+    { "buttons": [], "frames": 300 }, { "buttons": ["a"], "frames": 1 },
+    { "buttons": [], "frames": 300 }
+  ],
+  "source_assertions": {
+    "terminal_source_position": { "map_group": 1, "map_number": 4, "player_x": 6, "player_y": 5 },
+    "terminal_observability": {
+      "story_flags": { "pokedex_get": true, "received_pokedex_from_birch": true },
+      "callbacks": { "main_callback1": "0x08085e05", "main_callback2": "0x08085e5d" }
+    }
+  }
+}

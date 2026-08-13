@@ -4,7 +4,10 @@ use axum::response::Response;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use base64::{engine::general_purpose::STANDARD, Engine as _};
-use pokemon_emerald_littleroot_gold::{encode_png_rgb, frame_sha256, LittlerootSession, OpeningCheckpoint, StepRequest, ENV_FAMILY, FRAME_HEIGHT, FRAME_WIDTH};
+use pokemon_emerald_littleroot_gold::{
+    encode_png_rgb, frame_sha256, LittlerootSession, OpeningCheckpoint, StepRequest, ENV_FAMILY,
+    FRAME_HEIGHT, FRAME_WIDTH,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -22,7 +25,9 @@ struct CreateRolloutRequest {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-struct RestoreRequest { blob: String }
+struct RestoreRequest {
+    blob: String,
+}
 
 #[derive(Clone, Debug, Deserialize)]
 struct SimulateRequest {
@@ -52,11 +57,15 @@ async fn main() {
     let listener = tokio::net::TcpListener::bind(("127.0.0.1", port))
         .await
         .expect("bind Pokémon Emerald Littleroot gold service");
-    axum::serve(listener, app).await.expect("serve gold service");
+    axum::serve(listener, app)
+        .await
+        .expect("serve gold service");
 }
 
 async fn health(State(state): State<AppState>) -> Json<Value> {
-    Json(json!({ "ok": true, "lane": "rust", "env_family": ENV_FAMILY, "sessions": state.sessions.lock().unwrap().len() }))
+    Json(
+        json!({ "ok": true, "lane": "rust", "env_family": ENV_FAMILY, "sessions": state.sessions.lock().unwrap().len() }),
+    )
 }
 
 async fn info() -> Json<Value> {
@@ -70,12 +79,21 @@ async fn info() -> Json<Value> {
     }))
 }
 
-async fn create_rollout(State(state): State<AppState>, request: Option<Json<CreateRolloutRequest>>) -> Json<Value> {
+async fn create_rollout(
+    State(state): State<AppState>,
+    Json(request): Json<CreateRolloutRequest>,
+) -> Json<Value> {
     let rollout_id = Uuid::new_v4().to_string();
-    let checkpoint = request.and_then(|request| request.0.checkpoint).unwrap_or(OpeningCheckpoint::RivalOutsideLab);
+    let checkpoint = request
+        .checkpoint
+        .unwrap_or(OpeningCheckpoint::RivalOutsideLab);
     let session = LittlerootSession::from_checkpoint(checkpoint);
     let readout = session.readout();
-    state.sessions.lock().unwrap().insert(rollout_id.clone(), session);
+    state
+        .sessions
+        .lock()
+        .unwrap()
+        .insert(rollout_id.clone(), session);
     Json(json!({ "rollout_id": rollout_id, "readout": readout }))
 }
 
@@ -120,11 +138,15 @@ async fn restore(
     Path(rollout_id): Path<String>,
     Json(request): Json<RestoreRequest>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    let bytes = STANDARD.decode(request.blob.as_bytes()).map_err(|_| bad_request("invalid base64 checkpoint"))?;
+    let bytes = STANDARD
+        .decode(request.blob.as_bytes())
+        .map_err(|_| bad_request("invalid base64 checkpoint"))?;
     let mut sessions = state.sessions.lock().unwrap();
     let session = sessions.get_mut(&rollout_id).ok_or_else(not_found)?;
     session.restore_checkpoint(&bytes).map_err(bad_request)?;
-    Ok(Json(json!({ "rollout_id": rollout_id, "restore_report": { "bytes": bytes.len() }, "readout": session.readout() })))
+    Ok(Json(
+        json!({ "rollout_id": rollout_id, "restore_report": { "bytes": bytes.len() }, "readout": session.readout() }),
+    ))
 }
 
 async fn simulate(
@@ -132,17 +154,23 @@ async fn simulate(
     Path(rollout_id): Path<String>,
     Json(request): Json<SimulateRequest>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    let bytes = STANDARD.decode(request.blob.as_bytes()).map_err(|_| bad_request("invalid base64 checkpoint"))?;
+    let bytes = STANDARD
+        .decode(request.blob.as_bytes())
+        .map_err(|_| bad_request("invalid base64 checkpoint"))?;
     let sessions = state.sessions.lock().unwrap();
     let session = sessions.get(&rollout_id).ok_or_else(not_found)?;
     let mut results = Vec::with_capacity(request.sequences.len());
     for (index, sequence) in request.sequences.into_iter().enumerate() {
         let mut branch = session.clone();
         branch.restore_checkpoint(&bytes).map_err(bad_request)?;
-        for step in &sequence { branch.step(step.clone()); }
+        for step in &sequence {
+            branch.step(step.clone());
+        }
         results.push(json!({ "index": index, "inputs": sequence, "readout": branch.readout() }));
     }
-    Ok(Json(json!({ "rollout_id": rollout_id, "root_frame_index": session.frame_index, "results": results })))
+    Ok(Json(
+        json!({ "rollout_id": rollout_id, "root_frame_index": session.frame_index, "results": results }),
+    ))
 }
 
 async fn frame(
@@ -156,7 +184,10 @@ async fn frame(
         .header(header::CONTENT_TYPE, "application/octet-stream")
         .header("x-gamebench-frame-width", FRAME_WIDTH)
         .header("x-gamebench-frame-height", FRAME_HEIGHT)
-        .header("x-gamebench-frame-sha256", frame_sha256(session.frame_rgb()))
+        .header(
+            "x-gamebench-frame-sha256",
+            frame_sha256(session.frame_rgb()),
+        )
         .body(session.frame_rgb().to_vec().into())
         .map_err(|error| internal_error(error.to_string()))
 }
@@ -171,19 +202,31 @@ async fn render_png(
     Response::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, "image/png")
-        .header("x-gamebench-frame-sha256", frame_sha256(session.frame_rgb()))
+        .header(
+            "x-gamebench-frame-sha256",
+            frame_sha256(session.frame_rgb()),
+        )
         .body(png.into())
         .map_err(|error| internal_error(error.to_string()))
 }
 
 fn not_found() -> (StatusCode, Json<Value>) {
-    (StatusCode::NOT_FOUND, Json(json!({ "error": { "code": "rollout_not_found" } })))
+    (
+        StatusCode::NOT_FOUND,
+        Json(json!({ "error": { "code": "rollout_not_found" } })),
+    )
 }
 
 fn internal_error(message: String) -> (StatusCode, Json<Value>) {
-    (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({ "error": { "code": "response_build_failed", "message": message } })))
+    (
+        StatusCode::INTERNAL_SERVER_ERROR,
+        Json(json!({ "error": { "code": "response_build_failed", "message": message } })),
+    )
 }
 
 fn bad_request(message: impl Into<String>) -> (StatusCode, Json<Value>) {
-    (StatusCode::BAD_REQUEST, Json(json!({ "error": { "code": "invalid_checkpoint", "message": message.into() } })))
+    (
+        StatusCode::BAD_REQUEST,
+        Json(json!({ "error": { "code": "invalid_checkpoint", "message": message.into() } })),
+    )
 }

@@ -1,0 +1,10 @@
+{
+  "schema": "gamebench.pokemon_emerald.source_tape_request.v1",
+  "id": "mays_house_1f_to_2f_v7",
+  "coverage_segment": "littleroot_town",
+  "description": "Source-derived stair route from May's House 1F to the actual rival bedroom, with an explicit 120-VBlank warp settle.",
+  "program": [
+    {"buttons": ["up"], "frames": 96},
+    {"buttons": [], "frames": 120}
+  ]
+}

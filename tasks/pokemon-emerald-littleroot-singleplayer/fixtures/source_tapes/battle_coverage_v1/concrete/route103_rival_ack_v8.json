@@ -1,0 +1,8 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "route103_rival_ack_v8",
+  "coverage_segment": "route103_rival",
+  "description": "Acknowledge one authenticated Route 103 May dialogue phase with a released A edge and settle through native script movement to its next ownership boundary.",
+  "program": [ { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 600 } ],
+  "source_assertions": { "terminal_source_position": { "map_group": 0, "map_number": 18, "player_x": 10, "player_y": 4 }, "terminal_observability": { "palette_fade": { "active": false } } }
+}

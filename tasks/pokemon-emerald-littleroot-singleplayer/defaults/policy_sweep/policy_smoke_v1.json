@@ -1,0 +1,41 @@
+{
+  "schema": "gamebench.pokemon_emerald.policy_sweep.v1",
+  "suite_id": "emerald_policy_smoke_v1",
+  "max_steps": 40,
+  "scenarios": [
+    {
+      "scenario_id": "bedroom_to_met_rival_smoke",
+      "checkpoint": "bedroom_idle",
+      "seed": 1,
+      "min_manhattan_from_start": 2,
+      "require_phase": "met_rival",
+      "require_map": "brendans_house2_f",
+      "max_steps": 40
+    },
+    {
+      "scenario_id": "title_to_met_rival_smoke",
+      "checkpoint": "title_menu",
+      "seed": 2,
+      "min_manhattan_from_start": 0,
+      "require_phase": "met_rival",
+      "require_map": "brendans_house2_f",
+      "max_steps": 20
+    },
+    {
+      "scenario_id": "route103_rival_defeated_smoke",
+      "checkpoint": "route103_rival",
+      "seed": 3,
+      "min_manhattan_from_start": 0,
+      "require_phase": "rival_defeated",
+      "max_steps": 55
+    },
+    {
+      "scenario_id": "shoes_then_home_smoke",
+      "checkpoint": "running_shoes",
+      "seed": 4,
+      "min_manhattan_from_start": 1,
+      "require_map": "brendans_house1_f",
+      "max_steps": 120
+    }
+  ]
+}

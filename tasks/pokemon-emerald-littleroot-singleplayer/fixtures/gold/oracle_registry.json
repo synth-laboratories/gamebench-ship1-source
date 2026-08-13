@@ -1,0 +1,3968 @@
+{
+  "checkpoints": [
+    {
+      "capture": {
+        "procedure": "From route101_wild_victory_resume, execute two released Right tile pulses and settle at (15,9).",
+        "provenance": {
+          "capture_tape_sha256": "cd543467c4139fa7d34e89534aa0c0af4275721419a7cee77d7a56a4df9c2f72",
+          "capture_trace_sha256": "e4f7fc568cfb5501d8d63ca4513071e3726d7fd8067b727d6d213ac5e34422b7",
+          "captured_from_authenticated_checkpoint": "route101_wild_victory_resume",
+          "receipt_sha256": "838b86004df0871a7e7d514da66af4fea319380a9c93865fe301fbb43dd3a758",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 348
+        }
+      },
+      "id": "route101_post_victory_r2",
+    "normalization": {
+      "map_names": {
+        "0:10": "oldale_town",
+        "0:16": "route101"
+      },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_post_victory_r2",
+      "source": {
+        "initial_rgb_sha256": "aa6076c7404a6f779926c7edb3fe8309a2cf4953226709a592e9224758e02daf",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 15,
+          "player_y": 9
+        },
+        "state_sha256": "feabbcebe256ba898fd8a32f5ccf5fd1c3d38de3afe9b6cae2235bf091c4ca31"
+      },
+      "source_split": "capture from wild victory field resume after R2 pulses",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Replay littleroot_to_mays_house_1f_v7 from authenticated littleroot_field_ready under the pinned v8 oracle, then save/reload only after the house-entry warp has settled.",
+        "provenance": {
+          "capture_tape_sha256": "4fa4c7c5d9f581e4a102805e6622696ed9e531f1c92076d4501f17d372031b80",
+          "capture_trace_sha256": "157c84f7423b77c1f2f93554e94f3229d074ee90af9a082b7db5a601aebc7aa8",
+          "captured_from_authenticated_checkpoint": "littleroot_field_ready",
+          "receipt_sha256": "ed2f323927bd66e510407dd8bfc08ed8303626e172886ce2e5671cee3b601b86",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 136
+        },
+        "superseded_provenance": {
+          "capture_trace_sha256": "22520293033a9e52420b5f7daf1dc0fa37a27110fb00735a5a2e28a8554b2ec8",
+          "captured_from_authenticated_checkpoint": "littleroot_field_ready",
+          "evidence_status": "audit_only_superseded_adapter_identity",
+          "receipt_sha256": "5b3efe11fe9bd0f335c9f4993d0c8d6fc82b2b43741c674c03dab84996b9f098",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 136
+        }
+      },
+      "id": "mays_house_1f",
+      "normalization": {
+        "map_names": {
+          "0:9": "littleroot_town",
+          "1:2": "mays_house1_f"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_mays_house_1f",
+      "source": {
+        "initial_rgb_sha256": "07cfadaaabf5ef26a1ef6d114fc666e2030306bd1604d7c172b3b0e6b0b174c0",
+        "initial_state": {
+          "map_group": 1,
+          "map_number": 2,
+          "player_x": 2,
+          "player_y": 8
+        },
+        "state_sha256": "beb745447b08f2e76659b8428d1bc19495a863f0e646f5eb910c5b0a3329e2a4"
+      },
+      "source_split": "capture from littleroot_field_ready through the east (May's-house) warp",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Replay mays_house_1f_to_2f_v7 from authenticated mays_house_1f under the pinned v8 oracle, then save/reload only after the stair warp has settled.",
+        "provenance": {
+          "capture_tape_sha256": "a7ff1963ca42bb1706ba6dd437c8aeeee6c9f6504999ef9d1a6b1b68a16f93fc",
+          "capture_trace_sha256": "b1e9f03fa98e8b45f15ec58be0ceac183e2aca45264a01d9cd07337c677652a9",
+          "captured_from_authenticated_checkpoint": "mays_house_1f",
+          "receipt_sha256": "3920d9680f1c04cf9a758452a9ebab591d67ca637d422d648dadd1dad479af78",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 216
+        },
+        "superseded_provenance": {
+          "capture_tape_sha256": "a7ff1963ca42bb1706ba6dd437c8aeeee6c9f6504999ef9d1a6b1b68a16f93fc",
+          "capture_trace_sha256": "8f510782af2105c2f554e813657d6e6bf91ddaebe5a70daf3d6d638d0b034090",
+          "captured_from_authenticated_checkpoint": "mays_house_1f",
+          "evidence_status": "audit_only_superseded_adapter_identity",
+          "receipt_sha256": "5b94f47e62887d5fac5bf691a350b8876425e85dee05c12d05c34aa7d724dbd8",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 216
+        }
+      },
+      "id": "mays_house_2f",
+        "normalization": {
+          "map_names": {
+            "1:3": "mays_house2_f"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_mays_house_2f",
+      "source": {
+        "initial_rgb_sha256": "c82a6b33397f2ee0eab7ac1f48622351bbe88a28efd28eb6fda06fa7b20eda03",
+        "initial_state": {
+          "map_group": 1,
+          "map_number": 3,
+          "player_x": 1,
+          "player_y": 2
+        },
+        "state_sha256": "9cdc3fe09af6fdd7f8a3673e16905719c04fa50dc08b2723231fca5a5c53ee0e"
+      },
+      "source_split": "capture from mays_house_1f through the upstairs stair warp",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore 00_init.state in the pinned mGBA adapter, issue load, then record the state SHA-256, returned initial RGB SHA-256, and source_state fields before registering this row."
+      },
+      "id": "title_menu",
+      "normalization": {
+        "map_names": {},
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "title_menu",
+      "source_split": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/00_init/00_init.state",
+      "status": "capture_required"
+    },
+    {
+      "capture": {
+        "procedure": "Restore 01_tutorial.state in the pinned mGBA adapter, issue load, then record the state SHA-256, returned initial RGB SHA-256, and source_state fields before registering this row."
+      },
+      "id": "truck_arrival",
+      "normalization": {
+        "map_names": {},
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "truck_arrival",
+      "source_split": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/01_tutorial/01_tutorial.state",
+      "status": "capture_required"
+    },
+    {
+      "capture": {
+        "provenance": "Original local audit copy /Users/joshuapurtell/Documents/Codex/2026-07-30/emerald-gamebench-audit/work/emerald_oracle/02_starter.state; revalidated after the adapter reset.",
+        "superseded_v7_baseline_receipt": {
+          "capture_trace_sha256": "d157d2be209358d2cfde3abcc8c697310c9d0630bf7dfc6c1ff19c06b31b711c",
+          "receipt_path": "/Users/joshuapurtell/Documents/Codex/2026-07-30/emerald-gamebench-audit/work/emerald_oracle/v7_baseline_final/bedroom_idle.receipt.json",
+          "receipt_sha256": "16a844ded090bd82af179d61f6e0062f716b916e741fa299590798550df676d5",
+          "result": "fresh v7 load/snapshot/reload exact at bedroom_idle; retained for audit but excluded by the v8 oracle identity",
+          "snapshot_state_sha256": "a8c349bf9f197f3c6eaae32e05ae9c4da472bb044a8f15ba3190557409ec45a6"
+        },
+        "v8_observability_baseline_receipt": {
+          "capture_trace_sha256": "10e5078fd67d53d66eddb0d6014260aaa27c12e792c13915cb38e33de1ee12a7",
+          "receipt_path": "/Users/joshuapurtell/Documents/Codex/2026-07-30/emerald-gamebench-audit/work/emerald_oracle/v8_observability_baseline/bedroom_idle.receipt.json",
+          "receipt_sha256": "49a8aa9a16f9f247d017af284ab4117599768806a80b1fb09fd4c1c75ecd5716",
+          "result": "fresh v8 load/snapshot/reload exact at bedroom_idle with source observability",
+          "snapshot_state_sha256": "a8c349bf9f197f3c6eaae32e05ae9c4da472bb044a8f15ba3190557409ec45a6"
+        }
+      },
+      "id": "bedroom_idle",
+      "normalization": {
+    "map_names": {
+      "0:9": "littleroot_town",
+      "1:2": "mays_house1_f",
+          "1:3": "mays_house2_f"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": -2
+        },
+        "player_offsets": {
+          "0:9": {
+            "x": 0,
+            "y": 0
+          },
+          "1:2": {
+            "x": 0,
+            "y": -2
+          },
+          "1:3": {
+            "x": 0,
+            "y": -2
+          }
+        }
+      },
+      "rust_checkpoint": "bedroom_idle",
+      "source": {
+        "initial_rgb_sha256": "7fa70d30992cdd8a3f246fc616f4db65ebf571b605252dcf1073c24ca102ddfb",
+        "initial_state": {
+          "map_group": 1,
+          "map_number": 3,
+          "player_x": 1,
+          "player_y": 3
+        },
+        "state_sha256": "34ae4afe4285efbc61c2345a2927b66097ea97b40636f42e32226f5a586e6e6e"
+      },
+      "source_split": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/02_starter/02_starter.state",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Replay a v8 no-input settle tape from freshly authenticated littleroot_exterior, require the source-observed story/script boundary, then save/reload and promote this canonical row.",
+        "provenance": {
+          "capture_tape_sha256": "6a816dfdf83d21e394cde1cb0edabc3888d21133c7805fd02c6accf3ad29c03e",
+          "capture_trace_sha256": "23a8bbadb79a85eecb2141d9afd4c85ad7f698262d1a69d5a43718bdf11ae551",
+          "captured_from_authenticated_checkpoint": "littleroot_exterior",
+          "receipt_sha256": "159b8085f4a18853e9189dc5cc3acb242408033964d6edcb323902715e75ca07",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 300
+        },
+        "superseded_v7_provenance": {
+          "capture_tape_sha256": "467c2996e54e27f4788e40e803fcb03f650f16e3cefa4f74d185dc506ba0dd7c",
+          "capture_trace_sha256": "9ca98c0e4c5ce93c4c3ae3bbcbc3c1ed3be56ee55fb5857abbb494e2f15d2bfb",
+          "captured_from_authenticated_checkpoint": "littleroot_exterior",
+          "receipt_sha256": "bfa8f9ff7bdba9336557ab67c62950bcf18bd3ce614d3844e415a40efec9bb1c",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 300,
+          "status": "audit_only_superseded_adapter_identity"
+        },
+        "superseded_v7_source": {
+          "initial_rgb_sha256": "e1468b1ac450decb7e4667bc1a092475079380b6fac139bf07f43bb76b5eb80f",
+          "initial_state": {
+            "map_group": 0,
+            "map_number": 9,
+            "player_x": 14,
+            "player_y": 9
+          },
+          "state_sha256": "3628adbf8b56c7b914c712ec9c7430f6c7ba853a687be5647b38adf74fbdea2a"
+        }
+      },
+      "id": "littleroot_field_ready",
+      "normalization": {
+        "map_names": {
+          "0:9": "littleroot_town"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_littleroot_field_ready",
+      "source": {
+        "initial_rgb_sha256": "e1468b1ac450decb7e4667bc1a092475079380b6fac139bf07f43bb76b5eb80f",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 9,
+          "player_x": 14,
+          "player_y": 9
+        },
+        "state_sha256": "ba6f0caf85584713da6f91646d27496a5a66e1460ac8c852c2e7b64c9a2394c9"
+      },
+      "source_split": "capture from authenticated littleroot_exterior after the exit-warp settles",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "naming_correction": "The preserved capture was originally mislabeled as a rival house. Source map 1:0 is LittlerootTown_BrendansHouse_1F (the player's house in this male-player run); its source hashes remain valid, but it must not count as rival-house coverage.",
+        "procedure": "Replay the preserved v7 west-house entry tape, then save/reload after the entry transition settles. This is source-only until a Rust equivalent exists.",
+        "provenance": {
+          "capture_tape_sha256": "fd78adf077bb6acbd2c6e4ecac7c0d7576330b7cbb77dc25bad77ae30569c6af",
+          "capture_trace_sha256": "fd0299839a8aa04cca0346c08e7285684c882b5d0ba0844b131d2cb1c1fde44b",
+          "captured_from_authenticated_checkpoint": "littleroot_field_ready",
+          "evidence_status": "audit_only_superseded_adapter_identity",
+          "receipt_sha256": "74cb396f24803fa13cd260a3083be516aae3abe4628ba168d19e4fb1e7e85315",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 280
+        }
+      },
+      "id": "brendans_house_1f",
+      "normalization": {
+        "map_names": {
+          "1:0": "brendans_house_1f"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_brendans_house_1f",
+      "source": {
+        "initial_rgb_sha256": "2737495c7cab204c5d6d72d0bb3f809f8d45b5b3b2b0da4ffc7f113ea7c25b45",
+        "initial_state": {
+          "map_group": 1,
+          "map_number": 0,
+          "player_x": 8,
+          "player_y": 8
+        },
+        "state_sha256": "f7caf9a6704b24ac087c288e8c022480d5a195a463c4401fbfab7227eb64decf"
+      },
+      "source_split": "capture from littleroot_field_ready through the west (Brendan's-house) warp",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "naming_correction": "The preserved capture was originally mislabeled as a rival house. Source map 1:1 is LittlerootTown_BrendansHouse_2F (the player's bedroom); its source hashes remain valid, but it must not count as rival-house coverage.",
+        "procedure": "Replay the preserved v7 upstairs tape from brendans_house_1f, then save/reload after the stair transition settles. This is source-only until a Rust equivalent exists.",
+        "provenance": {
+          "capture_tape_sha256": "49dd099b1d7fcdb9e62de9ea5a68d3c0df816bfdbb586f537009abc9d012ec81",
+          "capture_trace_sha256": "4e4b28c5d2b65706c1212bc391cb28eb3bf4ce06f18236835b04b5214a4223f1",
+          "captured_from_checkpoint_legacy_id": "rival_house_1f",
+          "evidence_status": "audit_only_superseded_adapter_identity",
+          "receipt_sha256": "17622e4bf9a9b657adc92c89ebe618ccf7cbadbe46364cdf325db16832aef683",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 216
+        }
+      },
+      "id": "brendans_house_2f",
+      "normalization": {
+        "map_names": {
+          "1:1": "brendans_house_2f"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_brendans_house_2f",
+      "source": {
+        "initial_rgb_sha256": "b59cf4173c8d65b4e936f92eecb9e53b887f601d19f2d23b87002c81b0bc620e",
+        "initial_state": {
+          "map_group": 1,
+          "map_number": 1,
+          "player_x": 7,
+          "player_y": 2
+        },
+        "state_sha256": "9840076083a4fefd0a4971cd68b4eeac2d4875a0863859547bc6bd44d135465a"
+      },
+      "source_split": "capture from brendans_house_1f through the upstairs stair warp",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "procedure": "Re-capture from a freshly authenticated bedroom_idle using adapter v7; all pre-v7 behavior captures are quarantined.",
+        "quarantined_v5_capture": {
+          "capture_tape_sha256": "b972f556f41fb41168d342a5a035f26c8fc80c34a78618ecb671508a34cfba13",
+          "reason": "invalid mGBA input mask adapter v5; retained for audit only and excluded from all coverage/validity accounting",
+          "source_trace_sha256": "7eb0252a1ac7f8aaf0b0f9a4227f05e210fdf2e6b5737794684c520309eacc75",
+          "state_sha256": "7c26d2f1e3e53b3eaf76da04a29250e245c2923fb19dc243e34bde0add236ad1"
+        }
+      },
+      "id": "clock_tv_downstairs",
+      "normalization": {
+        "map_names": {
+          "0:9": "littleroot_town",
+          "1:2": "mays_house1_f"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "clock_tv_downstairs",
+      "source_split": "captured from bedroom_idle by fixtures/source_tapes/battle_coverage_v1/concrete/bedroom_clock_and_tv_v1.json",
+      "status": "capture_required"
+    },
+    {
+      "capture": {
+        "procedure": "Replay the checked-in bedroom_to_littleroot_exterior tape under v8 from authenticated bedroom_idle, require the source-observed story/script boundary, then save/reload and promote this canonical row.",
+        "provenance": {
+          "capture_tape_sha256": "a5d6e73f243d5498777f060817534320b56ed1d6cb19f4cbfddd9fdb3486d09b",
+          "capture_trace_sha256": "773cd6aefdeab625dafd95617a36156aef1c381614554ae315c39cce07b67e56",
+          "captured_from_authenticated_checkpoint": "bedroom_idle",
+          "receipt_sha256": "778ec9b54e0095bd230b1e50f97ae128c982fdaebb886538569ca5c289d40dee",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 4833
+        },
+        "superseded_v7_provenance": {
+          "capture_tape_sha256": "fc660c572ae5f084288a1bad663c2d65caa939da8a60f72a531afe3f87b80fbe",
+          "capture_trace_sha256": "ef13939d8c42f0a2ca3d6ddfe39d259f27a4b635ba2212a0d3e2161161135569",
+          "captured_from_authenticated_checkpoint": "bedroom_idle",
+          "receipt_sha256": "599cb78600cd454ec8a687c58773c6125a9285c282b3278dcf08ad4f1705a831",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 4833,
+          "status": "audit_only_superseded_adapter_identity"
+        },
+        "superseded_v7_source": {
+          "initial_rgb_sha256": "eae01cbc10deea5f6089fc4c33916b5137595c4eeafc1ac7c600154d2b3ab91d",
+          "initial_state": {
+            "map_group": 0,
+            "map_number": 9,
+            "player_x": 14,
+            "player_y": 8
+          },
+          "state_sha256": "ffcb10f03791bf5522224e0362c7f00c3ae1338e8646cae4d45ea7eadf892398"
+        }
+      },
+      "id": "littleroot_exterior",
+      "normalization": {
+        "map_names": {
+          "0:9": "littleroot_town"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_littleroot_exterior",
+      "source": {
+        "initial_rgb_sha256": "eae01cbc10deea5f6089fc4c33916b5137595c4eeafc1ac7c600154d2b3ab91d",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 9,
+          "player_x": 14,
+          "player_y": 8
+        },
+        "state_sha256": "7fb3b7299cb7089b12865dfcd127288292d7b4ba892c46ea66d9c383cf95c1d3"
+      },
+      "source_split": "capture from bedroom_idle after the verified Mom dialogue and May's-house exit",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore 03_birch.state in the pinned mGBA adapter, issue load, then record the state SHA-256, returned initial RGB SHA-256, and source_state fields before registering this row."
+      },
+      "id": "birch_lab_exterior",
+      "normalization": {
+        "map_names": {},
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "birch_lab_exterior",
+      "source_split": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/03_birch/03_birch.state",
+      "status": "capture_required"
+    },
+    {
+      "capture": {
+        "procedure": "Replay the measured staged-source Littleroot route under v8 from freshly authenticated littleroot_field_ready, require the source-observed Route 101/story/script boundary, then save/reload and promote this canonical row.",
+        "provenance": {
+          "capture_tape_sha256": "f69334ae993d4e7e1f2f4ab8bd0668b78965a0bc49855d30522d17bdabb9742f",
+          "capture_trace_sha256": "7dffd9ca2ceaf63be4f22248919ae769eb97d45d9f0e7d1698d37339fd87b7d4",
+          "captured_from_authenticated_checkpoint": "littleroot_field_ready",
+          "receipt_sha256": "26d0984efed4e8eef34ffb40e7c13293ff3ed7c1d444e90b7786844a6dc1baf5",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 4919
+        },
+        "superseded_v7_provenance": {
+          "capture_tape_sha256": "8409e3111b803b823190016193cec69817afa6e2fa1c198b0844fdbb94992d27",
+          "capture_trace_sha256": "66379f7c39a06e79d2f36d828ba398d54dfe64244dda5a2ae5ff23a820cd7888",
+          "captured_from_authenticated_checkpoint": "littleroot_field_ready",
+          "receipt_sha256": "1f1dcdad9e1a9314b73dc4754c0e470c903bc93fae2a54a89224b4ea880a1e73",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 4919,
+          "status": "audit_only_superseded_adapter_identity"
+        },
+        "superseded_v7_source": {
+          "initial_rgb_sha256": "508bac7f50cd66a5c88758f24ce30396e12e61d784838005ddeb5112f773bed0",
+          "initial_state": {
+            "map_group": 0,
+            "map_number": 16,
+            "player_x": 11,
+            "player_y": 15
+          },
+          "state_sha256": "d685a4ec7836eaae72fe74fcbd8858ab388e21aa6171bd88466d5e398b73f25c"
+        }
+      },
+      "id": "route101_rescue",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "route101_rescue",
+      "source": {
+        "initial_rgb_sha256": "508bac7f50cd66a5c88758f24ce30396e12e61d784838005ddeb5112f773bed0",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 11,
+          "player_y": 15
+        },
+        "state_sha256": "15f611c846623e6ee5608b73dedb7f001ef16e778fa9053d59922eb70b4726dd"
+      },
+      "source_split": "capture from littleroot_field_ready through the verified Littleroot and Route 101 coordinate scripts",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From freshly authenticated route101_rescue under v8, trigger Birch's rescue, open the starter bag, and save/reload only after the starter-selection UI is stable. Record source observability and active-task/script fingerprints in the immutable trace.",
+        "provenance": {
+          "capture_tape_sha256": "c8406464647f250d54661597e416e2138d972e9c29e7359cdfc2dc08ed739531",
+          "capture_trace_sha256": "3f330fbfff91f9796453a0cb6dcc68594d739d710ed2cff311444cd7f73fcf2d",
+          "captured_from_authenticated_checkpoint": "route101_rescue",
+          "receipt_sha256": "0c6e1c669733d5a7ecd0ebfa0dfe52af1bb9923b9d3b11464b17aeee69b2919e",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 306
+        }
+      },
+      "id": "starter_picker",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "starter_picker",
+      "source": {
+        "initial_rgb_sha256": "fb9e7ab7e7efac48c0a6560185500d093348074de1a940b75bcd049835400e4d",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 7,
+          "player_y": 15
+        },
+        "state_sha256": "4df9d688e7f7e6cba1ce61f13372b2e607e4310eaeaf4aa7fd683701283216c2"
+      },
+      "source_split": "capture from route101_rescue at the first stable starter-selection UI boundary",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "battle_memory_assertion": {
+          "expected_battle": {
+            "battlers_count": 2,
+            "mons": [
+              {
+                "hp": 19,
+                "level": 5,
+                "moves": [
+                  10,
+                  45,
+                  0,
+                  0
+                ],
+                "species": 280
+              },
+              {
+                "hp": 13,
+                "level": 2,
+                "moves": [
+                  33,
+                  45,
+                  0,
+                  0
+                ],
+                "species": 288
+              }
+            ]
+          },
+          "receipt_path": "/Users/joshuapurtell/Documents/Codex/2026-07-30/emerald-gamebench-audit/work/emerald_oracle/v8_starter_battle/starter_battle.battle-memory.json",
+          "receipt_sha256": "fae101e29e5d012de53aa6c121b34b2dde6c38102753a5a590c2f307728499cc",
+          "script_sha256": "af64e8dddc4c409e8e14d810e4c8d9a4622eb6682b7223fafe1300da4fbbb105",
+          "state_sha256": "d6f7d29591dfe91fc005718c410e2f86d1b201266491c5575c4652ec572bc9ac",
+          "status": "verified_external_sidecar",
+          "symbol_manifest_sha256": "f6e6ea071215886113dc88373335b5a494a262f9354049450057432b562c751b"
+        },
+        "continuous_battle_trace_smoke": {
+          "input_state_sha256": "d6f7d29591dfe91fc005718c410e2f86d1b201266491c5575c4652ec572bc9ac",
+          "intermediate_reload_count": 0,
+          "marker_count": 2,
+          "receipt_path": "/Users/joshuapurtell/Documents/Codex/2026-07-30/emerald-gamebench-audit/work/emerald_oracle/v8_starter_battle_continuous/trace.receipt.json",
+          "receipt_sha256": "f8d3f5183818f2fa31b04cc3cb0abb944f3ad09ca1288c50a9ccba46f7c5a378",
+          "sample_count": 5,
+          "status": "validated_continuous",
+          "tape_sha256": "ee8494d414f9ac04e08051e9418845607e9d54955722b2ae0046f2753c257a97",
+          "terminal_state_sha256": "e194742380d35ea67e1990d73bf71e3bed40831c23fb04e7d855b7c60fbc9b87",
+          "vblank_count": 4
+        },
+        "procedure": "From an authenticated Route 101 rescue replay, choose one starter, advance only until the first battle command menu is stable, save a raw mGBA state, reload it once, and register its state/RGB/state-field identities plus party/battle readout fields.",
+        "provenance": {
+          "capture_tape_sha256": "c123b22447109310e64bd1bf15fdd65e2664d5b6262e412c8667409e0867d144",
+          "capture_trace_sha256": "6c66215ac9fdf9c3ded459012f5c35103084bad00f0ac886bfb91f0c6269a3d2",
+          "captured_from_authenticated_checkpoint": "starter_picker",
+          "receipt_sha256": "6aa685f238a68a46d18ec67474915a434c5962cb44082278d52fb374abd484a6",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 780
+        }
+      },
+      "id": "starter_battle",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "starter_battle",
+      "source": {
+        "initial_rgb_sha256": "22dbb8b32f0b332af9fbfe70c8294b34efb5505d5b37b5741d9a03a9f4bbc4cb",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 7,
+          "player_y": 15
+        },
+        "state_sha256": "d6f7d29591dfe91fc005718c410e2f86d1b201266491c5575c4652ec572bc9ac"
+      },
+      "source_split": "capture from route101_rescue at the first battle command-menu VBlank",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated starter_battle, select the source default Scratch move once, wait through the complete native turn, and save only after the command menu has returned. Record the full VBlank trace and prove a fresh reload continuation before promotion.",
+        "provenance": {
+          "capture_tape_sha256": "9e22d78b6adb1871133dda3c9dfa406859626bae164294e240ee88489889d9b2",
+          "capture_trace_sha256": "bf2b12c7e851ef74a90c89d18bc563642f71d0c66e8c2209b4d431f9017834d9",
+          "captured_from_authenticated_checkpoint": "starter_battle",
+          "receipt_sha256": "a045110805574cd2f76d5062546d25ccaadb24cac06a0f11fe46542fc03e5e4a",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 432
+        }
+      },
+      "id": "zigzagoon_after_turn_one",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_zigzagoon_after_turn_one",
+      "source": {
+        "initial_rgb_sha256": "7e95f99f48a8c29f14daaf28af830fcc598c8f529d62a557941f3faa607d977e",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 7,
+          "player_y": 15
+        },
+        "state_sha256": "7b3f718b99d9910fe327219e8471db00913fa48c0c79bcd0048bb8963ba2b7ae"
+      },
+      "source_split": "capture from starter_battle after one complete native Scratch turn and returned command ownership",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated zigzagoon_after_turn_one, select Scratch once more and save only after the native second turn has returned to a stable command menu; capture every VBlank and prove a fresh reload continuation.",
+        "provenance": {
+          "capture_tape_sha256": "6c95e4ecfcc729a2389cfd827fc85293aa3f89643e0395dfd2a28d5b1e5ec5f7",
+          "capture_trace_sha256": "a51e487ad78d832eb3d914be848e2e2683a60255596b7a97d200c4e947b0bd32",
+          "captured_from_authenticated_checkpoint": "zigzagoon_after_turn_one",
+          "receipt_sha256": "156089199c81ea9f54ab434d569a994e6e1afad2bae7845add99acb8329c23c2",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 632
+        }
+      },
+      "id": "zigzagoon_after_turn_two",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_zigzagoon_after_turn_two",
+      "source": {
+        "initial_rgb_sha256": "351bcb91d19c02236b11e3ce85c19ec2c0c81ae3895364da3b3d0db94c871d5b",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 7,
+          "player_y": 15
+        },
+        "state_sha256": "bdc1349472f6541d0f4590f1cf7b63ed161642e3a10dd8ed516492d44a629263"
+      },
+      "source_split": "capture from zigzagoon_after_turn_one after the second complete native Scratch turn",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated zigzagoon_after_turn_two, select Scratch, acknowledge only the documented long-settled faint and experience messages, and save at the native battle-to-field Birch handoff while the post-victory script owns input. Record every VBlank and prove a fresh reload continuation.",
+        "provenance": {
+          "capture_tape_sha256": "8d9f7ab600c45f47867df0ea0fcbbb42d8066a7a65fae66f4d08ef354959d384",
+          "capture_trace_sha256": "5518129856cebadf8401346cb0ef2d7e3ca12f33405feff9e82e363991930be6",
+          "captured_from_authenticated_checkpoint": "zigzagoon_after_turn_two",
+          "receipt_sha256": "8a8c103e5ecd95c4a2b6b6085d7051f9c1fe9b8cd13399a23c1c14d7c48d3ab3",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 2400
+        }
+      },
+      "id": "zigzagoon_victory_handoff",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_zigzagoon_victory_handoff",
+      "source": {
+        "initial_rgb_sha256": "bb1345d3297f0d1c88be2ff65df16516a445252e76ea484da56876e78e9a1946",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 7,
+          "player_y": 15
+        },
+        "state_sha256": "8656f89f59f34440bfaafc7548caa34481b34551fa728ac9450df99de1410140"
+      },
+      "source_split": "capture from zigzagoon_after_turn_two through native faint, experience, and first Birch post-battle dialogue handoff",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated zigzagoon_victory_handoff, acknowledge the native Route 101 post-battle Birch pages only after their printers settle, then save after the scripted warp into Professor Birch's Lab while the first starter-acknowledgement message owns input. Record every VBlank and prove a fresh reload continuation.",
+        "provenance": {
+          "capture_tape_sha256": "4389ef1fd7163086a7885d509e1e56a957f82327a1dda05b3e2673a38c3b659e",
+          "capture_trace_sha256": "04e09dfff2ffe2964e57c4daceefc8b6082aa43aa4d2754b421ff562931992be",
+          "captured_from_authenticated_checkpoint": "zigzagoon_victory_handoff",
+          "receipt_sha256": "95f7bfb0e7132860059445fd70e39cf8b2469a0b59e7700538967753044c668b",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 1806
+        }
+      },
+      "id": "birch_lab_starter_ack",
+      "normalization": {
+        "map_names": {
+          "1:4": "birchs_lab"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_birch_lab_starter_ack",
+      "source": {
+        "initial_rgb_sha256": "06e91bb61c9c00c48bf9bcf7b9e6ecf76114ca991747de13f10ce14c4c761284",
+        "initial_state": {
+          "map_group": 1,
+          "map_number": 4,
+          "player_x": 6,
+          "player_y": 5
+        },
+        "state_sha256": "bc4ca554017d75455c96b2edf096fa9ec699eaa6e0c56532e4fb56e8407bace1"
+      },
+      "source_split": "capture from zigzagoon_victory_handoff through Route 101 Birch dialogue and the Professor Birch's Lab warp",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated birch_lab_starter_ack, acknowledge the four remaining pre-nickname Birch pages and wait for the obtain fanfare to complete; save only after the native nickname YES/NO menu is visibly settled. Record every VBlank and prove a fresh reload continuation.",
+        "provenance": {
+          "capture_tape_sha256": "42e9c2ae4bf73cd3e7b04c976c440d746ed85c9b72cd1be93f80a8a27832ad0c",
+          "capture_trace_sha256": "fa3f6e7c61138646baa6bfb3fc3749fdbc19b917846ee562220c8ab90e1dd472",
+          "captured_from_authenticated_checkpoint": "birch_lab_starter_ack",
+          "receipt_sha256": "c1a6355947634d1ded095f1c822811ca42bc536de151b59a0895f8301122cced",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 1204
+        }
+      },
+      "id": "birch_lab_receive_starter_page",
+      "normalization": {
+        "map_names": {
+          "1:4": "birchs_lab"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_birch_lab_receive_starter_page",
+      "source": {
+        "initial_rgb_sha256": "9ef8a3bdb3b061a9880209c46f14edf6d9647f7064a6833556387affd6dd2d3f",
+        "initial_state": {
+          "map_group": 1,
+          "map_number": 4,
+          "player_x": 6,
+          "player_y": 5
+        },
+        "state_sha256": "f7408400d92461e83c1995fc4a75ee5418481f200be3693af39069a90fe5cda5"
+      },
+      "source_split": "capture from birch_lab_starter_ack at the settled native receive-starter message page before its final acknowledgement",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated birch_lab_receive_starter_page, acknowledge the final receive-starter page, wait through the obtain fanfare, and save only after the native nickname YES/NO menu is visibly settled. Record every VBlank and prove a fresh reload continuation.",
+        "provenance": {
+          "capture_tape_sha256": "511aab667c052f4d5e12ca58d03605d3e763cb0e1b10887a29e37da7a8aa37b9",
+          "capture_trace_sha256": "e4aeac87eed1fca9c1a8b60e1c5855a5620d0f7855b709885913dea409d70def",
+          "captured_from_authenticated_checkpoint": "birch_lab_receive_starter_page",
+          "receipt_sha256": "bca70427562021fb51c4bb4d9e98c3d342542be20dc59dadce286e0bbccb7d4a",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 601
+        }
+      },
+      "id": "birch_lab_nickname_prompt",
+      "normalization": {
+        "map_names": {
+          "1:4": "birchs_lab"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_birch_lab_nickname_prompt",
+      "source": {
+        "initial_rgb_sha256": "e1f900f267a3ab621dd6831555f6eda5ba48c4dfa9f4ec59b0d1434792fe5fa6",
+        "initial_state": {
+          "map_group": 1,
+          "map_number": 4,
+          "player_x": 6,
+          "player_y": 5
+        },
+        "state_sha256": "3528b5a109cc58b3afdb86fed508969916c890a661fa759fe7f72f021595833d"
+      },
+      "source_split": "capture from birch_lab_receive_starter_page at the native settled nickname decision menu",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated birch_lab_nickname_prompt, choose NO with an explicit two-VBlank Down edge followed by A, accept the rival invitation, and close Birch's final instruction. Save only after source field movement has been separately observed; record every VBlank and prove fresh reload continuation.",
+        "provenance": {
+          "capture_tape_sha256": "86209ea7839956727a3e7d6f75743a5563b83be4b964d01cea3d467780306f91",
+          "capture_trace_sha256": "80930aaa0dd7c0b9933799a7ce1c16183375bc3c003a4b42634d1c863ba6ae76",
+          "captured_from_authenticated_checkpoint": "birch_lab_nickname_prompt",
+          "receipt_sha256": "62d1838c7a3fcb7714cd0a8ee412f5eec2a08a738cbf0d2b4db3522271570574",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 2146
+        }
+      },
+      "id": "birch_lab_field_ready",
+      "normalization": {
+        "map_names": {
+          "1:4": "birchs_lab"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_birch_lab_field_ready",
+      "source": {
+        "initial_rgb_sha256": "27ded344fc7decdb25a64e90c0042fb83bd26713e04d9dffe293d00045871ab8",
+        "initial_state": {
+          "map_group": 1,
+          "map_number": 4,
+          "player_x": 6,
+          "player_y": 5
+        },
+        "state_sha256": "ee39890e14c60cb6fa48054a932af8972b7a453b6d77e027a7ab78476f6151c2"
+      },
+      "source_split": "capture from birch_lab_nickname_prompt after explicit no-nickname/yes-rival route and verified field release",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated birch_lab_field_ready, use the south exit and save after the source Littleroot exterior map transition has settled. Record every VBlank and prove a fresh reload continuation.",
+        "provenance": {
+          "capture_tape_sha256": "44d8895f669cbab5672baa82a842311dde5274736ce8277d3f7ed79faed48868",
+          "capture_trace_sha256": "ce3d1c492e7447f9597e4e26f00b72c624537f57649cd253209d9b783efcaaae",
+          "captured_from_authenticated_checkpoint": "birch_lab_field_ready",
+          "receipt_sha256": "ee25e5a7a6316d9c8a7153075c6759df5e01708aa2004f351bb5925e25dd427f",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 428
+        }
+      },
+      "id": "littleroot_post_lab",
+      "normalization": {
+        "map_names": {
+          "0:9": "littleroot"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_littleroot_post_lab",
+      "source": {
+        "initial_rgb_sha256": "63f70e087449973e9aff826a72c70c8bc9e25c53f0b927b2e7b90362fda51482",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 9,
+          "player_x": 7,
+          "player_y": 17
+        },
+        "state_sha256": "182e179a7e1c83f3114e96273a23ef8e07bc0de943d49475307f4e64588bdeb6"
+      },
+      "source_split": "capture from birch_lab_field_ready through the Professor Birch's Lab south exit",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated littleroot_post_lab, traverse to the north connection column and save at the stable Littleroot edge before crossing into Route 101. Record every VBlank and prove a fresh reload continuation.",
+        "provenance": {
+          "capture_tape_sha256": "264ee7705b3048a0b3f488ffb0ce2e9c7590dd780b147b52ac664b4e3011a6c8",
+          "capture_trace_sha256": "b91c2fa032a121a64b1779f2cacf3846c96fe546c727e130fef6c566d525fc0c",
+          "captured_from_authenticated_checkpoint": "littleroot_post_lab",
+          "receipt_sha256": "c41dd455cac80cc9efd17e66c7a23ecfbce88dc48d72aeec5d77cf52b06b33b5",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 620
+        }
+      },
+      "id": "littleroot_north_connection",
+      "normalization": {
+        "map_names": {
+          "0:9": "littleroot"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_littleroot_north_connection",
+      "source": {
+        "initial_rgb_sha256": "bbc313dace3fa2c431031fed73d2dfdf8931e25748ea7bbbbd21fe6c6dcc6100",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 9,
+          "player_x": 11,
+          "player_y": 1
+        },
+        "state_sha256": "064fc1b626026fee29eeadf3ccefb5ce28b7cc006a8435cc2cb849a1da02b04d"
+      },
+      "source_split": "capture from littleroot_post_lab at the decomp-connected northern boundary",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated littleroot_north_connection, move one source tile north to the exact Littleroot map-edge coordinate and save before the subsequent connection-crossing input. Record every VBlank and prove fresh reload continuation.",
+        "provenance": {
+          "capture_tape_sha256": "1703d3225adb3a4c635bbca7478980f086cbedf8bf8b3b6fc32ae1317fa6d02a",
+          "capture_trace_sha256": "a344534f1af25e6acbbac6f6588d3f89b161d1bab4fc416d567c2a464b3183e8",
+          "captured_from_authenticated_checkpoint": "littleroot_north_connection",
+          "receipt_sha256": "4a9ef9862f4b10a4e27c8c374a831bee69006573f023b045969d5ec81e4991c3",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 316
+        }
+      },
+      "id": "littleroot_north_exit",
+      "normalization": {
+        "map_names": {
+          "0:9": "littleroot"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_littleroot_north_exit",
+      "source": {
+        "initial_rgb_sha256": "ef589e0d755e9e0f66ef8babdd52cb8eab529d3469a8641aa315aec298674718",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 9,
+          "player_x": 11,
+          "player_y": 0
+        },
+        "state_sha256": "ff51bb3a173cf8fa4d2b62e028d9ae45e7ca090d756da44d504aca3f2f204e48"
+      },
+      "source_split": "capture from littleroot_north_connection at the exact top-edge tile",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated littleroot_north_exit, cross the northern connection and save after the Route 101 south-entry field boundary has settled. Record every VBlank and prove fresh reload continuation.",
+        "provenance": {
+          "capture_tape_sha256": "590bb8329733eaf3fd6b62df9b428d22529539da84ea336634dda9e7bc1c32e1",
+          "capture_trace_sha256": "51353c9bceb920f9023e484535d79c3a0c3df68b049cfff9358807e449d7d8fe",
+          "captured_from_authenticated_checkpoint": "littleroot_north_exit",
+          "receipt_sha256": "cd89551169d4a8a0a580304130dd048b3daf408729fd13220007af03ae89e92c",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 316
+        }
+      },
+      "id": "route101_post_lab",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_post_lab",
+      "source": {
+        "initial_rgb_sha256": "b893e2ba19a2fec57f57dce57d5ffcb65ba4dd17369f10621958a4839a5234eb",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 11,
+          "player_y": 19
+        },
+        "state_sha256": "f997ada2bf6c1c02890ba4200480fcd347bde6248e543b6c0b61cb59bb76d932"
+      },
+      "source_split": "capture from littleroot_north_exit after the northward Route 101 connection",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated route101_post_lab, replay the static-decomp first north-lane segment as individually released source pulses, save only after its asserted (11,14) field position settles, and prove fresh reload continuation.",
+        "provenance": {
+          "capture_tape_sha256": "d9a0933333b4c8c733029b5dff11a0a3aa2468cf7824b2081fba22a0f5bd4ed8",
+          "capture_trace_sha256": "43adc421c63613996d5423e3b8af348d326814c1936308067584e0a2e37cd01f",
+          "captured_from_authenticated_checkpoint": "route101_post_lab",
+          "receipt_sha256": "5b2b71993194c64671d4edc51cbf2b9bb47a798b672e27f72d145a89199883ff",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 444
+        }
+      },
+      "id": "route101_north_lane",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_north_lane",
+      "source": {
+        "initial_rgb_sha256": "7277dffba3f3002b2ceef6568230d2dddafceda90825937e8d9841d23c990b88",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 11,
+          "player_y": 14
+        },
+        "state_sha256": "e94d8859bb04c911777838e735d956d7aa42e2bab636d00a64dc3ba01c21337d"
+      },
+      "source_split": "capture from route101_post_lab after the first source-validated static corridor segment",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated route101_north_lane, replay four individually released Left pulses along the static-decomp collision lane, save only after asserted (7,14) field position settles, and prove fresh reload continuation.",
+        "provenance": {
+          "capture_tape_sha256": "1616cbc9d82ed1c1879472070719e0222ef46e40be37c255404fa4b19faec1cb",
+          "capture_trace_sha256": "4e523a9b65b508510e132f86cd4bd976f59dc2ef181a6821c9be0e73f8baac0c",
+          "captured_from_authenticated_checkpoint": "route101_north_lane",
+          "receipt_sha256": "d6de9bc6ec4729dc621aac0ba2c05bcfe68c48346b0311ac6366f9ea790f0611",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 412
+        }
+      },
+      "id": "route101_west_lane",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_west_lane",
+      "source": {
+        "initial_rgb_sha256": "f39f1944ba5f7d5fe6fe0f84262203634d02c1952df5ff392e76d524c2e66ef3",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 7,
+          "player_y": 14
+        },
+        "state_sha256": "c591f721a46b2a40a2ff68a708a516397fb3fc775d26900eec662efa43e615da"
+      },
+      "source_split": "capture from route101_north_lane after its source-validated static corridor turn",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated route101_west_lane, replay four individually released Up pulses along the static-decomp collision lane, save only after asserted (7,10) field position settles, and prove fresh reload continuation.",
+        "provenance": {
+          "capture_tape_sha256": "9c1fd08748850b3cd4acc7f100330173a80ce3726d41e6de5300a9ae52ef9190",
+          "capture_trace_sha256": "94afebdfb62ea9839e814808fd0a5ff4cca12da43360dae3ae6e32b9d289cd02",
+          "captured_from_authenticated_checkpoint": "route101_west_lane",
+          "receipt_sha256": "9b905afde08f3c3ea801cf0800f8985bc455a415d0f002203031d0157cb3b562",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 412
+        }
+      },
+      "id": "route101_mid_lane",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_mid_lane",
+      "source": {
+        "initial_rgb_sha256": "9b76c99866967157bffd6b074acef6f941d823bfe302b78d6ae836a3ab4ce878",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 7,
+          "player_y": 10
+        },
+        "state_sha256": "2b5898b21acf9789ce0f4d32d3f00709235e83c37262a1424366dba452195b4d"
+      },
+      "source_split": "capture from route101_west_lane after its source-validated static corridor turn",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated route101_mid_lane, replay six individually released Right pulses along the static-decomp collision lane, save only after asserted (13,10) field position settles, and prove fresh reload continuation.",
+        "provenance": {
+          "capture_tape_sha256": "1d6435bbd5da7d7e903aa5f03246bdea1289900c5e0bcf51808f33cfc8a5f02f",
+          "capture_trace_sha256": "86a89c96a032c4d05188de60b050fc1a912bd90883a6d30ea2841a2b94a2d73d",
+          "captured_from_authenticated_checkpoint": "route101_mid_lane",
+          "receipt_sha256": "b4e3e4bff2f988b2618b530cf6ca29890bd6227d1286098a3536060b89ac0a8b",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 476
+        }
+      },
+      "id": "route101_east_lane",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_east_lane",
+      "source": {
+        "initial_rgb_sha256": "224adbefe673dd60aa5238243988809a8b3cb2f4c0de2604621ad29a830713bc",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 13,
+          "player_y": 10
+        },
+        "state_sha256": "df6e0bff59368a4baae954ae53a571624de6947f4263ba1c918c76288408b1ae"
+      },
+      "source_split": "capture from route101_mid_lane after its source-validated static corridor turn",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated route101_east_lane, replay one individually released Up pulse to the deterministic wild-encounter tile, wait through the native battle transition until palette fade is inactive, then save/reload the native wild-encounter entry text. The earlier field-checkpoint attempt is audit-only because it correctly revealed this non-field handoff.",
+        "provenance": {
+          "capture_tape_sha256": "5f5c29b85a5fd54c3ee916ba60ccb405861484b92bfee1dd390ce0a46e128f5b",
+          "capture_trace_sha256": "2e66e7f100bba73870eecd65d4b8288748cc86f8d319a4130d3b130d99c70f2b",
+          "captured_from_authenticated_checkpoint": "route101_east_lane",
+          "receipt_sha256": "cff211e183a8709cb895ff2f9dbbbf1a7b3a81a32ee90d05a23b982d84fc76b3",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 1216
+        }
+      },
+      "id": "route101_wild_battle",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_wild_battle",
+      "source": {
+        "initial_rgb_sha256": "49bf8d84c7f373d91127e73ba31a8427aa849fde92213cddb687e30d259045c7",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 13,
+          "player_y": 9
+        },
+        "state_sha256": "10ce0fe1d07bec8876dac98ef192dd2157641df0b273f6939d25a3e158a39ece"
+      },
+      "source_split": "capture from route101_east_lane at the deterministic Route 101 wild-encounter handoff",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated route101_wild_battle entry text, dismiss the native entry message with a released A edge, save only after the actual battle command surface settles, and prove fresh reload continuation.",
+        "provenance": {
+          "capture_tape_sha256": "e042c900022c24bc8ba21b210289be32352d801fb59628d7843d957d718f1eab",
+          "capture_trace_sha256": "8c10ee0d1901629e4d782880f5977320ecf452b7a8a25d70af704cbb67d588c0",
+          "captured_from_authenticated_checkpoint": "route101_wild_battle",
+          "receipt_sha256": "7d3b9edbc12e0e9bdce1746feee8ebfd565b44b272d55bb9de0d7ec3aa859c2d",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 61
+        }
+      },
+      "id": "route101_wild_command",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_wild_command",
+      "source": {
+        "initial_rgb_sha256": "45469a5b258a2207932b052cca7a0c366f47ccb3e1f29a22f9f5fe5914852517",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 13,
+          "player_y": 9
+        },
+        "state_sha256": "850b563f62f6be6a3ab901b45885177071220fc58b51668efd970e3d6742df5e"
+      },
+      "source_split": "capture from route101_wild_battle after acknowledging the native entry text",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated route101_wild_after_turn_two, select FIGHT then the default first move with released source edges, wait through the complete third native turn, and save/reload only after the battle command surface settles.",
+        "provenance": {
+          "capture_tape_sha256": "1b0e745184d23d74ad8fdd42a641c9f49365be5ac780c9584f13602838bf99f8",
+          "capture_trace_sha256": "a272820b4b29b7ebd576d83d8e59042f54bf829691fab3b603d9997a3a0a301c",
+          "captured_from_authenticated_checkpoint": "route101_wild_after_turn_two",
+          "receipt_sha256": "05bfa37d0c12504aee406438013e375b796b2e738a2217d8c62d384672d8035d",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 1232
+        }
+      },
+      "id": "route101_wild_after_turn_three",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_wild_after_turn_three",
+      "source": {
+        "initial_rgb_sha256": "f112914a6330e8b4bf3d0f9dc957b305b7372f492db6aa3101a8bede81ff2f9a",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 13,
+          "player_y": 9
+        },
+        "state_sha256": "51d246403705d9ba8ea930e29c3b0905903b8eab398e88216c88b7db26852156"
+      },
+      "source_split": "capture from route101_wild_after_turn_two after the third deterministic default move",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated route101_wild_after_turn_three, select FIGHT then the default first move with released source edges, wait through the complete fourth native turn or victory handoff, and classify ownership before promotion.",
+        "provenance": {
+          "capture_tape_sha256": "1b0e745184d23d74ad8fdd42a641c9f49365be5ac780c9584f13602838bf99f8",
+          "capture_trace_sha256": "1a1d8490a090d8ddcb30971fee837b2985ac034495660152a13e7768b6ce8f83",
+          "captured_from_authenticated_checkpoint": "route101_wild_after_turn_three",
+          "receipt_sha256": "88775cbc2e5d4e65efabfc7e8e5b62b631d3255ef434c906563c1608a3f6c172",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 1232
+        }
+      },
+      "id": "route101_wild_after_turn_four",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_wild_after_turn_four",
+      "source": {
+        "initial_rgb_sha256": "902bb3a256034da25f76397c6fa0255c05d5430fc68a5a72ac5bc1d6f22d2d3c",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 13,
+          "player_y": 9
+        },
+        "state_sha256": "0e88d93351be1326afc601bd3e0fb5ccb8d6cb6b63fd494a1bae6123d5e56f1a"
+      },
+      "source_split": "capture from route101_wild_after_turn_three after the fourth deterministic default move",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated route101_wild_after_turn_four, select FIGHT then the default first move with released source edges, wait through the complete fifth native turn or victory handoff, and classify ownership before promotion.",
+        "provenance": {
+          "capture_tape_sha256": "1b0e745184d23d74ad8fdd42a641c9f49365be5ac780c9584f13602838bf99f8",
+          "capture_trace_sha256": "59b5fdc27912e157c597f26f61a39380ba797781756d5c67e183fc78db809383",
+          "captured_from_authenticated_checkpoint": "route101_wild_after_turn_four",
+          "receipt_sha256": "2a3293b680418b9ec9c6a36374ed9b8c1fbfda5305dcc89c93009bbe5163353c",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 1232
+        }
+      },
+      "id": "route101_wild_after_turn_five",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_wild_after_turn_five",
+      "source": {
+        "initial_rgb_sha256": "a59f80507f509b0db4ca206d0cb088c4fe81ec4780a091b9eb2bf6713276a69e",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 13,
+          "player_y": 9
+        },
+        "state_sha256": "1ab62027814003585ced008ba2fef9d6e3f216c005a28dcc4c87920642676da4"
+      },
+      "source_split": "capture from route101_wild_after_turn_four after the fifth deterministic default move",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated route101_wild_after_turn_five, select FIGHT then the default first move with released source edges, wait through the complete sixth native turn or victory handoff, and classify ownership before promotion.",
+        "provenance": {
+          "capture_tape_sha256": "1b0e745184d23d74ad8fdd42a641c9f49365be5ac780c9584f13602838bf99f8",
+          "capture_trace_sha256": "88721b28e57142d09d95804f92717b017caf803ec0073ed0441e50010dcfe204",
+          "captured_from_authenticated_checkpoint": "route101_wild_after_turn_five",
+          "receipt_sha256": "054725fb6f03c56f39cf1f70623ad1fc1115748eb9a0aa2969116887f3d4f445",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 1232
+        }
+      },
+      "id": "route101_wild_after_turn_six",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_wild_after_turn_six",
+      "source": {
+        "initial_rgb_sha256": "272459df4f74554ee77c97c0d3928f9ff0e2f85c21bbedc2299618b3bcb7f58c",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 13,
+          "player_y": 9
+        },
+        "state_sha256": "b68f98eef917bea293459eba6e484aab3e7afdb1aa49397fc6332de6b6d862cb"
+      },
+      "source_split": "capture from route101_wild_after_turn_five after the sixth deterministic default move",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated route101_wild_after_turn_six, settle no-input field ownership after the wild-battle victory and prove fresh reload continuation.",
+        "provenance": {
+          "capture_tape_sha256": "54d5556826057804c6278bc64bd57962f1373e3e50c188cffdaa923cced76634",
+          "capture_trace_sha256": "7a88153d9b19b5a022144f25403316c8868b07dc69dbe837c418c4e3e5c48250",
+          "captured_from_authenticated_checkpoint": "route101_wild_after_turn_six",
+          "receipt_sha256": "7ee785388ef0463f886173dc233cb2d2b10b416aeb4b9de8d1605674d97f40c9",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 300
+        }
+      },
+      "id": "route101_wild_victory_resume",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_wild_victory_resume",
+      "source": {
+        "initial_rgb_sha256": "272459df4f74554ee77c97c0d3928f9ff0e2f85c21bbedc2299618b3bcb7f58c",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 13,
+          "player_y": 9
+        },
+        "state_sha256": "96b181d88ed659605f634e7d9ab7227083df9536aeb8d569bb55e8ae1081746d"
+      },
+      "source_split": "capture from route101_wild_after_turn_six after source-confirmed wild victory field resume",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated route101_wild_after_turn_one, select FIGHT then the default first move with released source edges, wait through the complete second native turn, and save/reload only after the battle command surface settles.",
+        "provenance": {
+          "capture_tape_sha256": "72844a0460750071aa3c59d469ff82b38236390ca7fc65366843e6cca028ea49",
+          "capture_trace_sha256": "7b079159e41df6a2ecc1c22ecc36cdc1fe6d003188f7e61d0ecd2cd9354d1314",
+          "captured_from_authenticated_checkpoint": "route101_wild_after_turn_one",
+          "receipt_sha256": "eee43a68ee52d35dc630bac112dd077077fc74d3d4c75674204057437e042ff0",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 1232
+        }
+      },
+      "id": "route101_wild_after_turn_two",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_wild_after_turn_two",
+      "source": {
+        "initial_rgb_sha256": "467dff75dedb1304917a7c428d3505fb61e8db73c3b89def0c8fdbb1a1bb1b93",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 13,
+          "player_y": 9
+        },
+        "state_sha256": "39d91d01d0d73c0349b38f36c27ea652cd45913401114cb6eb67a260f8276690"
+      },
+      "source_split": "capture from route101_wild_after_turn_one after the second deterministic default move",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated route101_wild_command, navigate to native RUN with released source edges and activate it. Promote only a resulting stable field resume; preserve a battle-owned terminal only as rejection evidence."
+      },
+      "id": "route101_wild_run_resume",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_wild_run_resume",
+      "source_split": "capture from route101_wild_command through the native RUN branch",
+      "status": "capture_required"
+    },
+    {
+      "capture": {
+        "procedure": "Reserved for a genuine completed Route 101 wild-battle turn. The first attempted tape was visually inspected and only dismissed the wild-entry text then opened the command menu; it must not count as a turn.",
+        "provenance": {
+          "capture_tape_sha256": "72844a0460750071aa3c59d469ff82b38236390ca7fc65366843e6cca028ea49",
+          "capture_trace_sha256": "1eba5dcae075d8269d8ff4097a182719c144fc59fccd84af2c7a6a465d3a0431",
+          "captured_from_authenticated_checkpoint": "route101_wild_command",
+          "receipt_sha256": "bf24819a446ec63e0822ba62d758cc34668e48f08bc88f29a87a0287d7aeb3d5",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 1232
+        }
+      },
+      "id": "route101_wild_after_turn_one",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_wild_after_turn_one",
+      "source": {
+        "initial_rgb_sha256": "2a79b0efe6ec5c7395491f82b1ea91cbd6d36e71c873ed2c5e530b69e06f4216",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 13,
+          "player_y": 9
+        },
+        "state_sha256": "1f6a3ba77181e8ea9f01b34bbc4db8acda86ede06f57edc1839ffa45299bf39d"
+      },
+      "source_split": "capture from route101_wild_battle after the first deterministic default move",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore 04_rival.state in the pinned mGBA adapter, issue load, then record the state SHA-256, returned initial RGB SHA-256, and source_state fields before registering this row.",
+        "provenance": {
+          "capture_tape_sha256": "94065e564746db6dad36dc283ff14046f50be20c8260bbbc3dff4abcdeea48d5",
+          "capture_trace_sha256": "55bbfe7281d489dbdc162da536841e5bfc21ecffffa0bf20654921f7d4cbaebf",
+          "captured_from_authenticated_checkpoint": "route101_post_victory_r2",
+          "receipt_sha256": "4f7a1f178953435af5ea0c5aea37f95f2b7a09c2f80bf226f85bcb858ffaafe4",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 508
+        }
+      },
+      "id": "route101_post_victory_u7",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_post_victory_u7",
+      "source": {
+        "initial_rgb_sha256": "2fc3de3b83bd2f98a86dc926f26a32d0cd4aa262e64c90d83245da245b9c2992",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 15,
+          "player_y": 2
+        },
+        "state_sha256": "3df0b8cbb48b8be0710cf11c08ad71a159001b163f09cd2da6a7b1f71a8043b7"
+      },
+      "source_split": "capture from route101_post_victory_r2 after seven released Up pulses",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore 04_rival.state in the pinned mGBA adapter, issue load, then record the state SHA-256, returned initial RGB SHA-256, and source_state fields before registering this row.",
+        "provenance": {
+          "capture_tape_sha256": "9b8ed4df7a8843f3a0d635c51260b09c161626dc4e3e285d56ed0003aa5fd398",
+          "capture_trace_sha256": "54f0c5f572f39828512539982d4158ba53e613ff441ae31bafe8a1fc12e37dc6",
+          "captured_from_authenticated_checkpoint": "route101_post_victory_u7",
+          "receipt_sha256": "c2a333c4947381a9d988512db4cc2b75f3060a9f4bafa2c3522f30f38e28019b",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 300
+        }
+      },
+      "id": "route101_post_victory_u7_settled",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_post_victory_u7_settled",
+      "source": {
+        "initial_rgb_sha256": "2fc3de3b83bd2f98a86dc926f26a32d0cd4aa262e64c90d83245da245b9c2992",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 15,
+          "player_y": 2
+        },
+        "state_sha256": "f7825d3826507c9fd7365fed25f1360a1bb52055be885a12be01fa78c3af6d44"
+      },
+      "source_split": "300-VBlank settled source state from route101_post_victory_u7",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated route101_post_victory_u7_settled, replay four calibrated Left16/release60 pulses and settle at (11,2).",
+        "provenance": {
+          "capture_tape_sha256": "4722c3399e3cbdf381c1afd0f81fb26d83d21c6501b4dc3a8e662847af6bb75e",
+          "capture_trace_sha256": "8e004ab6d4827da5f263735805cecbaf8b3456dcff712e39f1071aa633a6218c",
+          "captured_from_authenticated_checkpoint": "route101_post_victory_u7_settled",
+          "receipt_sha256": "d9d9fbe2a12a02b237cb1294b66576c0c0d05c1a7093c7a56f48803ba859e166",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 544
+        }
+      },
+      "id": "route101_post_victory_l4",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_post_victory_l4",
+      "source": {
+        "initial_rgb_sha256": "f12f49be4a03178670459bd86933f8a98abef427e97852eda911fe73fffdfc2c",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 11,
+          "player_y": 2
+        },
+        "state_sha256": "b5d53f409cef708335f8bc9c1fb765b49447a1de0b1a3c8b9884e4ad8021d54c"
+      },
+      "source_split": "capture from settled Route101 U7 after L4 calibrated pulses",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated route101_post_victory_l4, replay two calibrated Up16/release60 pulses to Route101 north edge (11,0).",
+        "provenance": {
+          "capture_tape_sha256": "139a53610472e6878a1b981c1d6c234fa3efff1e9e6894c247b09d1eab8cc96b",
+          "capture_trace_sha256": "0cd7e502370064923b0cf0646b099eb29dc2dbbbe211057858afe5b8a06c2650",
+          "captured_from_authenticated_checkpoint": "route101_post_victory_l4",
+          "receipt_sha256": "eee531b75b2d0817e742cc3f7009f8ed71a41e4d15190f1c5262d702ac926bbc",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 392
+        }
+      },
+      "id": "route101_post_victory_north_exit",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_post_victory_north_exit",
+      "source": {
+        "initial_rgb_sha256": "f717a3cc2a4982a3430abccb7c598eebaf02a7306ce484478f9cbb653f81a3d2",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 11,
+          "player_y": 0
+        },
+        "state_sha256": "d7ddd1e8d143c30da4139d8a27fe536382ad60327edfd86863e81f0a1b5a4d5d"
+      },
+      "source_split": "capture from Route101 L4 at north edge",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore 04_rival.state in the pinned mGBA adapter, issue load, then record identities.",
+        "provenance": {
+          "capture_tape_sha256": "98eef965e5f4916a8ddd9ad181cc7b3ff6daa7a46aad46e227e8860e9b9d68e2",
+          "capture_trace_sha256": "bfda142d2599399e4cfc2a9d8dd0b80685a0a6b694fc72973ad5830ac71c77db",
+          "captured_from_authenticated_checkpoint": "oldale_town",
+          "receipt_sha256": "caeb273ca25d700c4100deeea06814fd8d5f1be1f4f67b2937a2ee8933889494",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 924
+        }
+      },
+      "id": "oldale_u9",
+      "normalization": {
+        "map_names": {
+          "0:10": "oldale"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_oldale_u9",
+      "source": {
+        "initial_rgb_sha256": "5c3be9cd78d9139c1813603fd57794989412e3671bfa8a1dcde2cc4407676852",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 10,
+          "player_x": 11,
+          "player_y": 10
+        },
+        "state_sha256": "24e6af174aa28a911c05dd11dd8278a738c57c34e37fb0b2db0b7c837b052c3f"
+      },
+      "source_split": "capture from oldale_town after nine calibrated Up pulses",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore 04_rival.state in pinned mGBA.",
+        "provenance": {
+          "capture_tape_sha256": "b84ff7739396630f8af69889c4dbe811afdf62c153a6be698528385434676d6e",
+          "capture_trace_sha256": "c6a7763e63abd12bf821346e11e345757cf7b6cd41fbc3611e1b56569147e3ba",
+          "captured_from_authenticated_checkpoint": "oldale_u9",
+          "receipt_sha256": "62ee51a2c5665847e28d8f81ba64094ce4da75a6b59a4a31a5e2710d1970c62a",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 316
+        }
+      },
+      "id": "oldale_l1",
+      "normalization": {
+        "map_names": {
+          "0:10": "oldale"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_oldale_l1",
+      "source": {
+        "initial_rgb_sha256": "3209d10ec915ccb312679955743443cfe796ec0a23aeced739baa4f445f070eb",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 10,
+          "player_x": 10,
+          "player_y": 10
+        },
+        "state_sha256": "9af35ba0d1154a4d4a36b1841df0f770fbc51eb22bf1cfb9a4b9056f3a5297f8"
+      },
+      "source_split": "capture from oldale_u9 after calibrated Left pulse",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore 04_rival.state in pinned mGBA.",
+        "provenance": {
+          "capture_tape_sha256": "50acb2ef97b3bf579916ad020c7882c251933d0d95440f896ee1cfbd761c61e1",
+          "capture_trace_sha256": "cfe1ff1af202d1d2d0c3bf8c2bf7723dea2755abc7f06e1121bc47ac40e6e1fc",
+          "captured_from_authenticated_checkpoint": "oldale_l1",
+          "receipt_sha256": "df7dfd0f768f0fccaf0fc3ceb0be4d39cca4c6aa373524f110a3637ec33654ba",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 1000
+        }
+      },
+      "id": "oldale_u10",
+      "normalization": {
+        "map_names": {
+          "0:10": "oldale"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_oldale_u10",
+      "source": {
+        "initial_rgb_sha256": "e6f91b532c6dbc3b50f12fc913bb7e474de1f39b7ce31f42f68d3474c6887276",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 10,
+          "player_x": 10,
+          "player_y": 0
+        },
+        "state_sha256": "15d4edbcb7d808fdb59d442572a9cb644963cd03024cc3e87bb046d8ecc3ec47"
+      },
+      "source_split": "capture from oldale_l1 after U10 calibrated pulses",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore 04_rival.state in pinned mGBA.",
+        "provenance": {
+          "capture_tape_sha256": "bfb1f66cbde6776965fb417ff9dbdfe7c4d67e92894da4af2ca19b2517ca6ac2",
+          "capture_trace_sha256": "ee8c7bf0d220644c30641243b785ac5cc45349fafddcc8ad604e1c5a784733e1",
+          "captured_from_authenticated_checkpoint": "oldale_u10",
+          "receipt_sha256": "d70b74717e079ea9f13ccb47f3799eb3b383a3d58db4fccf02b968b96e82b08b",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 136
+        }
+      },
+      "id": "route103_south_entry",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_south_entry",
+      "source": {
+        "initial_rgb_sha256": "770b3afe82f12faba03c09c40f2325904b76a08166b56eeb3f8d38534468c05a",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 10,
+          "player_y": 21
+        },
+        "state_sha256": "3e65771f47c73cef928834b49bc0f0e68bbfb0b1de1fb019183a61fb4bb99460"
+      },
+      "source_split": "capture from oldale_u10 after north connection crossing",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore 04_rival.state in pinned mGBA.",
+        "provenance": {
+          "capture_tape_sha256": "ce48b6bd0d73a2378c672de839a28887f939c6e6c4a2cb780af7fd0241c5e49f",
+          "capture_trace_sha256": "e5c5fad1236aae514d7fd68c130bde2ba8c1af6e3428cdcf6209a5434d0db520",
+          "captured_from_authenticated_checkpoint": "route103_south_entry",
+          "receipt_sha256": "e3ec2bbe1f3869d99cb8add907dfe197792838e8c96561b9404d78eae56e0e4e",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 848
+        }
+      },
+      "id": "route103_u8",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_u8",
+      "source": {
+        "initial_rgb_sha256": "f7cf73e54cfeebcc2e1751c2f70c60ccfe9312b0ab0d393d862edc7a1787ea3e",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 10,
+          "player_y": 13
+        },
+        "state_sha256": "460faa9d6ee6856d8f6ab1fb4b147aeddcf74359838069404475abc43d00b0bd"
+      },
+      "source_split": "capture from Route103 south entry after U8",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore 04_rival.state in pinned mGBA.",
+        "provenance": {
+          "capture_tape_sha256": "11f42a49ef5988691e7fd21de880bd2159a1d9a59a1b274a7d03232b01662ee9",
+          "capture_trace_sha256": "73d07c6ad4296c32eadd6583eaa98c499d69842bcd8ce85196ba5a844b9883b2",
+          "captured_from_authenticated_checkpoint": "route103_u8",
+          "receipt_sha256": "43b6294d4316fa7765f822c2d0f045857de0585a47959be1983f2c0ab921acd6",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 544
+        }
+      },
+      "id": "route103_r4",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_r4",
+      "source": {
+        "initial_rgb_sha256": "c05ab0674b7513b01d06528b6258a0613905777609a8bcad2a7819d93bf43f8c",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 14,
+          "player_y": 13
+        },
+        "state_sha256": "d3fd9f5547c8a04b74b588ae7e25f6a0b364db8f5964ca04869ebc2fcca159d8"
+      },
+      "source_split": "capture from Route103 U8 after R4",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore 04_rival.state in pinned mGBA.",
+        "provenance": {
+          "capture_tape_sha256": "66125ed63489d3a51f7b5ab357274f9ab492e59d41dc107a71a12075aabdc321",
+          "capture_trace_sha256": "73e9703860d8c1ff8d5eead9d210467d345c88a360511626f72407061cd94074",
+          "captured_from_authenticated_checkpoint": "route103_r4",
+          "receipt_sha256": "58281259091362baa081632444407839bb22e3f5bf24c649f6b92b08fd4a6dd5",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 696
+        }
+      },
+      "id": "route103_u6",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_u6",
+      "source": {
+        "initial_rgb_sha256": "5db9a2a0ff73743f49af38d17ba8b1aa1d6943fd2e03aab403249c256090d192",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 14,
+          "player_y": 7
+        },
+        "state_sha256": "d7d75aa26e3618af4a0fc69eba0b8ac998b04bba7780d914e8aefe1971fbd093"
+      },
+      "source_split": "capture from Route103 R4 after U6",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore 04_rival.state in pinned mGBA.",
+        "provenance": {
+          "capture_tape_sha256": "722db6b903bd74ea36e76931074c3791bb050c8bf12362261893d92ebd82adf5",
+          "capture_trace_sha256": "57b06ae0f79848255bcdbba0d534a653952b5f54b57fcb393ea669dc10ea53fa",
+          "captured_from_authenticated_checkpoint": "route103_u6",
+          "receipt_sha256": "a73323b23f63bf29b2176cd6080f5ca0f35ba89058e9a0828692fe09afe599c7",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 392
+        }
+      },
+      "id": "route103_l2",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_l2",
+      "source": {
+        "initial_rgb_sha256": "58dc28463d878df82c3ea63d816f41b5c78477898872b84e6f1eba6990be1e49",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 12,
+          "player_y": 7
+        },
+        "state_sha256": "cc42b66d087fb6ca66158c24eff23050a8554b963de094714b3dfabd5a33f26a"
+      },
+      "source_split": "capture from Route103 U6 after L2",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore 04_rival.state in pinned mGBA.",
+        "provenance": {
+          "capture_tape_sha256": "c381fc9e45b437240cb87ba4a7609e9a589f555f3b3927b8d21e697e3382e79b",
+          "capture_trace_sha256": "f0e1e218cd4967acf664723e611bbeaaab1210ca826389e38041408740496a1f",
+          "captured_from_authenticated_checkpoint": "route103_l2",
+          "receipt_sha256": "e398bbe5958f7c7126157345a6ae0ed5490428bb69a51a8ba2ac1bbe52da93d2",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 316
+        }
+      },
+      "id": "route103_u1",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_u1",
+      "source": {
+        "initial_rgb_sha256": "2fbdefdab4d4933d80b0dba27fb22f503ca259124a1a80ed979a626e9e2c2573",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 12,
+          "player_y": 6
+        },
+        "state_sha256": "959e3f4a68ff31292144d27eb471eeae9a2653e449e3fed5196f1090f1caaa73"
+      },
+      "source_split": "capture from Route103 L2 after U1",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore 04_rival.state in pinned mGBA.",
+        "provenance": {
+          "capture_tape_sha256": "98b7bb519e768fdc4a359ef9c2506cc78dd727310dda2c8de54057e3c861e18f",
+          "capture_trace_sha256": "879c6b6cdb72d464be2d15c33e59967e271358d0e39c5fe3317fb0687811fc65",
+          "captured_from_authenticated_checkpoint": "route103_u1",
+          "receipt_sha256": "a8d5919366e435b691a05dcf2eb8d7b4beeed8412d44bc0ca677ca9afb19d84d",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 620
+        }
+      },
+      "id": "route103_west_anchor",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_west_anchor",
+      "source": {
+        "initial_rgb_sha256": "fc10cdaf7dcf47c9789443906ef135b01ed264839a2f45955deb281b65955b5b",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 7,
+          "player_y": 6
+        },
+        "state_sha256": "abe03b011a737a806a47bcf571712b63a6a5ce0efa0784713d921d0f1f796e62"
+      },
+      "source_split": "authenticated Route 103 wild-battle entry text at (7,6); retained under its historical ID",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore the authenticated Route 103 wild post-turn-one checkpoint, choose the native default FIGHT move with released A edges, and classify the observed terminal input owner before continuing the encounter.",
+        "provenance": {
+          "capture_tape_sha256": "93b380c2237f20bfdd4a055b74947e3dc684ffa0d6e3f3000c35cc318add56fb",
+          "capture_trace_sha256": "87da29e9ffb9c163e6d073619f9e90180d48d58512f3c2df05dbd51876bd7f3e",
+          "captured_from_authenticated_checkpoint": "route103_wild_turn_one",
+          "receipt_sha256": "7eb6b258dfec955d2221044723c1a315aedfb252ca6d6c444ff41295cb7c56d8",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 1232
+        }
+      },
+      "id": "route103_wild_turn_two",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_wild_turn_two",
+      "source": {
+        "initial_rgb_sha256": "29b0547791ad886dd2641f99414b56fc40bb2d38d1965a0e38bfe0f2ba7a8298",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 7,
+          "player_y": 6
+        },
+        "state_sha256": "b02a6c8456588177ea6ddaaa141fe667e65fe3ff55a889513079efbd10d8726b"
+      },
+      "source_split": "authenticated Route 103 wild second move outcome",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore the authenticated stable Route 103 Poochyena command surface, navigate FIGHT\u2192BAG\u2192RUN with released edges, activate RUN, and classify its observed terminal ownership.",
+        "provenance": {
+          "capture_tape_sha256": "116955f350823ef925b05887570a67cca5b00d98da585e9fafaa85973eb34e7f",
+          "capture_trace_sha256": "719053a9127b53451c487aebc5a5e49135fa8b7e6ede725b9b5618cd2e9bd070",
+          "captured_from_authenticated_checkpoint": "route103_wild_command_ready",
+          "receipt_sha256": "7646e85dd53e2c1f9d4a5e3f91047e94f8adf154bdda7fc7d44e6ecd5f280af0",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 1264
+        }
+      },
+      "id": "route103_wild_run_actual_outcome",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_wild_run_actual_outcome",
+      "source": {
+        "initial_rgb_sha256": "1378217e7da699471ec100791df845349cb043a7908f6eb5883e29d7f6edd6bd",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 7,
+          "player_y": 6
+        },
+        "state_sha256": "08d3d035951879cd6236e216df145d63db7ce45c5c6f9c0aca3c4bc5e1f229b2"
+      },
+      "source_split": "capture-required actual Route 103 wild RUN outcome",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore the authenticated Route 103 Poochyena command surface, select FIGHT with a released A edge, and preserve an independent native move-menu phase checkpoint.",
+        "provenance": {
+          "capture_tape_sha256": "88c387b0b944adb20bea1f70e06b65dab569cd66e55aac67ae6723d849949ef9",
+          "capture_trace_sha256": "05e4e494e047e83227c155e3c19a05971c553d97d33d7510d1da932892cc97e4",
+          "captured_from_authenticated_checkpoint": "route103_wild_command_ready",
+          "receipt_sha256": "ad0d25b3b7f31f943e21d5f372d2073610eed6dc377557e2facb54fdb63bcfb2",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 31
+        }
+      },
+      "id": "route103_wild_turn1_move_menu_legacy_mislabeled",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_wild_turn1_move_menu_legacy_mislabeled",
+      "source": {
+        "initial_rgb_sha256": "93c45c8dbcc1c09b75a7ddedc6d407cb1a347e2c7d5dd166a6914583f73a0949",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 7,
+          "player_y": 6
+        },
+        "state_sha256": "1df9a8d7d932e85cd2797a1307ec6761488293d96f45a53a47dfde76f38c4d4f"
+      },
+      "source_split": "quarantined: visible boundary is Go! TORCHIC! sendout, not move selection",
+      "status": "quarantined_mislabeled"
+    },
+    {
+      "capture": {
+        "procedure": "Restore the authenticated Route 103 Poochyena move-select phase, choose the default SCRATCH slot with a released A edge, and preserve the native post-selection result-text phase.",
+        "provenance": {
+          "capture_tape_sha256": "5e0ab869daf729c12c02f759e5610c9f670323c93419513d6df2c58cac3e281f",
+          "capture_trace_sha256": "8dcba50fa9cf6fd90e87f652c81ba3448aea6c7f1a6e6f585126e4d0938c1255",
+          "captured_from_authenticated_checkpoint": "route103_wild_turn1_move_menu",
+          "receipt_sha256": "54cf093f0f20379c9eef72332bb37c43e93bd464212652c3ae3cf447e386bc8c",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 121
+        }
+      },
+      "id": "route103_wild_turn1_scratch_text_legacy_mislabeled",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_wild_turn1_scratch_text_legacy_mislabeled",
+      "source": {
+        "initial_rgb_sha256": "6d3adf4f9ae485dc00910834347a892151ac7124fd32196c39433fc2944915df",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 7,
+          "player_y": 6
+        },
+        "state_sha256": "1341025eaf068d1c99b1385ccd0bdf6a67e469f7abb6518b725f069a09afc217"
+      },
+      "source_split": "quarantined: visible boundary is Go! TORCHIC! sendout, not Scratch text",
+      "status": "quarantined_mislabeled"
+    },
+    {
+      "capture": {
+        "procedure": "Acknowledge authenticated Route 103 first Scratch text with a released A edge and checkpoint the native Poochyena Tackle text.",
+        "provenance": {
+          "capture_tape_sha256": "0afdc1e693ae0bd6161b57e5c18f4f10b6741ceb1133766dfa4503737781d6c3",
+          "capture_trace_sha256": "19b3d7ce910fc2093e50c00fd6d7f3c3b1c5a119e3d64f9541fb4d873e511345",
+          "captured_from_authenticated_checkpoint": "route103_wild_turn1_scratch_text",
+          "receipt_sha256": "1be3a8ab67580974e52e70f1bde18c83dd90da9d52e67cee0fca5c5b0f67cc8f",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 121
+        }
+      },
+      "id": "route103_wild_turn1_tackle_text_legacy_mislabeled",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_wild_turn1_tackle_text_legacy_mislabeled",
+      "source": {
+        "initial_rgb_sha256": "ccaa80c4bfc2de53a0c1b3d1fca2412cef82616b1bfedd77964ee0baf95535ec",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 7,
+          "player_y": 6
+        },
+        "state_sha256": "2740c23151b339464ec4c47f2f9446747c3fdd6a1ca8d6ed2c373cd9ad037416"
+      },
+      "source_split": "quarantined: derived from mislabeled sendout state; does not authenticate Tackle text",
+      "status": "quarantined_mislabeled"
+    },
+    {
+      "capture": {
+        "procedure": "Acknowledge authenticated Route 103 first Tackle text with a released A edge and checkpoint the native command-menu return.",
+        "provenance": {
+          "capture_tape_sha256": "0afdc1e693ae0bd6161b57e5c18f4f10b6741ceb1133766dfa4503737781d6c3",
+          "capture_trace_sha256": "1949fe47647ea8656480ebc46e08cbfb6b91a03727664245121b22e27d66bf32",
+          "captured_from_authenticated_checkpoint": "route103_wild_turn1_tackle_text",
+          "receipt_sha256": "dce86be71e17623e07ee708f553717a51d3cea673a80aa57b2bcedd7c3e11f51",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 121
+        }
+      },
+      "id": "route103_wild_turn1_command_return_legacy_mislabeled",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_wild_turn1_command_return_legacy_mislabeled",
+      "source": {
+        "initial_rgb_sha256": "146fc9f277aa67ead9d41a352c06ecdf7379b9516701430891e8269ef55844eb",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 7,
+          "player_y": 6
+        },
+        "state_sha256": "c3b39044def8ee9c32d326cf9d73251ffb44fb4bbfc0d5828457662a9ffbfe2d"
+      },
+      "source_split": "quarantined: derived from mislabeled phase chain",
+      "status": "quarantined_mislabeled"
+    },
+    {
+      "capture": {
+        "procedure": "From the genuine Route 103 wild sendout boundary, acknowledge Go! TORCHIC!, settle the visible command surface, choose FIGHT with a second released A edge, and capture the settled move-selection surface.",
+        "provenance": {
+          "capture_tape_sha256": "1ed8f3ff20b5bb54c892a826ecf26379e8fd875c1c9bb09b4eb8d87b5af380ff",
+          "capture_trace_sha256": "e355507bb5afb493e8fa8c557875edd9b6cc9765d956e966781138753d1979c3",
+          "captured_from_authenticated_checkpoint": "route103_wild_command",
+          "continuous_chain_receipt_sha256": "06e722197facdd26a518777c090f4b427cfbf2afb8a6429c2fa44bede97b12db",
+          "round_trip": "visually verified SCRATCH/GROWL move surface; pinned one-load chain has core_load_count 1 and intermediate_reload_count 0",
+          "snapshot_frame_number": 332
+        }
+      },
+      "id": "route103_wild_turn1_move_menu",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_wild_turn1_move_menu",
+      "source": {
+        "initial_rgb_sha256": "b72a4c6b3b162128dda958b2dd00b6204c13b3758de37cb138d0bb3ad094dfc6",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 7,
+          "player_y": 6
+        },
+        "state_sha256": "fae858d3a5e270ec7cd3f2abd08813f634baf5fc8c8f172c7bef9aa40eae9856"
+      },
+      "source_split": "authenticated genuine Route 103 wild first move-selection phase",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Choose SCRATCH from the genuine move-selection state and capture the fully printed player move text.",
+        "provenance": {
+          "capture_tape_sha256": "c8c429d274f38dd90baf449a8dd9d90be5790d554e6fc7a443511f010d055290",
+          "capture_trace_sha256": "0b757ab19521d26a02c2ecbcc8c401522c00793b41cdf3e28294846c2227216b",
+          "captured_from_authenticated_checkpoint": "route103_wild_turn1_move_menu",
+          "continuous_chain_receipt_sha256": "06e722197facdd26a518777c090f4b427cfbf2afb8a6429c2fa44bede97b12db",
+          "round_trip": "visually verified TORCHIC used SCRATCH! and battle-memory PP 31",
+          "snapshot_frame_number": 453
+        }
+      },
+      "id": "route103_wild_turn1_scratch_text",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_wild_turn1_scratch_text",
+      "source": {
+        "initial_rgb_sha256": "e01b14447118e80fedd3c6c936becd78652887bb7d2dd91838afc7ac34936d59",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 7,
+          "player_y": 6
+        },
+        "state_sha256": "83e69c474e0dee82ecb3dc20f8d702c23085e5fc1b96fe8d054bea5986f2607c"
+      },
+      "source_split": "authenticated genuine Route 103 wild first Scratch result text",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Acknowledge the genuine Scratch text and capture the fully printed opposing Tackle text.",
+        "provenance": {
+          "capture_tape_sha256": "f59cf726b9380d3ff8cd2e6104a17f03fadd27338acc2717d01aa80d4c5674a7",
+          "capture_trace_sha256": "60d4ea1d9d8e0a6ee8a43a084a6bc14df26f832af93ab10c8d6b3996618a3c7e",
+          "captured_from_authenticated_checkpoint": "route103_wild_turn1_scratch_text",
+          "continuous_chain_receipt_sha256": "06e722197facdd26a518777c090f4b427cfbf2afb8a6429c2fa44bede97b12db",
+          "round_trip": "visually verified Wild POOCHYENA used TACKLE! and battle-memory enemy HP 7",
+          "snapshot_frame_number": 574
+        }
+      },
+      "id": "route103_wild_turn1_tackle_text",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_wild_turn1_tackle_text",
+      "source": {
+        "initial_rgb_sha256": "504341de354afd13e44da2bd4ac928cb51f0a72a854c7e9ad395093ffbecfa74",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 7,
+          "player_y": 6
+        },
+        "state_sha256": "b65a22f6a9e622d6599f266c43465c95586f81774ae337a3c148cdea5c1b8016"
+      },
+      "source_split": "authenticated genuine Route 103 wild first Tackle result text",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Acknowledge the genuine Tackle text and capture the next settled command surface.",
+        "provenance": {
+          "capture_tape_sha256": "109745ab241de9d738a80a5e92e5b19e64a52c045181e51156ace3642a2ab429",
+          "capture_trace_sha256": "903dc886e40e5b67822e733b8a56cbc4f4051ea9a457dd8cf314fb78817f0267",
+          "captured_from_authenticated_checkpoint": "route103_wild_turn1_tackle_text",
+          "continuous_chain_receipt_sha256": "06e722197facdd26a518777c090f4b427cfbf2afb8a6429c2fa44bede97b12db",
+          "round_trip": "visually verified What will TORCHIC do? command surface and battle-memory HP 13/7",
+          "snapshot_frame_number": 695
+        }
+      },
+      "id": "route103_wild_turn1_command_return",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_wild_turn1_command_return",
+      "source": {
+        "initial_rgb_sha256": "d5048d70bacd191a008bf85da93c8f46d55ae91b8bddc35bcd3089c92389645c",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 7,
+          "player_y": 6
+        },
+        "state_sha256": "7ec4224978a04e9241874ac731946b416867233507debeaf56131dd81f67e438"
+      },
+      "source_split": "authenticated genuine Route 103 wild first command return",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore the authenticated Route 103 command return after turn one, select FIGHT\u2192SCRATCH, acknowledge both native move texts, and checkpoint the next command return.",
+        "provenance": {
+          "capture_tape_sha256": "c4e56f5c2a7d672beb90c8f145c71c9b4016919676ec04e586eb85ba8ce5eab8",
+          "capture_trace_sha256": "944ee93de937ab1668c899be6102007aff8a7a8209e9683eb027d64887f3cccb",
+          "captured_from_authenticated_checkpoint": "route103_wild_turn1_command_return",
+          "receipt_sha256": "53eaa371f51e6f48a3aecf773177adb1164cb7b85e25bb2d02ad731b90146c23",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 394
+        }
+      },
+      "id": "route103_wild_turn2_command_return",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_wild_turn2_command_return",
+      "source": {
+        "initial_rgb_sha256": "e95ead41225b456cd0be4c524d1b28880572774318c401f75133ecfb78e0c5ef",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 7,
+          "player_y": 6
+        },
+        "state_sha256": "387847918b6579ec1cfe402fa0062d2eee2ddd03d51c42ad3b10390cb5d6ef21"
+      },
+      "source_split": "capture-required Route 103 wild command menu after second full Scratch/Tackle turn",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore the authenticated Route 103 command return after two Scratch turns, select the third deterministic SCRATCH, acknowledge the native faint/experience sequence, and classify the actual terminal owner.",
+        "provenance": {
+          "capture_tape_sha256": "65806c50f7933d745b40c4ae85b8b4119f10b6d2bc2db5cbf6f10a5a81ce73ba",
+          "capture_trace_sha256": "eebd76a0cebe60bdc8e1238dfcdba99b225169871601a74322162dcfaf9c8145",
+          "captured_from_authenticated_checkpoint": "route103_wild_turn2_command_return",
+          "receipt_sha256": "b5de757fcd4166fbf75c2133ae223e579db0169c982c484df418d26c7206f287",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 574
+        }
+      },
+      "id": "route103_wild_victory_outcome",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_wild_victory_outcome",
+      "source": {
+        "initial_rgb_sha256": "616ef461aab42cd6782d32d1ff1253e127879d074fbb63dcf64c5ddc6eff952a",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 7,
+          "player_y": 6
+        },
+        "state_sha256": "9f331ed872e4483417c7aff79aafa0e53016536606f4787a25aff3fe375c8934"
+      },
+      "source_split": "capture-required Route 103 Poochyena defeat outcome",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore the authenticated Route 103 Poochyena defeat text phase, acknowledge its final native result message, and require the stable field callbacks after fresh reload.",
+        "provenance": {
+          "capture_tape_sha256": "dca9e36da5465542f1b9ae4af4c7b70082652f95b8fb009e1f9bddb8c5253d93",
+          "capture_trace_sha256": "22f75d948b3514bf10fe382be24f47be7ae5970679f9f953c456abaf133ee7f6",
+          "captured_from_authenticated_checkpoint": "route103_wild_victory_outcome",
+          "receipt_sha256": "e5605d9b88b763aada3445d570be1eebc981fbfd96d9c707e9daa89eef13ea10",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 905
+        }
+      },
+      "id": "route103_wild_field_resume",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_wild_field_resume",
+      "source": {
+        "initial_rgb_sha256": "cbd75afbb5ee4f93616c562dfae82b878370848985d13763d1c1c79d6b99b2a7",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 7,
+          "player_y": 6
+        },
+        "state_sha256": "d0e5ff1981965bffd1a84479e5e1d77b3796d63ef1e90e826c4d623a3c6ccc9d"
+      },
+      "source_split": "capture-required Route 103 field resumption after defeating deterministic Poochyena",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore authenticated Route 103 field resumption after Poochyena, replay the pinned live-discovered L2/U2/R5 corridor, and require the stable field tile immediately south of May.",
+        "provenance": {
+          "capture_tape_sha256": "b61c356c9c3546d7be555425ccccb2051bc48bdbafb182fb14a83e082d54fc23",
+          "capture_trace_sha256": "b7feaca14f5afe136ccbafb2c969f34e5ba6c4bdf928655830ce9e967621ee03",
+          "captured_from_authenticated_checkpoint": "route103_wild_field_resume",
+          "receipt_sha256": "a54078236f0a2e6005ec5950119166b7085e1b2ebf96662dd4e9e62633c3e522",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 804
+        }
+      },
+      "id": "route103_rival_adjacent",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_rival_adjacent",
+      "source": {
+        "initial_rgb_sha256": "4c39c3140b3f4722b41c73920e05a196ead58cd97ddc86091ef5492668b10ada",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 10,
+          "player_y": 4
+        },
+        "state_sha256": "38d6d7b3f85f762c6f48d1d4c1b0854afe06f8a1b4170397ec615897052e33b0"
+      },
+      "source_split": "capture-required Route 103 May southern adjacency",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore authenticated Route 103 May southern adjacency, issue an Up pulse into the rival object, and classify the native object-script/dialogue handoff before battle promotion.",
+        "provenance": {
+          "capture_tape_sha256": "758f1240542b2b709b24e545a5cad0d520d7684a1f8da921fdba3c99dc4f9844",
+          "capture_trace_sha256": "3c9b1c67f4f82cca65e9b0f43eeb9f7580f37c7fd0741a651d7d1b28ed0931a9",
+          "captured_from_authenticated_checkpoint": "route103_rival_adjacent",
+          "receipt_sha256": "bb2c743c0438a69bd9a97427cd8e642ab83265ad57a0dc099a17199d05f8df59",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 616
+        }
+      },
+      "id": "route103_rival_trigger_outcome",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_rival_trigger_outcome",
+      "source": {
+        "initial_rgb_sha256": "534900f4dcd7e2d728bd60efd8bdf9365049dc811a831751204946915b6fdfbf",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 10,
+          "player_y": 4
+        },
+        "state_sha256": "a810d3e21ad67d46776a1b3539c62c3e217ca08a77269e57cab50e1582b8073b"
+      },
+      "source_split": "capture-required Route 103 May trigger outcome",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore authenticated Route 103 May adjacency after the facing-Up collision edge, activate the object with released A, and classify the native dialogue/battle script handoff.",
+        "provenance": {
+          "capture_tape_sha256": "9f321efee9619a827baa087e170292382a212c417843e87d80879c47a7d3b17f",
+          "capture_trace_sha256": "3cdfc8436971b48ed941d20dc723101b950668c5d6cd2337a547f31968dc28ea",
+          "captured_from_authenticated_checkpoint": "route103_rival_trigger_outcome",
+          "receipt_sha256": "799f3fb8c50fa142d90d34e0b40f95c5d7386147e6357e01e0732ece0cd00de2",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 601
+        }
+      },
+      "id": "route103_rival_talk_outcome",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_rival_talk_outcome",
+      "source": {
+        "initial_rgb_sha256": "4f1398f3cef93c43a88528fcf5c458d1eef08ce7c5a3efab3f073104652eeaa5",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 10,
+          "player_y": 4
+        },
+        "state_sha256": "ad1a35bf850ba9dbdc0b278732a5ede91b88d719d43f70e65d966fad9401fa1e"
+      },
+      "source_split": "capture-required Route 103 May object activation outcome",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Acknowledge authenticated Route 103 May first dialogue, wait through face/exclamation movement, and preserve the native second battle-invitation dialogue.",
+        "provenance": {
+          "capture_tape_sha256": "8d07e1dfb97b949ce3a8ca2691d6bb129d68bf9cd1554959686e211aa983bbeb",
+          "capture_trace_sha256": "b426ae3ebeb9ac9ffd8292685f9b3bb2fd76527b880c8cceef6502e8199fbcd0",
+          "captured_from_authenticated_checkpoint": "route103_rival_talk_outcome",
+          "receipt_sha256": "3c6e357c163348edbd207b1952303b93dc2b83f985cdc385c85879a29dad3c57",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 601
+        }
+      },
+      "id": "route103_rival_battle_invitation",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_rival_battle_invitation",
+      "source": {
+        "initial_rgb_sha256": "36630e0d594337ef74b623c62ddc5dec44c699947113e414242e6b5e60dc9549",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 10,
+          "player_y": 4
+        },
+        "state_sha256": "addd6b1c5223e45f683eb9b7fbc8c42c1fab5bab9a94291c1fdf8028dc563efe"
+      },
+      "source_split": "capture-required Route 103 May second dialogue before trainer battle",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Acknowledge authenticated Route 103 May battle invitation and require the source trainer-battle callbacks after native transition.",
+        "provenance": {
+          "capture_tape_sha256": "1984a15bfdbf1daa9af19e0f29a85f7185ba491e8c3ff092f8d9ec94b25c70fb",
+          "capture_trace_sha256": "ff3fd639f37bd7179bd7b0a6d0c91a7644f93aca6784bd1bdd3c0b664720eca5",
+          "captured_from_authenticated_checkpoint": "route103_rival_battle_invitation",
+          "receipt_sha256": "c5c7f9b9f4ff5be95ea0f146e8376654b5fcda82182e855bc4f15205c7c1fc5a",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 1144
+        }
+      },
+      "id": "route103_rival_battle_entry",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_rival_battle_entry",
+      "source": {
+        "initial_rgb_sha256": "c521792d60b3d630aacdf8fd3e2255b59b80eb41e29ad472ee25e3969248cd95",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 10,
+          "player_y": 4
+        },
+        "state_sha256": "6c0a197f119870f7c4c37f4477fda3cbe0b0b96fd449353cfde6eab902f492c0"
+      },
+      "source_split": "capture-required Route 103 May trainer battle entry",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore authenticated Route 103 May trainer-battle entry, acknowledge exactly one native intro phase, and retain the next phase for source classification.",
+        "provenance": {
+          "capture_tape_sha256": "28338f4f48ab5fe232b2ade483abdc738a7afaea04b6e00236d882a8b16b2cf8",
+          "capture_trace_sha256": "d3491e562f206e65b5095cce295949bc5b54ed44609e939727894a2c7961e191",
+          "captured_from_authenticated_checkpoint": "route103_rival_battle_entry",
+          "receipt_sha256": "79a719828fac427b50f80c73fa91d2b0f1ced9c242a2f283e8dd2722ae3ed57e",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 181
+        }
+      },
+      "id": "route103_rival_battle_intro_phase2",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_rival_battle_intro_phase2",
+      "source": {
+        "initial_rgb_sha256": "248c330109010020a7156baefe388a9bfc3e2366947f59721a60c93346d5c029",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 10,
+          "player_y": 4
+        },
+        "state_sha256": "33d5882d40d012affd9a311c9530ffe6b6a25f629fd11b80dc442a24b2112e51"
+      },
+      "source_split": "capture-required Route 103 May trainer battle intro phase two",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore authenticated Route 103 May trainer intro phase two, acknowledge one native intro phase, and require a stable battle command callback boundary.",
+        "provenance": {
+          "capture_tape_sha256": "28338f4f48ab5fe232b2ade483abdc738a7afaea04b6e00236d882a8b16b2cf8",
+          "capture_trace_sha256": "7ea08ddbc3f310e25e4628dc8c8eba0ac50b90346d7e65c76007ee0459457a36",
+          "captured_from_authenticated_checkpoint": "route103_rival_battle_intro_phase2",
+          "receipt_sha256": "bf4c8207e680f8892b0e005951c7da253a8a336bb403064df414af774a06b735",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 181
+        }
+      },
+      "id": "route103_rival_battle_command",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_rival_battle_command",
+      "source": {
+        "initial_rgb_sha256": "6ef8a89ae57b92db58ac29ad145a1f70a38e8308b888253976c2c863ece061b1",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 10,
+          "player_y": 4
+        },
+        "state_sha256": "484766deb26c11c2494539354833ba5d1d9056eec9d316ec77579f89ff5bc278"
+      },
+      "source_split": "capture-required Route 103 May trainer battle command boundary",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore authenticated Route 103 May battle command; choose FIGHT\u2192SCRATCH and acknowledge Mudkip's Tackle to the next native command boundary. HP is bound by the pinned direct battle-memory probe.",
+        "provenance": {
+          "capture_tape_sha256": "dbf60f32d8d0d91729f91bbd972bf042af7baef94c3ca6e4866eab20b7d66da2",
+          "capture_trace_sha256": "541e59f359106eff35ed2200dc41631bffed7f47bd451b0bffcb9299ff0a1f98",
+          "captured_from_authenticated_checkpoint": "route103_rival_battle_command",
+          "receipt_sha256": "3f2ce89f7da82994fd9ba3742c2e0ea873cedd8db0e54b7cdb5c177665390dde",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 543
+        }
+      },
+      "id": "route103_may_turn1_command_return",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_may_turn1_command_return",
+      "source": {
+        "initial_rgb_sha256": "3bcc6fdbd683a829b1d278435d72ee8b7d9ced1acebd70cb367bd1bdc4337cc9",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 10,
+          "player_y": 4
+        },
+        "state_sha256": "2acac71f69355ab40f23b8c95d4b68c76e863fa133401aa9ffe0c05d7f0cdfee"
+      },
+      "source_split": "QUARANTINED staged May branch: checkpoint reload changed subsequent battle cadence/RNG; retain receipt only, do not derive descendants",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "procedure": "Execute authenticated May Scratch turn two to command return; bind HP via pinned battle-memory sidecar.",
+        "provenance": {
+          "capture_tape_sha256": "dbf60f32d8d0d91729f91bbd972bf042af7baef94c3ca6e4866eab20b7d66da2",
+          "capture_trace_sha256": "0461fae00bd66a518a1a2c7de631ed11e13b0bfb7d71f13f5f92251d34efa063",
+          "captured_from_authenticated_checkpoint": "route103_may_turn1_command_return",
+          "receipt_sha256": "3da85e67203630b3798aa0726ba2a22e38e7cbaac7d3a4c4224a7a047556a1ec",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 543
+        }
+      },
+      "id": "route103_may_turn2_command_return",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_may_turn2_command_return",
+      "source": {
+        "initial_rgb_sha256": "944a6fea61ae549621a9a5acfedbf22ec00fc3bcce8e05ad7a72a7069862781c",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 10,
+          "player_y": 4
+        },
+        "state_sha256": "51f07d2f815626ac956e45bfcc9ffad0970cc9a3083b70b704f2cb3c85e89c82"
+      },
+      "source_split": "QUARANTINED staged May branch: stale turn-one HP annotation and checkpoint reload divergence; retain receipt only",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "procedure": "Execute authenticated May Scratch turn three to command return; bind HP via pinned battle-memory sidecar.",
+        "provenance": {
+          "capture_tape_sha256": "896d0852b401e19c97d68b3606cade34880bd888e7d8795fedbb32583e83b00f",
+          "capture_trace_sha256": "e22e1c68c0f60e0a006ebe35dc7125f6aa88567b0e7c89b772595b8ab4a4c989",
+          "captured_from_authenticated_checkpoint": "route103_may_turn2_command_return",
+          "receipt_sha256": "4b00f316f988f39b8ab435fd82b582b18ab6c3c89b7ada6685745ef857aaa685",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 724
+        }
+      },
+      "id": "route103_may_turn3_command_return",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_may_turn3_command_return",
+      "source": {
+        "initial_rgb_sha256": "e213941ed05e19f65421896db093df268059f0c372b79b37f395bba54e52a73e",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 10,
+          "player_y": 4
+        },
+        "state_sha256": "b60581141d66f16d0c8d5250796ca02d9c99a37cbb67391d2ecb91fbf0b8224e"
+      },
+      "source_split": "QUARANTINED staged May branch: chained reload trajectory leads to loss/whiteout; retain receipt only",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "procedure": "Execute authenticated fourth Scratch KO and bounded victory/EXP edges; classify terminal ownership and memory.",
+        "provenance": {
+          "capture_tape_sha256": "156ee5909a8160a8975fce749de6622d1b41a2744b0dd22bbed4dfd4952cb69c",
+          "capture_trace_sha256": "a84a0f9f5d3dc3b83b45f38529b704d280faa6c119af40564122a26872cd2513",
+          "captured_from_authenticated_checkpoint": "route103_may_turn3_command_return",
+          "receipt_sha256": "f96394351dd671d58153d1eb03cef5e4d35f333403443f2935f4aeb2d8c652c4",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 1025
+        }
+      },
+      "id": "route103_may_victory_outcome",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_may_victory_outcome",
+      "source": {
+        "initial_rgb_sha256": "a8099a38c6fafdd215f958b7d00b5813ff3a4af89ddb5985ed4100e2142282c1",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 10,
+          "player_y": 4
+        },
+        "state_sha256": "13842da2196088e2e066b0bc3b7cdfe540a9f0a2624b665a4210d6327c0097df"
+      },
+      "source_split": "QUARANTINED MISLABEL: direct pinned replay proves this is a loss/whiteout precursor; rival defeat flag false",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "procedure": "Replay all 15 proven May battle A edges continuously from original authenticated command state; reject whiteout by Route103 position and classify final owner before departure.",
+        "provenance": {
+          "capture_tape_sha256": "76a48386d89719fd256161f8442cc09670fba61fc1354d28432f2e3678e4af93",
+          "capture_trace_sha256": "7f86e6688ab477cc8573da612080af19670e4a5ea9347e4d2e1d03aa137aac71",
+          "captured_from_authenticated_checkpoint": "route103_rival_battle_command",
+          "receipt_sha256": "1a07ddc106f9226c0890ddec40fb7c41b6a9cf404fdb0959b391e0e2b7bed4ec",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 2835
+        }
+      },
+      "id": "route103_may_continuous_win_outcome",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_may_continuous_win_outcome",
+      "source": {
+        "initial_rgb_sha256": "3ac117ec71da74a5ae09d6d24a852c9b2924e4d4c071bf1c18eaa7242f6650e9",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 10,
+          "player_y": 4
+        },
+        "state_sha256": "0551ffad60bd3ab5d0d50b48721bccdf669177dd39e239899ca3ee01d7f74467"
+      },
+      "source_split": "continuous no-reload May win outcome",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "continuous_battle_trace_output": {
+          "input_state_sha256": "484766deb26c11c2494539354833ba5d1d9056eec9d316ec77579f89ff5bc278",
+          "intermediate_reload_count": 0,
+          "marker_count": 74,
+          "receipt_path": "/Users/joshuapurtell/Documents/Codex/2026-07-30/emerald-gamebench-audit/work/emerald_oracle/v8_route103_rival_victory_rehabilitation_20260730/trace.receipt.json",
+          "receipt_sha256": "4902deb0759086b5e6f3f0f1df4a708aac45d00aa840fec34bf99d04ec8ee59b",
+          "sample_count": 6458,
+          "source_checkpoint": "route103_rival_battle_command",
+          "status": "validated_continuous",
+          "tape_sha256": "83393ea75d44b3ca3c85d2577ff7f60a4d2f6bf1267cd5b52df5a6aa8d2ee496",
+          "terminal_state_sha256": "983796dc12057b962edafa07a1daa245612ff8dbd8259139ac4686a12fa0dbd7",
+          "vblank_count": 6457
+        },
+        "procedure": "Direct pinned-image continuous battle trace: load authenticated May command once, execute gated Growl+Scratch win without intermediate reloads, require Mudkip HP0, Torchic Lv7 alive, Route103 field callbacks, rival-defeat/hide flags, and return-story vars before one terminal snapshot.",
+        "provenance": {
+          "capture_tape_sha256": "83393ea75d44b3ca3c85d2577ff7f60a4d2f6bf1267cd5b52df5a6aa8d2ee496",
+          "capture_trace_sha256": "56a24bc066dfcc9c4c1cc1b25502d1ecb6428a50e14787a2889184f0c3806dc7",
+          "captured_from_authenticated_checkpoint": "route103_rival_battle_command",
+          "receipt_sha256": "4902deb0759086b5e6f3f0f1df4a708aac45d00aa840fec34bf99d04ec8ee59b",
+          "round_trip": "terminal raw state loaded successfully through pinned v8 adapter; field callbacks and Route103 position re-observed",
+          "snapshot_frame_number": 6457
+        }
+      },
+      "id": "route103_rival_victory_field",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_rival_victory_field",
+      "source": {
+        "initial_rgb_sha256": "0ebfa1e36918ed6da9dc7d8967685266d9d2ee346fdfa25217feb6dbf4b1dd08",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 10,
+          "player_y": 4
+        },
+        "state_sha256": "983796dc12057b962edafa07a1daa245612ff8dbd8259139ac4686a12fa0dbd7"
+      },
+      "source_split": "canonical continuous May victory field: Torchic Lv7 8/23, rival defeated, return story unlocked",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore canonical continuous May-victory field and replay live-validated 35-edge reverse corridor to stable Route103 south exit.",
+        "provenance": {
+          "capture_tape_sha256": "c80454a066399b68350d9ea6cedd7e6c484a37e133418de16040ae53d9df84d1",
+          "capture_trace_sha256": "c2a64cdadd167596d994e411c30dd2c8f7976d91237088e84ee5ed56c65de5d0",
+          "captured_from_authenticated_checkpoint": "route103_rival_victory_field",
+          "receipt_sha256": "cf468159662096797fae9648f609f9786aaabb792f998795e98726203f631479",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 2780
+        }
+      },
+      "id": "route103_post_rival_south_exit",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_post_rival_south_exit",
+      "source": {
+        "initial_rgb_sha256": "390cc168cf6c6a7eb593c23ff2193952cbfee6e5df085df04373a4129011e93e",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 10,
+          "player_y": 21
+        },
+        "state_sha256": "6ecd15cc68e66775cd48e6a4b237ae8d9acdaa720a9e4abf5faae2c0ed331801"
+      },
+      "source_split": "post-rival Route103 south exit",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "procedure": "Cross authenticated post-rival Route103 south boundary into stable Oldale field.",
+        "provenance": {
+          "capture_tape_sha256": "25a029a4d27cc803308d1e85605fa2db577f216736709d9c179672ce79f0ccdf",
+          "capture_trace_sha256": "2aebbd9a62a660430b765df01aa752df8a55d18eeb2d365503da36198237af44",
+          "captured_from_authenticated_checkpoint": "route103_post_rival_south_exit",
+          "receipt_sha256": "18ab5556d7c8145e4f77039e07fe89801607b18a67b1ee2ec5304c514b8b3cea",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 196
+        }
+      },
+      "id": "oldale_post_rival_north_entry",
+      "normalization": {
+        "map_names": {
+          "0:10": "oldale"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_oldale_post_rival_north_entry",
+      "source": {
+        "initial_rgb_sha256": "48a423104b88c2e2842e5e9a13bc87c690a3d8b58df81d305f86a68826785078",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 10,
+          "player_x": 10,
+          "player_y": 0
+        },
+        "state_sha256": "7de8f38b5574d8c0aa89c20155ea2b1fda57b7df1f6dc13dd4e00f3e889ff04b"
+      },
+      "source_split": "Oldale north entry after May victory",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "procedure": "Replay post-rival Oldale D10/R1/D8 to stable north adjacency of blocking Oldale rival.",
+        "provenance": {
+          "capture_tape_sha256": "3a9b5b892fe6f161dccbb1ff80e7fe171f3e68117062b8879bca2e179935b8c8",
+          "capture_trace_sha256": "6db941674d4a404932e8485a59979b2f7613f8f44170bfa4f7678a1f589e0e26",
+          "captured_from_authenticated_checkpoint": "oldale_post_rival_north_entry",
+          "receipt_sha256": "24bc842a448d586fab72c59a6133debc5fbccc753e2ce8b4aa4ebded7b0c846e",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 1564
+        }
+      },
+      "id": "oldale_post_rival_adjacent",
+      "normalization": {
+        "map_names": {
+          "0:10": "oldale"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_oldale_post_rival_adjacent",
+      "source": {
+        "initial_rgb_sha256": "26417322cf768e86bc5c43e9914d1a3dbafe03d94f5e1f032589d0043ce033b4",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 10,
+          "player_x": 11,
+          "player_y": 18
+        },
+        "state_sha256": "894ca1738bddff18a28b20c2adba5b6142d1e5f0f800b0b234d3ea1d6198a862"
+      },
+      "source_split": "Oldale rival north adjacency after May victory",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "procedure": "Face and activate blocking Oldale rival from authenticated north adjacency; preserve native return dialogue/script boundary.",
+        "provenance": {
+          "capture_tape_sha256": "0e01991fe6b6affb425a60327f9093eecd87c82be28fc6e4d14585a025a5e875",
+          "capture_trace_sha256": "71e1cc8fa144e8d508129fc232515c33b958ba37583f7621a8c6f3c9674858f3",
+          "captured_from_authenticated_checkpoint": "oldale_post_rival_adjacent",
+          "receipt_sha256": "e2f2be158ba4f4e9537055170b2c6ee06ef4ad32d2b5fd23266976157772b0f4",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 677
+        }
+      },
+      "id": "oldale_post_rival_dialogue",
+      "normalization": {
+        "map_names": {
+          "0:10": "oldale"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_oldale_post_rival_dialogue",
+      "source": {
+        "initial_rgb_sha256": "f5bc56dff084824bf58478978ffc8cdd5cf362384fb2e4d8aeadeaa88e3f5454",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 10,
+          "player_x": 11,
+          "player_y": 18
+        },
+        "state_sha256": "5ef622d5fc8d7ab590035d2cad0451ad4a5e7e46506aab7b1ec91f6e5915a974"
+      },
+      "source_split": "Oldale return rival dialogue",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "procedure": "Acknowledge Oldale May return message and settle through scripted rival exit/removal to stable field.",
+        "provenance": {
+          "capture_tape_sha256": "2814ad5c1115d47e5db0d5d5a56264f94bc3b4d7be6e5ec1eba283b248194f88",
+          "capture_trace_sha256": "11e07032c50a273df289ba3ba36b8b6299aa46c17ef4d898d76524a1de224790",
+          "captured_from_authenticated_checkpoint": "oldale_post_rival_dialogue",
+          "receipt_sha256": "159e472218f2d04ad23a55b1433a57b6844ae5d6cf0235cb25c6f5f94d2bd7b6",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 601
+        }
+      },
+      "id": "oldale_post_rival_departure",
+      "normalization": {
+        "map_names": {
+          "0:10": "oldale"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_oldale_post_rival_departure",
+      "source": {
+        "initial_rgb_sha256": "66ce818a9565dc0172b497f8def4c503e0ce34725fe7b27a05de0a8704b13ae3",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 10,
+          "player_x": 11,
+          "player_y": 18
+        },
+        "state_sha256": "8913456c87a7a42d993b7f63b9c8dddbbc12e64d9b7035b1b8364edd4eb30bd7"
+      },
+      "source_split": "Oldale rival departure IN PROGRESS (active script wait); historical ID retained, do not treat as settled field",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "procedure": "Continue authenticated Oldale departure-in-progress without input until rival removal and idle field script status are observed.",
+        "provenance": {
+          "capture_tape_sha256": "5bc4fb2f47781e663803f841b95f02b44a4eb6bf62037994d6c368410a6a58fa",
+          "capture_trace_sha256": "b3e4d294efae6f5c07aee1a5c0d411bc5e84f0fa8a5ce49bc5fb5301f76921ab",
+          "captured_from_authenticated_checkpoint": "oldale_post_rival_departure",
+          "receipt_sha256": "0e3bfe707164afabaaf108241faec2847cfa5ee07586b30223331a45de6d8f2d",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 1201
+        }
+      },
+      "id": "oldale_post_rival_departure_settled",
+      "normalization": {
+        "map_names": {
+          "0:10": "oldale"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_oldale_post_rival_departure_settled",
+      "source": {
+        "initial_rgb_sha256": "0976cb4eb947148de9c51204e47fe5a9577a6cfde921abae60b1bae68d580c32",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 10,
+          "player_x": 11,
+          "player_y": 18
+        },
+        "state_sha256": "e50ea12e71eae5f88fbf5f74352132f6a37b7527277e1c4cdcbf543a5de62f77"
+      },
+      "source_split": "settled Oldale field after rival removal",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "procedure": "Move south after settled Oldale rival departure and cross connection into stable Route101 north field.",
+        "provenance": {
+          "capture_tape_sha256": "e35c6db69377b2f7e72d987e0d05a76feab4a61e42db97682400fb08c89776ac",
+          "capture_trace_sha256": "d54a341e2b53a39dc8924e225d6394bd5a944d8d36d6cddd351b5c57daf5192f",
+          "captured_from_authenticated_checkpoint": "oldale_post_rival_departure_settled",
+          "receipt_sha256": "26481d49b1e31590bb68671394251afa30a145bf865b4ba17dd41ef937782d0e",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 272
+        }
+      },
+      "id": "route101_post_rival_north_entry",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_post_rival_north_entry",
+      "source": {
+        "initial_rgb_sha256": "ba5d9cb81ab340651fa14a759702e9d3e364b8b564c3858907335929fd3f6f7f",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 11,
+          "player_y": 0
+        },
+        "state_sha256": "e7df879eb415f2272b0e5e9fcd8bab89a8bc5c9b512ef217f3a13316f64360de"
+      },
+      "source_split": "Route101 north entry on return to Birch Lab",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "procedure": "Replay first 14 live Route101 return edges from authenticated north entry to deterministic wild encounter handoff at (15,10).",
+        "provenance": {
+          "capture_tape_sha256": "df9e5a23469e3ea0e50ec65536d1215a85726d6870b954493ac1b5312ffaf6c3",
+          "capture_trace_sha256": "3fcef5f372affce5e40e7ab5f173243a099a57eaaa48b16df1dd6ff614442ae8",
+          "captured_from_authenticated_checkpoint": "route101_post_rival_north_entry",
+          "receipt_sha256": "439d71a66484ee3e5184895a8c470f61f514d0c90aaea1973b266f9f65dd68e2",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 1304
+        }
+      },
+      "id": "route101_return_wild_entry",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_return_wild_entry",
+      "source": {
+        "initial_rgb_sha256": "e730dcdb5edb30efb742a3a93ca52c0137eb61940a2e13603fdf4e2983c898f6",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 15,
+          "player_y": 10
+        },
+        "state_sha256": "3c76dd695dfd0916a1f60eb67d41d725de00b15f1ae97954ea59e5944d5c1ab0"
+      },
+      "source_split": "second Route101 wild encounter on Birch Lab return",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "procedure": "Direct pinned-image continuous battle trace: load the authenticated second Route101 wild entry once, wait for the native entry prompt, select RUN from the true command surface, acknowledge its result, require unchanged Torchic HP/PP and Route101 field callbacks, then write one terminal snapshot.",
+        "provenance": {
+          "capture_tape_sha256": "9b08ab3d95654eeb40939fc4e5a756721ced3cccc1301c84051e84c3838fdffd",
+          "capture_trace_sha256": "d4a695e8da452c6a9e36a8135398a91244637c558ca6c39004ada12a702fdafb",
+          "captured_from_authenticated_checkpoint": "route101_return_wild_entry",
+          "round_trip": "terminal raw state loaded successfully through pinned v8 adapter; field callbacks and Route101 position re-observed",
+          "snapshot_frame_number": 1806
+        }
+      },
+      "id": "route101_return_wild_resume",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_return_wild_resume",
+      "source": {
+        "initial_rgb_sha256": "a3fd86609153b7c96a0f65e1d7096e6f55a59e0b5eb52e1a858cb42dba714f01",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 15,
+          "player_y": 10
+        },
+        "state_sha256": "0dfed5817309549adf4a73ae0dff227fbe7aef240a111376a74ebb4ed952067b"
+      },
+      "source_split": "canonical field resume after escaping the second Route101 return Poochyena; Torchic remains 8/23 with PP unchanged",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "procedure": "Replay the complete live-validated post-escape Route101 corridor from authenticated (15,10) to the stable south connection edge at (10,19), then save/reload and verify field ownership.",
+        "provenance": {
+          "capture_tape_sha256": "0503b41305062bffb767af4726044ec71568c0355540d4cd242eb5137423a581",
+          "capture_trace_sha256": "67431776dc11f01296aacf081c427d8256204fc0cafebac48520e675a2d8fe25",
+          "captured_from_authenticated_checkpoint": "route101_return_wild_resume",
+          "receipt_sha256": "69ed51ddff851ce57232983ef0d1356540a80fee21818f4bb208c1c917cee655",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 1760
+        }
+      },
+      "id": "route101_post_rival_south_edge",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route101_post_rival_south_edge",
+      "source": {
+        "initial_rgb_sha256": "81dd2868216b2dc26ac382f485b5f56c64b5e2d60ba9e8024ffacc64b3cb6b32",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 10,
+          "player_y": 19
+        },
+        "state_sha256": "5426d1ab7beb8bc0ce627c2ca7b49254dc642b9e5f525ded1c4a643f5f9b950c"
+      },
+      "source_split": "Route101 south connection edge after canonical return-battle escape",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "procedure": "Issue one released Down edge from authenticated Route101 (10,19), require the decomp-declared map connection to Littleroot (10,0), stable field callbacks, and idle scripts.",
+        "provenance": {
+          "capture_tape_sha256": "72ecacda08e2ff056d26a49a479bdcd8d15a7c7dfc00b3b3fcbf42eff8ce0dcc",
+          "capture_trace_sha256": "ed5af217c982bfb591bf25a3780953ef591f18fe4c3b067991bb00e23468caaf",
+          "captured_from_authenticated_checkpoint": "route101_post_rival_south_edge",
+          "receipt_sha256": "16503537963055b9ae9ec92fd300e500e4313f94a348c9ba4c0a32ab2e55ab21",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 316
+        }
+      },
+      "id": "littleroot_post_rival_north_entry",
+      "normalization": {
+        "map_names": {
+          "0:9": "littleroot"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_littleroot_post_rival_north_entry",
+      "source": {
+        "initial_rgb_sha256": "78343a2d23638e2b6bf74abf944c39799c1f52fe7c065b73fcc6bc4425744591",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 9,
+          "player_x": 10,
+          "player_y": 0
+        },
+        "state_sha256": "177fbb0e12b802669800dc261fd03bd3a20004e49ab640cbfe484cb447fef3c9"
+      },
+      "source_split": "Littleroot north entry after canonical Route101 return and escape",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "procedure": "Replay the pret/pokeemerald map.bin path Down17/Left3 to exterior (7,17), then Up into the declared Birch Lab warp and require map 1:4 (6,5).",
+        "provenance": {
+          "capture_tape_sha256": "7064d14882060324615f4feec487b2111538e7aa235985a350a419f646f370a2",
+          "capture_trace_sha256": "dfa813c58a3ea112955626ce97d05d17ce74de0265caed0cd1b6567291a6623b",
+          "captured_from_authenticated_checkpoint": "littleroot_post_rival_north_entry",
+          "receipt_sha256": "f5be603f050493f7eff8013c12b5c3fe82bc8f4d7811263677c247202edfa979",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 1836
+        }
+      },
+      "id": "birch_lab_post_rival_entry",
+      "normalization": {
+        "map_names": {
+          "1:4": "birch_lab"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_birch_lab_post_rival_entry",
+      "source": {
+        "initial_rgb_sha256": "834747455ecd143782719e372a1e8d414199534af08cb1cb181a9ab4f1e7369b",
+        "initial_state": {
+          "map_group": 1,
+          "map_number": 4,
+          "player_x": 6,
+          "player_y": 5
+        },
+        "state_sha256": "61bcd6cd7ee6e18dafaebda2e0d89987a26a3d65c615c9afdca75a4eb9ef3f4c"
+      },
+      "source_split": "Birch Lab entry after canonical rival victory and Route101 return",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "procedure": "Advance the authenticated active Lab return cutscene with measured 300-VBlank printer/fanfare settles and released A edges until both native Pok\u00e9dex receipt flags are true.",
+        "provenance": {
+          "capture_tape_sha256": "c7427f72d4932aedc6d09ebc0de6d118fb47ce127ac69a85565e0684cb39bc39",
+          "capture_trace_sha256": "351a04a23be14f05804756e9f140fb1fe8cee79a8cd2273397a3f96c52a35791",
+          "captured_from_authenticated_checkpoint": "birch_lab_post_rival_entry",
+          "receipt_sha256": "77b340b9365c076a1f8d9c8b59fea4b5b44f1278f43dd5baaf578ca06e387612",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 2407
+        }
+      },
+      "id": "birch_lab_pokedex_received",
+      "normalization": {
+        "map_names": {
+          "1:4": "birch_lab"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_birch_lab_pokedex_received",
+      "source": {
+        "initial_rgb_sha256": "da0c94e2c2e4d952ba1ad6a22d2875ea9639eae3d299b046a434877c6c28c947",
+        "initial_state": {
+          "map_group": 1,
+          "map_number": 4,
+          "player_x": 6,
+          "player_y": 5
+        },
+        "state_sha256": "fdbb67562bbace9932991c318dd39ff6651786b613a476a48289aa2bb83a4bf3"
+      },
+      "source_split": "native Pok\u00e9dex receipt milestone; Lab handoff script remains active",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "procedure": "Advance eight measured A cycles from authenticated Pok\u00e9dex receipt to the active rival gift/fanfare subroutine without claiming inventory receipt.",
+        "provenance": {
+          "capture_tape_sha256": "b6767174db7ef37cf6bc58a6d53290bef5c083d3c4f956f494342307754ab958",
+          "capture_trace_sha256": "ca9b75f35d4cf34c670d1478e16294b652a0f1db73a00ff2c0096f99be31d017",
+          "captured_from_authenticated_checkpoint": "birch_lab_pokedex_received",
+          "receipt_sha256": "e0929745447d3172492e23dc8b983eeb14fc649d163cf30e9639c320931a7cc9",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 2708
+        }
+      },
+      "id": "birch_lab_pokeball_gift_phase",
+      "normalization": {
+        "map_names": {
+          "1:4": "birch_lab"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_birch_lab_pokeball_gift_phase",
+      "source": {
+        "initial_rgb_sha256": "115e981300edb7cc8b9fff51d398687d1fb5ddd7db35a1e3c6775b0d82941af3",
+        "initial_state": {
+          "map_group": 1,
+          "map_number": 4,
+          "player_x": 6,
+          "player_y": 5
+        },
+        "state_sha256": "ce91da0331db3551fa975fc6d258610d92e35984145a35f40f782e050af0cd44"
+      },
+      "source_split": "active Pok\u00e9 Ball gift/fanfare phase; inventory receipt not yet asserted",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "procedure": "Advance exactly two measured released A cycles from active rival gift phase; inspect direct decrypted Pok\u00e9 Ball pocket before semantic promotion.",
+        "provenance": {
+          "capture_tape_sha256": "e795827dc17cb0d8ad418e2bf90215d811b8a63d3bb665e64719bda2056701a2",
+          "capture_trace_sha256": "a329902ed46aea515f7abf59ddc570d905a8c0c66250d43c8fe53616c91dc893",
+          "captured_from_authenticated_checkpoint": "birch_lab_pokeball_gift_phase",
+          "receipt_sha256": "9a73ea597dfcbfef08feecbb2a44a85d0110cc8d81f14cabf864c95eeec93393",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 902
+        }
+      },
+      "id": "birch_lab_pokeballs_received",
+      "normalization": {
+        "map_names": {
+          "1:4": "birch_lab"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_birch_lab_pokeballs_received",
+      "source": {
+        "initial_rgb_sha256": "3a6d72af51a6842727ea40c2353b6fdacba7b1904d6a7dbf82024e407ee0485a",
+        "initial_state": {
+          "map_group": 1,
+          "map_number": 4,
+          "player_x": 6,
+          "player_y": 5
+        },
+        "state_sha256": "ee403fad38ff4f90785f3452748b61d07b919f26a7e548f2084af878f2197b04"
+      },
+      "source_split": "native Pok\u00e9 Ball gift milestone: direct decrypted BALLS pocket contains ITEM_POKE_BALL quantity 5; Lab script remains active",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "procedure": "Wait120 at stable final rival text, A1, settle300; require field callbacks and script status2/mode0.",
+        "provenance": {
+          "capture_tape_sha256": "5df8c1ae8150e8c86278d4f589eda47a81f2f8aaeb76810c2c6dac442994f311",
+          "capture_trace_sha256": "69698551d55337faa61a820c2915cb0cd6249e1751b0fc875d95c7392d189e68",
+          "captured_from_authenticated_checkpoint": "birch_lab_pokeballs_received",
+          "receipt_sha256": "7e137d7ebbd39afb8dd63571e91ad0cfd60a22743ee4e6e49e71dc38af856491",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 421
+        }
+      },
+      "id": "birch_lab_post_pokedex_field_ready",
+      "normalization": {
+        "map_names": {
+          "1:4": "birch_lab"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_birch_lab_post_pokedex_field_ready",
+      "source": {
+        "initial_rgb_sha256": "164c7df79f1ebfb9165e529e940baecb310eaf39bea9c9434604d6f29630da4d",
+        "initial_state": {
+          "map_group": 1,
+          "map_number": 4,
+          "player_x": 6,
+          "player_y": 5
+        },
+        "state_sha256": "aeec659de43fba227c330964b96e46e77e9fe99102c3ba0cf6efb2ddab31b778"
+      },
+      "source_split": "true Birch Lab field control after Pok\u00e9dex and five Pok\u00e9 Balls",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "procedure": "From authenticated Lab field control, replay bounded Down exit and require Littleroot (7,17) field callbacks.",
+        "provenance": {
+          "capture_tape_sha256": "44d8895f669cbab5672baa82a842311dde5274736ce8277d3f7ed79faed48868",
+          "capture_trace_sha256": "33aed5e0b1f1af3e2999671c2681c02b42399497b782c5738b8607a1557e497e",
+          "captured_from_authenticated_checkpoint": "birch_lab_post_pokedex_field_ready",
+          "receipt_sha256": "63e0f0ab8805f2c9c4a2ef7dac05dfbfb6e6fce3137baea03574923655297ff6",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 428
+        }
+      },
+      "id": "littleroot_post_pokedex_lab_exit",
+      "normalization": {
+        "map_names": {
+          "0:9": "littleroot"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_littleroot_post_pokedex_lab_exit",
+      "source": {
+        "initial_rgb_sha256": "91d8be77de1d5e5a06602a368071ea34b15e90b0f251422a61fa7e67f6bfa568",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 9,
+          "player_x": 7,
+          "player_y": 17
+        },
+        "state_sha256": "9e96249ee0daf9fae48e17f336d93207e6de98aff859b2742600b6a398dd82eb"
+      },
+      "source_split": "Littleroot exterior immediately after completed Pok\u00e9dex/Pok\u00e9 Ball handoff",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "procedure": "Restore the authenticated Route 103 Poochyena entry text, dismiss the native entry text with a released A edge, and verify a fresh-reload continuation at the battle command surface.",
+        "provenance": {
+          "capture_tape_sha256": "42e9a03d331ff0fcb43dca4d6829cd03f68f2fcc58b2d9e10337dfef28572b33",
+          "capture_trace_sha256": "fc49cf795ab58ed924c90de24b0e259c119e605627b823800906612114113e7e",
+          "captured_from_authenticated_checkpoint": "route103_west_anchor",
+          "receipt_sha256": "000f144dcbd901e49e5d2e343e408e498e434f95b349691ff534a2ee93722580",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 212
+        }
+      },
+      "id": "route103_wild_command_ready",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_wild_command_ready",
+      "source": {
+        "initial_rgb_sha256": "41efb6aa89476ce1b414050d09c718d31c0ca66047813b8a7643c89255c5d26f",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 7,
+          "player_y": 6
+        },
+        "state_sha256": "eea9674f552f38c66ae71dc79ecf441b03c171d1e8edc03313c04ceb7e0a94ae"
+      },
+      "source_split": "capture-required stable Route 103 Poochyena command boundary",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Historical capture: restore Route 103 battle intro text and apply two released A edges. The resulting state is the native command menu; the checkpoint ID is retained for receipt stability.",
+        "provenance": {
+          "capture_tape_sha256": "a3cc6ca5412fe25bad09d1d15ed8129d299ba8f15f31ca0be57593f951a4e029",
+          "capture_trace_sha256": "2fb4ece6bf2ba7a0f3f38638956217c597e891309727d533ffca57cd710a5ba8",
+          "captured_from_authenticated_checkpoint": "route103_wild_command",
+          "receipt_sha256": "dca876e58e2d3bc05a9c50b7ef962cf410aa78e3f2bbc0b245aa002c7228041b",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 1232
+        }
+      },
+      "id": "route103_wild_turn_one",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_wild_turn_one",
+      "source": {
+        "initial_rgb_sha256": "1378217e7da699471ec100791df845349cb043a7908f6eb5883e29d7f6edd6bd",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 7,
+          "player_y": 6
+        },
+        "state_sha256": "1436414f65b65b12a5f48071ac8fea43fe7ac37a2ab54a7b6c9c6413a7dca2bd"
+      },
+      "source_split": "authenticated Route 103 wild command menu after both native intro text pages; historical ID retained",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Historical exploratory capture from a Route 103 intro-text state. Its buttons were consumed by intro dialogue; it is not evidence of a native RUN outcome.",
+        "provenance": {
+          "capture_tape_sha256": "733855d4b35dc43f276298ba334b1141a5b846c046fe885c6f61f288c9f97072",
+          "capture_trace_sha256": "24c848232243d172c2989c1e2fa0f1009c45e70a4317b70cbeb9e129e64dfc05",
+          "captured_from_authenticated_checkpoint": "route103_wild_command",
+          "receipt_sha256": "9c5e22f99e9c842f08853ab940f867888d4eb463c948a5d770427e313e475b46",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 1264
+        }
+      },
+      "id": "route103_wild_run_outcome",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_wild_run_outcome",
+      "source": {
+        "initial_rgb_sha256": "1378217e7da699471ec100791df845349cb043a7908f6eb5883e29d7f6edd6bd",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 7,
+          "player_y": 6
+        },
+        "state_sha256": "13bb23307bb87ebd26c5d2e4f6f6ec6357d52b3729c25a96e9dc6edf16f26de4"
+      },
+      "source_split": "authenticated Route 103 battle intro-text exploration; not a RUN outcome (historical ID retained)",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore the authenticated Route 103 wild-battle entry snapshot, dismiss its first native intro text with a released A edge, and verify a fresh-reload continuation at the second native intro text page.",
+        "provenance": {
+          "capture_tape_sha256": "eb59c49990c271ab2e9be625ab61a8fbd4946eb474a406fef9b3dd478143ef2b",
+          "capture_trace_sha256": "f28fcb2721d7467b2393e5214318b45338d161e7641989c9a247e1fefdf3fbb5",
+          "captured_from_authenticated_checkpoint": "route103_west_anchor",
+          "receipt_sha256": "0edf06bd428ba81ef9dcc71582d653cd822872c236684e28cd1275df1ac6fabb",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 181
+        }
+      },
+      "id": "route103_wild_command",
+      "normalization": {
+        "map_names": {
+          "0:18": "route103"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_route103_wild_command",
+      "source": {
+        "initial_rgb_sha256": "74d64d11c78df04e0a0c332b80e1a9c55b72577a0d6dd1b053f05feeda783abe",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 18,
+          "player_x": 7,
+          "player_y": 6
+        },
+        "state_sha256": "d535d9092cbdf1dcc8dd874052749a1819455a41da2c3ca710af05e5ecb91d40"
+      },
+      "source_split": "authenticated Route 103 wild battle second intro-text page; not a command boundary (historical ID retained)",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Restore 04_rival.state in pinned mGBA."
+      },
+      "id": "outside_lab_pokedex",
+      "normalization": {
+        "map_names": {},
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "rival_outside_lab",
+      "source_split": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "status": "capture_required"
+    },
+    {
+      "capture": {
+        "procedure": "Replay a checked-in canonical route from authenticated outside_lab_pokedex to the first stable Oldale field VBlank, save a raw mGBA state, reload it once, and register its state/RGB/state-field identities.",
+        "provenance": {
+          "capture_tape_sha256": "5d7635c7a7af7ff88a30cfc6600212c5162b55fc99863ac0616e600db44dec3e",
+          "capture_trace_sha256": "e4956e08f9c455617ee4bcae257d8e0d8b69d2d812d55a07acc3a68acb2192e9",
+          "captured_from_authenticated_checkpoint": "route101_post_victory_north_exit",
+          "receipt_sha256": "c6ac04e27cc022c3f1644be73b543b1fad861dc8ad1ee148070396c1c6c343fe",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 136
+        }
+      },
+      "id": "oldale_town",
+      "normalization": {
+        "map_names": {},
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "rival_outside_lab",
+      "source": {
+        "initial_rgb_sha256": "e538f2510e1cc916f11fedda807fcee73d35ca4393ad88781208035154d53dbb",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 10,
+          "player_x": 11,
+          "player_y": 19
+        },
+        "state_sha256": "90cbf71c651d06c094e3592807fe843efb728d1108ecf54edca7d60c696a9c7f"
+      },
+      "source_split": "capture from outside_lab_pokedex via the canonical Route 101 northbound route",
+      "status": "authenticated"
+    },
+    {
+      "capture": {
+        "procedure": "Replay the canonical Oldale-to-Route-103 route to the rival trigger, save a raw mGBA state on the first stable pre-battle field VBlank, reload it once, and register its identities."
+      },
+      "id": "route103_rival",
+      "normalization": {
+        "map_names": {},
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "route103_rival",
+      "source_split": "capture from oldale_town at May's Route 103 approach trigger",
+      "status": "capture_required"
+    },
+    {
+      "capture": {
+        "procedure": "From an authenticated Route 103 rival trigger replay, advance through the entry wipe to the first stable command menu, save/reload a raw mGBA state, and register party, HP, PP, cursor, battle phase, and state/RGB identities."
+      },
+      "id": "route103_rival_battle",
+      "normalization": {
+        "map_names": {},
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "route103_rival",
+      "source_split": "capture from route103_rival at the first battle command-menu VBlank",
+      "status": "capture_required"
+    },
+    {
+      "capture": {
+        "procedure": "Replay a recorded victory branch from authenticated route103_rival_battle to the first stable Pok\u00e9dex dialogue VBlank in Birch's Lab, save/reload a raw mGBA state, and register its identities."
+      },
+      "id": "return_pokedex",
+      "normalization": {
+        "map_names": {},
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "rival_outside_lab",
+      "source_split": "capture after Route 103 victory at the first stable Birch Lab Pok\u00e9dex dialogue VBlank",
+      "status": "capture_required"
+    },
+    {
+      "capture": {
+        "procedure": "Replay the exact v8 11-pulse Running Shoes trigger from littleroot_post_pokedex_lab_exit: 3 x Right16/noop60 then 8 x Up16/noop60. Require Littleroot (10,9), town state 3, SYS_B_DASH clear, fade inactive, and retain active script/task evidence.",
+        "provenance": {
+          "capture_tape_sha256": "99f7f4c5933ec7d33df4745e7609a0aa188efa93b67bd941fab75f8a3ac78273",
+          "capture_trace_sha256": "fb541bea5772eb4e48181a1719f9950a670bf042723f0e69160d096c3101af0c",
+          "captured_from_authenticated_checkpoint": "littleroot_post_pokedex_lab_exit",
+          "receipt_sha256": "aa1107dee07f284e329cdabff3c84e6f9c3154eb9bb2a120f1c0a15d71c823ad",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 836
+        }
+      },
+      "id": "running_shoes_trigger_active",
+      "normalization": {
+        "map_names": {
+          "0:9": "littleroot"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_running_shoes_trigger_active",
+      "source": {
+        "initial_rgb_sha256": "30c9c0871bbfd6050586a47244766d668ab768f4437ca81705e870cea77fc83c",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 9,
+          "player_x": 10,
+          "player_y": 9
+        },
+        "state_sha256": "3909f5467ae1a32f59719b8c11ac11bb66a0e2e674d4cfd8c3c02ed8672a51eb"
+      },
+      "source_split": "Mom Running Shoes trigger at Littleroot (10,9), before receipt flags are granted",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "field_state_assertion": {
+          "expected_flags": {
+            "FLAG_RECEIVED_RUNNING_SHOES": true,
+            "FLAG_SYS_B_DASH": true
+          },
+          "receipt_path": "/Users/joshuapurtell/Documents/Codex/2026-07-30/emerald-gamebench-audit/work/emerald_oracle/v8_running_shoes_field_flags/granted.receipt.json",
+          "receipt_sha256": "4d26cd10cdcb19445f807c74892e50d12955249c596efac5a4af2cc6abf0506b",
+          "script_sha256": "81713aab44ef35e575b606dbfe4449933f6cbf54a82d9cf360a0ab2ab6478d72",
+          "state_sha256": "f51da6974aecbc966a6aab9c9c12acbc38d98d74bfc0a4b5599b909bbc559a4d",
+          "status": "verified_external_sidecar",
+          "symbol_manifest_sha256": "3bbd6795787fbd122787955e0dcdf1de90bfc5d8bd99d565dc13766fa39b8140"
+        },
+        "procedure": "Advance the authenticated active Mom Running Shoes script through its source dialogue, fanfare, movement, and door phases until FLAG_RECEIVED_RUNNING_SHOES and FLAG_SYS_B_DASH are set, Littleroot town state is 4, and field script mode is idle.",
+        "provenance": {
+          "capture_tape_sha256": "5f0b978a7b149bc42d65b7e5d694387edd3e549affc59af802048d1b40e54939",
+          "capture_trace_sha256": "255b7de3268ea7d8c86be0aed3438df38b3fb86cedc32000e576f67be8400d77",
+          "captured_from_authenticated_checkpoint": "running_shoes_trigger_active",
+          "receipt_sha256": "3b8c508227a7d0e596dfff75d129b1c2036a82b0e465d1fccb9343a05574bc57",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 3001
+        }
+      },
+      "id": "running_shoes_granted",
+      "normalization": {
+        "map_names": {
+          "0:9": "littleroot"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "source_only_running_shoes_granted",
+      "source": {
+        "initial_rgb_sha256": "823506aeba27762ee3f367c9759d7bdda51e6b468e6a825a4978341e5c88c1f4",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 9,
+          "player_x": 10,
+          "player_y": 9
+        },
+        "state_sha256": "f51da6974aecbc966a6aab9c9c12acbc38d98d74bfc0a4b5599b909bbc559a4d"
+      },
+      "source_split": "first stable Littleroot field boundary after Mom grants Running Shoes",
+      "status": "quarantined_provenance"
+    },
+    {
+      "capture": {
+        "field_state_assertion": {
+          "expected_flags": {
+            "FLAG_RECEIVED_RUNNING_SHOES": true,
+            "FLAG_SYS_B_DASH": true
+          },
+          "receipt_path": "/Users/joshuapurtell/Documents/Codex/2026-07-30/emerald-gamebench-audit/work/emerald_oracle/v8_running_shoes_field_flags/departure.receipt.json",
+          "receipt_sha256": "6ef6ed42a3acb6f234e8bfc2b2e5370665feaf7846559ff142ee46301e6f674f",
+          "script_sha256": "81713aab44ef35e575b606dbfe4449933f6cbf54a82d9cf360a0ab2ab6478d72",
+          "state_sha256": "70cb454983a603a9d84a433d63351c4259873b997e52e45088545fc1a863c01b",
+          "status": "verified_external_sidecar",
+          "symbol_manifest_sha256": "3bbd6795787fbd122787955e0dcdf1de90bfc5d8bd99d565dc13766fa39b8140"
+        },
+        "procedure": "From the authenticated running_shoes_granted checkpoint, replay ten Up pulses of 16 held VBlanks and 60 released VBlanks (with a 360-VBlank final release), save the stable Route 101 field state, reload it once, and register its identities.",
+        "provenance": {
+          "capture_tape_sha256": "c0e29bed8d00d54714c0e0c803b8490986fddf7caf34f6bc1f1ad5ef6c78b03a",
+          "capture_trace_sha256": "1e21422c0392815439430a5b6ce62344808e36dfb4791c796a83a69458706120",
+          "captured_from_authenticated_checkpoint": "running_shoes_granted",
+          "receipt_sha256": "e36bfdfd274d96ff201ce2ce8645b9cacf136eb51ee5ad52c72cc2fac11ab3f1",
+          "round_trip": "fresh adapter reload matched one no-input continuation frame and source_state",
+          "snapshot_frame_number": 1060
+        }
+      },
+      "id": "running_shoes_departure",
+      "normalization": {
+        "map_names": {
+          "0:16": "route101"
+        },
+        "player_offset": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "rust_checkpoint": "running_shoes",
+      "source": {
+        "initial_rgb_sha256": "3c2b38f47a57f21d33f1fb1a081132e1b25adddf9bd9af147494d8475180c47c",
+        "initial_state": {
+          "map_group": 0,
+          "map_number": 16,
+          "player_x": 10,
+          "player_y": 19
+        },
+        "state_sha256": "70cb454983a603a9d84a433d63351c4259873b997e52e45088545fc1a863c01b"
+      },
+      "source_split": "stable Route 101 field boundary after Mom's Running Shoes scene releases field control",
+      "status": "quarantined_provenance"
+    }
+  ],
+  "default_checkpoint": "bedroom_idle",
+  "oracle": {
+    "config": {
+      "adapter": "gamebench.mgba_jsonl_oracle",
+      "adapter_source_sha256": "899825c1f5b6b07566a5cc3de123a11f388203284213b9fd5777b7d2c6e849e1",
+      "adapter_version": "9",
+      "audio": false,
+      "bios": "mGBA built-in",
+      "container_image_id": "sha256:5995357b864e56df0715730a0ec2735d1a3f6af73d0bd90b87ee1b4f8bd7e0ed",
+      "frame_boundary": "one core.run_frame call per step",
+      "framebuffer": "native 240x160 RGB888",
+      "frameskip": 0,
+      "initial_state_advance_frames": 1,
+      "libmgba_package_version": "0.10.5+dfsg-1",
+      "observability_source_sha256": "59b4b2bf83b4dd2f5d8900381c1d941c64e0b56c612ab1d3fe37636a59248592",
+      "python_mgba_version": "0.10.2"
+    },
+    "emulator": {
+    "config_sha256": "7d8956e1ad6ea20c69d0f84dd8c25487ad37e9cf07ec8213f8cd83b07e17b4e8",
+      "core": "mGBA",
+      "version": "libmgba 0.10.5+dfsg-1; python-mgba 0.10.2"
+    },
+    "trust_status": "trusted"
+  },
+  "rom_sha256": "a9dec84dfe7f62ab2220bafaef7479da0929d066ece16a6885f6226db19085af",
+  "schema": "gamebench.pokemon_emerald.mgba_oracle_registry.v1"
+}

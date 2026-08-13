@@ -1,0 +1,15 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "birch_lab_ack_to_field_probe_v8",
+  "coverage_segment": "birch_lab_acknowledgement",
+  "description": "Advance the native Birch Lab acknowledgement at long settled boundaries, explicitly choose NO for nickname (Down then A) and YES for seeing the rival (default A), then settle after Birch's final instruction. Source-only probe to establish the released field boundary.",
+  "program": [
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 300 },
+    { "buttons": ["down"], "frames": 1 }, { "buttons": [], "frames": 30 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 300 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 300 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 300 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 300 }
+  ],
+  "source_assertions": {}
+}

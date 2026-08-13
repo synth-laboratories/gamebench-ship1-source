@@ -1,0 +1,29 @@
+{
+  "schema": "gamebench.pokemon_emerald.source_tape_request.v1",
+  "id": "bedroom_to_littleroot_exterior_v8",
+  "coverage_segment": "littleroot_town",
+  "description": "v8-observed replay from 02_starter: descend from the staged rival bedroom, wait for the downstairs greeting, acknowledge its 13 source-controlled pages, then exit into Littleroot. This is a fresh v8 capture request; the similarly shaped v7 artifact is audit-only.",
+  "program": [
+    {"buttons": ["up"], "frames": 64},
+    {"buttons": ["down"], "frames": 128},
+    {"buttons": [], "frames": 600},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["down"], "frames": 128}
+  ],
+  "source_assertions": {
+    "terminal_source_position": {"map_group": 0, "map_number": 9, "player_x": 14, "player_y": 8},
+    "minimum_dialogue_pages": 13
+  }
+}

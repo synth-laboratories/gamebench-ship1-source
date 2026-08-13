@@ -1,0 +1,38 @@
+{
+  "schema": "gamebench.pokemon_emerald.mgba_oracle.v1",
+  "source": {
+    "rom_sha256": "a9dec84dfe7f62ab2220bafaef7479da0929d066ece16a6885f6226db19085af",
+    "state_sha256": "34ae4afe4285efbc61c2345a2927b66097ea97b40636f42e32226f5a586e6e6e",
+    "initial_rgb_sha256": "7fa70d30992cdd8a3f246fc616f4db65ebf571b605252dcf1073c24ca102ddfb",
+    "initial_state": {
+      "map_group": 1,
+      "map_number": 3,
+      "player_x": 1,
+      "player_y": 3
+    }
+  },
+  "emulator": {
+    "core": "mGBA",
+    "version": "libmgba 0.10.5+dfsg-1; python-mgba 0.10.2",
+    "config_sha256": "a6aa89931daf81e5b5ba2f1f588adead22c9cd6e4b755e709aa3448459f64ae7"
+  },
+  "config": {
+    "adapter": "gamebench.mgba_jsonl_oracle",
+    "adapter_source_sha256": "7a99bffead91e44c6aa8a25b8ca6cb5915a22687470a455160f22aa39100eba5",
+    "adapter_version": "4",
+    "audio": false,
+    "bios": "mGBA built-in",
+    "container_image_id": "sha256:fcd9c6c1485a630536854e5224e7261ef2b8f58565d02d40974cfe7ecc831158",
+    "frame_boundary": "one core.run_frame call per step",
+    "framebuffer": "native 240x160 RGB888",
+    "frameskip": 0,
+    "initial_state_advance_frames": 1,
+    "libmgba_package_version": "0.10.5+dfsg-1",
+    "python_mgba_version": "0.10.2"
+  },
+  "build": {
+    "dockerfile_sha256": "fa67479ab5e72ea165bfbb2d50e7dc31a573f0056e00dd419e7b5c6af3a6ebd7",
+    "platform": "linux/arm64",
+    "python_base_digest": "sha256:db3ff2e1800a8581e2c48a27c3995339d47bdf046da21c7627accd3d51053a93"
+  }
+}

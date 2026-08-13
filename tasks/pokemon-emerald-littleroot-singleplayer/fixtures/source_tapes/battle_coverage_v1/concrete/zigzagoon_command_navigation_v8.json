@@ -1,0 +1,33 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "zigzagoon_command_navigation_v8",
+  "coverage_segment": "route101_zigzagoon_command_navigation",
+  "description": "Exercise released directional edges on the source first-battle command menu: FIGHT→BAG→FIGHT, open the move menu, select its lower move, cancel, and return to the command surface. Source-only evidence; no Rust comparison claim.",
+  "program": [
+    { "buttons": ["right"], "frames": 1 },
+    { "buttons": [], "frames": 1 },
+    { "buttons": ["left"], "frames": 1 },
+    { "buttons": [], "frames": 1 },
+    { "buttons": ["a"], "frames": 1 },
+    { "buttons": [], "frames": 1 },
+    { "buttons": ["down"], "frames": 1 },
+    { "buttons": [], "frames": 1 },
+    { "buttons": ["b"], "frames": 1 },
+    { "buttons": [], "frames": 1 }
+  ],
+  "source_assertions": {
+    "terminal_source_position": {
+      "map_group": 0,
+      "map_number": 16,
+      "player_x": 7,
+      "player_y": 15
+    },
+    "terminal_observability": {
+      "active_tasks": { "count": 0 },
+      "callbacks": {
+        "main_callback1": "0x08039ef1",
+        "main_callback2": "0x08038421"
+      }
+    }
+  }
+}

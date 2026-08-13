@@ -1,0 +1,29 @@
+{
+  "schema": "gamebench.pokemon_emerald.source_tape_request.v1",
+  "id": "bedroom_to_littleroot_exterior_v7",
+  "description": "mGBA-v7 source-derived opening corridor: descend from the bedroom, wait for the downstairs scripted greeting, advance its 13 input-owning pages, then exit May's house. The 13-page minimum was independently checked against the pinned core: 12 pages remains on map 1:2; 13 permits the exit to map 0:9.",
+  "program": [
+    {"buttons": ["up"], "frames": 64},
+    {"buttons": ["down"], "frames": 128},
+    {"buttons": [], "frames": 600},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 300},
+    {"buttons": ["down"], "frames": 128}
+  ],
+  "source_assertions": {
+    "terminal_source_position": {"map_group": 0, "map_number": 9, "player_x": 14, "player_y": 8},
+    "minimum_dialogue_pages": 13,
+    "no_implicit_a_release": true
+  }
+}

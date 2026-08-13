@@ -1,0 +1,10 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "route101_east_lane_to_turn_pulses_v8",
+  "coverage_segment": "oldale_connection",
+  "description": "Fifth live-validated Route 101 static-decomp segment: one released Up pulse from (13,10) to (13,9).",
+  "program": [
+    { "buttons": ["up"], "frames": 16 }, { "buttons": [], "frames": 300 }
+  ],
+  "source_assertions": { "terminal_source_position": { "map_group": 0, "map_number": 16, "player_x": 13, "player_y": 9 } }
+}

@@ -1,0 +1,180 @@
+{
+  "schema": "gamebench.pokemon_emerald.source_tape_plan.v1",
+  "scope": "opening_route101_and_route103_battles",
+  "comparison": {
+    "kind": "source_only",
+    "rust_comparison": "forbidden_until_a_separate_differential_runner_records_one",
+    "per_vblank": true,
+    "framebuffer": "240x160 RGB888"
+  },
+  "source_identity_requirements": {
+    "rom_sha256": "a9dec84dfe7f62ab2220bafaef7479da0929d066ece16a6885f6226db19085af",
+    "emulator": "pinned mGBA JSONL oracle",
+    "frame_boundary": "one core.run_frame call per recorded VBlank",
+    "state_contents": "local only; record SHA-256 and provenance, never commit the state"
+  },
+  "known_source_anchors": [
+    {
+      "id": "birch_split_frame_anchor",
+      "state_path_when_available": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/03_birch/03_birch.state",
+      "frame_manifest": "fixtures/gold/frames/manifest.json",
+      "frame_manifest_id": "opening-birch-idle",
+      "frame_rgb_sha256": "8a5210e713369ac061ace3f3f336a1775acbed4cb87658f548c0c76f6878f8b7",
+      "evidence_scope": "single source frame only"
+    },
+    {
+      "id": "rival_split_frame_anchor",
+      "state_path_when_available": "../../../pokeagent-speedrun/Emerald-GBAdvance/splits/04_rival/04_rival.state",
+      "frame_manifest": "fixtures/gold/frames/manifest.json",
+      "frame_manifest_id": "littleroot-outside-birch-lab-idle",
+      "frame_rgb_sha256": "9374924229cdd9d32aab80f701b2da3127a075b6b255d06473418a38f1f1d2c6",
+      "evidence_scope": "single source frame only"
+    }
+  ],
+  "tapes": [
+    {
+      "id": "route101_plea_premature_a_release",
+      "checkpoint": "route101_plea",
+      "capture_from": "03_birch split; save immediately after Birch's plea begins",
+      "input_shape": ["a:1", "noop:1", "a:1", "noop:1"],
+      "covers": ["dialogue printer readiness", "premature input", "A pressed/released edge"],
+      "observe": ["source_state each VBlank", "first accepted dialogue advance", "frame hash each VBlank"],
+      "status": "pending_source_capture"
+    },
+    {
+      "id": "route101_rescue_approach_and_bag_handoff",
+      "checkpoint": "route101_plea",
+      "capture_from": "03_birch split; use the shortest verified field route to Birch's Bag",
+      "input_shape": ["directional route: concrete VBlank program required", "a:1", "noop:1"],
+      "covers": ["field lock", "scripted approach", "bag interaction", "field-to-starter-picker handoff"],
+      "observe": ["map/player coordinates", "object-event hash", "transition first/middle/final VBlanks"],
+      "status": "pending_source_capture"
+    },
+    {
+      "id": "route101_starter_cursor_edges",
+      "checkpoint": "route101_starter_select",
+      "capture_from": "save with the starter picker settled and visible",
+      "input_shape": ["left:1", "noop:1", "right:1", "noop:1", "left:held-window", "noop:1"],
+      "covers": ["starter cursor", "held versus newly pressed direction", "selection UI timing"],
+      "observe": ["every cursor movement boundary", "held-repeat onset if any", "frame hash each VBlank"],
+      "status": "pending_source_capture"
+    },
+    {
+      "id": "route101_starter_confirm_to_zigzagoon_entry",
+      "checkpoint": "route101_starter_select",
+      "capture_from": "same picker checkpoint; select one documented starter deterministically",
+      "input_shape": ["a:1", "noop:1", "transition: record through settled battle command surface"],
+      "covers": ["starter confirmation", "Poké Ball/reveal", "wild battle entry", "input ownership handoff"],
+      "observe": ["transition first/middle/final VBlanks", "battle-command-ready point", "RNG progression"],
+      "status": "pending_source_capture"
+    },
+    {
+      "id": "route101_zigzagoon_command_and_move_navigation",
+      "checkpoint": "route101_zigzagoon_command",
+      "capture_from": "save only after the battle command menu is input-ready",
+      "input_shape": ["right:1", "noop:1", "left:1", "noop:1", "a:1", "noop:1", "down:1", "noop:1", "b:1", "noop:1"],
+      "covers": ["command cursor", "FIGHT move cursor", "B cancellation", "physical edges"],
+      "observe": ["selected menu/cursor state if adapter exposes it", "OAM/OBJ changes", "frame hash each VBlank"],
+      "status": "pending_source_capture"
+    },
+    {
+      "id": "route101_zigzagoon_run_rejection",
+      "checkpoint": "route101_zigzagoon_command",
+      "capture_from": "same input-ready scripted first-battle command checkpoint",
+      "input_shape": ["navigate to RUN with released directional edges", "a:1", "noop:1", "advance ready message with a:1/noop:1 pairs"],
+      "covers": ["scripted RUN rejection", "message readiness", "no accidental wild escape"],
+      "observe": ["message transition", "battle remains active", "frame hash each VBlank"],
+      "status": "pending_source_capture"
+    },
+    {
+      "id": "route101_zigzagoon_turn_hp_pp_and_stage",
+      "checkpoint": "route101_zigzagoon_command",
+      "capture_from": "same command checkpoint; select both a damaging move and status move in distinct deterministic tapes",
+      "input_shape": ["fight selection", "one move confirmation", "advance every ready message with a:1/noop:1"],
+      "covers": ["HP delta", "PP delta", "opponent response", "Growl/stat-stage message when source selects it"],
+      "observe": ["all adapter battle fields if available", "RNG", "source state hash", "frame hash each VBlank"],
+      "status": "pending_source_capture"
+    },
+    {
+      "id": "route101_zigzagoon_victory_to_birch_handoff",
+      "checkpoint": "route101_zigzagoon_command",
+      "capture_from": "deterministic command checkpoint; finish the scripted fight",
+      "input_shape": ["repeat documented winning move with explicit a:1/noop:1 message edges", "record through settled Route 101 post-battle field control"],
+      "covers": ["faint/victory", "experience/message timing", "post-battle Birch approach", "battle-to-field handoff"],
+      "observe": ["battle disappearance", "field-control-ready point", "map/player/object hashes"],
+      "status": "pending_source_capture"
+    },
+    {
+      "id": "route101_zigzagoon_faint_or_failure",
+      "checkpoint": "route101_zigzagoon_command",
+      "capture_from": "a deliberately reachable low-HP source checkpoint only; do not mutate RAM",
+      "input_shape": ["legal move/message program that reaches faint or deterministic failure", "record through the resulting stable owner"],
+      "covers": ["faint/failure branch", "white-out or rescue continuation", "no-strand handoff"],
+      "observe": ["branch identity", "battle/field ownership", "all source hashes"],
+      "status": "pending_reachability_confirmation"
+    },
+    {
+      "id": "route103_rival_prompt_premature_a_release",
+      "checkpoint": "route103_rival_prompt",
+      "capture_from": "04_rival split or nearest authenticated predecessor; save with rival challenge printer active",
+      "input_shape": ["a:1", "noop:1", "a:1", "noop:1"],
+      "covers": ["rival dialogue readiness", "premature A", "A release"],
+      "observe": ["first accepted dialogue advance", "trainer battle trigger boundary"],
+      "status": "pending_source_capture"
+    },
+    {
+      "id": "route103_rival_challenge_to_battle_entry",
+      "checkpoint": "route103_rival_prompt",
+      "capture_from": "same prompt checkpoint",
+      "input_shape": ["advance only at documented ready edges", "noop through full entry", "stop at settled command surface"],
+      "covers": ["trainer challenge", "entry wipe", "trainer send-out", "command ownership"],
+      "observe": ["first/middle/final transition VBlanks", "trainer/OAM object changes", "RNG"],
+      "status": "pending_source_capture"
+    },
+    {
+      "id": "route103_rival_command_move_cancel_edges",
+      "checkpoint": "route103_rival_command",
+      "capture_from": "save after the Route 103 command window is input-ready",
+      "input_shape": ["right:1", "noop:1", "left:1", "noop:1", "a:1", "noop:1", "down:1", "noop:1", "b:1", "noop:1"],
+      "covers": ["trainer command cursor", "move cursor", "B cancellation", "held/edge semantics"],
+      "observe": ["all displayed cursor states", "frame hash each VBlank"],
+      "status": "pending_source_capture"
+    },
+    {
+      "id": "route103_rival_run_rejection",
+      "checkpoint": "route103_rival_command",
+      "capture_from": "same trainer command checkpoint",
+      "input_shape": ["navigate to RUN with release frames", "a:1", "noop:1", "advance rejection only at ready edges"],
+      "covers": ["trainer RUN rejection", "message printer/ready wait", "battle remains active"],
+      "observe": ["rejection text surface", "command return boundary", "frame hash each VBlank"],
+      "status": "pending_source_capture"
+    },
+    {
+      "id": "route103_rival_turn_hp_pp_growl_or_leer",
+      "checkpoint": "route103_rival_command",
+      "capture_from": "same checkpoint; run enough deterministic turns to observe source opponent behaviour",
+      "input_shape": ["choose documented player move", "advance every ready message with a:1/noop:1", "repeat as necessary"],
+      "covers": ["HP", "PP", "opponent move", "Growl/Leer stage effect if selected", "RNG-dependent outcome"],
+      "observe": ["raw source_state per VBlank", "battle semantic extensions if adapter exposes them", "frame hash"],
+      "status": "pending_source_capture"
+    },
+    {
+      "id": "route103_rival_victory_and_departure",
+      "checkpoint": "route103_rival_command",
+      "capture_from": "deterministic command checkpoint; choose a source-valid winning line",
+      "input_shape": ["explicit winning move/message program", "record through rival departure and restored field control"],
+      "covers": ["trainer defeat", "post-battle dialogue", "rival movement/departure", "post-battle field handoff"],
+      "observe": ["rival object hash changes", "player/map handoff", "first/middle/final departure VBlanks"],
+      "status": "pending_source_capture"
+    },
+    {
+      "id": "route103_rival_faint_whiteout",
+      "checkpoint": "route103_rival_low_hp_command",
+      "capture_from": "a naturally reached/restored low-HP source checkpoint; no RAM editing",
+      "input_shape": ["legal source input to faint", "record through stable white-out/respawn owner"],
+      "covers": ["trainer-battle failure", "white-out transition", "retry ownership"],
+      "observe": ["map/player reset", "rival trigger reset if any", "all source hashes"],
+      "status": "pending_reachability_confirmation"
+    }
+  ]
+}

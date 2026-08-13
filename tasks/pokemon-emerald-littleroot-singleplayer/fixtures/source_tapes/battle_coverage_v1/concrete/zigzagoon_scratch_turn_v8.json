@@ -1,0 +1,31 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "zigzagoon_scratch_turn_v8",
+  "coverage_segment": "route101_zigzagoon_turn_one",
+  "description": "At the authenticated Zigzagoon command menu, select FIGHT, wait for its source menu handoff, choose the default Scratch move, and record the complete native turn through the returned command surface. Source-only evidence; HP/PP are represented only by captured source pixels because the adapter does not yet expose battle structs.",
+  "program": [
+    { "buttons": ["a"], "frames": 1 },
+    { "buttons": [], "frames": 30 },
+    { "buttons": ["a"], "frames": 1 },
+    { "buttons": [], "frames": 400 }
+  ],
+  "source_assertions": {
+    "terminal_source_position": {
+      "map_group": 0,
+      "map_number": 16,
+      "player_x": 7,
+      "player_y": 15
+    },
+    "terminal_observability": {
+      "active_tasks": { "count": 0 },
+      "callbacks": {
+        "main_callback1": "0x08039ef1",
+        "main_callback2": "0x08038421"
+      },
+      "story_flags": {
+        "pokemon_get": true,
+        "rescued_birch": true
+      }
+    }
+  }
+}

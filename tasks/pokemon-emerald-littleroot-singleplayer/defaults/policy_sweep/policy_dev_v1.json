@@ -1,0 +1,128 @@
+{
+  "schema": "gamebench.pokemon_emerald.policy_sweep.v1",
+  "suite_id": "emerald_policy_dev_v1",
+  "max_steps": 40,
+  "scenarios": [
+    {
+      "scenario_id": "bedroom_clock_visit",
+      "checkpoint": "bedroom_idle",
+      "seed": 1,
+      "min_manhattan_from_start": 2,
+      "target_player": {"x": 3, "y": 2},
+      "require_phase": "clock_visit",
+      "max_steps": 24
+    },
+    {
+      "scenario_id": "bedroom_tv_broadcast",
+      "checkpoint": "bedroom_idle",
+      "seed": 2,
+      "min_manhattan_from_start": 2,
+      "require_phase": "tv_broadcast",
+      "max_steps": 40
+    },
+    {
+      "scenario_id": "bedroom_meet_rival",
+      "checkpoint": "bedroom_idle",
+      "seed": 3,
+      "min_manhattan_from_start": 2,
+      "require_phase": "meet_rival",
+      "max_steps": 80
+    },
+    {
+      "scenario_id": "bedroom_to_met_rival",
+      "checkpoint": "bedroom_idle",
+      "seed": 4,
+      "min_manhattan_from_start": 2,
+      "require_phase": "met_rival",
+      "require_map": "brendans_house2_f",
+      "target_player": {"x": 3, "y": 5},
+      "max_steps": 40
+    },
+    {
+      "scenario_id": "title_to_truck",
+      "checkpoint": "title_menu",
+      "seed": 5,
+      "min_manhattan_from_start": 0,
+      "require_map": "moving_truck",
+      "max_steps": 20
+    },
+    {
+      "scenario_id": "title_to_met_rival",
+      "checkpoint": "title_menu",
+      "seed": 6,
+      "min_manhattan_from_start": 0,
+      "require_phase": "met_rival",
+      "require_map": "brendans_house2_f",
+      "require_world": {"player_gender": "may", "player_name": "A"},
+      "target_player": {"x": 3, "y": 5},
+      "max_steps": 20
+    },
+    {
+      "scenario_id": "truck_exit_to_town",
+      "checkpoint": "truck_arrival",
+      "seed": 7,
+      "min_manhattan_from_start": 1,
+      "require_map_change": true,
+      "max_steps": 4
+    },
+    {
+      "scenario_id": "rival_north_approach",
+      "checkpoint": "rival_outside_lab",
+      "seed": 8,
+      "min_manhattan_from_start": 5,
+      "target_player": {"x": 11, "y": 11},
+      "max_steps": 20
+    },
+    {
+      "scenario_id": "rival_has_pokedex",
+      "checkpoint": "rival_outside_lab",
+      "seed": 9,
+      "min_manhattan_from_start": 0,
+      "require_world": {"has_pokedex": true},
+      "require_phase": "pokedex_received",
+      "max_steps": 2
+    },
+    {
+      "scenario_id": "birch_starter_chosen",
+      "checkpoint": "birch_lab_exterior",
+      "seed": 10,
+      "min_manhattan_from_start": 1,
+      "require_map": "professor_birchs_lab",
+      "require_phase": "starter_chosen",
+      "max_steps": 28
+    },
+    {
+      "scenario_id": "route101_bag_lane",
+      "checkpoint": "route101_rescue",
+      "seed": 11,
+      "min_manhattan_from_start": 2,
+      "target_player": {"x": 10, "y": 15},
+      "max_steps": 20
+    },
+    {
+      "scenario_id": "shoes_then_home",
+      "checkpoint": "running_shoes",
+      "seed": 12,
+      "min_manhattan_from_start": 1,
+      "require_map": "brendans_house1_f",
+      "max_steps": 120
+    },
+    {
+      "scenario_id": "route103_rival_defeated",
+      "checkpoint": "route103_rival",
+      "seed": 13,
+      "min_manhattan_from_start": 0,
+      "require_phase": "rival_defeated",
+      "max_steps": 55
+    },
+    {
+      "scenario_id": "route103_selecting_move",
+      "checkpoint": "route103_rival",
+      "seed": 14,
+      "min_manhattan_from_start": 0,
+      "require_phase": "rival_battle",
+      "require_battle": {"selecting_move": true},
+      "max_steps": 40
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "schema": "gamebench.pokemon_emerald.source_tape_request.v1",
+  "id": "rival_house_1f_to_2f_v7",
+  "coverage_segment": "littleroot_town",
+  "description": "Source-derived stair warp from the rival house ground floor to its upstairs room, followed by a stable transition settle.",
+  "program": [{"buttons": ["up"], "frames": 96}, {"buttons": [], "frames": 120}],
+  "source_assertions": {"terminal_source_position": {"map_group": 1, "map_number": 1, "player_x": 7, "player_y": 2}}
+}

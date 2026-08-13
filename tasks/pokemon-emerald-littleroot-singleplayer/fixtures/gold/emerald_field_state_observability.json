@@ -1,0 +1,18 @@
+{
+  "schema": "gamebench.pokemon_emerald.field_state_observability_symbols.v1",
+  "rom_sha256": "a9dec84dfe7f62ab2220bafaef7479da0929d066ece16a6885f6226db19085af",
+  "source_revision": "83df84e40623b79281f2397faa611cbf044170bd",
+  "symbol_table_sha256": "98b99e4f60b9b976e4ef2c065f30e03b8a6441b6cf0ed57cbe4b737dc893848c",
+  "symbols": {
+    "gSaveBlock1Ptr": "0x03005d8c"
+  },
+  "save_block1": {
+    "flags_offset": "0x1270"
+  },
+  "flags": {
+    "FLAG_RECEIVED_RUNNING_SHOES": "0x112",
+    "FLAG_SYS_B_DASH": "0x8c0"
+  },
+  "derivation": "Read gSaveBlock1Ptr, then flags[flag_id / 8] & (1 << (flag_id % 8)); definitions and SaveBlock1 layout come from the pinned matching pret/pokeemerald revision.",
+  "interpretation_policy": "Emit the two independently addressed raw flag bits. Do not infer one flag from the other."
+}

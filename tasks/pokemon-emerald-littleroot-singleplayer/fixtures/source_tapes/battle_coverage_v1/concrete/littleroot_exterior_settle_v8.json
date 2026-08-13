@@ -1,0 +1,12 @@
+{
+  "schema": "gamebench.pokemon_emerald.source_tape_request.v1",
+  "id": "littleroot_exterior_settle_v8",
+  "coverage_segment": "littleroot_town",
+  "description": "v8 source-only settle after the verified May-house exit warp; captures the first stable, field-controlled Littleroot surface.",
+  "program": [
+    {"buttons": [], "frames": 300}
+  ],
+  "source_assertions": {
+    "terminal_source_position": {"map_group": 0, "map_number": 9, "player_x": 14, "player_y": 9}
+  }
+}

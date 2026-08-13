@@ -1,0 +1,47 @@
+{
+  "schema": "gamebench.pokemon_emerald.source_tape_request.v1",
+  "id": "running_shoes_scene_candidate2_v8",
+  "coverage_segment": "running_shoes",
+  "description": "Bounded released-edge phase probe with conservative source rendering waits.",
+  "source_assertions": {
+    "terminal_source_position": {
+      "map_group": 0,
+      "map_number": 9,
+      "player_x": 10,
+      "player_y": 9
+    },
+    "terminal_observability": {
+      "story_vars": {"littleroot_town_state": 4},
+      "story_flags": {"running_shoes_received": true},
+      "script_contexts": {
+        "global_status": 2,
+        "global": {"mode": 0}
+      },
+      "palette_fade": {"active": false}
+    }
+  },
+  "program": [
+    {"buttons": [], "frames": 600},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 89},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 89},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 89},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 89},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 89},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 89},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 89},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 89},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 89},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 89},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 89},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 89},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 89},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 89},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 89},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 89},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 89},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 89},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 89},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 89},
+    {"buttons": ["a"], "frames": 1}, {"buttons": [], "frames": 600}
+  ]
+}

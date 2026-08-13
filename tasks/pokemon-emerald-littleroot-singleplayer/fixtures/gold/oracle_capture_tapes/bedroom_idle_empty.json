@@ -1,0 +1,6 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_capture_tape.v1",
+  "checkpoint": "bedroom_idle",
+  "purpose": "adapter snapshot round-trip validation; no source input is replayed",
+  "program": []
+}

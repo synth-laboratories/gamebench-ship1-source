@@ -1,0 +1,15 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "birch_lab_nickname_no_edge_v8",
+  "coverage_segment": "birch_lab_acknowledgement",
+  "description": "Short per-VBlank source proof of the settled nickname menu's NO edge: hold Down for two VBlanks, release, then hold A for two VBlanks and settle only 32 VBlanks into the resulting rival-invitation text. This is source-only evidence.",
+  "program": [
+    { "buttons": ["down"], "frames": 2 },
+    { "buttons": [], "frames": 2 },
+    { "buttons": ["a"], "frames": 2 },
+    { "buttons": [], "frames": 32 }
+  ],
+  "source_assertions": {
+    "terminal_source_position": { "map_group": 1, "map_number": 4, "player_x": 6, "player_y": 5 }
+  }
+}

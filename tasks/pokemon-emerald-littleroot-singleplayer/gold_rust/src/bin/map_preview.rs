@@ -1,4 +1,6 @@
-use pokemon_emerald_littleroot_gold::native::{fit_littleroot_camera, render_littleroot_map, render_littleroot_with_idle_objects};
+use pokemon_emerald_littleroot_gold::native::{
+    fit_littleroot_camera, render_littleroot_map, render_littleroot_with_idle_objects,
+};
 use pokemon_emerald_littleroot_gold::world::{Facing, TilePosition};
 use std::fs;
 
@@ -16,8 +18,18 @@ fn main() -> Result<(), String> {
         direction => return Err(format!("unsupported facing: {direction}")),
     };
     let player = TilePosition {
-        x: std::env::args().nth(3).map(|value| value.parse()).transpose().map_err(|error| format!("invalid x coordinate: {error}"))?.unwrap_or(10),
-        y: std::env::args().nth(4).map(|value| value.parse()).transpose().map_err(|error| format!("invalid y coordinate: {error}"))?.unwrap_or(13),
+        x: std::env::args()
+            .nth(3)
+            .map(|value| value.parse())
+            .transpose()
+            .map_err(|error| format!("invalid x coordinate: {error}"))?
+            .unwrap_or(10),
+        y: std::env::args()
+            .nth(4)
+            .map(|value| value.parse())
+            .transpose()
+            .map_err(|error| format!("invalid y coordinate: {error}"))?
+            .unwrap_or(13),
     };
     let viewport = if std::env::args().nth(2).as_deref() == Some("start") {
         pokemon_emerald_littleroot_gold::native::render_littleroot_start_walk(&player, facing)?

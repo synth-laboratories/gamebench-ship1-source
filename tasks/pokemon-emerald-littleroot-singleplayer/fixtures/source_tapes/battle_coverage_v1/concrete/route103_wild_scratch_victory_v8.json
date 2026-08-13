@@ -1,0 +1,16 @@
+{
+  "schema": "gamebench.pokemon_emerald.concrete_source_tape.v1",
+  "id": "route103_wild_scratch_victory_v8",
+  "coverage_segment": "route103_wild_encounter",
+  "description": "At the authenticated Route 103 command surface after two Scratch turns, select the third deterministic SCRATCH and acknowledge native faint/experience completion without assuming battle or field terminal ownership.",
+  "program": [
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 30 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 120 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 120 },
+    { "buttons": ["a"], "frames": 1 }, { "buttons": [], "frames": 300 }
+  ],
+  "source_assertions": {
+    "terminal_source_position": { "map_group": 0, "map_number": 18, "player_x": 7, "player_y": 6 },
+    "terminal_observability": { "palette_fade": { "active": false } }
+  }
+}
