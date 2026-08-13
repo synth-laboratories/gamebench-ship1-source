@@ -91,6 +91,49 @@ def _error_text(value: Any) -> str | None:
     return normalized[:1000] or None
 
 
+def _codex_failure_text(value: Any) -> str | None:
+    """Extract the terminal agent failure from Codex's native JSONL output."""
+
+    if not isinstance(value, str):
+        return None
+    fallback: str | None = None
+    for line in reversed(value.splitlines()):
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(event, Mapping):
+            continue
+        event_type = event.get("type")
+        if event_type == "turn.failed":
+            return _error_text(event.get("error"))
+        if event_type == "error" and fallback is None:
+            fallback = _error_text(event.get("message"))
+    return fallback
+
+
+def _provider_failure_text(trace_v5: Any) -> str | None:
+    """Summarize a captured upstream HTTP failure when Codex text is absent."""
+
+    if not isinstance(trace_v5, Mapping):
+        return None
+    capture = trace_v5.get("capture")
+    if not isinstance(capture, Mapping):
+        return None
+    failures = capture.get("provider_call_failures")
+    if not isinstance(failures, list):
+        return None
+    for failure in reversed(failures):
+        if not isinstance(failure, Mapping):
+            continue
+        status = failure.get("http_status")
+        route = str(failure.get("route") or "").strip()
+        if isinstance(status, int):
+            suffix = f" on {route}" if route else ""
+            return f"upstream provider request failed (HTTP {status}){suffix}"
+    return None
+
+
 def _read_reward(path: Path) -> float | None:
     try:
         return float(path.read_text(encoding="utf-8").strip())
@@ -158,8 +201,18 @@ def interpret_codex_result(
             metadata.get("verifier_returncode"),
             field="metadata.verifier_returncode",
         )
-        agent_error = _error_text(result.get("error"))
         trace_v5 = metadata.get("trace_v5")
+        # The combined runner's top-level error can contain verifier output,
+        # even when Codex failed first. Preserve the native agent/provider
+        # failure as the primary lane error so HTTP 429/5xx failures remain
+        # visible in receipts and the matrix TUI.
+        agent_error = None
+        if agent_rc != 0:
+            agent_error = (
+                _codex_failure_text(metadata.get("codex_stdout"))
+                or _provider_failure_text(trace_v5)
+                or _error_text(result.get("error"))
+            )
         # Required Responses capture is part of Harbor agent completion. When
         # Codex/verifier codes are present but the sealed capture failed, treat
         # the lane as an agent fault instead of inventing verify_rc=125.
@@ -169,7 +222,7 @@ def interpret_codex_result(
             and agent_rc == 0
         ):
             agent_rc = runner_rc or 1
-            agent_error = agent_error or _error_text(trace_v5.get("failure"))
+            agent_error = _error_text(trace_v5.get("failure")) or agent_error
         return _classify(
             runner_rc=runner_rc,
             agent_rc=agent_rc,
@@ -247,6 +300,36 @@ def build_lane_receipt(
         payload["verifier"] = verifier
     if isinstance(metadata.get("trace_v5"), Mapping):
         payload["trace_v5"] = dict(metadata["trace_v5"])
+    token_cost = metadata.get("token_cost")
+    if not isinstance(token_cost, Mapping):
+        trace_v5 = metadata.get("trace_v5")
+        capture = (
+            trace_v5.get("capture")
+            if isinstance(trace_v5, Mapping)
+            else None
+        )
+        if isinstance(capture, Mapping):
+            token_cost = capture.get("token_cost")
+            if not isinstance(token_cost, Mapping):
+                usage = capture.get("usage")
+                if isinstance(usage, Mapping) and usage.get("cost_usd") is not None:
+                    token_cost = {
+                        "prompt_tokens": usage.get("prompt_tokens"),
+                        "cached_tokens": usage.get("cached_tokens"),
+                        "completion_tokens": usage.get("completion_tokens"),
+                        "reasoning_tokens": usage.get("reasoning_tokens"),
+                        "total_tokens": usage.get("total_tokens"),
+                        "cost_usd": usage.get("cost_usd"),
+                        "cost_authority": usage.get("cost_authority"),
+                        "model": usage.get("cost_model") or identity.model,
+                    }
+    if isinstance(token_cost, Mapping):
+        payload["token_cost"] = dict(token_cost)
+        payload["cost_usd"] = token_cost.get("cost_usd")
+        payload["prompt_tokens"] = token_cost.get("prompt_tokens")
+        payload["completion_tokens"] = token_cost.get("completion_tokens")
+        payload["cached_tokens"] = token_cost.get("cached_tokens")
+        payload["total_tokens"] = token_cost.get("total_tokens")
     for name in (
         "baseline_score",
         "best_score",

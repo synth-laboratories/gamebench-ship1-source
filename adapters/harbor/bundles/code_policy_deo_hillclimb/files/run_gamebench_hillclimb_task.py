@@ -11,11 +11,32 @@ from typing import Any
 
 
 def gamebench_task() -> str:
-    return os.environ.get("GAMEBENCH_TASK", "tictactoe-singleplayer").strip()
+    value = os.environ.get("GAMEBENCH_TASK", "").strip()
+    if not value:
+        raise RuntimeError("GAMEBENCH_TASK must be set by the Harbor launch config")
+    return value
 
 
 def candidate_subdir() -> str:
-    return os.environ.get("CANDIDATE_SUBDIR", "tictactoe").strip()
+    value = os.environ.get("CANDIDATE_SUBDIR", "").strip()
+    if not value:
+        raise RuntimeError("CANDIDATE_SUBDIR must be set by the Harbor launch config")
+    return value
+
+
+def gamebench_python() -> str:
+    configured = os.environ.get("GAMEBENCH_PYTHON", "").strip()
+    if configured:
+        return configured
+    for name in ("python3.14", "python3.13", "python3.12", "python3.11"):
+        resolved = shutil.which(name)
+        if resolved:
+            return resolved
+    if sys.version_info >= (3, 11):
+        return sys.executable
+    raise RuntimeError(
+        "Craftax hillclimb requires Python >=3.11; set GAMEBENCH_PYTHON"
+    )
 
 
 def gamebench_root(workspace: Path) -> Path:
@@ -61,7 +82,7 @@ def run_hillclimb(output_root: Path, *, candidate_root: Path, lane: Path) -> dic
     suite = lane / "defaults" / "policy_sweep" / "policy_dev_v1.json"
     baseline = lane / "containers" / "codepolicy" / "heuristic_policy.py"
     command = [
-        sys.executable,
+        gamebench_python(),
         str(hillclimb),
         "--suite",
         str(suite),
@@ -77,7 +98,21 @@ def run_hillclimb(output_root: Path, *, candidate_root: Path, lane: Path) -> dic
         command.extend(extra.split())
     env = dict(os.environ)
     env["PYTHONPATH"] = str(lane)
-    subprocess.run(command, check=True, cwd=str(lane), env=env)
+    timeout_raw = os.environ.get("GAMEBENCH_HILLCLIMB_TIMEOUT_SEC", "").strip()
+    timeout_sec: float | None
+    try:
+        timeout_sec = float(timeout_raw) if timeout_raw else 900.0
+    except ValueError:
+        timeout_sec = 900.0
+    if timeout_sec is not None and timeout_sec <= 0:
+        timeout_sec = None
+    subprocess.run(
+        command,
+        check=True,
+        cwd=str(lane),
+        env=env,
+        timeout=timeout_sec,
+    )
     return json.loads((work_dir / "leaderboard.json").read_text(encoding="utf-8"))
 
 

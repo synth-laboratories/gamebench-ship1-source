@@ -59,6 +59,13 @@ sync_script = "sync_rogue_reference.sh"
 gamebench_task = "tasks/rogue-singleplayer"
 
 [[bundles]]
+task_id = "super-mario-bros-singleplayer"
+bundle = "super_mario_bros_singleplayer_gold"
+verify_script = "run_smb_reference_verify.sh"
+gamebench_task = "tasks/super-mario-bros-singleplayer"
+notes = "Research-safe original Rust platformer; 32 authored capability courses; no ROM or extracted assets"
+
+[[bundles]]
 task_id = "overcooked-v2-multiplayer"
 bundle = "overcooked_v2_multiplayer_gold"
 verify_script = "run_overcooked_v2_reference_verify.sh"

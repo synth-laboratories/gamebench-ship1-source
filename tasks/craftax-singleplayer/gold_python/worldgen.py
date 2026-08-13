@@ -334,11 +334,12 @@ def _generate_smooth_level(
             water = water_noise[y][x] + water_proximity - 1.0
             if water_density <= 0.0:
                 water = -1.0
-            elif water_density != 1.0:
-                water = (water - config.water_threshold) * water_density + config.water_threshold
+            water_cut, sand_cut = _water_cuts(
+                config.water_threshold, config.sand_threshold, water_density
+            )
 
-            block = config.sea_block if water > config.water_threshold else config.default_block
-            if water > config.sand_threshold and block != config.sea_block:
+            block = config.sea_block if water > water_cut else config.default_block
+            if water > sand_cut and block != config.sea_block:
                 block = config.coast_block
 
             mountain_proximity = min(
@@ -626,10 +627,39 @@ def _tree_uniform_threshold(config: SmoothGenConfig, density: float) -> float:
 
 
 def _density(densities: dict[str, Any], key: str, default: float) -> float:
+    """Scale a feature relative to the vanilla amount.
+
+    ``1.0`` is vanilla, ``0.0`` removes the feature, ``0.5`` is half as much.
+    It is never an absolute fraction of the map.
+    """
+
     try:
         return max(0.0, float(densities.get(key, default)))
     except (TypeError, ValueError):
         return default
+
+
+def _water_cuts(
+    water_threshold: float, sand_threshold: float, density: float
+) -> tuple[float, float]:
+    """Scale the sea and coast cut points instead of distorting the field.
+
+    Compressing the noise toward ``water_threshold`` (the previous behaviour)
+    pulled every tile into the narrow band between ``sand_threshold`` and
+    ``water_threshold``, so a low density turned the whole surface into coast
+    and erased the default block.  Trees require the default block, so
+    ``water: 0.05`` silently produced a treeless world on every seed.
+    """
+
+    if density == 1.0:
+        return water_threshold, sand_threshold
+
+    def shrink(cut: float) -> float:
+        if density >= 1.0:
+            return max(-1.0, min(1.0, cut - (density - 1.0) * (cut + 1.0)))
+        return max(-1.0, min(1.0, cut + (1.0 - density) * (1.0 - cut)))
+
+    return shrink(water_threshold), shrink(sand_threshold)
 
 
 def _dot(gradient: tuple[float, float], x: float, y: float) -> float:

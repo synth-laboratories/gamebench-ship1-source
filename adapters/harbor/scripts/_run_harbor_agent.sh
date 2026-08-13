@@ -41,7 +41,7 @@ IMAGE="${GAMEBENCH_HARBOR_IMAGE:-gamebench-harbor-${BUNDLE}-${TASK_ID}:latest}"
 # Default OUT_DIR is minted fresh per run (panel-style UTC stamp + pid) so a
 # direct run can never score against a prior run's result.json.
 OUT_DIR="${GAMEBENCH_HARBOR_OUT:-/tmp/gamebench-harbor-${BUNDLE}-${AGENT}-$(date -u +%Y%m%dT%H%M%SZ)-$$}"
-RUN_STARTED_AT="$(date -u +%Y%m%dT%H%M%SZ)"
+RUN_STARTED_AT="${GAMEBENCH_HARBOR_STARTED_AT:-$(date -u +%Y%m%dT%H%M%SZ)}"
 DEPLOYMENT="gamebench_${BUNDLE}"
 TIMEOUT_SEC="${GAMEBENCH_HARBOR_TIMEOUT_SEC:-3600}"
 # Per-lane workspace under OUT_DIR so parallel panel replicas do not race.
@@ -131,6 +131,7 @@ if [[ "$AGENT" == "codex" ]]; then
   ROLLOUT_JSON="$OUT_DIR/rollout.json"
   python3 - "$ROLLOUT_JSON" "$WORKSPACE" "$MODEL" "$DEPLOYMENT" "$TASK_ID" "${CANDIDATE_SUBDIR:-}" "$EFFORT" "$TIMEOUT_SEC" <<'PY'
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -144,6 +145,7 @@ if not candidate_subdir:
     candidate_subdir = task_id.removesuffix("-singleplayer").removesuffix("-multiplayer")
 effort = sys.argv[7] if len(sys.argv) > 7 else "low"
 timeout_sec = int(sys.argv[8]) if len(sys.argv) > 8 else 3600
+system_prompt_suffix = os.environ.get("GAMEBENCH_HARBOR_SYSTEM_PROMPT_SUFFIX", "").strip()
 payload = {
     "trace_correlation_id": f"{deployment}-{workspace.name}",
     "deployment_name": deployment,
@@ -166,6 +168,10 @@ payload = {
         "CANDIDATE_SUBDIR": candidate_subdir,
     },
 }
+if system_prompt_suffix:
+    payload["policy"] = {
+        "config": {"system_prompt_suffix": system_prompt_suffix},
+    }
 Path(sys.argv[1]).write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 PY
 

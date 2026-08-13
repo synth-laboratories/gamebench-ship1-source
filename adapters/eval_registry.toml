@@ -95,3 +95,8 @@ id = "towermind-singleplayer"
 policy_suite = "defaults/policy_sweep/policy_dev_v1.json"
 policy_baseline = "containers/codepolicy/heuristic_policy.py"
 candidate_subdir = "towermind"
+
+[[task]]
+id = "super-mario-bros-singleplayer"
+candidate_subdir = "gold_rust"
+notes = "32-level research-safe Rust platformer; run cargo tests and Harbor protocol smoke"

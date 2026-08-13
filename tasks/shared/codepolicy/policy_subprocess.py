@@ -21,17 +21,92 @@ _POLICY_ENV_ALLOWLIST: frozenset[str] = frozenset()
 _MAX_IPC_LINE_CHARS = 2 * 1024 * 1024
 _LINUX_SANDBOX_UID = 65534
 _LINUX_SANDBOX_GID = 65534
-_DARWIN_DOCKER_CONTEXT = "orbstack"
-_DARWIN_POLICY_IMAGE = (
-    "python:3.13-slim-bookworm@"
-    "sha256:129f9f5d5729767916d79f0021ba4fe56ff113332b08ef1213ecf529a9da7ebb"
-)
-_DARWIN_POLICY_PLATFORM = "linux/amd64"
+# Prefer OrbStack when present; fall back to the active Docker context.
+_DARWIN_DOCKER_CONTEXT_PREFERRED = "orbstack"
+# Pin per-arch digests for python:3.13.14-slim-bookworm. Apple Silicon must use
+# linux/arm64 — linux/amd64 goes through Rosetta and fails with
+# `rosetta error: mmap_anonymous_rw` under OrbStack (rc 133).
+_DARWIN_POLICY_IMAGES: dict[str, tuple[str, str]] = {
+    "arm64": (
+        "linux/arm64",
+        "python:3.13-slim-bookworm@"
+        "sha256:56249d7a2f93306106f6d8bcdf6423afb73c1b747d874febcc778beee25cb8bb",
+    ),
+    "aarch64": (
+        "linux/arm64",
+        "python:3.13-slim-bookworm@"
+        "sha256:56249d7a2f93306106f6d8bcdf6423afb73c1b747d874febcc778beee25cb8bb",
+    ),
+    "x86_64": (
+        "linux/amd64",
+        "python:3.13-slim-bookworm@"
+        "sha256:dd86541a59b252667f4c12f8b2ee17216de37dd65ac773bf097bef996fa78860",
+    ),
+    "amd64": (
+        "linux/amd64",
+        "python:3.13-slim-bookworm@"
+        "sha256:dd86541a59b252667f4c12f8b2ee17216de37dd65ac773bf097bef996fa78860",
+    ),
+}
 _POLICY_LABEL = "synth.factorybench.policy"
 _RUNNER_PID_LABEL = "synth.factorybench.runner_pid"
 _WORKER_PID_LABEL = "synth.factorybench.worker_pid"
 POLICY_PROCESS_CANDIDATE_FAILURE_EXIT_CODE = 40
 _CANDIDATE_FAILURE_CODE = "candidate_policy_failure"
+
+
+def _darwin_host_machine() -> str:
+    return os.uname().machine
+
+
+def _darwin_policy_platform_and_image() -> tuple[str, str]:
+    machine = _darwin_host_machine()
+    try:
+        return _DARWIN_POLICY_IMAGES[machine]
+    except KeyError as exc:
+        raise RuntimeError(
+            f"FactoryBench Darwin policy sandbox unsupported on machine {machine!r}"
+        ) from exc
+
+
+def _real_user_home() -> Path:
+    """Home directory of the real user, ignoring Harbor HOME remaps."""
+    try:
+        import pwd
+
+        return Path(pwd.getpwuid(os.getuid()).pw_dir)
+    except Exception:
+        return Path.home()
+
+
+def _resolve_darwin_docker_context(*, env: dict[str, str]) -> str:
+    explicit = (
+        env.get("DOCKER_CONTEXT")
+        or os.environ.get("FACTORYBENCH_DOCKER_CONTEXT")
+        or ""
+    ).strip()
+    if explicit:
+        return explicit
+    docker = shutil.which("docker")
+    if not docker:
+        return _DARWIN_DOCKER_CONTEXT_PREFERRED
+    try:
+        listed = subprocess.run(
+            [docker, "context", "ls", "--format", "{{.Name}}"],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=3,
+            env=env,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return _DARWIN_DOCKER_CONTEXT_PREFERRED
+    names = {line.strip() for line in listed.stdout.splitlines() if line.strip()}
+    if _DARWIN_DOCKER_CONTEXT_PREFERRED in names:
+        return _DARWIN_DOCKER_CONTEXT_PREFERRED
+    if "default" in names:
+        return "default"
+    return next(iter(names), _DARWIN_DOCKER_CONTEXT_PREFERRED)
 
 
 class CandidatePolicyFailure(RuntimeError):
@@ -59,12 +134,61 @@ def _candidate_environment(*, home: str, path: str) -> dict[str, str]:
     return env
 
 
-def _linux_sandbox_command(*, root: Path, executable: Path) -> tuple[list[str], dict[str, str]]:
-    bwrap = shutil.which("bwrap")
-    if not bwrap:
-        raise RuntimeError(
-            "FactoryBench candidate isolation requires bubblewrap (bwrap) on Linux"
+def _linux_bwrap_userns_available(bwrap: str) -> bool:
+    """True when non-privileged bubblewrap can create user namespaces.
+
+    Nested Dock/SMR runtimes often ship ``bwrap`` but disable unprivileged
+    userns; probing avoids a hard fail mid-episode.
+    """
+    try:
+        probe = subprocess.run(
+            [
+                bwrap,
+                "--unshare-all",
+                "--die-with-parent",
+                "--ro-bind",
+                "/usr",
+                "/usr",
+                "--proc",
+                "/proc",
+                "--dev",
+                "/dev",
+                "/usr/bin/true",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return probe.returncode == 0
+
+def _linux_process_fallback_command(
+    *, root: Path, executable: Path
+) -> tuple[list[str], dict[str, str], str]:
+    """IPC process isolation without OS namespaces (Dock/SMR nested runtimes)."""
+    base_prefix = Path(sys.base_prefix).resolve()
+    command = [
+        str(executable),
+        str(root / "policy_subprocess.py"),
+        "--serve",
+        str(root / "policy.py"),
+    ]
+    env = _candidate_environment(
+        home=str(root / "empty"),
+        path=f"{base_prefix / 'bin'}:/usr/bin:/bin",
+    )
+    env["PWD"] = str(root)
+    return command, env, "process_fallback"
+
+
+def _linux_sandbox_command(
+    *, root: Path, executable: Path
+) -> tuple[list[str], dict[str, str], str]:
+    bwrap = shutil.which("bwrap")
+    if not bwrap or not _linux_bwrap_userns_available(bwrap):
+        return _linux_process_fallback_command(root=root, executable=executable)
     command = [
         bwrap,
         "--unshare-all",
@@ -116,9 +240,13 @@ def _linux_sandbox_command(*, root: Path, executable: Path) -> tuple[list[str], 
             "/workspace/policy.py",
         )
     )
-    return command, _candidate_environment(
-        home="/home/candidate",
-        path=f"{base_prefix / 'bin'}:/usr/bin:/bin",
+    return (
+        command,
+        _candidate_environment(
+            home="/home/candidate",
+            path=f"{base_prefix / 'bin'}:/usr/bin:/bin",
+        ),
+        "bubblewrap",
     )
 
 
@@ -131,7 +259,18 @@ def _docker_client_environment() -> dict[str, str]:
         "PATH",
         "XDG_CONFIG_HOME",
     }
-    return {key: value for key, value in os.environ.items() if key in keys}
+    env = {key: value for key, value in os.environ.items() if key in keys}
+    # Harbor remaps HOME into the lane workspace; Docker then loses the user's
+    # context metadata (orbstack). Always point DOCKER_CONFIG at the real home
+    # unless the caller already set an explicit config dir.
+    if "DOCKER_CONFIG" not in env:
+        real_config = _real_user_home() / ".docker"
+        if real_config.is_dir():
+            env["DOCKER_CONFIG"] = str(real_config)
+    # Keep HOME coherent with DOCKER_CONFIG for clients that key off HOME.
+    if env.get("DOCKER_CONFIG"):
+        env["HOME"] = str(_real_user_home())
+    return env
 
 
 def _darwin_sandbox_command(
@@ -154,10 +293,13 @@ def _darwin_sandbox_command(
     ).strip()
     if not runner_pid.isdigit():
         raise RuntimeError("FactoryBench policy runner pid must be numeric")
+    env = _docker_client_environment()
+    context = _resolve_darwin_docker_context(env=env)
+    platform, image = _darwin_policy_platform_and_image()
     command = [
         docker,
         "--context",
-        _DARWIN_DOCKER_CONTEXT,
+        context,
         "run",
         "--rm",
         "--interactive",
@@ -171,7 +313,7 @@ def _darwin_sandbox_command(
         "--label",
         f"{_WORKER_PID_LABEL}={os.getpid()}",
         "--platform",
-        _DARWIN_POLICY_PLATFORM,
+        platform,
         "--network",
         "none",
         "--read-only",
@@ -207,7 +349,7 @@ def _darwin_sandbox_command(
         )
     command.extend(
         (
-            _DARWIN_POLICY_IMAGE,
+            image,
             "/usr/bin/env",
             "-i",
             "HOME=/home/candidate",
@@ -221,7 +363,7 @@ def _darwin_sandbox_command(
             "/workspace/policy.py",
         )
     )
-    return command, _docker_client_environment()
+    return command, env
 
 
 def cleanup_isolated_policy_containers(*, runner_pid: int, worker_pid: int) -> None:
@@ -231,6 +373,8 @@ def cleanup_isolated_policy_containers(*, runner_pid: int, worker_pid: int) -> N
     docker = shutil.which("docker")
     if not docker:
         return
+    env = _docker_client_environment()
+    context = _resolve_darwin_docker_context(env=env)
     filters = [
         "--filter",
         f"label={_POLICY_LABEL}=true",
@@ -244,7 +388,7 @@ def cleanup_isolated_policy_containers(*, runner_pid: int, worker_pid: int) -> N
             [
                 docker,
                 "--context",
-                _DARWIN_DOCKER_CONTEXT,
+                context,
                 "ps",
                 "--all",
                 "--quiet",
@@ -254,7 +398,7 @@ def cleanup_isolated_policy_containers(*, runner_pid: int, worker_pid: int) -> N
             capture_output=True,
             text=True,
             timeout=3,
-            env=_docker_client_environment(),
+            env=env,
         )
         container_ids = [
             value.strip()
@@ -268,7 +412,7 @@ def cleanup_isolated_policy_containers(*, runner_pid: int, worker_pid: int) -> N
                 [
                     docker,
                     "--context",
-                    _DARWIN_DOCKER_CONTEXT,
+                    context,
                     "rm",
                     "--force",
                     *container_ids,
@@ -277,7 +421,7 @@ def cleanup_isolated_policy_containers(*, runner_pid: int, worker_pid: int) -> N
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 timeout=3,
-                env=_docker_client_environment(),
+                env=env,
             )
     except subprocess.TimeoutExpired:
         return
@@ -285,7 +429,7 @@ def cleanup_isolated_policy_containers(*, runner_pid: int, worker_pid: int) -> N
 
 def _sandbox_command(
     *, root: Path, container_name: str | None
-) -> tuple[list[str], dict[str, str]]:
+) -> tuple[list[str], dict[str, str], str]:
     if sys.platform.startswith("linux"):
         executable = Path(
             str(getattr(sys, "_base_executable", "") or sys.executable)
@@ -294,7 +438,8 @@ def _sandbox_command(
     if sys.platform == "darwin":
         if not container_name:
             raise RuntimeError("FactoryBench Darwin sandbox requires a container name")
-        return _darwin_sandbox_command(root=root, container_name=container_name)
+        command, env = _darwin_sandbox_command(root=root, container_name=container_name)
+        return command, env, "docker"
     raise RuntimeError(
         f"FactoryBench candidate isolation unsupported on platform {sys.platform!r}"
     )
@@ -470,7 +615,7 @@ class IsolatedPolicyProcess:
             if sys.platform == "darwin"
             else None
         )
-        command, env = _sandbox_command(
+        command, env, sandbox_mode = _sandbox_command(
             root=sandbox_root,
             container_name=self._container_name,
         )
@@ -507,7 +652,9 @@ class IsolatedPolicyProcess:
                 returncode = self._proc.poll()
                 if returncode == POLICY_PROCESS_CANDIDATE_FAILURE_EXIT_CODE:
                     raise CandidatePolicyFailure()
-                raise RuntimeError("isolated_policy_startup_failed")
+                raise RuntimeError(
+                    f"isolated_policy_startup_failed:rc={returncode}"
+                )
             if len(ready_line) > _MAX_IPC_LINE_CHARS or not ready_line.endswith("\n"):
                 raise CandidatePolicyFailure()
             try:
@@ -528,24 +675,39 @@ class IsolatedPolicyProcess:
             finally:
                 self._sandbox.cleanup()
             raise
+        linux_bwrap = sandbox_mode == "bubblewrap"
         self.isolation_receipt = {
-            "contract": "os_sandbox_observation_action.v2",
+            "contract": (
+                "os_sandbox_observation_action.v2"
+                if sandbox_mode != "process_fallback"
+                else "process_observation_action.v1"
+            ),
             "platform": sys.platform,
-            "sandbox": "bubblewrap" if sys.platform.startswith("linux") else "docker",
-            "network": "unshared" if sys.platform.startswith("linux") else "denied",
-            "filesystem": "policy_only_read_only",
-            "policy_uid": _LINUX_SANDBOX_UID,
+            "sandbox": sandbox_mode,
+            "network": (
+                "unshared"
+                if linux_bwrap
+                else ("denied" if sandbox_mode == "docker" else "shared_with_evaluator")
+            ),
+            "filesystem": (
+                "policy_only_read_only"
+                if sandbox_mode != "process_fallback"
+                else "process_cwd_policy_only"
+            ),
+            "policy_uid": _LINUX_SANDBOX_UID if linux_bwrap else os.getuid(),
             "suite_visible": False,
             "output_visible": False,
-            "evaluator_visible": False,
-            "forking": "denied",
+            "evaluator_visible": sandbox_mode == "process_fallback",
+            "forking": "denied" if sandbox_mode != "process_fallback" else "inherited",
         }
         if sys.platform == "darwin":
+            platform, image = _darwin_policy_platform_and_image()
+            docker_env = _docker_client_environment()
             self.isolation_receipt.update(
                 {
-                    "container_context": _DARWIN_DOCKER_CONTEXT,
-                    "container_image": _DARWIN_POLICY_IMAGE,
-                    "container_platform": _DARWIN_POLICY_PLATFORM,
+                    "container_context": _resolve_darwin_docker_context(env=docker_env),
+                    "container_image": image,
+                    "container_platform": platform,
                     "memory_limit_bytes": 512 * 1024 * 1024,
                     "pids_limit": 1,
                 }
@@ -634,11 +796,13 @@ class IsolatedPolicyProcess:
             docker = shutil.which("docker")
             if docker:
                 try:
+                    env = _docker_client_environment()
+                    context = _resolve_darwin_docker_context(env=env)
                     subprocess.run(
                         [
                             docker,
                             "--context",
-                            _DARWIN_DOCKER_CONTEXT,
+                            context,
                             "rm",
                             "--force",
                             self._container_name,
@@ -647,7 +811,7 @@ class IsolatedPolicyProcess:
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL,
                         timeout=3,
-                        env=_docker_client_environment(),
+                        env=env,
                     )
                 except subprocess.TimeoutExpired:
                     pass

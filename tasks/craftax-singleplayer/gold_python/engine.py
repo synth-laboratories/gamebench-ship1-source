@@ -45,38 +45,6 @@ ACTION_NAMES = CRAFTAX_ACTIONS
 MONSTERS_KILLED_TO_CLEAR_LEVEL = 8
 BOSS_FIGHT_SPAWN_TURNS = 7
 DAY_LENGTH = 300
-INTERMEDIATE_ACHIEVEMENTS = {
-    "collect_sapphire",
-    "collect_ruby",
-    "make_diamond_pickaxe",
-    "make_diamond_sword",
-    "make_iron_armour",
-    "make_diamond_armour",
-    "enter_gnomish_mines",
-    "enter_dungeon",
-    "defeat_gnome_warrior",
-    "defeat_gnome_archer",
-    "defeat_orc_solider",
-    "defeat_orc_mage",
-    "eat_bat",
-    "eat_snail",
-    "find_bow",
-    "fire_bow",
-    "open_chest",
-    "drink_potion",
-}
-VERY_ADVANCED_ACHIEVEMENTS = {
-    "enter_fire_realm",
-    "enter_ice_realm",
-    "enter_graveyard",
-    "defeat_pigman",
-    "defeat_fire_elemental",
-    "defeat_frost_troll",
-    "defeat_ice_elemental",
-    "damage_necromancer",
-    "defeat_necromancer",
-}
-
 ACTION_ALIASES = {
     "move_left": "left",
     "move_right": "right",
@@ -1455,6 +1423,7 @@ class CraftaxEngine:
         if self._spawn_player_projectile("arrow2", "shoot_arrow"):
             self.world.inventory["arrows"] -= 1
             self._unlock("fire_bow")
+            self._append_action("shoot_arrow", "projectile_spawn", {"projectile": "arrow2"})
 
     def _cast_spell(self) -> None:
         assert self.world is not None
@@ -1465,6 +1434,7 @@ class CraftaxEngine:
         if self._spawn_player_projectile("fireball", "cast_spell"):
             self.world.inventory["mana"] -= 2
             self._unlock("cast_spell")
+            self._append_action("cast_spell", "projectile_spawn", {"projectile": "fireball"})
 
     def _drink_potion(self, color: str) -> None:
         assert self.world is not None
@@ -1563,6 +1533,10 @@ class CraftaxEngine:
 
     def _melee(self, entity: Entity, action: str) -> None:
         assert self.world is not None
+        # Entity transitions describe the combat result, not the submitted
+        # action. Keep a primary action event so an action_applied-only replay
+        # tape preserves this world-advancing step.
+        self._append_action(action, "melee", {"target": list(entity.pos), "entity": entity.to_dict()})
         if entity.kind in PASSIVE_MOBS:
             damage = self._damage_against_entity(entity, self._player_damage_vector())
             entity.health -= damage
@@ -2194,7 +2168,7 @@ class CraftaxEngine:
                     continue
                 entity = self.entity_at((x, y), self.world.player_level)
                 if entity is not None:
-                    chars.append(entity.kind[0].upper())
+                    chars.append(_entity_char(entity.kind))
                     continue
                 projectile = self.projectile_at((x, y), self.world.player_level)
                 if projectile is not None:
@@ -2216,7 +2190,7 @@ class CraftaxEngine:
                     continue
                 entity = self.entity_at((x, y), self.world.player_level)
                 if entity is not None:
-                    chars.append(entity.kind[0].upper())
+                    chars.append(_entity_char(entity.kind))
                     continue
                 projectile = self.projectile_at((x, y), self.world.player_level)
                 if projectile is not None:
@@ -2482,14 +2456,8 @@ class CraftaxEngine:
             self.private.total_reward += delta
 
     def _achievement_reward(self, name: str) -> float:
-        scale = float(self.resolved.rules.get("achievement_reward", 1.0)) if self.resolved else 1.0
-        if name in VERY_ADVANCED_ACHIEVEMENTS:
-            return 8.0 * scale
-        if name in INTERMEDIATE_ACHIEVEMENTS:
-            return 3.0 * scale
-        if name in CRAFTAX_ACHIEVEMENTS:
-            return 1.0 * scale
-        return 5.0 * scale
+        del name
+        return 1.0
 
     def _apply_step_reward(self) -> None:
         reward = float(self.resolved.rules.get("step_reward", 0.0)) if self.resolved else 0.0
@@ -3481,49 +3449,86 @@ def _craft_tier(action: str) -> int:
     return 1
 
 
+# One glyph per world feature, mirroring gold_rust/src/native.rs.  Kept
+# injective: mob glyphs used to be ``kind[0].upper()``, which rendered a pigman
+# as ``P`` (the player), a troll as ``T`` (a tree), and a lizard as ``L``
+# (lava).
+TILE_GLYPHS: dict[str, str] = {
+    "grass": ".",
+    "path": "_",
+    "sand": ",",
+    "gravel": ";",
+    "fire_grass": '"',
+    "ice_grass": "'",
+    "water": "~",
+    "fountain": "u",
+    "stone": "o",
+    "stalagmite": "^",
+    "wall": "#",
+    "wall_moss": "%",
+    "tree": "T",
+    "fire_tree": "Y",
+    "ice_shrub": "y",
+    "lava": "L",
+    "coal": "c",
+    "iron": "i",
+    "diamond": "d",
+    "sapphire": "s",
+    "ruby": "r",
+    "chest": "h",
+    "crafting_table": "a",
+    "furnace": "F",
+    "ladder_down": ">",
+    "ladder_up": "<",
+    "ladder_down_blocked": "x",
+    "plant": "p",
+    "ripe_plant": "R",
+    "torch": "t",
+    "grave": "+",
+    "grave2": "+",
+    "grave3": "+",
+    "enchantment_table_fire": "E",
+    "enchantment_table_ice": "e",
+    "necromancer": "N",
+    "necromancer_vulnerable": "n",
+    "darkness": " ",
+    "out_of_bounds": " ",
+    "invalid": "?",
+}
+
+ENTITY_GLYPHS: dict[str, str] = {
+    "cow": "C",
+    "zombie": "Z",
+    "skeleton": "S",
+    "bat": "B",
+    "snail": "U",
+    "orc_solider": "O",
+    "orc_mage": "Q",
+    "gnome_warrior": "G",
+    "gnome_archer": "g",
+    "lizard": "V",
+    "kobold": "K",
+    "knight": "W",
+    "archer": "A",
+    "troll": "M",
+    "deep_thing": "D",
+    "pigman": "X",
+    "fire_elemental": "H",
+    "frost_troll": "I",
+    "ice_elemental": "J",
+    "necromancer": "N",
+}
+
+PLAYER_GLYPH = "P"
+UNKNOWN_GLYPH = "?"
+
+
 def _tile_char(tile: str) -> str:
-    return {
-        "invalid": "?",
-        "out_of_bounds": " ",
-        "grass": ".",
-        "path": ".",
-        "sand": ",",
-        "gravel": ",",
-        "water": "~",
-        "stone": "o",
-        "tree": "T",
-        "coal": "c",
-        "iron": "i",
-        "diamond": "d",
-        "sapphire": "s",
-        "ruby": "r",
-        "chest": "h",
-        "crafting_table": "a",
-        "furnace": "F",
-        "plant": "p",
-        "ripe_plant": "R",
-        "ladder_down": ">",
-        "ladder_up": "<",
-        "ladder_down_blocked": "x",
-        "wall": "#",
-        "wall_moss": "%",
-        "darkness": " ",
-        "stalagmite": "^",
-        "lava": "L",
-        "fountain": "u",
-        "fire_grass": ".",
-        "ice_grass": ".",
-        "fire_tree": "Y",
-        "ice_shrub": "y",
-        "enchantment_table_fire": "E",
-        "enchantment_table_ice": "e",
-        "necromancer": "N",
-        "necromancer_vulnerable": "n",
-        "grave": "+",
-        "grave2": "+",
-        "grave3": "+",
-        "torch": "t",
-    }.get(tile, "?")
+    return TILE_GLYPHS.get(tile, UNKNOWN_GLYPH)
+
+
+def _entity_char(kind: str) -> str:
+    return ENTITY_GLYPHS.get(kind, UNKNOWN_GLYPH)
 
 
 def _projectile_char(projectile: Projectile) -> str:
@@ -3532,7 +3537,7 @@ def _projectile_char(projectile: Projectile) -> str:
     if projectile.kind in {"fireball", "fireball2"}:
         return "*"
     if projectile.kind in {"iceball", "iceball2"}:
-        return "o"
+        return ":"
     return "-"
 
 

@@ -23,7 +23,9 @@ load_task_env "$TASK_ID"
 ensure_policy_sandbox_image
 BUNDLE="$(eval_registry harbor-bundle "$REG_FAMILY" "$TASK_ID")"
 TASK_ROOT="$(bundle_root "$BUNDLE")"
-IMAGE="${GAMEBENCH_HARBOR_IMAGE:-gamebench-harbor-${BUNDLE}:latest}"
+# Include TASK_ID so parallel verifies of different tasks cannot clobber a
+# shared :latest tag mid-build/extract.
+IMAGE="${GAMEBENCH_HARBOR_IMAGE:-gamebench-harbor-${BUNDLE}-${TASK_ID}:latest}"
 # Default OUT_DIR is minted fresh per run (panel-style UTC stamp + pid) so a
 # direct run can never report a prior run's result.json.
 OUT_DIR="${GAMEBENCH_HARBOR_OUT:-/tmp/gamebench-harbor-${BUNDLE}-verify-$(date -u +%Y%m%dT%H%M%SZ)-$$}"

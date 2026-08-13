@@ -1148,6 +1148,7 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
         .unwrap_or(false);
     let mut scratchpad = String::new();
     let mut scratchpad_writes: usize = 0;
+    let mut invalid_actions_total: usize = 0;
     let mut compactions: Vec<Value> = Vec::new();
     let mut last_prompt_tokens: u64 = 0;
 
@@ -1330,6 +1331,13 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
 
                 let mut executed: Vec<String> = Vec::new();
                 let mut planned: Vec<String> = Vec::new();
+                let mut turn_invalid: usize = 0;
+                let turn_observation = engine
+                    .readout()
+                    .get("observation_text")
+                    .and_then(Value::as_str)
+                    .unwrap_or("")
+                    .to_string();
                 let used_tool_call = tool_calls.as_ref().is_some_and(|c| !c.is_empty());
                 match tool_calls {
                     Some(calls) if !calls.is_empty() => {
@@ -1365,7 +1373,9 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                                 continue;
                             }
                             let batch_cap = max_actions.min(steps_remaining).max(1);
-                            let batch = parse_actions_batch(args_raw, &valid, batch_cap);
+                            let (batch, invalid) = parse_actions_batch_counted(args_raw, &valid, batch_cap);
+                            invalid_actions_total += invalid;
+                            turn_invalid += invalid;
                             planned.extend(batch.iter().cloned());
                             for action in &batch {
                                 if engine.is_done() {
@@ -1447,7 +1457,9 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                         // model that ignores the tool schema still advances,
                         // and tell it plainly what it should have done.
                         let batch_cap = max_actions.min(steps_remaining).max(1);
-                        let batch = parse_actions_batch(&assistant_text, &valid, batch_cap);
+                        let (batch, invalid) = parse_actions_batch_counted(&assistant_text, &valid, batch_cap);
+                        invalid_actions_total += invalid;
+                        turn_invalid += invalid;
                         planned.extend(batch.iter().cloned());
                         for action in &batch {
                             if engine.is_done() {
@@ -1544,6 +1556,18 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                     "assistant": assistant_text,
                     "actions": executed,
                     "planned": planned,
+                    // The observation this turn conditioned on. Without it a
+                    // turn cannot become an SFT example — curation rejects
+                    // "no observation to condition on" — and in image mode the
+                    // symbolic text is not in the tool result either.
+                    "observation_text": turn_observation,
+                    "invalid_actions": turn_invalid,
+                    // The exact target an SFT example must reproduce. In
+                    // tool-call mode `assistant` carries the model's thinking
+                    // and the action lives in the tool call, so the target has
+                    // to be stated separately or every turn looks empty.
+                    "target": serde_json::to_string(&json!({"actions": planned}))
+                        .unwrap_or_else(|_| "{\"actions\":[]}".into()),
                     "prompt_tokens": last_prompt_tokens,
                     "message_count": messages.len(),
                     // Distinguishes a real tool call from the text fallback.
@@ -1950,6 +1974,10 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
         // (CraftaxTrace) exists only in the Python ReAct container.
         "events": [],
         "nev": nev_ref,
+        // Required by SFT curation, which fail-closes when a container does not
+        // supply its own counters rather than inferring them from turn count.
+        "invalid_actions": invalid_actions_total,
+        "steps": steps,
         "scheduled_checkpoints": [],
         "final_achievements": engine.private.get("achievements").cloned().unwrap_or(json!([])),
         "metadata": {
@@ -2094,6 +2122,40 @@ fn accumulate_usage(total: &mut Value, usage: Option<&Value>) {
         let cur = obj.get(key).and_then(Value::as_u64).unwrap_or(0);
         obj.insert(key.into(), json!(cur + add));
     }
+}
+
+/// Parse a batch and report how many emitted actions were not valid action
+/// names. The count is required evidence downstream: SFT curation hard-rejects
+/// a trajectory whose container did not supply its invalid-action counter,
+/// because a policy that mostly emits garbage is not a demonstration.
+fn parse_actions_batch_counted(
+    raw: &str,
+    valid: &[String],
+    batch_cap: usize,
+) -> (Vec<String>, usize) {
+    let emitted = count_emitted_actions(raw);
+    let parsed = parse_actions_batch(raw, valid, batch_cap);
+    // Only actions beyond the cap are legitimately dropped; the rest were
+    // unrecognized names.
+    let kept_or_capped = parsed.len().max(emitted.min(batch_cap));
+    (parsed, emitted.saturating_sub(kept_or_capped))
+}
+
+/// How many action strings the model actually emitted, valid or not.
+fn count_emitted_actions(raw: &str) -> usize {
+    let text = raw.trim();
+    if let Ok(parsed) = serde_json::from_str::<Value>(text) {
+        if let Some(arr) = parsed.get("actions").and_then(Value::as_array) {
+            return arr.iter().filter(|v| v.is_string()).count();
+        }
+        if let Some(arr) = parsed.as_array() {
+            return arr.iter().filter(|v| v.is_string()).count();
+        }
+        if parsed.get("action").or_else(|| parsed.get("move")).or_else(|| parsed.get("command")).is_some() {
+            return 1;
+        }
+    }
+    0
 }
 
 fn parse_actions_batch(raw: &str, valid: &[String], batch_cap: usize) -> Vec<String> {

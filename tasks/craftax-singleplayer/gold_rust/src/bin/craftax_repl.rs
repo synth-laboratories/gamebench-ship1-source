@@ -66,6 +66,11 @@ fn handle_request(state: &mut ReplState, request: &Value) -> Value {
         .unwrap_or_default();
     match op {
         "ping" => json!({"ok": true, "lane": "rust_repl"}),
+        "info" => json!({
+            "ok": true,
+            "action_names": craftax_gamebench_gold::action_names(),
+            "glyph_legend": craftax_gamebench_gold::glyph_legend(),
+        }),
         "close" => {
             state.session = None;
             state.replay = None;
