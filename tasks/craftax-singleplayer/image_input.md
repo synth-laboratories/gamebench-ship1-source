@@ -3,7 +3,10 @@
 **Date:** 2026-08-13
 **Policy under test:** Luna medium ReAct — `openai/gpt-5.6-luna` via OpenRouter,
 `reasoning_effort: medium`, conversational loop with fixed-threshold compaction
-**World:** `craftax_default` (48×48, 9 levels), 1000 steps / 150 turns, 10 seeds
+**World:** `craftax_default` (48×48, 9 levels), requested 1000 steps / 150 turns,
+10 seeds. The service silently clamped `max_llm_turns` to 128 at the time of this
+experiment, so the 127–128-turn survivors (894–1000 steps) were turn-capped, not
+purely step-capped. The clamp is now 1024; the historical results below are unchanged.
 
 ## Headline
 
@@ -170,4 +173,3 @@ in the output itself rather than leaving it to whoever reads the table.
       text    2/2        0/2       4    3.50       [3.0, 4.0]    3.50
       both    2/2        0/2       3    2.00       [1.0, 3.0]    2.00
 ```
-

@@ -13,7 +13,7 @@ use craftax_gamebench_gold::{run_entry, CraftaxRustSession, EventRecord};
 use serde::Deserialize;
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
@@ -61,6 +61,339 @@ struct ApiError {
     status: StatusCode,
     code: &'static str,
     message: String,
+}
+
+struct TraceCapture {
+    requested: String,
+    required: bool,
+    control_url: Option<String>,
+    control_token: Option<String>,
+    client: Option<reqwest::Client>,
+    capture_id: Option<String>,
+    opened: Option<Value>,
+    failure: Option<String>,
+    uploaded_digests: HashSet<String>,
+}
+
+impl Drop for TraceCapture {
+    fn drop(&mut self) {
+        let Some(capture_id) = self.capture_id.take() else {
+            return;
+        };
+        let Some(url) = self.control_url.clone() else {
+            return;
+        };
+        let Some(client) = self.client.clone() else {
+            return;
+        };
+        let token = self.control_token.clone();
+        if let Ok(runtime) = tokio::runtime::Handle::try_current() {
+            runtime.spawn(async move {
+                let mut request = client
+                    .post(format!("{url}/captures/{capture_id}/seal"))
+                    .json(&json!({
+                        "status": "interrupted",
+                        "termination": {"reason": "craftax_rollout_aborted"},
+                    }));
+                if let Some(token) = token {
+                    request = request.bearer_auth(token);
+                }
+                let _ = request.send().await;
+            });
+        }
+    }
+}
+
+impl TraceCapture {
+    fn off() -> Self {
+        Self {
+            requested: "off".into(),
+            required: false,
+            control_url: None,
+            control_token: None,
+            client: None,
+            capture_id: None,
+            opened: None,
+            failure: None,
+            uploaded_digests: HashSet::new(),
+        }
+    }
+
+    async fn open(
+        policy_cfg: &Value,
+        rollout_id: &str,
+        client: reqwest::Client,
+    ) -> Result<Self, ApiError> {
+        let requested = policy_cfg
+            .get("capture")
+            .and_then(Value::as_str)
+            .unwrap_or("off")
+            .to_string();
+        if !matches!(requested.as_str(), "off" | "best_effort" | "required") {
+            return Err(ApiError {
+                status: StatusCode::BAD_REQUEST,
+                code: "invalid_capture_mode",
+                message: "policy.config.capture must be off, best_effort, or required".into(),
+            });
+        }
+        let required = requested == "required";
+        let control_url = policy_cfg
+            .get("capture_url")
+            .and_then(Value::as_str)
+            .map(str::to_string)
+            .or_else(|| std::env::var("SYNTH_TRACE_CONTROL_URL").ok())
+            .map(|url| url.trim_end_matches('/').to_string());
+        let mut capture = Self {
+            requested: requested.clone(),
+            required,
+            control_url,
+            control_token: std::env::var("SYNTH_TRACE_CONTROL_TOKEN").ok(),
+            client: Some(client),
+            capture_id: None,
+            opened: None,
+            failure: None,
+            uploaded_digests: HashSet::new(),
+        };
+        if requested == "off" {
+            return Ok(capture);
+        }
+        let Some(url) = capture.control_url.clone() else {
+            capture.fail("SYNTH_TRACE_CONTROL_URL/capture_url is not configured".into())?;
+            return Ok(capture);
+        };
+        let mut request = capture.client.as_ref().expect("capture client").post(format!("{url}/captures")).json(&json!({
+            "rollout_id": rollout_id,
+            "labels": {"workload": "craftax-singleplayer", "emitter": "gold_rust"},
+            "capture_mode": requested,
+        }));
+        if let Some(token) = capture.control_token.as_deref() {
+            request = request.bearer_auth(token);
+        }
+        match request.send().await {
+            Ok(response) if response.status().is_success() => match response.json::<Value>().await {
+                Ok(opened) => {
+                    capture.capture_id = opened
+                        .get("capture_id")
+                        .and_then(Value::as_str)
+                        .map(str::to_string);
+                    capture.opened = Some(opened);
+                    if capture.capture_id.is_none() {
+                        capture.fail("capture open response omitted capture_id".into())?;
+                    }
+                }
+                Err(err) => capture.fail(format!("capture open response: {err}"))?,
+            },
+            Ok(response) => capture.fail(format!("capture open returned HTTP {}", response.status()))?,
+            Err(err) => capture.fail(format!("capture open failed: {err}"))?,
+        }
+        Ok(capture)
+    }
+
+    fn fail(&mut self, message: String) -> Result<(), ApiError> {
+        self.failure = Some(message.clone());
+        if self.required {
+            Err(ApiError {
+                status: StatusCode::FAILED_DEPENDENCY,
+                code: "trace_capture_required",
+                message,
+            })
+        } else {
+            Ok(())
+        }
+    }
+
+    async fn emit_turn(&mut self, mut payload: Value) -> Result<(), ApiError> {
+        let Some(capture_id) = self.capture_id.clone() else {
+            return Ok(());
+        };
+        if let Some(messages) = payload.get("messages").cloned() {
+            match self.externalize_images(messages).await {
+                Ok(messages) => payload["messages"] = messages,
+                Err(err) => {
+                    if self.interrupt_capture(&capture_id, &err).await {
+                        self.capture_id = None;
+                    }
+                    return self.fail(err);
+                }
+            }
+        }
+        let Some(url) = self.control_url.as_deref() else {
+            return self.fail("capture control URL disappeared".into());
+        };
+        let mut request = self
+            .client
+            .as_ref()
+            .expect("open capture has an HTTP client")
+            .post(format!("{url}/captures/{capture_id}/events"))
+            .json(&json!({"event_type": "craftax.turn", "payload": payload}));
+        if let Some(token) = self.control_token.as_deref() {
+            request = request.bearer_auth(token);
+        }
+        match request.send().await {
+            Ok(response) if response.status().is_success() => Ok(()),
+            Ok(response) => {
+                let message = format!("capture event returned HTTP {}", response.status());
+                if self.interrupt_capture(&capture_id, &message).await {
+                    self.capture_id = None;
+                }
+                self.fail(message)
+            }
+            Err(err) => {
+                let message = format!("capture event failed: {err}");
+                if self.interrupt_capture(&capture_id, &message).await {
+                    self.capture_id = None;
+                }
+                self.fail(message)
+            }
+        }
+    }
+
+    async fn externalize_images(&mut self, mut messages: Value) -> Result<Value, String> {
+        let Some(items) = messages.as_array_mut() else {
+            return Ok(messages);
+        };
+        for message_index in 0..items.len() {
+            let part_count = items[message_index]
+                .get("content")
+                .and_then(Value::as_array)
+                .map(Vec::len)
+                .unwrap_or(0);
+            for part_index in 0..part_count {
+                let data_url = items[message_index]
+                    .pointer(&format!("/content/{part_index}/image_url/url"))
+                    .and_then(Value::as_str)
+                    .map(str::to_string);
+                let Some(data_url) = data_url else { continue };
+                let Some(encoded) = data_url.strip_prefix("data:image/png;base64,") else {
+                    continue;
+                };
+                let content = BASE64.decode(encoded).map_err(|err| format!("invalid trace frame: {err}"))?;
+                let digest = format!("sha256:{:x}", Sha256::digest(&content));
+                if !self.uploaded_digests.contains(&digest) {
+                    self.upload_image(&content, message_index, &digest).await?;
+                    self.uploaded_digests.insert(digest.clone());
+                }
+                items[message_index]["content"][part_index]["image_url"] = json!({
+                    "digest": digest,
+                    "media_type": "image/png",
+                });
+            }
+        }
+        Ok(messages)
+    }
+
+    async fn upload_image(
+        &self,
+        content: &[u8],
+        message_index: usize,
+        digest: &str,
+    ) -> Result<(), String> {
+        let capture_id = self.capture_id.as_deref().ok_or("capture is not open")?;
+        let url = self.control_url.as_deref().ok_or("capture control URL is missing")?;
+        let mut request = self
+            .client
+            .as_ref()
+            .expect("open capture has an HTTP client")
+            .post(format!("{url}/captures/{capture_id}/artifacts"))
+            .json(&json!({
+                "role": "observation",
+                "media_type": "image/png",
+                "logical_name": format!("craftax-frame-{message_index}-{digest}.png"),
+                "content_base64": BASE64.encode(content),
+                "visibility": "private",
+            }));
+        if let Some(token) = self.control_token.as_deref() {
+            request = request.bearer_auth(token);
+        }
+        match request.send().await {
+            Ok(response) if response.status().is_success() => Ok(()),
+            Ok(response) => Err(format!("capture artifact returned HTTP {}", response.status())),
+            Err(err) => Err(format!("capture artifact failed: {err}")),
+        }
+    }
+
+    async fn interrupt_capture(&self, capture_id: &str, reason: &str) -> bool {
+        let Some(url) = self.control_url.as_deref() else { return false };
+        let mut request = self
+            .client
+            .as_ref()
+            .expect("open capture has an HTTP client")
+            .post(format!("{url}/captures/{capture_id}/seal"))
+            .json(&json!({
+                "status": "interrupted",
+                "termination": {"reason": "craftax_emission_failed", "detail": reason},
+            }));
+        if let Some(token) = self.control_token.as_deref() {
+            request = request.bearer_auth(token);
+        }
+        matches!(request.send().await, Ok(response) if response.status().is_success())
+    }
+
+    async fn seal(&mut self) -> Result<Value, ApiError> {
+        let Some(capture_id) = self.capture_id.clone() else {
+            return Ok(if self.requested == "off" {
+                json!({"capture": "off", "status": "disabled"})
+            } else {
+                json!({
+                    "capture": self.requested,
+                    "status": "unavailable",
+                    "reason": self.failure,
+                })
+            });
+        };
+        let Some(url) = self.control_url.as_deref() else {
+            self.fail("capture control URL disappeared before seal".into())?;
+            return Ok(json!({"capture": self.requested, "status": "unavailable"}));
+        };
+        let mut request = self
+            .client
+            .as_ref()
+            .expect("open capture has an HTTP client")
+            .post(format!("{url}/captures/{capture_id}/seal"))
+            .json(&json!({"status": "completed"}));
+        if let Some(token) = self.control_token.as_deref() {
+            request = request.bearer_auth(token);
+        }
+        match request.send().await {
+            Ok(response) if response.status().is_success() => {
+                let mut sealed = response.json::<Value>().await.map_err(|err| ApiError {
+                    status: StatusCode::BAD_GATEWAY,
+                    code: "trace_capture_seal",
+                    message: err.to_string(),
+                })?;
+                self.capture_id = None;
+                sealed["capture"] = json!(self.requested);
+                Ok(sealed)
+            }
+            Ok(response) => {
+                self.fail(format!("capture seal returned HTTP {}", response.status()))?;
+                Ok(json!({"capture": self.requested, "status": "unavailable", "reason": self.failure}))
+            }
+            Err(err) => {
+                self.fail(format!("capture seal failed: {err}"))?;
+                Ok(json!({"capture": self.requested, "status": "unavailable", "reason": self.failure}))
+            }
+        }
+    }
+}
+
+fn trace_safe_message(mut message: Value) -> Value {
+    // OpenRouter may return an opaque provider-signed reasoning_details.data blob.
+    // It is not exposed thinking, is not useful for replay/training, grows every
+    // later request snapshot, and random URL-safe bytes can trip literal secret
+    // scanners (including an incidental `sk-` substring). Capture the assistant
+    // content as thinking and omit this transport-only continuation token.
+    if let Some(object) = message.as_object_mut() {
+        object.remove("reasoning_details");
+    }
+    message
+}
+
+fn trace_safe_messages(messages: Value) -> Value {
+    match messages {
+        Value::Array(items) => Value::Array(items.into_iter().map(trace_safe_message).collect()),
+        other => other,
+    }
 }
 
 impl IntoResponse for ApiError {
@@ -592,7 +925,7 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
         .or_else(|| body.pointer("/go_ex/max_llm_turns"))
         .and_then(Value::as_u64)
         .unwrap_or(16)
-        .clamp(1, 128) as usize;
+        .clamp(1, 1024) as usize;
     let use_lm = policy_cfg
         .get("use_lm")
         .and_then(Value::as_bool)
@@ -602,6 +935,24 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
         .and_then(Value::as_str)
         .map(str::to_string)
         .unwrap_or_else(|| Uuid::new_v4().to_string());
+    let mut trace_capture = if policy_cfg
+        .get("capture")
+        .and_then(Value::as_str)
+        .unwrap_or("off")
+        == "off"
+    {
+        TraceCapture::off()
+    } else {
+        let trace_http_client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(60))
+            .build()
+            .map_err(|err| ApiError {
+                status: StatusCode::INTERNAL_SERVER_ERROR,
+                code: "trace_http_client",
+                message: err.to_string(),
+            })?;
+        TraceCapture::open(&policy_cfg, &rollout_id, trace_http_client).await?
+    };
     // The world used to be hardcoded to `policy_dev_small` here: a 16x16, 3-level
     // board with 16% of vanilla tree density and a 120-step budget. Every
     // optimizer, GEPA, GELO and SFT rollout went through this function, so all
@@ -940,6 +1291,21 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                     request_body.as_object_mut().unwrap()
                         .insert("reasoning_effort".into(), json!(effort));
                 }
+                let trace_messages = trace_safe_messages(request_body
+                    .get("messages")
+                    .cloned()
+                    .unwrap_or_else(|| json!([])));
+                let trace_steps_before = steps_done;
+                let trace_reward_before = engine
+                    .private
+                    .get("total_reward")
+                    .and_then(Value::as_f64)
+                    .unwrap_or(0.0);
+                let trace_achievements_before = engine
+                    .private
+                    .get("achievements")
+                    .cloned()
+                    .unwrap_or_else(|| json!([]));
                 let payload = call_policy_lm(
                     &client,
                     &inference_url,
@@ -956,8 +1322,10 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                 let msg = payload.pointer("/choices/0/message").cloned().unwrap_or(json!({}));
                 let assistant_text = extract_assistant_text(&payload);
                 let tool_calls = msg.get("tool_calls").and_then(Value::as_array).cloned();
+                let trace_tool_calls = tool_calls.clone().unwrap_or_default();
 
                 // Keep the assistant turn verbatim so tool_call_ids stay valid.
+                let transcript_len_before_response = messages.len();
                 messages.push(msg.clone());
 
                 let mut executed: Vec<String> = Vec::new();
@@ -1148,6 +1516,29 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                 }
 
                 llm_calls += 1;
+                let trace_tool_results: Vec<Value> = messages
+                    .iter()
+                    .skip(transcript_len_before_response + 1)
+                    .filter(|message| {
+                        message.get("role").and_then(Value::as_str) == Some("tool")
+                    })
+                    .cloned()
+                    .collect();
+                let trace_steps_after = engine
+                    .private
+                    .get("step_index")
+                    .and_then(Value::as_u64)
+                    .unwrap_or(0);
+                let trace_reward_after = engine
+                    .private
+                    .get("total_reward")
+                    .and_then(Value::as_f64)
+                    .unwrap_or(0.0);
+                let trace_achievements_after = engine
+                    .private
+                    .get("achievements")
+                    .cloned()
+                    .unwrap_or_else(|| json!([]));
                 turns.push(json!({
                     "llm_call": llm_calls,
                     "assistant": assistant_text,
@@ -1160,6 +1551,28 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                     // running on tool calls or quietly limping on JSON parsing.
                     "used_tool_call": used_tool_call,
                 }));
+                trace_capture
+                    .emit_turn(json!({
+                        "llm_call": llm_calls,
+                        "messages": trace_messages,
+                        "assistant_message": trace_safe_message(msg),
+                        "thinking": assistant_text,
+                        "tool_calls": trace_tool_calls,
+                        "tool_results": trace_tool_results,
+                        "usage": payload.get("usage").cloned().unwrap_or_else(|| json!({})),
+                        "env_transition": {
+                            "steps_before": trace_steps_before,
+                            "steps_after": trace_steps_after,
+                            "actions": executed,
+                            "reward_before": trace_reward_before,
+                            "reward_after": trace_reward_after,
+                            "reward_delta": trace_reward_after - trace_reward_before,
+                            "achievements_before": trace_achievements_before,
+                            "achievements_after": trace_achievements_after,
+                        },
+                        "compactions": compactions,
+                    }))
+                    .await?;
 
                 // ── Compaction ─────────────────────────────────────────────
                 // Fixed context window: compact when the real prompt token
@@ -1319,6 +1732,21 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                     obj.insert("max_tokens".into(), json!(1024));
                 }
             }
+            let trace_messages = trace_safe_messages(request_body
+                .get("messages")
+                .cloned()
+                .unwrap_or_else(|| json!([])));
+            let trace_steps_before = steps_done;
+            let trace_reward_before = engine
+                .private
+                .get("total_reward")
+                .and_then(Value::as_f64)
+                .unwrap_or(0.0);
+            let trace_achievements_before = engine
+                .private
+                .get("achievements")
+                .cloned()
+                .unwrap_or_else(|| json!([]));
             let payload = call_policy_lm(
                 &client,
                 &inference_url,
@@ -1366,6 +1794,21 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                 }
             }
             llm_calls += 1;
+            let trace_steps_after = engine
+                .private
+                .get("step_index")
+                .and_then(Value::as_u64)
+                .unwrap_or(0);
+            let trace_reward_after = engine
+                .private
+                .get("total_reward")
+                .and_then(Value::as_f64)
+                .unwrap_or(0.0);
+            let trace_achievements_after = engine
+                .private
+                .get("achievements")
+                .cloned()
+                .unwrap_or_else(|| json!([]));
             turns.push(json!({
                 "llm_call": llm_calls,
                 "assistant": assistant,
@@ -1377,6 +1820,28 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                 "observation_text": observation_for_turn,
                 "valid_actions": valid_for_turn,
             }));
+            trace_capture
+                .emit_turn(json!({
+                    "llm_call": llm_calls,
+                    "messages": trace_messages,
+                    "assistant_message": {"role": "assistant", "content": assistant},
+                    "thinking": assistant,
+                    "tool_calls": [],
+                    "tool_results": [],
+                    "usage": payload.get("usage").cloned().unwrap_or_else(|| json!({})),
+                    "env_transition": {
+                        "steps_before": trace_steps_before,
+                        "steps_after": trace_steps_after,
+                        "actions": executed,
+                        "reward_before": trace_reward_before,
+                        "reward_after": trace_reward_after,
+                        "reward_delta": trace_reward_after - trace_reward_before,
+                        "achievements_before": trace_achievements_before,
+                        "achievements_after": trace_achievements_after,
+                    },
+                    "compactions": [],
+                }))
+                .await?;
         }
         policy_label = format!("craftax_react_{provider}");
         }
@@ -1407,7 +1872,8 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
         .and_then(Value::as_u64)
         .unwrap_or(0);
     let nev_ref = spool_nev(&rollout_id, &engine.events);
-    let record = json!({
+    let trace_ref = trace_capture.seal().await?;
+    let mut record = json!({
         "status": "completed",
         "rollout_id": rollout_id,
         "outcome_reward": reward,
@@ -1494,6 +1960,13 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
         "terminated": true,
         "truncated": engine.private.get("truncated").and_then(Value::as_bool).unwrap_or(false),
     });
+    // Trace V5 is independently stored by synth-containers. Only the digest/path
+    // manifest crosses the rollout response boundary. Capture-off omits the field
+    // entirely so the default response contract remains byte-for-byte shaped as it
+    // was before tracing support.
+    if trace_ref.get("capture").and_then(Value::as_str) != Some("off") {
+        record["summary"]["trace"] = trace_ref;
+    }
     let session = RolloutSession {
         engine,
         started_at: Instant::now(),
@@ -2347,5 +2820,42 @@ mod catalog_tests {
 		assert_eq!(instances[31]["task_instance_id"], "craftax:train:1032");
 		assert_eq!(instances[32]["task_instance_id"], "craftax:test:2001");
 		assert_eq!(instances[39]["metadata"]["seed"], 2008);
+	}
+
+	#[tokio::test]
+	async fn capture_defaults_off_without_a_control_service() {
+		let capture = TraceCapture::open(
+			&json!({}),
+			"rollout-off",
+			reqwest::Client::new(),
+		)
+		.await
+		.expect("capture off");
+		assert_eq!(capture.requested, "off");
+		assert!(capture.capture_id.is_none());
+	}
+
+	#[tokio::test]
+	async fn required_capture_rejects_unavailable_control_service() {
+		let result = TraceCapture::open(
+			&json!({"capture": "required", "capture_url": "http://127.0.0.1:0"}),
+			"rollout-required",
+			reqwest::Client::new(),
+		)
+		.await;
+		assert!(result.is_err());
+		let error = result.err().expect("required error");
+		assert_eq!(error.code, "trace_capture_required");
+	}
+
+	#[test]
+	fn trace_omits_opaque_provider_reasoning_continuations() {
+		let safe = trace_safe_messages(json!([{
+			"role": "assistant",
+			"content": "exposed reasoning",
+			"reasoning_details": [{"data": "opaque-sk-not-a-secret"}],
+		}]));
+		assert_eq!(safe[0]["content"], "exposed reasoning");
+		assert!(safe[0].get("reasoning_details").is_none());
 	}
 }
