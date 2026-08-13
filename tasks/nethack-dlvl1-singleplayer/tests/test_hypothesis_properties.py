@@ -196,6 +196,31 @@ def adapter_task() -> dict[str, Any]:
     }
 
 
+def captured_inventory_task() -> dict[str, Any]:
+    """A source-shaped Valkyrie inventory with its raw NLE presentation."""
+
+    entries = [
+        ("a", 2, "a +1 long sword (weapon in hand)", ")"),
+        ("b", 2, "a +0 dagger (alternate weapon; not wielded)", ")"),
+        ("c", 3, "an uncursed +3 small shield (being worn)", "["),
+        ("d", 7, "2 uncursed food rations", "%"),
+        ("e", 6, "an uncursed oil lamp", "("),
+    ]
+    task = adapter_task()
+    level = task["level_dump"]
+    level["inventory"] = [
+        {"id": f"capture-{letter}", "letter": letter, "kind": kind, "name": name, "oclass_code": object_class}
+        for letter, object_class, name, kind in entries
+    ]
+    level["metadata"]["nle_inventory"] = {
+        "inv_letters": [ord(letter) for letter, _, _, _ in entries] + [0] * 50,
+        "inv_glyphs": [0] * 55,
+        "inv_oclasses": [object_class for _, object_class, _, _ in entries] + [18] * 50,
+        "inv_strs": [capture_buffer(name, width=80) for _, _, name, _ in entries] + [[0] * 80 for _ in range(50)],
+    }
+    return task
+
+
 def capture_buffer(text: str, *, width: int) -> list[int]:
     """Build an NLE-style fixed-width NUL-padded byte buffer."""
 
@@ -551,7 +576,14 @@ class TestNetHackProperties(unittest.TestCase):
         self.assertEqual(".", underlaid["terrain"][0][1])
         self.assertEqual(702, underlaid["glyphs"][0][1])
         self.assertEqual(13, underlaid["colors"][0][1])
-        with self.assertRaisesRegex(ValueError, "visible reset monster or item cell"):
+        hero_underlaid = level_dump(
+            initial,
+            {"terrain_underlay": [{"x": 0, "y": 0, "char": "<", "glyph": 703, "color": 7}]},
+        )
+        self.assertEqual("<", hero_underlaid["terrain"][0][0])
+        self.assertEqual(703, hero_underlaid["glyphs"][0][0])
+        self.assertEqual(7, hero_underlaid["colors"][0][0])
+        with self.assertRaisesRegex(ValueError, "visible reset entity cell"):
             level_dump(
                 initial,
                 {"terrain_underlay": [{"x": 2, "y": 0, "char": "#", "glyph": 703, "color": 14}]},
@@ -573,6 +605,31 @@ class TestNetHackProperties(unittest.TestCase):
             [{"letter": "d", "kind": "%", "name": "an uncursed food ration", "oclass_code": 7}],
             [{key: item[key] for key in ("letter", "kind", "name", "oclass_code")} for item in captured_inventory],
         )
+
+    def test_dark_corridor_visibility_stops_at_room_boundary_but_not_inside_corridor(self) -> None:
+        """Keep the NLE entering-corridor boundary in both independent lanes."""
+
+        def task(*, hero_on_corridor: bool) -> dict[str, Any]:
+            result = adapter_task()
+            result["rules"]["vision_radius"] = 5
+            result["level_dump"]["hero"] = {"x": 5, "y": 4}
+            result["level_dump"]["seen"] = seen_mask((5, 4))
+            terrain = [list(row) for row in result["level_dump"]["terrain"]]
+            if hero_on_corridor:
+                for x in range(5, 10):
+                    terrain[4][x] = "#"
+            else:
+                terrain[4][9] = "#"
+            result["level_dump"]["terrain"] = ["".join(row) for row in terrain]
+            return result
+
+        room_trace = python_public_trace(task(hero_on_corridor=False), ["CompassDirection.E"])
+        self.assertEqual(room_trace, rust_public_trace(task(hero_on_corridor=False), ["CompassDirection.E"]))
+        self.assertEqual(" ", room_trace[-1]["chars"][4][9])
+
+        corridor_trace = python_public_trace(task(hero_on_corridor=True), ["CompassDirection.E"])
+        self.assertEqual(corridor_trace, rust_public_trace(task(hero_on_corridor=True), ["CompassDirection.E"]))
+        self.assertEqual("#", corridor_trace[-1]["chars"][4][9])
 
     def test_capture_state_baselines_and_gold_owned_fov_match_across_lanes(self) -> None:
         task, expected = capture_state_task()
@@ -747,6 +804,53 @@ class TestNetHackProperties(unittest.TestCase):
             self.assertEqual("You don't have anything to use or apply.", after["message"])
             self.assertEqual(before["blstats"], after["blstats"])
             self.assertEqual("normal", after["input_mode"]["kind"])
+
+    def test_apply_uses_nle_tool_prompt_and_letter_list_in_both_lanes(self) -> None:
+        task = adapter_task()
+        task["level_dump"]["inventory"].append({"id": "lamp", "kind": "(", "name": "an oil lamp"})
+        python_trace = python_public_trace(task, ["Command.APPLY"])
+        rust_trace = rust_public_trace(task, ["Command.APPLY"])
+        self.assertEqual(python_trace, rust_trace)
+        before, after = python_trace
+        self.assertEqual("What do you want to use or apply? [c or ?*]", after["message"])
+        self.assertEqual(before["blstats"], after["blstats"])
+        self.assertEqual("inventory_letter", after["input_mode"]["kind"])
+
+    def test_inventory_is_an_empty_message_zero_turn_display_command_in_both_lanes(self) -> None:
+        task = adapter_task()
+        python_trace = python_public_trace(task, ["Command.INVENTORY"])
+        rust_trace = rust_public_trace(task, ["Command.INVENTORY"])
+        self.assertEqual(python_trace, rust_trace)
+        before, after = python_trace
+        self.assertEqual("", after["message"])
+        self.assertEqual([], after["message_raw"])
+        self.assertEqual(before["blstats"], after["blstats"])
+        self.assertEqual("inventory_display", after["input_mode"]["kind"])
+
+    def test_captured_inventory_display_persists_until_escape_in_both_lanes(self) -> None:
+        task = captured_inventory_task()
+        actions = ["Command.INVENTORY", "Command.SEARCH", "Command.ESC"]
+        python_trace = python_public_trace(task, actions)
+        rust_trace = rust_public_trace(task, actions)
+        self.assertEqual(python_trace, rust_trace)
+        before, displayed, ignored, dismissed = python_trace
+        self.assertEqual("inventory_display", displayed["input_mode"]["kind"])
+        self.assertEqual("", displayed["message"])
+        self.assertEqual(displayed["blstats"], ignored["blstats"])
+        self.assertEqual("inventory_display", ignored["input_mode"]["kind"])
+        self.assertEqual("normal", dismissed["input_mode"]["kind"])
+        self.assertEqual("", dismissed["message"])
+        self.assertEqual(before["blstats"], dismissed["blstats"])
+
+    def test_quit_uses_the_nle_confirmation_prompt_in_both_lanes(self) -> None:
+        task = adapter_task()
+        python_trace = python_public_trace(task, ["Command.QUIT"])
+        rust_trace = rust_public_trace(task, ["Command.QUIT"])
+        self.assertEqual(python_trace, rust_trace)
+        before, after = python_trace
+        self.assertEqual("Really quit? [yn] (n)", after["message"])
+        self.assertEqual(before["blstats"], after["blstats"])
+        self.assertEqual("ynq", after["input_mode"]["kind"])
 
     def test_close_against_non_door_is_message_only_in_both_lanes(self) -> None:
         task = explicit_stair_task()

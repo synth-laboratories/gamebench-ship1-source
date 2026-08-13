@@ -1,0 +1,78 @@
+{
+  "capture_runtime": {
+    "limitation": "The historical capture predates exact binary/runtime fingerprinting.",
+    "nethack_version": "3.6.6",
+    "nle_version": "0.9.0",
+    "status": "legacy_version_only"
+  },
+  "files_sha256": {
+    "actions.jsonl": "b432c681300d9c09d53de4a7a93f9bc40a028ac3845fc7c4b326544fb79ea7d7",
+    "level_dump.json": "dc206b68c5479516bab07d85554e4085b4307c97d028c3a3ac901f0225758266",
+    "meta.json": "631bbde679cfba8a56ffb5a35e206b6835efe3a50cf073bba1673e144e189a2e",
+    "snapshots.jsonl": "34a3b2f5051c7626615da10d8d82b4655363781f13648401ff0ed1ada8fe2f75"
+  },
+  "fixture_id": "val-door-open-horizontal-seed-20260316",
+  "native_pre_action_evidence": {
+    "conformance_denominator_included": false,
+    "limitation": "This tape predates pinned native map/FOV/door, entity/path, player, and RNG sidecars.",
+    "status": "legacy_no_native_pre_action_evidence",
+    "usage_policy": {
+      "captured_before_action_only": true,
+      "classification": "read_only_authoritative_source_evidence",
+      "forbidden_uses": [
+        "future_observation_hydration",
+        "reset_level_dump_hydration",
+        "gold_runtime_input",
+        "conformance_denominator"
+      ]
+    }
+  },
+  "oracle_identity": {
+    "action_table_sha256": "49fd23af71259e5349fb82b0825517a35f876e48250d76d61379f48fe86cffd3",
+    "capture_contract": {
+      "auto_more": "raw_explicit",
+      "geography": "Main Dungeon dlvl 1; descent freezes the last pre-dlvl2 observation",
+      "source_of_truth": "actions.jsonl and snapshots.jsonl captured from the pinned NLE oracle"
+    },
+    "oracle": {
+      "name": "NetHack Learning Environment",
+      "nethack_version": "3.6.6",
+      "nle_version": "0.9.0",
+      "source_artifact": {
+        "filename": "nle-0.9.0.tar.gz",
+        "sha256": "a98644bdd547017cdde9fdf589b245da98ff8753327285e949d506d9006f10d4",
+        "url": "https://files.pythonhosted.org/packages/12/4f/af454188d1f16c7023c54dc0c89199c571ccfffe55f0a6a829ec96c62685/nle-0.9.0.tar.gz"
+      }
+    },
+    "schema": "gamebench.nethack.oracle_identity.v1"
+  },
+  "reset_state_sha256": "43a82d446fb8fbc1084dc3b41acd45335f7bc83becbaf6220ce0c1179f3df45f",
+  "schema": "gamebench.nethack.oracle_tape_manifest.v1",
+  "terminal_state_sha256": "9d90943d3fcb700842f91cfb80e60a3e0ea77741edc8249dd1d4a9f724dd386b",
+  "turns": [
+    {
+      "input": {
+        "action_id": 57,
+        "action_name": "Command.OPEN",
+        "step": 1
+      },
+      "input_sha256": "aeae501cce5763982efde1f434ac8d6dcfa193200d3228eec2f01a36ebbb1c84",
+      "result_state_sha256": "cae3ef031b53cd29ce5118c9bf3ec7e0fab0eb6734ab14c1e01bb374e8e6b951",
+      "source_state_sha256": "43a82d446fb8fbc1084dc3b41acd45335f7bc83becbaf6220ce0c1179f3df45f",
+      "step": 1,
+      "terminal_ui_evidence_sha256": "cd9d7b561e353482fac9418594cfdd6424a4af4e7a4723e079b51d175f17d3e4"
+    },
+    {
+      "input": {
+        "action_id": 1,
+        "action_name": "CompassDirection.E",
+        "step": 2
+      },
+      "input_sha256": "5797e04017128eceae81f8172f80d7796c69bed498843b0e255846b40b1f48a6",
+      "result_state_sha256": "9d90943d3fcb700842f91cfb80e60a3e0ea77741edc8249dd1d4a9f724dd386b",
+      "source_state_sha256": "cae3ef031b53cd29ce5118c9bf3ec7e0fab0eb6734ab14c1e01bb374e8e6b951",
+      "step": 2,
+      "terminal_ui_evidence_sha256": "a06985c9cb092fedf3e19cdae8e9c3a7b16d0b56ef7b93812e40274b33005715"
+    }
+  ]
+}

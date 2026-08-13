@@ -6,7 +6,7 @@ visibility: private
 oracle:
   type: capture_backed_nle_discrepancy
   reference: fixtures/nle_oracle/
-  comparator: scripts/compare_nle_discrepancies.py
+  comparator: scripts/judge_nle_tapes.py
   gold_eventlogs: fixtures/gold/eventlogs/eventlogs.json
   note: Frozen NLE 0.9.0 / NetHack 3.6.6 captures are the discrepancy oracle. Gold runtime never imports, links, shells to, or wraps NLE.
 upstream:
@@ -38,4 +38,4 @@ status:
     property_test_requirements: requirements-property-tests.txt
     live_nle_twin_step: optional_dev_extra
     required_oracle_tapes_v0: 33
-    current_oracle_tapes: 12
+  current_oracle_tapes: 31

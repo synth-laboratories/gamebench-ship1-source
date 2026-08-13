@@ -14,6 +14,7 @@ TASK_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TASK_DIR))
 
 from gold_python.scenarios import run_scenario
+from scripts.trap_outcome_assertions import authored_trap_death_report
 
 
 def subset_difference(expected: Any, actual: Any, path: str = "$") -> str | None:
@@ -64,6 +65,10 @@ def main() -> None:
             if difference:
                 failures.append(f"{path.name} {lane} state: {difference}")
                 continue
+            if scenario_id == "bootstrap_trap_death":
+                trap_report = authored_trap_death_report(result, trap_id="fatal-pit", damage=14)
+                if trap_report.get("status") != "pass":
+                    failures.append(f"{path.name} {lane} trap lifecycle: {trap_report}")
             kinds = {event["kind"] for event in result["nev"]}
             missing = [kind for kind in required_kinds if kind not in kinds]
             if missing:

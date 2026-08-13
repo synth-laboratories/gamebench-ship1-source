@@ -1,0 +1,78 @@
+{
+  "schema": "gamebench.nethack.procedural_species.v1",
+  "selector_bound": 16,
+  "entries": [
+    {
+      "upper_exclusive": 6,
+      "profile": {
+        "species_id": 87,
+        "name": "sewer rat",
+        "char": "r",
+        "hp": 3,
+        "attack": 1,
+        "experience": 1,
+        "armor_class": 7,
+        "level": 0,
+        "to_hit": 0,
+        "damage_dice": 1,
+        "damage_sides": 3,
+        "base_speed": 12,
+        "movement_points": 0,
+        "corpse": true,
+        "corpse_nutrition": 12,
+        "geno": 161,
+        "generation_frequency": 1,
+        "corpse_weight": 20,
+        "no_corpse": false
+      }
+    },
+    {
+      "upper_exclusive": 11,
+      "profile": {
+        "species_id": 318,
+        "name": "newt",
+        "char": ":",
+        "hp": 2,
+        "attack": 1,
+        "experience": 1,
+        "armor_class": 8,
+        "level": 0,
+        "to_hit": 0,
+        "damage_dice": 1,
+        "damage_sides": 2,
+        "base_speed": 6,
+        "movement_points": 0,
+        "corpse": true,
+        "corpse_nutrition": 20,
+        "geno": 37,
+        "generation_frequency": 5,
+        "corpse_weight": 10,
+        "no_corpse": false
+      }
+    },
+    {
+      "upper_exclusive": 16,
+      "profile": {
+        "species_id": 13,
+        "name": "fox",
+        "char": "d",
+        "hp": 4,
+        "attack": 1,
+        "experience": 1,
+        "armor_class": 7,
+        "level": 0,
+        "to_hit": 0,
+        "damage_dice": 1,
+        "damage_sides": 3,
+        "base_speed": 15,
+        "movement_points": 0,
+        "corpse": true,
+        "corpse_nutrition": 250,
+        "geno": 33,
+        "generation_frequency": 1,
+        "corpse_weight": 300,
+        "no_corpse": false
+      }
+    }
+  ]
+}

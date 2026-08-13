@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -20,6 +19,7 @@ TASK_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TASK_DIR))
 
 from gold_python.engine import NethackDlvl1Engine
+from scripts.rust_scenario import run_scenario
 from shared.task_resolve import resolve_task
 
 
@@ -86,7 +86,7 @@ def expected_nle_projection(snapshot: dict[str, Any]) -> dict[str, Any]:
 
     projection = dict(snapshot.get("projection", {}))
     inventory = dict(projection.get("inventory", {}))
-    return {
+    result = {
         "chars": decode_chars(projection.get("chars", [])),
         "colors": projection.get("colors", []),
         "glyphs": projection.get("glyphs", []),
@@ -100,6 +100,12 @@ def expected_nle_projection(snapshot: dict[str, Any]) -> dict[str, Any]:
             "inv_strs": decode_inventory_strings(inventory.get("inv_strs", [])),
         },
     }
+    # Some pure own-engine property fixtures predate the public NLE specials
+    # plane.  Its absence is not an all-zero NLE observation and must not
+    # create a vacuous/incorrect comparison.
+    if "specials" in projection:
+        result["specials"] = projection["specials"]
+    return result
 
 
 def expected_public(snapshot: dict[str, Any]) -> dict[str, Any]:
@@ -141,16 +147,41 @@ def python_step_projections(task: dict[str, Any], actions: list[dict[str, Any]])
     return projections
 
 
+def python_step_semantic_snapshots(task: dict[str, Any], actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Replay the full private gold state for cross-lane validity checks.
+
+    The frozen NLE tape judges only the public observation against the oracle.
+    This companion trace is deliberately gold-to-gold: it catches a Python /
+    Rust hidden-state split even when both lanes happen to render identical
+    chars, glyphs, and blstats at the same prefix.  It never consumes native
+    state and it is not part of the public environment contract.
+    """
+
+    engine = NethackDlvl1Engine()
+    engine.reset(resolve_task(task))
+    snapshots = [engine.private_projection()]
+    for record in actions:
+        if engine.state["terminated"] or engine.state["truncated"]:
+            break
+        engine.step(int(record["action_id"]))
+        snapshots.append(engine.private_projection())
+    return snapshots
+
+
 def rust_step_projections(task: dict[str, Any], actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
     entry = {**task, "actions": [int(record["action_id"]) for record in actions]}
-    completed = subprocess.run(
-        ["cargo", "run", "--quiet", "--manifest-path", str(TASK_DIR / "gold_rust" / "Cargo.toml"), "--bin", "scenario", "--", "--trace-stdin"],
-        input=json.dumps(entry),
-        text=True,
-        capture_output=True,
-        check=True,
-    )
-    return list(json.loads(completed.stdout)["snapshots"])
+    return list(run_scenario(entry, ("--trace-stdin",))["snapshots"])
+
+
+def rust_step_semantic_snapshots(task: dict[str, Any], actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return Rust's private state trace emitted by the validity-only adapter."""
+
+    entry = {**task, "actions": [int(record["action_id"]) for record in actions]}
+    result = run_scenario(entry, ("--trace-stdin",))
+    snapshots = result.get("semantic_snapshots")
+    if not isinstance(snapshots, list):
+        raise RuntimeError("Rust trace omitted semantic_snapshots")
+    return snapshots
 
 
 def is_dlvl1_descend(record: dict[str, Any]) -> bool:

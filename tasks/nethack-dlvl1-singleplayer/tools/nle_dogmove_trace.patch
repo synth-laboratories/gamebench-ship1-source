@@ -1,0 +1,193 @@
+diff --git a/src/dog.c b/src/dog.c
+index 5c50eb69c..17265bff9 100644
+--- a/src/dog.c
++++ b/src/dog.c
+@@ -5,6 +5,93 @@
+ 
+ #include "hack.h"
+ 
++#include <stdint.h>
++
++/* TRACE-ONLY SOURCE EVIDENCE.  This ledger is bounded, read-only from the
++ * game perspective, and never consulted by NetHack.  It records the object
++ * and pet call ownership needed to join dog_move's RNG chronology. */
++#define NLE_DOG_TRACE_CAPACITY 131072U
++struct nle_dog_trace_event {
++    uint32_t kind; /* 1..5=dog/object calls, 6=rndmonst, 7=newmonhp */
++    uint32_t entity_id;
++    uint32_t object_id;
++    int32_t object_type;
++    int32_t object_where;
++    int64_t object_quantity;
++    int32_t native_x;
++    int32_t native_y;
++    int32_t arg0;
++    int32_t arg1;
++    int32_t arg2;
++    int32_t result;
++    int64_t moves;
++    int64_t monstermoves;
++    int32_t hero_native_x;
++    int32_t hero_native_y;
++};
++static struct nle_dog_trace_event nle_dog_trace_events[NLE_DOG_TRACE_CAPACITY];
++static uint32_t nle_dog_trace_count_;
++static boolean nle_dog_trace_overflow_;
++
++void
++nle_dog_trace_reset(void)
++{
++    nle_dog_trace_count_ = 0;
++    nle_dog_trace_overflow_ = FALSE;
++}
++
++uint32_t
++nle_dog_trace_count(void)
++{
++    return nle_dog_trace_count_;
++}
++
++boolean
++nle_dog_trace_overflow(void)
++{
++    return nle_dog_trace_overflow_;
++}
++
++boolean
++nle_dog_trace_get(uint32_t index, struct nle_dog_trace_event *out)
++{
++    if (index >= nle_dog_trace_count_ || !out)
++        return FALSE;
++    *out = nle_dog_trace_events[index];
++    return TRUE;
++}
++
++void
++nle_dog_trace_record(unsigned kind, struct monst *mon, struct obj *obj,
++                     int arg0, int arg1, int arg2, int result)
++{
++    struct nle_dog_trace_event *event;
++    if (nle_dog_trace_count_ >= NLE_DOG_TRACE_CAPACITY) {
++        nle_dog_trace_overflow_ = TRUE;
++        return;
++    }
++    event = &nle_dog_trace_events[nle_dog_trace_count_++];
++    (void) memset((genericptr_t) event, 0, sizeof *event);
++    event->kind = (uint32_t) kind;
++    event->entity_id = mon ? (uint32_t) mon->m_id : 0U;
++    event->native_x = mon ? (int32_t) mon->mx : -1;
++    event->native_y = mon ? (int32_t) mon->my : -1;
++    event->arg0 = (int32_t) arg0;
++    event->arg1 = (int32_t) arg1;
++    event->arg2 = (int32_t) arg2;
++    event->result = (int32_t) result;
++    event->moves = (int64_t) moves;
++    event->monstermoves = (int64_t) monstermoves;
++    event->hero_native_x = (int32_t) u.ux;
++    event->hero_native_y = (int32_t) u.uy;
++    if (obj) {
++        event->object_id = (uint32_t) obj->o_id;
++        event->object_type = (int32_t) obj->otyp;
++        event->object_where = (int32_t) obj->where;
++        event->object_quantity = (int64_t) obj->quan;
++    }
++}
++
+ STATIC_DCL int NDECL(pet_type);
+ 
+ void
+@@ -737,6 +824,7 @@ dogfood(mon, obj)
+ struct monst *mon;
+ register struct obj *obj;
+ {
++    nle_dog_trace_record(3, mon, obj, 0, 0, 0, 0);
+     struct permonst *mptr = mon->data, *fptr = 0;
+     boolean carni = carnivorous(mptr), herbi = herbivorous(mptr),
+             starving, mblind;
+diff --git a/src/dogmove.c b/src/dogmove.c
+index df3452faa..e478cd049 100644
+--- a/src/dogmove.c
++++ b/src/dogmove.c
+@@ -9,6 +9,8 @@
+ 
+ extern boolean notonhead;
+ 
++extern void FDECL(nle_dog_trace_record, (unsigned, struct monst *, struct obj *, int, int, int, int));
++
+ STATIC_DCL boolean FDECL(dog_hunger, (struct monst *, struct edog *));
+ STATIC_DCL int FDECL(dog_invent, (struct monst *, struct edog *, int));
+ STATIC_DCL int FDECL(dog_goal, (struct monst *, struct edog *, int, int, int));
+@@ -405,6 +407,7 @@ register struct monst *mtmp;
+ register struct edog *edog;
+ int udist;
+ {
++    nle_dog_trace_record(1, mtmp, (struct obj *) 0, udist, 0, 0, 0);
+     register int omx, omy, carryamt = 0;
+     struct obj *obj, *otmp;
+ 
+@@ -478,6 +481,7 @@ register struct monst *mtmp;
+ struct edog *edog;
+ int after, udist, whappr;
+ {
++    nle_dog_trace_record(2, mtmp, (struct obj *) 0, after, udist, whappr, 0);
+     register int omx, omy;
+     boolean in_masters_sight, dog_has_minvent;
+     register struct obj *obj;
+@@ -546,3 +546,3 @@
+                            && (otyp == MANFOOD || m_cansee(mtmp, nx, ny))
+-                           && edog->apport > rn2(8)
++                           && edog->apport > (nle_dog_trace_record(5, mtmp, obj, 8, 0, 0, 0), rn2(8))
+                            && can_carry(mtmp, obj) > 0) {
+diff --git a/src/zap.c b/src/zap.c
+index 1c7a5debb..67a3c3b1c 100644
+--- a/src/zap.c
++++ b/src/zap.c
+@@ -5,6 +5,8 @@
+ 
+ #include "hack.h"
+ 
++extern void FDECL(nle_dog_trace_record, (unsigned, struct monst *, struct obj *, int, int, int, int));
++
+ /* Disintegration rays have special treatment; corpses are never left.
+  * But the routine which calculates the damage is separate from the routine
+  * which kills the monster.  The damage routine returns this cookie to
+@@ -1181,6 +1183,7 @@ obj_resists(obj, ochance, achance)
+ struct obj *obj;
+ int ochance, achance; /* percent chance for ordinary objects, artifacts */
+ {
++    nle_dog_trace_record(4, (struct monst *) 0, obj, ochance, achance, 0, 0);
+    if (obj->otyp == AMULET_OF_YENDOR
+        || obj->otyp == SPE_BOOK_OF_THE_DEAD
+        || obj->otyp == CANDELABRUM_OF_INVOCATION
+diff --git a/src/makemon.c b/src/makemon.c
+index 5c50eb69c..6b93c31f8 100644
+--- a/src/makemon.c
++++ b/src/makemon.c
+@@ -5,6 +5,8 @@
+ 
+ #include "hack.h"
+ 
++extern void FDECL(nle_dog_trace_record, (unsigned, struct monst *, struct obj *, int, int, int, int));
++
+ STATIC_DCL void FDECL(m_initinv, (struct monst *));
+ STATIC_DCL boolean FDECL(makemon_rnd_goodpos, (struct monst *,
+                                                 unsigned, coord *));
+@@ -1211,5 +1211,6 @@ makemon(ptr, x, y, mmflags)
+     /* set up level and hit points */
+     newmonhp(mtmp, mndx);
++    nle_dog_trace_record(7, mtmp, (struct obj *) 0, mndx, mtmp->mhpmax, mtmp->m_lev, 0);
+ 
+     if (is_female(ptr))
+         mtmp->female = TRUE;
+@@ -1588,7 +1588,11 @@ rndmonst()
+     /*
+      *      Now, select a monster at random.
+      */
+     ct = rnd(rndmonst_state.choice_count);
++    {
++        int selected_ct = ct;
+     for (mndx = LOW_PM; mndx < SPECIAL_PM; mndx++)
+         if ((ct -= (int) rndmonst_state.mchoices[mndx]) <= 0)
+             break;
++    nle_dog_trace_record(6, (struct monst *) 0, (struct obj *) 0, rndmonst_state.choice_count, selected_ct, mndx, 0);
++    }

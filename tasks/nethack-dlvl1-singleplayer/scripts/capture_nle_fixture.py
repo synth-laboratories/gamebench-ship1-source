@@ -22,6 +22,17 @@ from typing import Any
 TASK_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TASK_DIR))
 
+from scripts.oracle_tape import capture_runtime_identity, write_manifest
+from scripts.native_pre_action_evidence import NativePreActionExporters, SIDECAR_FILE, capture_record, validate_records
+from scripts.native_reset_entity_state import (
+    SIDECAR_FILE as RESET_ENTITY_SIDECAR_FILE,
+    capture_reset_state,
+    portable_reset_projection,
+    portable_reset_rng_projection_from_capture,
+    record_from_reset_capture,
+    validate_reset_entity_state,
+)
+
 
 OBSERVATION_KEYS = (
     "glyphs",
@@ -42,6 +53,7 @@ NLE_SEED_MASK = (1 << 63) - 1
 DISPLAY_SEED_XOR = 0x5DEECE66D
 STATIC_TERRAIN_CHARS = frozenset(".#|-+<>_{}~")
 ANNOTATION_ENTITY_KEYS = frozenset(("objects", "inventory", "monsters", "traps"))
+PRESENTATION_OVERLAY_KEYS = frozenset(("x", "y", "char", "glyph", "color", "special", "provenance", "presentation_class", "identity_status"))
 FIXTURE_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*\Z")
 NLE_OCLASS_TO_KIND = {
     2: ")",  # WEAPON_CLASS
@@ -92,6 +104,19 @@ def bytes_to_text(value: Any) -> str:
         raw = bytes(int(entry) for entry in flat if isinstance(entry, int))
         return raw.split(b"\0", 1)[0].decode("utf-8", errors="replace")
     return str(flat)
+
+
+def terminal_reason_for_capture(*, done: bool, pending_operation: str) -> str:
+    """Label the final NLE observation without reading hidden native state.
+
+    NLE reports only ``done`` after it clears the dungeon.  The prompt
+    operation is already part of the wire tape, so confirmed quit/save can be
+    distinguished from an actual death without guessing from zeroed blstats.
+    """
+
+    if not done:
+        return ""
+    return {"quit": "quit", "save": "saved"}.get(str(pending_operation), "death")
 
 
 def project(observation: dict[str, Any]) -> dict[str, Any]:
@@ -214,13 +239,63 @@ def _apply_terrain_underlay(dump: dict[str, Any], annotations: dict[str, Any], i
         if type(glyph) is not int or type(color) is not int:
             raise ValueError("terrain_underlay glyph and color must be integers")
         initial_char = chr(initial_chars[y][x])
-        if not dump["seen"][y][x] or initial_char in STATIC_TERRAIN_CHARS or initial_char in {" ", "@"}:
-            raise ValueError("terrain_underlay may fill only a visible reset monster or item cell")
+        if not dump["seen"][y][x] or initial_char in STATIC_TERRAIN_CHARS or initial_char == " ":
+            raise ValueError("terrain_underlay may fill only a visible reset entity cell")
         claimed.add((x, y))
         terrain[y][x] = char
         glyphs[y][x] = glyph
         colors[y][x] = color
     dump["terrain"] = ["".join(row) for row in terrain]
+
+
+def _apply_presentation_overlays(dump: dict[str, Any], annotations: dict[str, Any], initial_projection: dict[str, Any]) -> None:
+    """Preserve reset-only screen overlays without turning them into game entities.
+
+    NLE's observation planes tell us a glyph was rendered, but not its monster
+    identity, allegiance, hit points, inventory, or future movement.  These
+    markers therefore have no game semantics: they are an exact initial
+    presentation layer only.  They must exactly match a visible, non-static
+    reset cell so an annotation cannot fabricate a future screen state.
+    """
+
+    overlays = annotations.get("presentation_overlays")
+    if overlays is None:
+        return
+    if not isinstance(overlays, list):
+        raise ValueError("presentation_overlays annotations must be a list")
+    chars = _plane_rows(initial_projection["chars"], height=len(dump["terrain"]), width=len(dump["terrain"][0]) if dump["terrain"] else 0, fill=ord(" "))
+    glyphs = _plane_rows(initial_projection["glyphs"], height=len(dump["terrain"]), width=len(dump["terrain"][0]) if dump["terrain"] else 0, fill=0)
+    colors = _plane_rows(initial_projection["colors"], height=len(dump["terrain"]), width=len(dump["terrain"][0]) if dump["terrain"] else 0, fill=0)
+    validated: list[dict[str, Any]] = []
+    claimed: set[tuple[int, int]] = set()
+    for entry in overlays:
+        if not isinstance(entry, dict) or set(entry) - PRESENTATION_OVERLAY_KEYS:
+            raise ValueError("presentation_overlays entries must use only the presentation marker schema")
+        x, y = entry.get("x"), entry.get("y")
+        char, glyph, color = entry.get("char"), entry.get("glyph"), entry.get("color")
+        if type(x) is not int or type(y) is not int or not (0 <= y < len(chars) and 0 <= x < len(chars[y])):
+            raise ValueError("presentation_overlay entry has an out-of-bounds position")
+        if (x, y) in claimed:
+            raise ValueError("presentation_overlays may not assign a cell twice")
+        # The glyph classifier, rather than its display character, separates
+        # terrain from a rendered object: for example a normal object can be
+        # displayed as '+' in a tile font.
+        if not isinstance(char, str) or len(char) != 1 or char in {"@", " "}:
+            raise ValueError("presentation_overlay char must be a non-hero visible glyph")
+        if type(glyph) is not int or type(color) is not int:
+            raise ValueError("presentation_overlay glyph and color must be integers")
+        if "special" in entry and (type(entry["special"]) is not int or not 0 <= int(entry["special"]) <= 255):
+            raise ValueError("presentation_overlay special must be an unsigned byte")
+        if not dump["seen"][y][x] or (char, glyph, color) != (chr(chars[y][x]), int(glyphs[y][x]), int(colors[y][x])):
+            raise ValueError("presentation_overlay must exactly match a visible reset presentation cell")
+        if entry.get("provenance") != "nle_reset_presentation" or entry.get("identity_status") != "unavailable_from_nle_presentation":
+            raise ValueError("presentation_overlay must be explicitly reset-only and identity-unavailable")
+        presentation_class = entry.get("presentation_class")
+        if not isinstance(presentation_class, str) or not presentation_class:
+            raise ValueError("presentation_overlay must record a glyph-derived presentation_class")
+        claimed.add((x, y))
+        validated.append({key: entry[key] for key in sorted(PRESENTATION_OVERLAY_KEYS) if key in entry})
+    dump["presentation_overlays"] = validated
 
 
 def _captured_inventory_items(inventory: dict[str, Any]) -> list[dict[str, Any]]:
@@ -298,12 +373,18 @@ def level_dump(
     # Raw screen arrays do not expose monster hit points or object identities.
     # Annotations can materialize only owned entities needed by a tape.  They
     # cannot replace the captured reset projection or choose later visibility.
-    unknown_annotation_keys = set(annotations) - (ANNOTATION_ENTITY_KEYS | {"terrain_underlay"})
+    unknown_annotation_keys = set(annotations) - (ANNOTATION_ENTITY_KEYS | {"terrain_underlay", "presentation_overlays", "pet_interaction_markers"})
     if unknown_annotation_keys:
         raise ValueError(f"unsupported annotation keys: {', '.join(sorted(unknown_annotation_keys))}")
     for key in ANNOTATION_ENTITY_KEYS:
         if key in annotations:
             dump[key] = annotations[key]
+    _apply_presentation_overlays(dump, annotations, projection)
+    if "pet_interaction_markers" in annotations:
+        markers = annotations["pet_interaction_markers"]
+        if not isinstance(markers, list):
+            raise ValueError("pet_interaction_markers annotations must be a list")
+        dump["pet_interaction_markers"] = deepcopy(markers)
     return dump
 
 
@@ -417,8 +498,19 @@ def main() -> None:
     if table_hash != expected_hash and not args.accept_action_map_drift:
         raise SystemExit(f"NLE action table drift: capture={table_hash} pinned={expected_hash}. Refuse capture; update the pinned map deliberately or pass --accept-action-map-drift for investigation.")
     actions = read_actions(args.actions)
+    runtime = capture_runtime_identity(nle)
+    # Native readers are source-only and are constructed after reset, before
+    # the first action.  Unsupported/mismatched native ABI is a hard capture
+    # failure rather than a silent downgrade for a new tape.
+    native_exporters = NativePreActionExporters.from_env(env)
+    # This copy is intentionally made once, at reset, before the first action
+    # record or ``env.step``.  Its action/level hashes are attached only after
+    # the tape has been serialized; that finalization performs no native read.
+    native_reset_capture = capture_reset_state(native_exporters, observation)
+    native_records: list[dict[str, Any]] = []
     snapshots = [{"step": 0, "projection": project(observation), "done": False, "terminal_reason": ""}]
     action_records: list[dict[str, Any]] = []
+    pending_terminal_operation = ""
     for step, action_id in enumerate(actions, start=1):
         if not 0 <= action_id < len(table):
             raise ValueError(f"action id {action_id} is outside NLE action table length {len(table)}")
@@ -426,13 +518,23 @@ def main() -> None:
         known_down_stairs.update(visible_down_stairs(observation))
         pre_action_projection = project(observation)
         pre_action_position = hero_position(observation)
+        action_record: dict[str, Any] = {"step": step, "action_id": action_id, "action_name": action_name}
+        if action_name in {"Command.QUIT", "Command.SAVE"}:
+            # This is a tape-local prompt marker, not native state.  It lets
+            # the terminal snapshot label distinguish quit/save from death
+            # after NLE has cleared its dungeon identity.
+            action_record["terminal_prompt_operation"] = action_name.rsplit(".", 1)[-1].lower()
+            pending_terminal_operation = action_record["terminal_prompt_operation"]
         if action_name == "MiscDirection.DOWN":
             if pre_action_position not in known_down_stairs:
                 raise RuntimeError("DOWN requires an earlier raw visible Main Dungeon dlvl-1 stair; refuse to step NLE across an unauditable boundary")
-            action_records.append({"step": step, "action_id": action_id, "action_name": action_name, "boundary": "dlvl1_descend", "observed_down_stair": {"x": pre_action_position[0], "y": pre_action_position[1]}})
+            action_record.update({"boundary": "dlvl1_descend", "observed_down_stair": {"x": pre_action_position[0], "y": pre_action_position[1]}})
+            native_records.append(capture_record(native_exporters, observation, fixture_id=args.fixture_id, action=action_record, runtime=runtime))
+            action_records.append(action_record)
             snapshots.append({"step": step, "projection": pre_action_projection, "done": True, "terminal_reason": "descended", "oracle_boundary": "pre_dlvl2"})
             observations.append(deepcopy(observation))
             break
+        native_records.append(capture_record(native_exporters, observation, fixture_id=args.fixture_id, action=action_record, runtime=runtime))
         stepped = env.step(action_id)
         if isinstance(stepped, tuple) and len(stepped) >= 3:
             next_observation = dict(stepped[0])
@@ -440,23 +542,62 @@ def main() -> None:
         else:
             next_observation = dict(stepped)
             done = False
-        if dungeon_identity(next_observation) != (0, 1):
+        # A native terminal action intentionally leaves the live dungeon
+        # identity behind (NLE clears the level after quit/death).  Preserve
+        # that exact terminal observation as the final in-scope boundary;
+        # non-terminal transitions must still remain on Main Dungeon dlvl 1.
+        if not done and dungeon_identity(next_observation) != (0, 1):
             raise RuntimeError(f"capture left Main Dungeon dlvl 1 after {action_name}; refuse out-of-scope fixture")
         observation = next_observation
         observations.append(deepcopy(observation))
         known_down_stairs.update(visible_down_stairs(observation))
-        action_records.append({"step": step, "action_id": action_id, "action_name": action_name})
-        snapshots.append({"step": step, "projection": project(observation), "done": done, "terminal_reason": "death" if done else ""})
+        action_records.append(action_record)
+        terminal_reason = terminal_reason_for_capture(done=done, pending_operation=pending_terminal_operation)
+        if done or action_name not in {"Command.QUIT", "Command.SAVE"}:
+            pending_terminal_operation = ""
+        snapshots.append({"step": step, "projection": project(observation), "done": done, "terminal_reason": terminal_reason})
         if done:
             break
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=output.parent, prefix=f".{args.fixture_id}.capture-") as temporary:
         staged = Path(temporary) / args.fixture_id
         staged.mkdir()
-        (staged / "meta.json").write_text(json.dumps({"schema": "gamebench.nethack.nle_capture.v1", "fixture_id": args.fixture_id, "nle_version": getattr(nle, "__version__", "unknown"), "nethack_version": "3.6.6", "character": {"nle_character": args.character}, "seed": args.seed, "nle_seeds": {"core": int(seeded[0]), "display": int(seeded[1]), "reseed": bool(seeded[2])}, "observation_keys": OBSERVATION_KEYS, "auto_more": "raw_explicit", "unseen_glyph": unseen_glyph, "action_table": table, "action_table_sha256": table_hash}, indent=2, sort_keys=True) + "\n")
-        (staged / "level_dump.json").write_text(json.dumps(level_dump(initial_observation, annotations, observations=observations, unseen_glyph=unseen_glyph), indent=2, sort_keys=True) + "\n")
+        (staged / "meta.json").write_text(json.dumps({"schema": "gamebench.nethack.nle_capture.v1", "fixture_id": args.fixture_id, "nle_version": getattr(nle, "__version__", "unknown"), "nethack_version": "3.6.6", "character": {"nle_character": args.character}, "seed": args.seed, "nle_seeds": {"core": int(seeded[0]), "display": int(seeded[1]), "reseed": bool(seeded[2])}, "observation_keys": OBSERVATION_KEYS, "auto_more": "raw_explicit", "unseen_glyph": unseen_glyph, "action_table": table, "action_table_sha256": table_hash, "capture_runtime": runtime}, indent=2, sort_keys=True) + "\n")
+        captured_level_dump = level_dump(initial_observation, annotations, observations=observations, unseen_glyph=unseen_glyph)
+        # This is task data, not native-receipt hydration: it is a sanitized
+        # immutable copy made at reset and later attested by the receipt.
+        captured_level_dump["authoritative_reset_entities"] = portable_reset_projection(native_reset_capture)
+        captured_level_dump["authoritative_reset_rng"] = portable_reset_rng_projection_from_capture(native_reset_capture)
+        if native_reset_capture.get("portable_reset_map") is not None:
+            captured_level_dump["authoritative_reset_map"] = deepcopy(native_reset_capture["portable_reset_map"])
+        (staged / "level_dump.json").write_text(json.dumps(captured_level_dump, indent=2, sort_keys=True) + "\n")
         (staged / "actions.jsonl").write_text("".join(json.dumps(record, sort_keys=True) + "\n" for record in action_records))
         (staged / "snapshots.jsonl").write_text("".join(json.dumps(record, sort_keys=True) + "\n" for record in snapshots))
+        native_failures = validate_records(native_records, action_records, fixture_id=args.fixture_id, runtime=runtime, require_native=True)
+        if native_failures:
+            raise RuntimeError("native pre-action evidence validation failed: " + "; ".join(native_failures))
+        (staged / SIDECAR_FILE).write_text("".join(json.dumps(record, sort_keys=True) + "\n" for record in native_records))
+        reset_entity_record = record_from_reset_capture(
+            native_reset_capture,
+            fixture_id=args.fixture_id,
+            runtime=runtime,
+            level_dump=captured_level_dump,
+            actions=action_records,
+            reset_projection=snapshots[0]["projection"],
+        )
+        reset_failures = validate_reset_entity_state(
+            reset_entity_record,
+            fixture_id=args.fixture_id,
+            runtime=runtime,
+            level_dump=captured_level_dump,
+            actions=action_records,
+            reset_projection=snapshots[0]["projection"],
+            require_native=True,
+        )
+        if reset_failures:
+            raise RuntimeError("native reset entity state validation failed: " + "; ".join(reset_failures))
+        (staged / RESET_ENTITY_SIDECAR_FILE).write_text(json.dumps(reset_entity_record, indent=2, sort_keys=True) + "\n")
+        write_manifest(staged)
         staged.replace(output)
     print(json.dumps({"fixture": str(output), "actions": len(action_records), "snapshots": len(snapshots), "action_table_sha256": table_hash}, sort_keys=True))
 

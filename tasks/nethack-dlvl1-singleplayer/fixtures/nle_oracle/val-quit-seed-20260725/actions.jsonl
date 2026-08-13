@@ -1,0 +1,2 @@
+{"action_id": 65, "action_name": "Command.QUIT", "step": 1, "terminal_prompt_operation": "quit"}
+{"action_id": 7, "action_name": "CompassDirection.NW", "step": 2}

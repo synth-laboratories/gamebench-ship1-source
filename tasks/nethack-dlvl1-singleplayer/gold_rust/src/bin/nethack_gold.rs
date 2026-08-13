@@ -8,7 +8,11 @@ use base64::{engine::general_purpose::STANDARD, Engine};
 use nethack_dlvl1_gold::{resolve_task, run_scenario_entry, NethackSession, ENV_FAMILY};
 use serde::Deserialize;
 use serde_json::{json, Value};
-use std::{collections::HashMap, net::SocketAddr, sync::{Arc, Mutex}};
+use std::{
+    collections::HashMap,
+    net::SocketAddr,
+    sync::{Arc, Mutex},
+};
 use uuid::Uuid;
 
 type Sessions = Arc<Mutex<HashMap<String, NethackSession>>>;
@@ -69,54 +73,105 @@ async fn main() {
         .route("/rollouts/:id/readout", get(readout))
         .route("/rollouts/:id/event_log", get(event_log))
         .with_state(sessions);
-    let listener = tokio::net::TcpListener::bind(format!("{host}:{port}").parse::<SocketAddr>().expect("socket address")).await.expect("bind service socket");
+    let listener = tokio::net::TcpListener::bind(
+        format!("{host}:{port}")
+            .parse::<SocketAddr>()
+            .expect("socket address"),
+    )
+    .await
+    .expect("bind service socket");
     axum::serve(listener, app).await.expect("serve gold HTTP");
 }
 
 async fn health(State(sessions): State<Sessions>) -> Json<Value> {
-    Json(json!({"ok": true, "lane": "rust", "env_family": ENV_FAMILY, "sessions": sessions.lock().expect("session lock").len()}))
+    Json(
+        json!({"ok": true, "lane": "rust", "env_family": ENV_FAMILY, "sessions": sessions.lock().expect("session lock").len()}),
+    )
 }
 
-async fn run_scenario(Json(body): Json<ScenarioRequest>) -> Result<Json<Value>, (StatusCode, String)> {
-    run_scenario_entry(&body.task).map(Json).map_err(bad_request)
+async fn run_scenario(
+    Json(body): Json<ScenarioRequest>,
+) -> Result<Json<Value>, (StatusCode, String)> {
+    run_scenario_entry(&body.task)
+        .map(Json)
+        .map_err(bad_request)
 }
 
-async fn create_rollout(State(sessions): State<Sessions>, Json(body): Json<RolloutRequest>) -> Result<Json<Value>, (StatusCode, String)> {
+async fn create_rollout(
+    State(sessions): State<Sessions>,
+    Json(body): Json<RolloutRequest>,
+) -> Result<Json<Value>, (StatusCode, String)> {
     let task = body.task.unwrap_or_else(default_task);
     let resolved = resolve_task(&task, body.seed).map_err(bad_request)?;
     let session = NethackSession::reset(resolved).map_err(bad_request)?;
     let id = Uuid::new_v4().to_string();
-    sessions.lock().expect("session lock").insert(id.clone(), session);
+    sessions
+        .lock()
+        .expect("session lock")
+        .insert(id.clone(), session);
     let guard = sessions.lock().expect("session lock");
     Ok(Json(payload(&id, guard.get(&id).expect("stored rollout"))))
 }
 
-async fn step(State(sessions): State<Sessions>, Path(id): Path<String>, Json(body): Json<StepRequest>) -> Result<Json<Value>, StatusCode> {
+async fn step(
+    State(sessions): State<Sessions>,
+    Path(id): Path<String>,
+    Json(body): Json<StepRequest>,
+) -> Result<Json<Value>, StatusCode> {
     let mut guard = sessions.lock().expect("session lock");
     let session = guard.get_mut(&id).ok_or(StatusCode::NOT_FOUND)?;
     session.step(body.action);
     Ok(Json(payload(&id, session)))
 }
 
-async fn checkpoint(State(sessions): State<Sessions>, Path(id): Path<String>) -> Result<Json<Value>, StatusCode> {
+async fn checkpoint(
+    State(sessions): State<Sessions>,
+    Path(id): Path<String>,
+) -> Result<Json<Value>, StatusCode> {
     let guard = sessions.lock().expect("session lock");
     let session = guard.get(&id).ok_or(StatusCode::NOT_FOUND)?;
     let blob = session.checkpoint_bytes();
-    Ok(Json(json!({"rollout_id": id, "checkpoint_id": Uuid::new_v4().to_string(), "blob": STANDARD.encode(&blob), "bytes": blob.len(), "nev_cursor": session.events.len(), "readout": session.readout()})))
+    Ok(Json(
+        json!({"rollout_id": id, "checkpoint_id": Uuid::new_v4().to_string(), "blob": STANDARD.encode(&blob), "bytes": blob.len(), "nev_cursor": session.events.len(), "readout": session.readout()}),
+    ))
 }
 
-async fn restore(State(sessions): State<Sessions>, Path(id): Path<String>, Json(body): Json<RestoreRequest>) -> Result<Json<Value>, (StatusCode, String)> {
-    let bytes = STANDARD.decode(body.blob.as_bytes()).map_err(|error| (StatusCode::BAD_REQUEST, format!("invalid checkpoint: {error}")))?;
+async fn restore(
+    State(sessions): State<Sessions>,
+    Path(id): Path<String>,
+    Json(body): Json<RestoreRequest>,
+) -> Result<Json<Value>, (StatusCode, String)> {
+    let bytes = STANDARD.decode(body.blob.as_bytes()).map_err(|error| {
+        (
+            StatusCode::BAD_REQUEST,
+            format!("invalid checkpoint: {error}"),
+        )
+    })?;
     let mut guard = sessions.lock().expect("session lock");
-    let session = guard.get_mut(&id).ok_or((StatusCode::NOT_FOUND, "rollout not found".to_string()))?;
+    let session = guard
+        .get_mut(&id)
+        .ok_or((StatusCode::NOT_FOUND, "rollout not found".to_string()))?;
     let restored = session.restore_checkpoint(&bytes).map_err(bad_request)?;
-    Ok(Json(json!({"rollout_id": id, "restore_report": {"bytes": bytes.len(), "wall_ms": 0.0, "nev_events_restored": restored}, "readout": session.readout()})))
+    Ok(Json(
+        json!({"rollout_id": id, "restore_report": {"bytes": bytes.len(), "wall_ms": 0.0, "nev_events_restored": restored}, "readout": session.readout()}),
+    ))
 }
 
-async fn simulate(State(sessions): State<Sessions>, Path(id): Path<String>, Json(body): Json<SimulateRequest>) -> Result<Json<Value>, (StatusCode, String)> {
-    let bytes = STANDARD.decode(body.blob.as_bytes()).map_err(|error| (StatusCode::BAD_REQUEST, format!("invalid checkpoint: {error}")))?;
+async fn simulate(
+    State(sessions): State<Sessions>,
+    Path(id): Path<String>,
+    Json(body): Json<SimulateRequest>,
+) -> Result<Json<Value>, (StatusCode, String)> {
+    let bytes = STANDARD.decode(body.blob.as_bytes()).map_err(|error| {
+        (
+            StatusCode::BAD_REQUEST,
+            format!("invalid checkpoint: {error}"),
+        )
+    })?;
     let guard = sessions.lock().expect("session lock");
-    let root = guard.get(&id).ok_or((StatusCode::NOT_FOUND, "rollout not found".to_string()))?;
+    let root = guard
+        .get(&id)
+        .ok_or((StatusCode::NOT_FOUND, "rollout not found".to_string()))?;
     let mut results = Vec::new();
     for (index, sequence) in body.sequences.iter().enumerate() {
         let mut sim = root.clone();
@@ -129,18 +184,28 @@ async fn simulate(State(sessions): State<Sessions>, Path(id): Path<String>, Json
         }
         results.push(json!({"index": index, "actions": sequence, "reward": sim.state.reward, "terminated": sim.state.terminated, "truncated": sim.state.truncated, "readout": sim.readout(), "nev_cursor": sim.events.len()}));
     }
-    Ok(Json(json!({"rollout_id": id, "root_nev_cursor": root.events.len(), "results": results})))
+    Ok(Json(
+        json!({"rollout_id": id, "root_nev_cursor": root.events.len(), "results": results}),
+    ))
 }
 
-async fn readout(State(sessions): State<Sessions>, Path(id): Path<String>) -> Result<Json<Value>, StatusCode> {
+async fn readout(
+    State(sessions): State<Sessions>,
+    Path(id): Path<String>,
+) -> Result<Json<Value>, StatusCode> {
     let guard = sessions.lock().expect("session lock");
     Ok(Json(guard.get(&id).ok_or(StatusCode::NOT_FOUND)?.readout()))
 }
 
-async fn event_log(State(sessions): State<Sessions>, Path(id): Path<String>) -> Result<Json<Value>, StatusCode> {
+async fn event_log(
+    State(sessions): State<Sessions>,
+    Path(id): Path<String>,
+) -> Result<Json<Value>, StatusCode> {
     let guard = sessions.lock().expect("session lock");
     let session = guard.get(&id).ok_or(StatusCode::NOT_FOUND)?;
-    Ok(Json(json!({"events": session.events, "legacy": session.legacy_strings(), "nev_cursor": session.events.len()})))
+    Ok(Json(
+        json!({"events": session.events, "legacy": session.legacy_strings(), "nev_cursor": session.events.len()}),
+    ))
 }
 
 fn payload(id: &str, session: &NethackSession) -> Value {
@@ -148,7 +213,10 @@ fn payload(id: &str, session: &NethackSession) -> Value {
 }
 
 fn default_task() -> Value {
-    serde_json::from_str(include_str!("../../../fixtures/gold/scenarios/bootstrap_descend.json")).expect("valid default task")
+    serde_json::from_str(include_str!(
+        "../../../fixtures/gold/scenarios/bootstrap_descend.json"
+    ))
+    .expect("valid default task")
 }
 
 fn bad_request(error: String) -> (StatusCode, String) {

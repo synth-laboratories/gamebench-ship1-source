@@ -1,0 +1,126 @@
+diff --git a/src/rnd.c b/src/rnd.c
+index 0ca649f..b5e1d08 100644
+--- a/src/rnd.c
++++ b/src/rnd.c
+@@ -3,6 +3,80 @@
+ /* NetHack may be freely redistributed.  See license for details. */
+ 
+ #include "hack.h"
++#include <stdint.h>
++
++/* TRACE-ONLY INSTRUMENTATION: this bounded in-memory ledger is compiled only
++ * into the wheel-equivalence candidate.  It never feeds game state, and the
++ * harness rejects overflow or any unmatched event before using a trace. */
++#define NLE_RNG_TRACE_CAPACITY 65536U
++struct nle_rng_trace_event {
++    uintptr_t caller_return_address;
++    uintptr_t semantic_return_address;
++    int bound;
++    int value;
++    unsigned call_kind; /* 1=rn2, 2=rnd */
++};
++static struct nle_rng_trace_event nle_rng_trace_events[NLE_RNG_TRACE_CAPACITY];
++static unsigned nle_rng_trace_count_;
++static boolean nle_rng_trace_overflow_;
++
++void
++nle_rng_trace_reset(void)
++{
++    nle_rng_trace_count_ = 0;
++    nle_rng_trace_overflow_ = FALSE;
++}
++
++unsigned
++nle_rng_trace_count(void)
++{
++    return nle_rng_trace_count_;
++}
++
++boolean
++nle_rng_trace_overflow(void)
++{
++    return nle_rng_trace_overflow_;
++}
++
++boolean
++nle_rng_trace_get(unsigned index, uintptr_t *caller, uintptr_t *semantic,
++                  int *bound, int *value, unsigned *call_kind)
++{
++    if (index >= nle_rng_trace_count_)
++        return FALSE;
++    *caller = nle_rng_trace_events[index].caller_return_address;
++    *semantic = nle_rng_trace_events[index].semantic_return_address;
++    *bound = nle_rng_trace_events[index].bound;
++    *value = nle_rng_trace_events[index].value;
++    *call_kind = nle_rng_trace_events[index].call_kind;
++    return TRUE;
++}
++
++static void
++nle_rng_trace_record(int bound, int value, uintptr_t caller)
++{
++    if (nle_rng_trace_count_ >= NLE_RNG_TRACE_CAPACITY) {
++        nle_rng_trace_overflow_ = TRUE;
++        return;
++    }
++    nle_rng_trace_events[nle_rng_trace_count_].caller_return_address = caller;
++    nle_rng_trace_events[nle_rng_trace_count_].semantic_return_address = 0;
++    nle_rng_trace_events[nle_rng_trace_count_].bound = bound;
++    nle_rng_trace_events[nle_rng_trace_count_].value = value;
++    ++nle_rng_trace_count_;
++}
++
++static void
++nle_rng_trace_annotate(uintptr_t semantic, unsigned call_kind)
++{
++    if (nle_rng_trace_count_ == 0) {
++        nle_rng_trace_overflow_ = TRUE;
++        return;
++    }
++    nle_rng_trace_events[nle_rng_trace_count_ - 1].semantic_return_address = semantic;
++    nle_rng_trace_events[nle_rng_trace_count_ - 1].call_kind = call_kind;
++}
+ 
+ #ifdef USE_ISAAC64
+ #include "isaac64.h"
+@@ -59,7 +133,9 @@ int FDECL((*fn), (int));
+ static int
+ RND(int x)
+ {
+-    return (isaac64_next_uint64(&rnglist[CORE].rng_state) % x);
++    int result = (isaac64_next_uint64(&rnglist[CORE].rng_state) % x);
++    nle_rng_trace_record(x, result, (uintptr_t) __builtin_return_address(0));
++    return result;
+ }
+ 
+ /* 0 <= rn2(x) < x, but on a different sequence from the "main" rn2;
+@@ -101,16 +177,17 @@ int
+ rn2(x)
+ register int x;
+ {
++    int bound = x;
++    int result;
+ #if (NH_DEVEL_STATUS != NH_STATUS_RELEASED)
+     if (x <= 0) {
+         impossible("rn2(%d) attempted", x);
+         return 0;
+     }
+-    x = RND(x);
+-    return x;
+-#else
+-    return RND(x);
+ #endif
++    result = RND(x);
++    nle_rng_trace_annotate((uintptr_t) __builtin_return_address(0), 1);
++    return result;
+ }
+ 
+ /* 0 <= rnl(x) < x; sometimes subtracting Luck;
+@@ -170,6 +247,7 @@ register int x;
+     }
+ #endif
+     x = RND(x) + 1;
++    nle_rng_trace_annotate((uintptr_t) __builtin_return_address(0), 2);
+     return x;
+ }
+ 

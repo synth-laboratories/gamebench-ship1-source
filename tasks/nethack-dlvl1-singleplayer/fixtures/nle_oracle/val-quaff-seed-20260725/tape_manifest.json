@@ -1,0 +1,115 @@
+{
+  "capture_runtime": {
+    "capture_script_sha256": "672934340232802861964a4873cdebfd0dcf797e27fe4c93b11ac4dd7fe17df0",
+    "nle_distribution_record_sha256": "8f70772486cd44dc8b99f5f5090b4a4aca8647e0b22db7b828304ea70083c986",
+    "nle_runtime_files_sha256": {
+      "nle/_pyconverter.cpython-310-darwin.so": "de710c50225bc0c1971e02cca46ebceefb87d5a20741b0b19f6a1c4a0be2eec3",
+      "nle/_pynethack.cpython-310-darwin.so": "a3231293d4dacc65cde95ebe451b801ad7b49464f057b6f2a924447a3b374302",
+      "nle/libnethack.so": "7ac1270dfd5fa0a5fb2f715ef6a7151058f06cda595e4b722ac6d070ce0f2057",
+      "nle/nethack/actions.py": "132def6a1f8afbc729ff46ffca04a57cf1c56f2d0ddeaa44c0da95296e67aab4"
+    },
+    "oracle_source_artifact": {
+      "filename": "nle-0.9.0.tar.gz",
+      "sha256": "a98644bdd547017cdde9fdf589b245da98ff8753327285e949d506d9006f10d4",
+      "url": "https://files.pythonhosted.org/packages/12/4f/af454188d1f16c7023c54dc0c89199c571ccfffe55f0a6a829ec96c62685/nle-0.9.0.tar.gz"
+    },
+    "platform": "macOS-26.4-arm64-arm-64bit",
+    "python": {
+      "executable_sha256": "76c9b7490345f28797b2085f7ff9fcd607bc8ba32c130b7ecbf72ccf0d8cdad3",
+      "implementation": "CPython",
+      "version": "3.10.20"
+    },
+    "schema": "gamebench.nethack.capture_runtime.v1"
+  },
+  "files_sha256": {
+    "actions.jsonl": "7b5864bea5ee37efb1d736329eecd4dd40daed6fac3e13dd54b2d3d47cb8a27f",
+    "level_dump.json": "8d8a19402a3e9aeb009a32765946a96ed23e054e9ce3f0d737c07952492293b3",
+    "meta.json": "04b85a4cca25682d0b7be281ea940831372d375dcb6d4404554a1d4e7a02ce48",
+    "native_pre_action_evidence.jsonl": "1b6df48bc8d2d02a007459aed96dc44ccda77a315d71b72e86a6ad51cb700b77",
+    "native_reset_entity_state.json": "9768aaf7eca5d5f752664df63cc0704858e4f9ca9b978fd8bc978184a9e05b08",
+    "snapshots.jsonl": "0d2208e6d0dd8777c03ca5aefd112e0025a5be5834920ba8c449cdbccb797448"
+  },
+  "fixture_id": "val-quaff-seed-20260725",
+  "native_pre_action_evidence": {
+    "conformance_denominator_included": false,
+    "record_count": 2,
+    "records_sha256": "0dffe76be4b61644b8c4dc2428b07355663bfe7d54e41bed4ee4b232d8cfbfdf",
+    "status": "present_pre_action_evidence_only",
+    "usage_policy": {
+      "captured_before_action_only": true,
+      "classification": "read_only_authoritative_source_evidence",
+      "forbidden_uses": [
+        "future_observation_hydration",
+        "reset_level_dump_hydration",
+        "gold_runtime_input",
+        "conformance_denominator"
+      ]
+    }
+  },
+  "native_reset_entity_state": {
+    "conformance_denominator_included": false,
+    "record_sha256": "3c58c81185253049238fd2f83e1642550c3d4f224ecffbc746b5e9bca2bfede4",
+    "scheduler_source_eligible": true,
+    "status": "present_reset_only_source_evidence",
+    "usage_policy": {
+      "captured_at_reset_only": true,
+      "classification": "read_only_authoritative_reset_source_evidence",
+      "forbidden_uses": [
+        "future_observation_hydration",
+        "pre_action_sidecar_hydration",
+        "native_receipt_level_dump_hydration",
+        "native_receipt_gold_runtime_input",
+        "checkpoint_state_input",
+        "conformance_denominator"
+      ]
+    }
+  },
+  "oracle_identity": {
+    "action_table_sha256": "49fd23af71259e5349fb82b0825517a35f876e48250d76d61379f48fe86cffd3",
+    "capture_contract": {
+      "auto_more": "raw_explicit",
+      "geography": "Main Dungeon dlvl 1; descent freezes the last pre-dlvl2 observation",
+      "source_of_truth": "actions.jsonl and snapshots.jsonl captured from the pinned NLE oracle"
+    },
+    "oracle": {
+      "name": "NetHack Learning Environment",
+      "nethack_version": "3.6.6",
+      "nle_version": "0.9.0",
+      "source_artifact": {
+        "filename": "nle-0.9.0.tar.gz",
+        "sha256": "a98644bdd547017cdde9fdf589b245da98ff8753327285e949d506d9006f10d4",
+        "url": "https://files.pythonhosted.org/packages/12/4f/af454188d1f16c7023c54dc0c89199c571ccfffe55f0a6a829ec96c62685/nle-0.9.0.tar.gz"
+      }
+    },
+    "schema": "gamebench.nethack.oracle_identity.v1"
+  },
+  "reset_state_sha256": "eefe7086e8e416052de556cb74fcb3397f25e97054901338d8196c78bc535602",
+  "schema": "gamebench.nethack.oracle_tape_manifest.v1",
+  "terminal_state_sha256": "4786292125983d890d7895884510ff50f2bb727a5ba3e4bf617532afca6360b2",
+  "turns": [
+    {
+      "input": {
+        "action_id": 64,
+        "action_name": "Command.QUAFF",
+        "step": 1
+      },
+      "input_sha256": "a7daa4b9c26eb36bcbbef466571a8d611c035b7f58cbf80c21fbad701433e485",
+      "result_state_sha256": "fd3fe5855d792d3cd2b1274696c484375b2ac087a0b8a2d7d6fd46c07a81486a",
+      "source_state_sha256": "eefe7086e8e416052de556cb74fcb3397f25e97054901338d8196c78bc535602",
+      "step": 1,
+      "terminal_ui_evidence_sha256": "d698bc2ff459559da91fa0b0adacd67a483b1cdee20c96abfec83b8bec7a718d"
+    },
+    {
+      "input": {
+        "action_id": 38,
+        "action_name": "Command.ESC",
+        "step": 2
+      },
+      "input_sha256": "3729c6f1ac5d0540b18cfeef2caf1f68bafad6d7f1d1c2392a97a476bbbc8f13",
+      "result_state_sha256": "4786292125983d890d7895884510ff50f2bb727a5ba3e4bf617532afca6360b2",
+      "source_state_sha256": "fd3fe5855d792d3cd2b1274696c484375b2ac087a0b8a2d7d6fd46c07a81486a",
+      "step": 2,
+      "terminal_ui_evidence_sha256": "bd564e54c836e6926b75553c9ba942e12b15fae2625a3c89de6802dba6ab2a01"
+    }
+  ]
+}

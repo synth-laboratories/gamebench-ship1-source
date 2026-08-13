@@ -1,0 +1,373 @@
+{
+  "bindings": {
+    "actions_sha256": "5f1c26b1a0ab4713fc8bef67427360ca270305e253cf415ba94909fe3940677a",
+    "capture_runtime_sha256": "ab2029bb3ff083ad212d6e8995cd481d0876467e58e5be9eff0cc04ad498044b",
+    "level_dump_sha256": "60c9f6d2adb1b97f735820cf54c01e5169a94bb6280439046e93c254c036acff",
+    "native_binary_sha256": "7ac1270dfd5fa0a5fb2f715ef6a7151058f06cda595e4b722ac6d070ce0f2057",
+    "oracle_identity_sha256": "f4185316eba59dd2e7628666e53d1407a15666d15c8c2a77ef1daae8be9f945b",
+    "portable_projection_sha256": "1d716af3401d71314220064a230ebaa9e6f29de9ab0038c2ac707a34b9eb721b",
+    "portable_reset_rng_sha256": "7ee7fa548fd32352019428c83347bb797151194b502fde61492f05975c4e1ab2",
+    "reset_projection_sha256": "26369bca6ef264d899dabc3936b3bc155df5a2fddc66d57791bd4233cc888005"
+  },
+  "capture_boundary": {
+    "action_step": 0,
+    "before_action_step": 1,
+    "kind": "reset"
+  },
+  "captured_at_reset_only": true,
+  "controls": {
+    "entities": {
+      "native_entities": 1,
+      "verified_public_pet_cells": 1
+    },
+    "player": {
+      "public_condition_mask": 0,
+      "verified_blstats": 16,
+      "verified_inventory_entries": 5
+    }
+  },
+  "fixture_id": "val-quaff-seed-20260725",
+  "record_sha256": "3c58c81185253049238fd2f83e1642550c3d4f224ecffbc746b5e9bca2bfede4",
+  "reset_source_state_sha256": "e5523f3687e51afa57553ae9a4974d9fd1e4fcd8f8e6879244fd76ea39a31ab9",
+  "rng": {
+    "reason": "A complete reset-only ISAAC64 projection is embedded separately in the level dump; this entity receipt never accepts later RNG sidecars.",
+    "status": "separate_portable_reset_contract"
+  },
+  "schema": "gamebench.nethack.native_reset_entity_scheduler_state.v1",
+  "state": {
+    "entities": {
+      "binary_sha256": "7ac1270dfd5fa0a5fb2f715ef6a7151058f06cda595e4b722ac6d070ce0f2057",
+      "coordinate_contract": "native level (x,y) is emitted as NLE plane (x-1,y); native_x preserves the source level coordinate",
+      "entities": [
+        {
+          "allegiance": "tame",
+          "entity_id": 23,
+          "hp": 4,
+          "hp_max": 4,
+          "lifecycle": "alive",
+          "native_x": 36,
+          "path_state": {
+            "apparent_hero_native": {
+              "x": 35,
+              "y": 17
+            },
+            "edog": {
+              "abuse": 0,
+              "apport": 7,
+              "dropdist": 10000,
+              "droptime": 0,
+              "hungrytime": 1001,
+              "killed_by_u": false,
+              "mhpmax_penalty": 0,
+              "ogoal_native": {
+                "x": -1,
+                "y": -1
+              },
+              "revivals": 0,
+              "whistletime": 0
+            },
+            "last_monster_move": 0,
+            "mtrack_native": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              }
+            ],
+            "status": {
+              "blind_timeout": 0,
+              "can_see": true,
+              "cancelled": false,
+              "confused": false,
+              "eating_timeout": 0,
+              "flee_timeout": 0,
+              "frozen_timeout": 0,
+              "invisible": false,
+              "is_minion": false,
+              "leashed": false,
+              "stunned": false,
+              "trapped": false,
+              "undetected": false
+            },
+            "strategy": 0,
+            "trap_seen_mask": 0
+          },
+          "scheduler": {
+            "base_speed": 18,
+            "can_move": true,
+            "fleeing": false,
+            "iteration_order": 0,
+            "movement_points": 0,
+            "sleeping": false,
+            "special_cooldown": 0,
+            "speed_state": 0,
+            "strategy": 0
+          },
+          "species_id": 32,
+          "underlay": {
+            "object_stack": [],
+            "object_stack_complete": true,
+            "terrain_memory_glyph": 2378,
+            "terrain_type": 24
+          },
+          "x": 35,
+          "y": 16
+        }
+      ],
+      "schema": "gamebench.nethack.native_entity_snapshot.v1",
+      "source_commit": "2fa1be5ac1dbe0a8b075f3274891c306ab8aa0aa",
+      "source_turn": {
+        "monstermoves": 1,
+        "moves": 1
+      },
+      "turn_queue": [
+        23
+      ]
+    },
+    "player": {
+      "binary_sha256": "7ac1270dfd5fa0a5fb2f715ef6a7151058f06cda595e4b722ac6d070ce0f2057",
+      "player": {
+        "attributes": {
+          "components": {
+            "charisma": {
+              "base": 7,
+              "bonus": 0,
+              "temporary": 0
+            },
+            "constitution": {
+              "base": 18,
+              "bonus": 0,
+              "temporary": 0
+            },
+            "dexterity": {
+              "base": 15,
+              "bonus": 0,
+              "temporary": 0
+            },
+            "intelligence": {
+              "base": 7,
+              "bonus": 0,
+              "temporary": 0
+            },
+            "strength": {
+              "base": 18,
+              "bonus": 0,
+              "temporary": 0
+            },
+            "wisdom": {
+              "base": 10,
+              "bonus": 0,
+              "temporary": 0
+            }
+          },
+          "effective": {
+            "charisma": 7,
+            "constitution": 18,
+            "dexterity": 15,
+            "intelligence": 7,
+            "strength": 18,
+            "wisdom": 10
+          }
+        },
+        "combat": {
+          "luck": {
+            "base": 1,
+            "bonus": 0,
+            "total": 1
+          },
+          "martial": {
+            "bare_handed_max_skill": 4,
+            "bare_handed_skill": 1,
+            "constants": {
+              "kicking_boots_object_type": 147,
+              "pm_sasquatch": 234
+            },
+            "effective": false,
+            "kicking_boots": false,
+            "role_bonus": false,
+            "role_is_monk": false,
+            "role_is_samurai": false,
+            "role_species_id": 340,
+            "sasquatch_form": false,
+            "source_macro": "martial_bonus() || is_bigfoot(youmonst.data) || (uarmf && uarmf->otyp == KICKING_BOOTS)"
+          },
+          "monster_form": {
+            "base_species_id": 340,
+            "current_species_id": 340
+          },
+          "polymorphed": false,
+          "two_weapon": false
+        },
+        "completeness": {
+          "basic_melee": {
+            "blockers": [
+              "weapon damage tables, monster AC/resistance, attack sequence, and full skill/object semantics are intentionally not exported"
+            ],
+            "complete": false
+          },
+          "reset_wall_kick": {
+            "complete": true,
+            "fields": [
+              "attributes.effective.constitution",
+              "attributes.effective.dexterity",
+              "combat.luck",
+              "conditions.wounded_legs",
+              "resources.hp",
+              "resources.armor_class",
+              "combat.martial.effective"
+            ]
+          }
+        },
+        "conditions": {
+          "trap_timeout": 0,
+          "trap_type": 0,
+          "wounded_legs": {
+            "active": false,
+            "extrinsic_sides": 0,
+            "intrinsic": 0,
+            "left": false,
+            "right": false
+          }
+        },
+        "coordinates": {
+          "native_x": 35,
+          "native_y": 17,
+          "nle_x": 34,
+          "nle_y": 17
+        },
+        "equipment": {
+          "inventory": [
+            {
+              "artifact": 0,
+              "inventory_letter": "a",
+              "object_class": 2,
+              "object_id": 1,
+              "object_type": 37,
+              "quantity": 1,
+              "spe": 1,
+              "worn_mask": 256
+            },
+            {
+              "artifact": 0,
+              "inventory_letter": "b",
+              "object_class": 2,
+              "object_id": 2,
+              "object_type": 17,
+              "quantity": 1,
+              "spe": 0,
+              "worn_mask": 1024
+            },
+            {
+              "artifact": 0,
+              "inventory_letter": "c",
+              "object_class": 3,
+              "object_id": 3,
+              "object_type": 129,
+              "quantity": 1,
+              "spe": 3,
+              "worn_mask": 8
+            },
+            {
+              "artifact": 0,
+              "inventory_letter": "d",
+              "object_class": 7,
+              "object_id": 4,
+              "object_type": 268,
+              "quantity": 2,
+              "spe": 0,
+              "worn_mask": 0
+            },
+            {
+              "artifact": 0,
+              "inventory_letter": "e",
+              "object_class": 6,
+              "object_id": 5,
+              "object_type": 202,
+              "quantity": 1,
+              "spe": 1,
+              "worn_mask": 0
+            }
+          ],
+          "slots": {
+            "uarm": null,
+            "uarmc": null,
+            "uarmf": null,
+            "uarmg": null,
+            "uarmh": null,
+            "uarms": {
+              "artifact": 0,
+              "inventory_letter": "c",
+              "object_class": 3,
+              "object_id": 3,
+              "object_type": 129,
+              "quantity": 1,
+              "spe": 3,
+              "worn_mask": 8
+            },
+            "uarmu": null,
+            "uquiver": null,
+            "uswapwep": {
+              "artifact": 0,
+              "inventory_letter": "b",
+              "object_class": 2,
+              "object_id": 2,
+              "object_type": 17,
+              "quantity": 1,
+              "spe": 0,
+              "worn_mask": 1024
+            },
+            "uwep": {
+              "artifact": 0,
+              "inventory_letter": "a",
+              "object_class": 2,
+              "object_id": 1,
+              "object_type": 37,
+              "quantity": 1,
+              "spe": 1,
+              "worn_mask": 256
+            }
+          }
+        },
+        "resources": {
+          "armor_class": 6,
+          "energy": 2,
+          "energy_max": 2,
+          "experience_level": 1,
+          "hp": 16,
+          "hp_max": 16,
+          "human_hp": 16,
+          "human_hp_max": 16,
+          "hunger": 900,
+          "hunger_state": 1
+        }
+      },
+      "schema": "gamebench.nethack.native_player_combat_snapshot.v1",
+      "scope": "read-only pre-action source evidence for KICK/basic melee assertions only; never a gold input or behavior implementation",
+      "source_commit": "2fa1be5ac1dbe0a8b075f3274891c306ab8aa0aa",
+      "source_turn": 1
+    }
+  },
+  "usage_policy": {
+    "captured_at_reset_only": true,
+    "classification": "read_only_authoritative_reset_source_evidence",
+    "forbidden_uses": [
+      "future_observation_hydration",
+      "pre_action_sidecar_hydration",
+      "native_receipt_level_dump_hydration",
+      "native_receipt_gold_runtime_input",
+      "checkpoint_state_input",
+      "conformance_denominator"
+    ]
+  }
+}

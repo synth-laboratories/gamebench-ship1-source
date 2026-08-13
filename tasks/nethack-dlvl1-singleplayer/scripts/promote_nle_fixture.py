@@ -17,10 +17,13 @@ TASK_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TASK_DIR))
 
 from scripts.compare_nle_discrepancies import compare_fixture
+from scripts.native_pre_action_evidence import SIDECAR_FILE
+from scripts.native_reset_entity_state import SIDECAR_FILE as RESET_ENTITY_SIDECAR_FILE
+from scripts.oracle_tape import MANIFEST_FILE, oracle_identity, validate_manifest
 from shared.task_resolve import resolve_task
 
 
-REQUIRED_FILES = ("meta.json", "level_dump.json", "actions.jsonl", "snapshots.jsonl")
+REQUIRED_FILES = ("meta.json", "level_dump.json", "actions.jsonl", "snapshots.jsonl", SIDECAR_FILE, RESET_ENTITY_SIDECAR_FILE, MANIFEST_FILE)
 FIXTURE_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*\Z")
 
 
@@ -109,6 +112,28 @@ def validate_capture(source: Path, fixture_id: str) -> None:
         raise SystemExit("--fixture-id must exactly match meta.json fixture_id")
     if meta.get("nle_version") != "0.9.0" or meta.get("nethack_version") != "3.6.6":
         raise SystemExit("canonical fixtures must pin NLE 0.9.0 and NetHack 3.6.6")
+    runtime = meta.get("capture_runtime")
+    if not isinstance(runtime, dict) or runtime.get("schema") != "gamebench.nethack.capture_runtime.v1":
+        raise SystemExit("new canonical fixtures require exact capture_runtime provenance")
+    if runtime.get("oracle_source_artifact") != oracle_identity()["oracle"]["source_artifact"]:
+        raise SystemExit("capture runtime does not match the pinned NLE source artifact")
+    if not runtime.get("capture_script_sha256") or not runtime.get("nle_distribution_record_sha256"):
+        raise SystemExit("capture runtime is missing script or distribution fingerprints")
+    if not isinstance(runtime.get("nle_runtime_files_sha256"), dict) or not runtime["nle_runtime_files_sha256"]:
+        raise SystemExit("capture runtime is missing NLE binary fingerprints")
+    manifest = read_json(source / MANIFEST_FILE)
+    native_provenance = manifest.get("native_pre_action_evidence")
+    if not isinstance(native_provenance, dict) or native_provenance.get("status") != "present_pre_action_evidence_only":
+        raise SystemExit("new canonical fixtures require pinned pre-action native evidence")
+    if native_provenance.get("conformance_denominator_included") is not False:
+        raise SystemExit("native source evidence must never enter a conformance denominator")
+    reset_entity_provenance = manifest.get("native_reset_entity_state")
+    if not isinstance(reset_entity_provenance, dict) or reset_entity_provenance.get("status") != "present_reset_only_source_evidence":
+        raise SystemExit("new canonical fixtures require a reset-only native entity/scheduler source receipt")
+    if reset_entity_provenance.get("scheduler_source_eligible") is not True:
+        raise SystemExit("reset entity receipt must be scheduler-source eligible")
+    if reset_entity_provenance.get("conformance_denominator_included") is not False:
+        raise SystemExit("reset entity receipt must never enter a conformance denominator")
     if "fuzz" in meta or meta.get("diagnostic_fuzz") or meta.get("not_a_conformance_pass"):
         raise SystemExit("diagnostic fuzz artifacts may not be promoted into fixtures/nle_oracle")
     pinned_actions = read_json(TASK_DIR / "shared" / "nle_action_map.json").get("actions")
@@ -140,6 +165,14 @@ def validate_capture(source: Path, fixture_id: str) -> None:
     for snapshot in snapshots:
         projection = snapshot["projection"]
         blstats = projection.get("blstats") if isinstance(projection, dict) else None
+        # NLE clears blstats when a confirmed quit/death terminal screen is
+        # emitted.  That final observation is still an in-scope dlvl-1
+        # lifecycle boundary; every live snapshot must retain the dungeon
+        # identity.
+        if bool(snapshot.get("done", False)):
+            if snapshot is not snapshots[-1] or snapshot.get("terminal_reason") not in {"quit", "death", "saved", "descended"}:
+                raise SystemExit("terminal snapshot must be the final owned lifecycle boundary")
+            continue
         if not isinstance(blstats, list) or len(blstats) < 25 or blstats[23:25] != [0, 1]:
             raise SystemExit("canonical fixture must remain on Main Dungeon dlvl 1 in every raw NLE snapshot")
     validate_descend_boundary(actions, snapshots)
@@ -168,6 +201,9 @@ def main() -> None:
     missing = [name for name in REQUIRED_FILES if not (source / name).is_file()]
     if missing:
         raise SystemExit(f"staged capture is missing required files: {', '.join(missing)}")
+    manifest_failures = validate_manifest(source)
+    if manifest_failures:
+        raise SystemExit("staged capture failed tape integrity validation\n" + "\n".join(manifest_failures))
     validate_capture(source, args.fixture_id)
 
     failures = [

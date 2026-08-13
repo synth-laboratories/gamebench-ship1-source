@@ -1,0 +1,300 @@
+{
+  "capture_runtime": {
+    "capture_script_sha256": "39f9a52b5ed00ae1d86f5ba4b6ed159da68acc521697784108efa99ed96b4b76",
+    "nle_distribution_record_sha256": "8f70772486cd44dc8b99f5f5090b4a4aca8647e0b22db7b828304ea70083c986",
+    "nle_runtime_files_sha256": {
+      "nle/_pyconverter.cpython-310-darwin.so": "de710c50225bc0c1971e02cca46ebceefb87d5a20741b0b19f6a1c4a0be2eec3",
+      "nle/_pynethack.cpython-310-darwin.so": "a3231293d4dacc65cde95ebe451b801ad7b49464f057b6f2a924447a3b374302",
+      "nle/libnethack.so": "7ac1270dfd5fa0a5fb2f715ef6a7151058f06cda595e4b722ac6d070ce0f2057",
+      "nle/nethack/actions.py": "132def6a1f8afbc729ff46ffca04a57cf1c56f2d0ddeaa44c0da95296e67aab4"
+    },
+    "oracle_source_artifact": {
+      "filename": "nle-0.9.0.tar.gz",
+      "sha256": "a98644bdd547017cdde9fdf589b245da98ff8753327285e949d506d9006f10d4",
+      "url": "https://files.pythonhosted.org/packages/12/4f/af454188d1f16c7023c54dc0c89199c571ccfffe55f0a6a829ec96c62685/nle-0.9.0.tar.gz"
+    },
+    "platform": "macOS-26.4-arm64-arm-64bit",
+    "python": {
+      "executable_sha256": "76c9b7490345f28797b2085f7ff9fcd607bc8ba32c130b7ecbf72ccf0d8cdad3",
+      "implementation": "CPython",
+      "version": "3.10.20"
+    },
+    "schema": "gamebench.nethack.capture_runtime.v1"
+  },
+  "files_sha256": {
+    "actions.jsonl": "7ec1a9ebf1a148b3f720b14468955a9e5b57c524ab5bf6d9be20e402bcce615c",
+    "level_dump.json": "3fcc92f225a26f1a35ecb65664ba4dd49d177f76c7b1ffef5b8df61989fe22bf",
+    "meta.json": "90fac24061c4beb74b710cb307052db9062b84817018d911cb16e9afabfadba4",
+    "native_pre_action_evidence.jsonl": "83a279c600ba24081279ae6b9fb1f2f5b0cd1e4452527a13d2290cdcbd3a070c",
+    "native_reset_entity_state.json": "b8d718ea1c8ff46a2a74e731a1e6dd9aef30cc65e0ed072801d59da82335bb25",
+    "snapshots.jsonl": "cc5beb53c183da876a2845c9e759d69603cbdbb2893946ed3f13747389c5b4fd"
+  },
+  "fixture_id": "nethack-descent-seed-20260748",
+  "native_pre_action_evidence": {
+    "conformance_denominator_included": false,
+    "record_count": 17,
+    "records_sha256": "8b4f41842fd876413512e066c0954c405944aa192ec5481e4bebc92904fb32ea",
+    "status": "present_pre_action_evidence_only",
+    "usage_policy": {
+      "captured_before_action_only": true,
+      "classification": "read_only_authoritative_source_evidence",
+      "forbidden_uses": [
+        "future_observation_hydration",
+        "reset_level_dump_hydration",
+        "gold_runtime_input",
+        "conformance_denominator"
+      ]
+    }
+  },
+  "native_reset_entity_state": {
+    "conformance_denominator_included": false,
+    "record_sha256": "5515bbd47f78b507d6ad8684f9cf87d2a02386366cec863e57fb69e271749c6e",
+    "scheduler_source_eligible": true,
+    "status": "present_reset_only_source_evidence",
+    "usage_policy": {
+      "captured_at_reset_only": true,
+      "classification": "read_only_authoritative_reset_source_evidence",
+      "forbidden_uses": [
+        "future_observation_hydration",
+        "pre_action_sidecar_hydration",
+        "native_receipt_level_dump_hydration",
+        "native_receipt_gold_runtime_input",
+        "checkpoint_state_input",
+        "conformance_denominator"
+      ]
+    }
+  },
+  "oracle_identity": {
+    "action_table_sha256": "49fd23af71259e5349fb82b0825517a35f876e48250d76d61379f48fe86cffd3",
+    "capture_contract": {
+      "auto_more": "raw_explicit",
+      "geography": "Main Dungeon dlvl 1; descent freezes the last pre-dlvl2 observation",
+      "source_of_truth": "actions.jsonl and snapshots.jsonl captured from the pinned NLE oracle"
+    },
+    "oracle": {
+      "name": "NetHack Learning Environment",
+      "nethack_version": "3.6.6",
+      "nle_version": "0.9.0",
+      "source_artifact": {
+        "filename": "nle-0.9.0.tar.gz",
+        "sha256": "a98644bdd547017cdde9fdf589b245da98ff8753327285e949d506d9006f10d4",
+        "url": "https://files.pythonhosted.org/packages/12/4f/af454188d1f16c7023c54dc0c89199c571ccfffe55f0a6a829ec96c62685/nle-0.9.0.tar.gz"
+      }
+    },
+    "schema": "gamebench.nethack.oracle_identity.v1"
+  },
+  "reset_state_sha256": "ff60f617adb95e796256d88a3caac17c86df375b87eb0ed956e639bc7708c5eb",
+  "schema": "gamebench.nethack.oracle_tape_manifest.v1",
+  "terminal_state_sha256": "4b75351401d9d74b65254829178655b30389778f7893124ead35ad5338de0667",
+  "turns": [
+    {
+      "input": {
+        "action_id": 2,
+        "action_name": "CompassDirection.S",
+        "step": 1
+      },
+      "input_sha256": "410722cbad0850a0eb101ed94e29b83d588e91ecf758e41ec8c3e0705a4798fd",
+      "result_state_sha256": "3d1db9a70ec52c26d65114c673b83256a2d5f264b1bff0d9ddb70f346fd53726",
+      "source_state_sha256": "ff60f617adb95e796256d88a3caac17c86df375b87eb0ed956e639bc7708c5eb",
+      "step": 1,
+      "terminal_ui_evidence_sha256": "03b6a98a2dd456668638b04622ee8ebb568305119c921f23ee623a96b7d30710"
+    },
+    {
+      "input": {
+        "action_id": 1,
+        "action_name": "CompassDirection.E",
+        "step": 2
+      },
+      "input_sha256": "5797e04017128eceae81f8172f80d7796c69bed498843b0e255846b40b1f48a6",
+      "result_state_sha256": "15226dc41d7564a65ba9c9fecf06b0b79456abe4fe646c7736fff54a9e5cbd15",
+      "source_state_sha256": "3d1db9a70ec52c26d65114c673b83256a2d5f264b1bff0d9ddb70f346fd53726",
+      "step": 2,
+      "terminal_ui_evidence_sha256": "adb53b830a191541c7e3fbc4926347b833f49d777c09394230b26ba36791c002"
+    },
+    {
+      "input": {
+        "action_id": 1,
+        "action_name": "CompassDirection.E",
+        "step": 3
+      },
+      "input_sha256": "0784cbe755dd0b96865d6626e61eeb9d1a88d97723aefe3b65e18a84b7677ebb",
+      "result_state_sha256": "a90146d703506a3693b856a14c6d33f6df5d03556586b4c149ef6b8a90423c7b",
+      "source_state_sha256": "15226dc41d7564a65ba9c9fecf06b0b79456abe4fe646c7736fff54a9e5cbd15",
+      "step": 3,
+      "terminal_ui_evidence_sha256": "8b5d90503a468b654d9271f0b46429508a0acef9928493eaa20feb953310b6d4"
+    },
+    {
+      "input": {
+        "action_id": 0,
+        "action_name": "CompassDirection.N",
+        "step": 4
+      },
+      "input_sha256": "b3584c6c6597a17366e9131dd41fa03aac981827c203aa86bc32a1521e338b90",
+      "result_state_sha256": "fe16845a7c8ce4d6a5880fdedc3bcfe21ec2d4ba156464678d66c75e1b4263d8",
+      "source_state_sha256": "a90146d703506a3693b856a14c6d33f6df5d03556586b4c149ef6b8a90423c7b",
+      "step": 4,
+      "terminal_ui_evidence_sha256": "c73e3139937b9a9df765942ae4f7971159140356e0df47068621001c3e7c19db"
+    },
+    {
+      "input": {
+        "action_id": 0,
+        "action_name": "CompassDirection.N",
+        "step": 5
+      },
+      "input_sha256": "96407b47ce85011312a40a8efb3f23c527c2acfec4d059c59c3b0558ce4fe3b9",
+      "result_state_sha256": "d379cd3b02b40902afd455a69740ee8403d38278f365510e5628b44f33f1cba4",
+      "source_state_sha256": "fe16845a7c8ce4d6a5880fdedc3bcfe21ec2d4ba156464678d66c75e1b4263d8",
+      "step": 5,
+      "terminal_ui_evidence_sha256": "a12c1fcd8a2864fc568d0a4fcfc26d082f2a445e1b3586b88d11f88a79984056"
+    },
+    {
+      "input": {
+        "action_id": 1,
+        "action_name": "CompassDirection.E",
+        "step": 6
+      },
+      "input_sha256": "15758d5720e9013a4bb818900fe6ebd3295e3271b7fbaff1e17d0db29fbbf778",
+      "result_state_sha256": "9fe56b4d5eb15be5b562bd28cc7ff434bd85fc10b9d4fd7d12d0c0decd812821",
+      "source_state_sha256": "d379cd3b02b40902afd455a69740ee8403d38278f365510e5628b44f33f1cba4",
+      "step": 6,
+      "terminal_ui_evidence_sha256": "f960bf4085746a0340e2938b99705dba244f6838fa701a93256f9248727d9a19"
+    },
+    {
+      "input": {
+        "action_id": 1,
+        "action_name": "CompassDirection.E",
+        "step": 7
+      },
+      "input_sha256": "eabade2c8690db55541c8a2d75a7d425863919b2409f8caf1bca601ddf488584",
+      "result_state_sha256": "e1a7a54c49ce373e3f45a21b68bfa1859ecf35e07f21094d4348935651ca429d",
+      "source_state_sha256": "9fe56b4d5eb15be5b562bd28cc7ff434bd85fc10b9d4fd7d12d0c0decd812821",
+      "step": 7,
+      "terminal_ui_evidence_sha256": "bc20ff7157b1010e5146d4cd5c2557b370325ac31325ec529d45285143489966"
+    },
+    {
+      "input": {
+        "action_id": 1,
+        "action_name": "CompassDirection.E",
+        "step": 8
+      },
+      "input_sha256": "30672e35173ae3912a6de08129ba311990925d659c37081ee5e1bfb6dbff6e06",
+      "result_state_sha256": "cc24b8c79e75f71c402ac585d1a859189a8f726003c445b09043ad8a52fc5766",
+      "source_state_sha256": "e1a7a54c49ce373e3f45a21b68bfa1859ecf35e07f21094d4348935651ca429d",
+      "step": 8,
+      "terminal_ui_evidence_sha256": "9f5fd68777b1daebe2471d60878a406e272b1d338ce2fd0a498023bffeb40f23"
+    },
+    {
+      "input": {
+        "action_id": 1,
+        "action_name": "CompassDirection.E",
+        "step": 9
+      },
+      "input_sha256": "8d4dfa8999aa858ecab97eaa68aee418301c655933523abf4b04abafc47982cb",
+      "result_state_sha256": "216d455010435f1b692e71f8ddf42ba315849c7ef19be196525a30dee682fc14",
+      "source_state_sha256": "cc24b8c79e75f71c402ac585d1a859189a8f726003c445b09043ad8a52fc5766",
+      "step": 9,
+      "terminal_ui_evidence_sha256": "4101109e073cd44fac3e596c26c37166b4ae129672e34f5de1b8ae39df19e656"
+    },
+    {
+      "input": {
+        "action_id": 0,
+        "action_name": "CompassDirection.N",
+        "step": 10
+      },
+      "input_sha256": "59b947092f9a966788d9c45119037cd643e9cf96bd2da6dc32ffc1cb016e5fc4",
+      "result_state_sha256": "2e06555ae63a6405bc1f7f8b04dda569e89bcb6ddd06ed982957f9b895cd7df6",
+      "source_state_sha256": "216d455010435f1b692e71f8ddf42ba315849c7ef19be196525a30dee682fc14",
+      "step": 10,
+      "terminal_ui_evidence_sha256": "e0bd24ff4d8c6d9284aded45642ef480bcf2db0047999f1cf90590f76cc1a74a"
+    },
+    {
+      "input": {
+        "action_id": 0,
+        "action_name": "CompassDirection.N",
+        "step": 11
+      },
+      "input_sha256": "4249f42e5dbf246ee72f2f9b64b8878bc2e58e6cfb516f3961f3d1804333c26f",
+      "result_state_sha256": "0c7fa51cbfd2765f25ec4a2e4061558d2c45adb5a1ab5d52da6794e182e7e84f",
+      "source_state_sha256": "2e06555ae63a6405bc1f7f8b04dda569e89bcb6ddd06ed982957f9b895cd7df6",
+      "step": 11,
+      "terminal_ui_evidence_sha256": "27b0b90aa6e3932a01721599b55b55cab0bd6ed538157ba9e15ec72751bbdef5"
+    },
+    {
+      "input": {
+        "action_id": 1,
+        "action_name": "CompassDirection.E",
+        "step": 12
+      },
+      "input_sha256": "a3c52120ffb25c375d1dcef05966a9c015c36a4b94585f0c593b126c19eed215",
+      "result_state_sha256": "4e2f161f6ed6bcbaf20f05fbe9fab44ea8b01b40a24021b410b175bf3664d340",
+      "source_state_sha256": "0c7fa51cbfd2765f25ec4a2e4061558d2c45adb5a1ab5d52da6794e182e7e84f",
+      "step": 12,
+      "terminal_ui_evidence_sha256": "09c3e6a09d698264696d439e6cff3f704f474ca8d97ebaff34f51dbb0876f02f"
+    },
+    {
+      "input": {
+        "action_id": 1,
+        "action_name": "CompassDirection.E",
+        "step": 13
+      },
+      "input_sha256": "3c8c1c909da158158feab7f703838ab2a0b7e391a62b55a69830e3efd5634769",
+      "result_state_sha256": "09e58850fddbd1e826bc761f2d5a24d6ead68cb12c983467fbc37615712f5c6d",
+      "source_state_sha256": "4e2f161f6ed6bcbaf20f05fbe9fab44ea8b01b40a24021b410b175bf3664d340",
+      "step": 13,
+      "terminal_ui_evidence_sha256": "a153140d4fe065ec8dd7adb0e794f1ff7a7c937d1aa64385255631c94ee917dc"
+    },
+    {
+      "input": {
+        "action_id": 1,
+        "action_name": "CompassDirection.E",
+        "step": 14
+      },
+      "input_sha256": "85bc10a43185ac8257ce3c613cb0268565309024c7108edaa827410448e48842",
+      "result_state_sha256": "8bf235cab32dfa956cbd2746ad1872793d51e25eb41eeb048d58afca0e7332e0",
+      "source_state_sha256": "09e58850fddbd1e826bc761f2d5a24d6ead68cb12c983467fbc37615712f5c6d",
+      "step": 14,
+      "terminal_ui_evidence_sha256": "cacfd423f4ff3a1d80227c58e32364ea88752ff354415cf8ad4ecb27bcb4d6e1"
+    },
+    {
+      "input": {
+        "action_id": 2,
+        "action_name": "CompassDirection.S",
+        "step": 15
+      },
+      "input_sha256": "cf87cb90004f11ba40011c4fec4ce63a543ae1fb6d3238e2e6ae39523743f0c1",
+      "result_state_sha256": "2a24aee8598eb8fdb43be45f5e3ffd55ca4dea7889504179723102a248bd5858",
+      "source_state_sha256": "8bf235cab32dfa956cbd2746ad1872793d51e25eb41eeb048d58afca0e7332e0",
+      "step": 15,
+      "terminal_ui_evidence_sha256": "8c93bc7a091b92344491f2527c5f86194ec650b878f4668fb5e6e889fb8bd404"
+    },
+    {
+      "input": {
+        "action_id": 2,
+        "action_name": "CompassDirection.S",
+        "step": 16
+      },
+      "input_sha256": "57e75ca77ba3ffb7e71d17219f535038876bc95f30631b7df41467351cfa802f",
+      "result_state_sha256": "fbfeffde127f3422a060a48de024e30c6c86c349b82fa19bcc2a6737536edb98",
+      "source_state_sha256": "2a24aee8598eb8fdb43be45f5e3ffd55ca4dea7889504179723102a248bd5858",
+      "step": 16,
+      "terminal_ui_evidence_sha256": "6226174bfea48990caaa80aaf6049cde243ae4d4efb5ec8753b479d5c9396643"
+    },
+    {
+      "input": {
+        "action_id": 17,
+        "action_name": "MiscDirection.DOWN",
+        "boundary": "dlvl1_descend",
+        "observed_down_stair": {
+          "x": 17,
+          "y": 6
+        },
+        "step": 17
+      },
+      "input_sha256": "ec064429e532a2120bd3aa86748dd40d369f8ecb543a931dffbc189b5c01583c",
+      "result_state_sha256": "4b75351401d9d74b65254829178655b30389778f7893124ead35ad5338de0667",
+      "source_state_sha256": "fbfeffde127f3422a060a48de024e30c6c86c349b82fa19bcc2a6737536edb98",
+      "step": 17,
+      "terminal_ui_evidence_sha256": "6226174bfea48990caaa80aaf6049cde243ae4d4efb5ec8753b479d5c9396643"
+    }
+  ]
+}

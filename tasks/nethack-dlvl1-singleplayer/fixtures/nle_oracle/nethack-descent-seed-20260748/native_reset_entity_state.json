@@ -1,0 +1,1623 @@
+{
+  "bindings": {
+    "actions_sha256": "0d033351494cc8dbaf8b8200ec4a127f5d4cdaf066eaf31ea4ff7c011a1aa0ac",
+    "capture_runtime_sha256": "7fe11a838b49a39cd7bf6105c4054c5960bad24bb83c808190a94fe2c0de7fe1",
+    "level_dump_sha256": "73d3f6e9cdd3fbe034d1a914dde2d52fa400cfe091412c2d9fcb805bb9e95c60",
+    "native_binary_sha256": "7ac1270dfd5fa0a5fb2f715ef6a7151058f06cda595e4b722ac6d070ce0f2057",
+    "oracle_identity_sha256": "f4185316eba59dd2e7628666e53d1407a15666d15c8c2a77ef1daae8be9f945b",
+    "portable_projection_sha256": "c565efc3081f0c6f4e632320461195d7783bf0112f0a5ea40542fa01cb34b480",
+    "portable_reset_map_sha256": "8aa7a3cf063ada3b898326c0b30991eb684ccc8405fbf0ef7aaa9e0e0ceaf42a",
+    "portable_reset_rng_sha256": "3b35e40e51694fbed8e14f880791ffe74edff243232fea42e3800ea35682a13d",
+    "reset_projection_sha256": "599ff7619243c0d83b64f6e58399a66eda4a7b029bd2fc22c23fc60a502557d1"
+  },
+  "capture_boundary": {
+    "action_step": 0,
+    "before_action_step": 1,
+    "kind": "reset"
+  },
+  "captured_at_reset_only": true,
+  "controls": {
+    "entities": {
+      "native_entities": 4,
+      "verified_public_pet_cells": 1
+    },
+    "player": {
+      "public_condition_mask": 0,
+      "verified_blstats": 16,
+      "verified_inventory_entries": 5
+    }
+  },
+  "fixture_id": "nethack-descent-seed-20260748",
+  "record_sha256": "5515bbd47f78b507d6ad8684f9cf87d2a02386366cec863e57fb69e271749c6e",
+  "reset_source_state_sha256": "6353e0129912dc5da1bef69bdc1a04a6cc6c35c58617b0fbf6fadb7fc841cfe3",
+  "rng": {
+    "reason": "A complete reset-only ISAAC64 projection is embedded separately in the level dump; this entity receipt never accepts later RNG sidecars.",
+    "status": "separate_portable_reset_contract"
+  },
+  "schema": "gamebench.nethack.native_reset_entity_scheduler_state.v1",
+  "state": {
+    "entities": {
+      "binary_sha256": "7ac1270dfd5fa0a5fb2f715ef6a7151058f06cda595e4b722ac6d070ce0f2057",
+      "coordinate_contract": "native level (x,y) is emitted as NLE plane (x-1,y); native_x preserves the source level coordinate",
+      "entities": [
+        {
+          "allegiance": "tame",
+          "entity_id": 45,
+          "hp": 1,
+          "hp_max": 1,
+          "inventory": [],
+          "lifecycle": "alive",
+          "native_x": 8,
+          "path_state": {
+            "apparent_hero_native": {
+              "x": 9,
+              "y": 7
+            },
+            "edog": {
+              "abuse": 0,
+              "apport": 6,
+              "dropdist": 10000,
+              "droptime": 0,
+              "hungrytime": 1001,
+              "killed_by_u": false,
+              "mhpmax_penalty": 0,
+              "ogoal_native": {
+                "x": -1,
+                "y": -1
+              },
+              "revivals": 0,
+              "whistletime": 0
+            },
+            "last_monster_move": 0,
+            "mtrack_native": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              }
+            ],
+            "status": {
+              "blind_timeout": 0,
+              "can_see": true,
+              "cancelled": false,
+              "confused": false,
+              "eating_timeout": 0,
+              "flee_timeout": 0,
+              "frozen_timeout": 0,
+              "invisible": false,
+              "is_minion": false,
+              "leashed": false,
+              "stunned": false,
+              "trapped": false,
+              "undetected": false
+            },
+            "strategy": 0,
+            "trap_seen_mask": 0
+          },
+          "presentation": {
+            "char": "f",
+            "color": 15,
+            "glyph": 413,
+            "monster_class": 6,
+            "provenance": "nle_reset_monster_class_symbol"
+          },
+          "scheduler": {
+            "base_speed": 18,
+            "can_move": true,
+            "fleeing": false,
+            "iteration_order": 0,
+            "movement_points": 0,
+            "sleeping": false,
+            "special_cooldown": 0,
+            "speed_state": 0,
+            "strategy": 0
+          },
+          "species_id": 32,
+          "species_rules": {
+            "base_speed": 18,
+            "branch_profile": "dog_move_domestic",
+            "capabilities": {
+              "amorphous": false,
+              "cannot_pickup": false,
+              "collects_objects": false,
+              "conceal_underlay": false,
+              "covetous": false,
+              "domestic": true,
+              "hide": false,
+              "likes_gems": false,
+              "likes_gold": false,
+              "likes_magic": false,
+              "no_eyes": false,
+              "no_hands": true,
+              "stalk": false,
+              "swim": false,
+              "teleport": false,
+              "tunnel": false,
+              "very_small": false,
+              "wallwalk": false,
+              "wander": true
+            },
+            "combat": {
+              "armor_class": 6,
+              "attack_bytes_hex": "020001060000000000000000000000000000000000000000",
+              "attacks": [
+                {
+                  "aatyp": 2,
+                  "adtyp": 0,
+                  "damd": 6,
+                  "damn": 1,
+                  "slot": 0
+                },
+                {
+                  "aatyp": 0,
+                  "adtyp": 0,
+                  "damd": 0,
+                  "damn": 0,
+                  "slot": 1
+                },
+                {
+                  "aatyp": 0,
+                  "adtyp": 0,
+                  "damd": 0,
+                  "damn": 0,
+                  "slot": 2
+                },
+                {
+                  "aatyp": 0,
+                  "adtyp": 0,
+                  "damd": 0,
+                  "damn": 0,
+                  "slot": 3
+                },
+                {
+                  "aatyp": 0,
+                  "adtyp": 0,
+                  "damd": 0,
+                  "damn": 0,
+                  "slot": 4
+                },
+                {
+                  "aatyp": 0,
+                  "adtyp": 0,
+                  "damd": 0,
+                  "damn": 0,
+                  "slot": 5
+                }
+              ],
+              "level": 2,
+              "magic_resistance": 0,
+              "provenance": "nle_reset_permonst_attack_profile_v1",
+              "resistances": 0
+            },
+            "mflags1": 537141248,
+            "mflags2": 12582912,
+            "mflags3": 512,
+            "monster_class": 6,
+            "name": "kitten",
+            "provenance": "nle_reset_permonst_static_profile_v1",
+            "species_id": 32
+          },
+          "underlay": {
+            "object_stack": [],
+            "object_stack_complete": true,
+            "terrain_memory_glyph": 2378,
+            "terrain_type": 24
+          },
+          "x": 7,
+          "y": 6
+        },
+        {
+          "allegiance": "hostile",
+          "entity_id": 18,
+          "hp": 1,
+          "hp_max": 1,
+          "inventory": [],
+          "lifecycle": "alive",
+          "native_x": 69,
+          "path_state": {
+            "apparent_hero_native": {
+              "x": 0,
+              "y": 0
+            },
+            "edog": null,
+            "last_monster_move": 0,
+            "mtrack_native": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              }
+            ],
+            "status": {
+              "blind_timeout": 0,
+              "can_see": true,
+              "cancelled": false,
+              "confused": false,
+              "eating_timeout": 0,
+              "flee_timeout": 0,
+              "frozen_timeout": 0,
+              "invisible": false,
+              "is_minion": false,
+              "leashed": false,
+              "stunned": false,
+              "trapped": false,
+              "undetected": false
+            },
+            "strategy": 0,
+            "trap_seen_mask": 0
+          },
+          "presentation": {
+            "char": "d",
+            "color": 1,
+            "glyph": 13,
+            "monster_class": 4,
+            "provenance": "nle_reset_monster_class_symbol"
+          },
+          "scheduler": {
+            "base_speed": 15,
+            "can_move": true,
+            "fleeing": false,
+            "iteration_order": 1,
+            "movement_points": 0,
+            "sleeping": false,
+            "special_cooldown": 0,
+            "speed_state": 0,
+            "strategy": 0
+          },
+          "species_id": 13,
+          "species_rules": {
+            "base_speed": 15,
+            "branch_profile": "ordinary_m_move_candidate",
+            "capabilities": {
+              "amorphous": false,
+              "cannot_pickup": false,
+              "collects_objects": false,
+              "conceal_underlay": false,
+              "covetous": false,
+              "domestic": false,
+              "hide": false,
+              "likes_gems": false,
+              "likes_gold": false,
+              "likes_magic": false,
+              "no_eyes": false,
+              "no_hands": true,
+              "stalk": false,
+              "swim": false,
+              "teleport": false,
+              "tunnel": false,
+              "very_small": false,
+              "wallwalk": false,
+              "wander": false
+            },
+            "combat": {
+              "armor_class": 7,
+              "attack_bytes_hex": "020001030000000000000000000000000000000000000000",
+              "attacks": [
+                {
+                  "aatyp": 2,
+                  "adtyp": 0,
+                  "damd": 3,
+                  "damn": 1,
+                  "slot": 0
+                },
+                {
+                  "aatyp": 0,
+                  "adtyp": 0,
+                  "damd": 0,
+                  "damn": 0,
+                  "slot": 1
+                },
+                {
+                  "aatyp": 0,
+                  "adtyp": 0,
+                  "damd": 0,
+                  "damn": 0,
+                  "slot": 2
+                },
+                {
+                  "aatyp": 0,
+                  "adtyp": 0,
+                  "damd": 0,
+                  "damn": 0,
+                  "slot": 3
+                },
+                {
+                  "aatyp": 0,
+                  "adtyp": 0,
+                  "damd": 0,
+                  "damn": 0,
+                  "slot": 4
+                },
+                {
+                  "aatyp": 0,
+                  "adtyp": 0,
+                  "damd": 0,
+                  "damn": 0,
+                  "slot": 5
+                }
+              ],
+              "level": 0,
+              "magic_resistance": 0,
+              "provenance": "nle_reset_permonst_attack_profile_v1",
+              "resistances": 0
+            },
+            "mflags1": 537141248,
+            "mflags2": 1048576,
+            "mflags3": 512,
+            "monster_class": 4,
+            "name": "fox",
+            "provenance": "nle_reset_permonst_static_profile_v1",
+            "species_id": 13
+          },
+          "underlay": {
+            "object_stack": [],
+            "object_stack_complete": true,
+            "terrain_memory_glyph": 2359,
+            "terrain_type": 24
+          },
+          "x": 68,
+          "y": 17
+        },
+        {
+          "allegiance": "hostile",
+          "entity_id": 15,
+          "hp": 2,
+          "hp_max": 2,
+          "inventory": [],
+          "lifecycle": "alive",
+          "native_x": 46,
+          "path_state": {
+            "apparent_hero_native": {
+              "x": 0,
+              "y": 0
+            },
+            "edog": null,
+            "last_monster_move": 0,
+            "mtrack_native": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              }
+            ],
+            "status": {
+              "blind_timeout": 0,
+              "can_see": true,
+              "cancelled": false,
+              "confused": false,
+              "eating_timeout": 0,
+              "flee_timeout": 0,
+              "frozen_timeout": 0,
+              "invisible": false,
+              "is_minion": false,
+              "leashed": false,
+              "stunned": false,
+              "trapped": false,
+              "undetected": false
+            },
+            "strategy": 0,
+            "trap_seen_mask": 0
+          },
+          "presentation": {
+            "char": "F",
+            "color": 10,
+            "glyph": 155,
+            "monster_class": 32,
+            "provenance": "nle_reset_monster_class_symbol"
+          },
+          "scheduler": {
+            "base_speed": 1,
+            "can_move": true,
+            "fleeing": false,
+            "iteration_order": 2,
+            "movement_points": 0,
+            "sleeping": false,
+            "special_cooldown": 0,
+            "speed_state": 0,
+            "strategy": 0
+          },
+          "species_id": 155,
+          "species_rules": {
+            "base_speed": 1,
+            "branch_profile": "ordinary_m_move_candidate",
+            "capabilities": {
+              "amorphous": false,
+              "cannot_pickup": true,
+              "collects_objects": false,
+              "conceal_underlay": false,
+              "covetous": false,
+              "domestic": false,
+              "hide": false,
+              "likes_gems": false,
+              "likes_gold": false,
+              "likes_magic": false,
+              "no_eyes": true,
+              "no_hands": true,
+              "stalk": false,
+              "swim": false,
+              "teleport": false,
+              "tunnel": false,
+              "very_small": false,
+              "wallwalk": false,
+              "wander": false
+            },
+            "combat": {
+              "armor_class": 9,
+              "attack_bytes_hex": "051300000000000000000000000000000000000000000000",
+              "attacks": [
+                {
+                  "aatyp": 5,
+                  "adtyp": 19,
+                  "damd": 0,
+                  "damn": 0,
+                  "slot": 0
+                },
+                {
+                  "aatyp": 0,
+                  "adtyp": 0,
+                  "damd": 0,
+                  "damn": 0,
+                  "slot": 1
+                },
+                {
+                  "aatyp": 0,
+                  "adtyp": 0,
+                  "damd": 0,
+                  "damn": 0,
+                  "slot": 2
+                },
+                {
+                  "aatyp": 0,
+                  "adtyp": 0,
+                  "damd": 0,
+                  "damn": 0,
+                  "slot": 3
+                },
+                {
+                  "aatyp": 0,
+                  "adtyp": 0,
+                  "damd": 0,
+                  "damn": 0,
+                  "slot": 4
+                },
+                {
+                  "aatyp": 0,
+                  "adtyp": 0,
+                  "damd": 0,
+                  "damn": 0,
+                  "slot": 5
+                }
+              ],
+              "level": 0,
+              "magic_resistance": 0,
+              "provenance": "nle_reset_permonst_attack_profile_v1",
+              "resistances": 0
+            },
+            "mflags1": 130048,
+            "mflags2": 1310720,
+            "mflags3": 0,
+            "monster_class": 32,
+            "name": "lichen",
+            "provenance": "nle_reset_permonst_static_profile_v1",
+            "species_id": 155
+          },
+          "underlay": {
+            "object_stack": [],
+            "object_stack_complete": true,
+            "terrain_memory_glyph": 2359,
+            "terrain_type": 24
+          },
+          "x": 45,
+          "y": 5
+        },
+        {
+          "allegiance": "hostile",
+          "entity_id": 11,
+          "hp": 1,
+          "hp_max": 1,
+          "inventory": [],
+          "lifecycle": "alive",
+          "native_x": 41,
+          "path_state": {
+            "apparent_hero_native": {
+              "x": 0,
+              "y": 0
+            },
+            "edog": null,
+            "last_monster_move": 0,
+            "mtrack_native": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              }
+            ],
+            "status": {
+              "blind_timeout": 0,
+              "can_see": true,
+              "cancelled": false,
+              "confused": false,
+              "eating_timeout": 0,
+              "flee_timeout": 0,
+              "frozen_timeout": 0,
+              "invisible": false,
+              "is_minion": false,
+              "leashed": false,
+              "stunned": false,
+              "trapped": false,
+              "undetected": false
+            },
+            "strategy": 0,
+            "trap_seen_mask": 0
+          },
+          "presentation": {
+            "char": "r",
+            "color": 3,
+            "glyph": 87,
+            "monster_class": 18,
+            "provenance": "nle_reset_monster_class_symbol"
+          },
+          "scheduler": {
+            "base_speed": 12,
+            "can_move": true,
+            "fleeing": false,
+            "iteration_order": 3,
+            "movement_points": 0,
+            "sleeping": false,
+            "special_cooldown": 0,
+            "speed_state": 0,
+            "strategy": 0
+          },
+          "species_id": 87,
+          "species_rules": {
+            "base_speed": 12,
+            "branch_profile": "ordinary_m_move_candidate",
+            "capabilities": {
+              "amorphous": false,
+              "cannot_pickup": false,
+              "collects_objects": false,
+              "conceal_underlay": false,
+              "covetous": false,
+              "domestic": false,
+              "hide": false,
+              "likes_gems": false,
+              "likes_gold": false,
+              "likes_magic": false,
+              "no_eyes": false,
+              "no_hands": true,
+              "stalk": false,
+              "swim": false,
+              "teleport": false,
+              "tunnel": false,
+              "very_small": true,
+              "wallwalk": false,
+              "wander": false
+            },
+            "combat": {
+              "armor_class": 7,
+              "attack_bytes_hex": "020001030000000000000000000000000000000000000000",
+              "attacks": [
+                {
+                  "aatyp": 2,
+                  "adtyp": 0,
+                  "damd": 3,
+                  "damn": 1,
+                  "slot": 0
+                },
+                {
+                  "aatyp": 0,
+                  "adtyp": 0,
+                  "damd": 0,
+                  "damn": 0,
+                  "slot": 1
+                },
+                {
+                  "aatyp": 0,
+                  "adtyp": 0,
+                  "damd": 0,
+                  "damn": 0,
+                  "slot": 2
+                },
+                {
+                  "aatyp": 0,
+                  "adtyp": 0,
+                  "damd": 0,
+                  "damn": 0,
+                  "slot": 3
+                },
+                {
+                  "aatyp": 0,
+                  "adtyp": 0,
+                  "damd": 0,
+                  "damn": 0,
+                  "slot": 4
+                },
+                {
+                  "aatyp": 0,
+                  "adtyp": 0,
+                  "damd": 0,
+                  "damn": 0,
+                  "slot": 5
+                }
+              ],
+              "level": 0,
+              "magic_resistance": 0,
+              "provenance": "nle_reset_permonst_attack_profile_v1",
+              "resistances": 0
+            },
+            "mflags1": 537141248,
+            "mflags2": 1048576,
+            "mflags3": 512,
+            "monster_class": 18,
+            "name": "sewer rat",
+            "provenance": "nle_reset_permonst_static_profile_v1",
+            "species_id": 87
+          },
+          "underlay": {
+            "object_stack": [],
+            "object_stack_complete": true,
+            "terrain_memory_glyph": 2359,
+            "terrain_type": 24
+          },
+          "x": 40,
+          "y": 15
+        }
+      ],
+      "object_stacks": [
+        {
+          "objects": [
+            {
+              "age": -50,
+              "artifact": 0,
+              "bitfield_hex": "100000000000",
+              "blessed": false,
+              "corpsenm": 162,
+              "cursed": false,
+              "display_class": 7,
+              "display_color": 3,
+              "display_glyph": 2146,
+              "display_mode": "unsupported_special_object",
+              "display_object_type": 240,
+              "object_class": 7,
+              "object_id": 7,
+              "object_type": 240,
+              "quantity": 1,
+              "source_order": 22,
+              "spe": 0,
+              "worn_mask": 0
+            },
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "110000000000",
+              "blessed": false,
+              "corpsenm": -1,
+              "cursed": true,
+              "display_class": 6,
+              "display_color": 6,
+              "display_glyph": 2118,
+              "display_mode": "normal",
+              "display_object_type": 212,
+              "object_class": 6,
+              "object_id": 6,
+              "object_type": 212,
+              "quantity": 1,
+              "source_order": 23,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 6,
+          "y": 6
+        },
+        {
+          "objects": [
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "100000000000",
+              "blessed": false,
+              "corpsenm": -1,
+              "cursed": false,
+              "display_class": 12,
+              "display_color": 11,
+              "display_glyph": 2316,
+              "display_mode": "normal",
+              "display_object_type": 410,
+              "object_class": 12,
+              "object_id": 8,
+              "object_type": 410,
+              "quantity": 5,
+              "source_order": 21,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 6,
+          "y": 8
+        },
+        {
+          "objects": [
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "100000000000",
+              "blessed": false,
+              "corpsenm": -1,
+              "cursed": false,
+              "display_class": 12,
+              "display_color": 11,
+              "display_glyph": 2316,
+              "display_mode": "normal",
+              "display_object_type": 410,
+              "object_class": 12,
+              "object_id": 23,
+              "object_type": 410,
+              "quantity": 15,
+              "source_order": 14,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 7,
+          "y": 11
+        },
+        {
+          "objects": [
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "200000000000",
+              "blessed": false,
+              "corpsenm": -1,
+              "cursed": false,
+              "display_class": 3,
+              "display_color": 6,
+              "display_glyph": 2013,
+              "display_mode": "normal",
+              "display_object_type": 107,
+              "object_class": 3,
+              "object_id": 10,
+              "object_type": 107,
+              "quantity": 1,
+              "source_order": 19,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 13,
+          "y": 15
+        },
+        {
+          "objects": [
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "100000000000",
+              "blessed": false,
+              "corpsenm": -1,
+              "cursed": false,
+              "display_class": 12,
+              "display_color": 11,
+              "display_glyph": 2316,
+              "display_mode": "normal",
+              "display_object_type": 410,
+              "object_class": 12,
+              "object_id": 9,
+              "object_type": 410,
+              "quantity": 7,
+              "source_order": 20,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 21,
+          "y": 16
+        },
+        {
+          "objects": [
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "100000000000",
+              "blessed": false,
+              "corpsenm": -1,
+              "cursed": false,
+              "display_class": 12,
+              "display_color": 11,
+              "display_glyph": 2316,
+              "display_mode": "normal",
+              "display_object_type": 410,
+              "object_class": 12,
+              "object_id": 25,
+              "object_type": 410,
+              "quantity": 37,
+              "source_order": 13,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 26,
+          "y": 2
+        },
+        {
+          "objects": [
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "100000000000",
+              "blessed": false,
+              "corpsenm": -1,
+              "cursed": false,
+              "display_class": 12,
+              "display_color": 11,
+              "display_glyph": 2316,
+              "display_mode": "normal",
+              "display_object_type": 410,
+              "object_class": 12,
+              "object_id": 26,
+              "object_type": 410,
+              "quantity": 52,
+              "source_order": 12,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 26,
+          "y": 14
+        },
+        {
+          "objects": [
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "100000000000",
+              "blessed": false,
+              "corpsenm": 0,
+              "cursed": false,
+              "display_class": 13,
+              "display_color": 5,
+              "display_glyph": 2333,
+              "display_mode": "normal",
+              "display_object_type": 427,
+              "object_class": 13,
+              "object_id": 27,
+              "object_type": 427,
+              "quantity": 1,
+              "source_order": 11,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 28,
+          "y": 19
+        },
+        {
+          "objects": [
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "100000000000",
+              "blessed": false,
+              "corpsenm": -1,
+              "cursed": false,
+              "display_class": 12,
+              "display_color": 11,
+              "display_glyph": 2316,
+              "display_mode": "normal",
+              "display_object_type": 410,
+              "object_class": 12,
+              "object_id": 30,
+              "object_type": 410,
+              "quantity": 37,
+              "source_order": 10,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 34,
+          "y": 2
+        },
+        {
+          "objects": [
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "100000000000",
+              "blessed": false,
+              "corpsenm": -1,
+              "cursed": false,
+              "display_class": 12,
+              "display_color": 11,
+              "display_glyph": 2316,
+              "display_mode": "normal",
+              "display_object_type": 410,
+              "object_class": 12,
+              "object_id": 31,
+              "object_type": 410,
+              "quantity": 46,
+              "source_order": 9,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 34,
+          "y": 14
+        },
+        {
+          "objects": [
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "10a000000000",
+              "blessed": false,
+              "corpsenm": -1,
+              "cursed": false,
+              "display_class": 6,
+              "display_color": 3,
+              "display_glyph": 2095,
+              "display_mode": "normal",
+              "display_object_type": 189,
+              "object_class": 6,
+              "object_id": 13,
+              "object_type": 189,
+              "quantity": 1,
+              "source_order": 17,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 39,
+          "y": 12
+        },
+        {
+          "objects": [
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "100000000000",
+              "blessed": false,
+              "corpsenm": -1,
+              "cursed": false,
+              "display_class": 12,
+              "display_color": 11,
+              "display_glyph": 2316,
+              "display_mode": "normal",
+              "display_object_type": 410,
+              "object_class": 12,
+              "object_id": 12,
+              "object_type": 410,
+              "quantity": 5,
+              "source_order": 18,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 41,
+          "y": 12
+        },
+        {
+          "objects": [
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "100000000000",
+              "blessed": false,
+              "corpsenm": -1,
+              "cursed": false,
+              "display_class": 12,
+              "display_color": 11,
+              "display_glyph": 2316,
+              "display_mode": "normal",
+              "display_object_type": 410,
+              "object_class": 12,
+              "object_id": 32,
+              "object_type": 410,
+              "quantity": 43,
+              "source_order": 8,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 46,
+          "y": 19
+        },
+        {
+          "objects": [
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "100000000000",
+              "blessed": false,
+              "corpsenm": -1,
+              "cursed": false,
+              "display_class": 12,
+              "display_color": 11,
+              "display_glyph": 2316,
+              "display_mode": "normal",
+              "display_object_type": 410,
+              "object_class": 12,
+              "object_id": 33,
+              "object_type": 410,
+              "quantity": 6,
+              "source_order": 7,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 47,
+          "y": 9
+        },
+        {
+          "objects": [
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "100000000000",
+              "blessed": false,
+              "corpsenm": -1,
+              "cursed": false,
+              "display_class": 12,
+              "display_color": 11,
+              "display_glyph": 2316,
+              "display_mode": "normal",
+              "display_object_type": 410,
+              "object_class": 12,
+              "object_id": 35,
+              "object_type": 410,
+              "quantity": 20,
+              "source_order": 6,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 57,
+          "y": 16
+        },
+        {
+          "objects": [
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "100000000000",
+              "blessed": false,
+              "corpsenm": -1,
+              "cursed": false,
+              "display_class": 12,
+              "display_color": 11,
+              "display_glyph": 2316,
+              "display_mode": "normal",
+              "display_object_type": 410,
+              "object_class": 12,
+              "object_id": 16,
+              "object_type": 410,
+              "quantity": 5,
+              "source_order": 16,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 62,
+          "y": 6
+        },
+        {
+          "objects": [
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "100000000000",
+              "blessed": false,
+              "corpsenm": -1,
+              "cursed": false,
+              "display_class": 9,
+              "display_color": 15,
+              "display_glyph": 2236,
+              "display_mode": "normal",
+              "display_object_type": 330,
+              "object_class": 9,
+              "object_id": 17,
+              "object_type": 311,
+              "quantity": 1,
+              "source_order": 15,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 64,
+          "y": 4
+        },
+        {
+          "objects": [
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "100000000000",
+              "blessed": false,
+              "corpsenm": -1,
+              "cursed": false,
+              "display_class": 12,
+              "display_color": 11,
+              "display_glyph": 2316,
+              "display_mode": "normal",
+              "display_object_type": 410,
+              "object_class": 12,
+              "object_id": 36,
+              "object_type": 410,
+              "quantity": 31,
+              "source_order": 5,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 65,
+          "y": 12
+        },
+        {
+          "objects": [
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "100000000000",
+              "blessed": false,
+              "corpsenm": -1,
+              "cursed": false,
+              "display_class": 12,
+              "display_color": 11,
+              "display_glyph": 2316,
+              "display_mode": "normal",
+              "display_object_type": 410,
+              "object_class": 12,
+              "object_id": 37,
+              "object_type": 410,
+              "quantity": 5,
+              "source_order": 4,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 65,
+          "y": 18
+        },
+        {
+          "objects": [
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "100000000000",
+              "blessed": false,
+              "corpsenm": -1,
+              "cursed": false,
+              "display_class": 12,
+              "display_color": 11,
+              "display_glyph": 2316,
+              "display_mode": "normal",
+              "display_object_type": 410,
+              "object_class": 12,
+              "object_id": 38,
+              "object_type": 410,
+              "quantity": 57,
+              "source_order": 3,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 68,
+          "y": 7
+        },
+        {
+          "objects": [
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "100000000000",
+              "blessed": false,
+              "corpsenm": -1,
+              "cursed": false,
+              "display_class": 12,
+              "display_color": 11,
+              "display_glyph": 2316,
+              "display_mode": "normal",
+              "display_object_type": 410,
+              "object_class": 12,
+              "object_id": 41,
+              "object_type": 410,
+              "quantity": 17,
+              "source_order": 2,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 71,
+          "y": 12
+        },
+        {
+          "objects": [
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "100000000000",
+              "blessed": false,
+              "corpsenm": -1,
+              "cursed": false,
+              "display_class": 12,
+              "display_color": 11,
+              "display_glyph": 2316,
+              "display_mode": "normal",
+              "display_object_type": 410,
+              "object_class": 12,
+              "object_id": 43,
+              "object_type": 410,
+              "quantity": 13,
+              "source_order": 1,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 73,
+          "y": 3
+        },
+        {
+          "objects": [
+            {
+              "age": 1,
+              "artifact": 0,
+              "bitfield_hex": "100000000000",
+              "blessed": false,
+              "corpsenm": -1,
+              "cursed": false,
+              "display_class": 12,
+              "display_color": 11,
+              "display_glyph": 2316,
+              "display_mode": "normal",
+              "display_object_type": 410,
+              "object_class": 12,
+              "object_id": 44,
+              "object_type": 410,
+              "quantity": 45,
+              "source_order": 0,
+              "spe": 0,
+              "worn_mask": 0
+            }
+          ],
+          "x": 75,
+          "y": 3
+        }
+      ],
+      "schema": "gamebench.nethack.native_entity_snapshot.v1",
+      "source_commit": "2fa1be5ac1dbe0a8b075f3274891c306ab8aa0aa",
+      "source_turn": {
+        "monstermoves": 1,
+        "moves": 1
+      },
+      "turn_queue": [
+        45,
+        18,
+        15,
+        11
+      ]
+    },
+    "player": {
+      "binary_sha256": "7ac1270dfd5fa0a5fb2f715ef6a7151058f06cda595e4b722ac6d070ce0f2057",
+      "player": {
+        "attributes": {
+          "components": {
+            "charisma": {
+              "base": 6,
+              "bonus": 0,
+              "temporary": 0
+            },
+            "constitution": {
+              "base": 18,
+              "bonus": 0,
+              "temporary": 0
+            },
+            "dexterity": {
+              "base": 11,
+              "bonus": 0,
+              "temporary": 0
+            },
+            "intelligence": {
+              "base": 11,
+              "bonus": 0,
+              "temporary": 0
+            },
+            "strength": {
+              "base": 19,
+              "bonus": 0,
+              "temporary": 0
+            },
+            "wisdom": {
+              "base": 9,
+              "bonus": 0,
+              "temporary": 0
+            }
+          },
+          "effective": {
+            "charisma": 6,
+            "constitution": 18,
+            "dexterity": 11,
+            "intelligence": 11,
+            "strength": 19,
+            "wisdom": 9
+          }
+        },
+        "combat": {
+          "luck": {
+            "base": 0,
+            "bonus": 0,
+            "total": 0
+          },
+          "martial": {
+            "bare_handed_max_skill": 4,
+            "bare_handed_skill": 1,
+            "constants": {
+              "kicking_boots_object_type": 147,
+              "pm_sasquatch": 234
+            },
+            "effective": false,
+            "kicking_boots": false,
+            "role_bonus": false,
+            "role_is_monk": false,
+            "role_is_samurai": false,
+            "role_species_id": 340,
+            "sasquatch_form": false,
+            "source_macro": "martial_bonus() || is_bigfoot(youmonst.data) || (uarmf && uarmf->otyp == KICKING_BOOTS)"
+          },
+          "monster_form": {
+            "base_species_id": 340,
+            "current_species_id": 340
+          },
+          "polymorphed": false,
+          "two_weapon": false
+        },
+        "completeness": {
+          "basic_melee": {
+            "blockers": [
+              "weapon damage tables, monster AC/resistance, attack sequence, and full skill/object semantics are intentionally not exported"
+            ],
+            "complete": false
+          },
+          "reset_wall_kick": {
+            "complete": true,
+            "fields": [
+              "attributes.effective.constitution",
+              "attributes.effective.dexterity",
+              "combat.luck",
+              "conditions.wounded_legs",
+              "resources.hp",
+              "resources.armor_class",
+              "combat.martial.effective"
+            ]
+          },
+          "reset_wall_kick_portable": {
+            "blockers": [
+              "exercise_state and whole-turn draw ownership still require an action-bound portable contract"
+            ],
+            "complete": false
+          }
+        },
+        "conditions": {
+          "trap_timeout": 0,
+          "trap_type": 0,
+          "wounded_legs": {
+            "active": false,
+            "extrinsic_sides": 0,
+            "intrinsic": 0,
+            "left": false,
+            "right": false
+          }
+        },
+        "coordinates": {
+          "native_x": 9,
+          "native_y": 7,
+          "nle_x": 8,
+          "nle_y": 7
+        },
+        "equipment": {
+          "inventory": [
+            {
+              "artifact": 0,
+              "blessed": false,
+              "cursed": false,
+              "inventory_letter": "a",
+              "object_class": 2,
+              "object_id": 1,
+              "object_type": 37,
+              "quantity": 1,
+              "spe": 1,
+              "worn_mask": 256
+            },
+            {
+              "artifact": 0,
+              "blessed": false,
+              "cursed": false,
+              "inventory_letter": "b",
+              "object_class": 2,
+              "object_id": 2,
+              "object_type": 17,
+              "quantity": 1,
+              "spe": 0,
+              "worn_mask": 1024
+            },
+            {
+              "artifact": 0,
+              "blessed": false,
+              "cursed": false,
+              "inventory_letter": "c",
+              "object_class": 3,
+              "object_id": 3,
+              "object_type": 129,
+              "quantity": 1,
+              "spe": 3,
+              "worn_mask": 8
+            },
+            {
+              "artifact": 0,
+              "blessed": false,
+              "cursed": false,
+              "inventory_letter": "d",
+              "object_class": 7,
+              "object_id": 4,
+              "object_type": 268,
+              "quantity": 1,
+              "spe": 0,
+              "worn_mask": 0
+            },
+            {
+              "artifact": 0,
+              "blessed": false,
+              "cursed": false,
+              "inventory_letter": "e",
+              "object_class": 6,
+              "object_id": 5,
+              "object_type": 202,
+              "quantity": 1,
+              "spe": 1,
+              "worn_mask": 0
+            }
+          ],
+          "slots": {
+            "uarm": null,
+            "uarmc": null,
+            "uarmf": null,
+            "uarmg": null,
+            "uarmh": null,
+            "uarms": {
+              "artifact": 0,
+              "blessed": false,
+              "cursed": false,
+              "inventory_letter": "c",
+              "object_class": 3,
+              "object_id": 3,
+              "object_type": 129,
+              "quantity": 1,
+              "spe": 3,
+              "worn_mask": 8
+            },
+            "uarmu": null,
+            "uquiver": null,
+            "uswapwep": {
+              "artifact": 0,
+              "blessed": false,
+              "cursed": false,
+              "inventory_letter": "b",
+              "object_class": 2,
+              "object_id": 2,
+              "object_type": 17,
+              "quantity": 1,
+              "spe": 0,
+              "worn_mask": 1024
+            },
+            "uwep": {
+              "artifact": 0,
+              "blessed": false,
+              "cursed": false,
+              "inventory_letter": "a",
+              "object_class": 2,
+              "object_id": 1,
+              "object_type": 37,
+              "quantity": 1,
+              "spe": 1,
+              "worn_mask": 256
+            }
+          }
+        },
+        "exercise_state": {
+          "aexe": {
+            "charisma": 0,
+            "constitution": 0,
+            "dexterity": 0,
+            "intelligence": 0,
+            "strength": 0,
+            "wisdom": 0
+          },
+          "atime": {
+            "charisma": 0,
+            "constitution": 0,
+            "dexterity": 0,
+            "intelligence": 0,
+            "strength": 0,
+            "wisdom": 0
+          },
+          "next_attrib_check": 600
+        },
+        "resources": {
+          "armor_class": 6,
+          "energy": 2,
+          "energy_max": 2,
+          "experience_level": 1,
+          "hp": 16,
+          "hp_max": 16,
+          "human_hp": 16,
+          "human_hp_max": 16,
+          "hunger": 900,
+          "hunger_state": 1
+        },
+        "scheduler": {
+          "movement_points": 12,
+          "source_moves": 1
+        }
+      },
+      "schema": "gamebench.nethack.native_player_combat_snapshot.v1",
+      "scope": "read-only pre-action source evidence for KICK/basic melee assertions only; never a gold input or behavior implementation",
+      "source_commit": "2fa1be5ac1dbe0a8b075f3274891c306ab8aa0aa",
+      "source_turn": 1
+    }
+  },
+  "usage_policy": {
+    "captured_at_reset_only": true,
+    "classification": "read_only_authoritative_reset_source_evidence",
+    "forbidden_uses": [
+      "future_observation_hydration",
+      "pre_action_sidecar_hydration",
+      "native_receipt_level_dump_hydration",
+      "native_receipt_gold_runtime_input",
+      "checkpoint_state_input",
+      "conformance_denominator"
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{"action_id": 2, "action_name": "CompassDirection.S", "step": 1}
+{"action_id": 1, "action_name": "CompassDirection.E", "step": 2}
+{"action_id": 1, "action_name": "CompassDirection.E", "step": 3}
+{"action_id": 0, "action_name": "CompassDirection.N", "step": 4}
+{"action_id": 0, "action_name": "CompassDirection.N", "step": 5}
+{"action_id": 1, "action_name": "CompassDirection.E", "step": 6}
+{"action_id": 1, "action_name": "CompassDirection.E", "step": 7}
+{"action_id": 1, "action_name": "CompassDirection.E", "step": 8}
+{"action_id": 1, "action_name": "CompassDirection.E", "step": 9}
+{"action_id": 0, "action_name": "CompassDirection.N", "step": 10}
+{"action_id": 0, "action_name": "CompassDirection.N", "step": 11}
+{"action_id": 1, "action_name": "CompassDirection.E", "step": 12}
+{"action_id": 1, "action_name": "CompassDirection.E", "step": 13}
+{"action_id": 1, "action_name": "CompassDirection.E", "step": 14}
+{"action_id": 2, "action_name": "CompassDirection.S", "step": 15}
+{"action_id": 2, "action_name": "CompassDirection.S", "step": 16}
+{"action_id": 17, "action_name": "MiscDirection.DOWN", "boundary": "dlvl1_descend", "observed_down_stair": {"x": 17, "y": 6}, "step": 17}
