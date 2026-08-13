@@ -363,6 +363,87 @@ fn observation_png_b64(
     base64::engine::general_purpose::STANDARD.encode(png)
 }
 
+
+/// Call the policy LM with bounded retries, and fail loudly about *why*.
+///
+/// The previous code mapped every failure — connect error, read timeout, 429,
+/// 5xx, malformed body — onto one opaque `policy_http` 502. That made a local
+/// bug (an oversized multimodal request exceeding the client timeout) look
+/// exactly like provider flakiness, and because long transcripts are what time
+/// out, the resulting seed losses were biased toward deep survivors rather than
+/// random. A biased silent drop is far worse than a loud stop.
+async fn call_policy_lm(
+    client: &reqwest::Client,
+    url: &str,
+    api_key: &str,
+    body: &Value,
+    attempts: usize,
+) -> Result<Value, ApiError> {
+    let request_bytes = serde_json::to_vec(body).map(|v| v.len()).unwrap_or(0);
+    let mut last: String = "no attempt made".into();
+    for attempt in 1..=attempts.max(1) {
+        let started = Instant::now();
+        let response = client
+            .post(url)
+            .header("Authorization", format!("Bearer {api_key}"))
+            .header("Content-Type", "application/json")
+            .json(body)
+            .send()
+            .await;
+        match response {
+            Err(err) => {
+                // Transient by nature: connect failures and read timeouts.
+                let kind = if err.is_timeout() { "timeout" } else { "transport" };
+                last = format!(
+                    "{kind} after {:.1}s on attempt {attempt}/{attempts}                      (request {request_bytes} bytes): {err}",
+                    started.elapsed().as_secs_f64()
+                );
+            }
+            Ok(response) => {
+                let status = response.status();
+                let payload = response.json::<Value>().await;
+                match payload {
+                    Err(err) => {
+                        last = format!(
+                            "decode failed on attempt {attempt}/{attempts} (HTTP {}): {err}",
+                            status.as_u16()
+                        );
+                    }
+                    Ok(payload) => {
+                        if status.is_success() {
+                            return Ok(payload);
+                        }
+                        let retryable = status.as_u16() == 429 || status.is_server_error();
+                        last = format!(
+                            "HTTP {} on attempt {attempt}/{attempts} (request {request_bytes}                              bytes): {}",
+                            status.as_u16(),
+                            serde_json::to_string(&payload).unwrap_or_default().chars().take(400).collect::<String>()
+                        );
+                        // A 4xx that is not 429 is our bug, not theirs. Retrying
+                        // an malformed request just wastes time and money.
+                        if !retryable {
+                            return Err(ApiError {
+                                status: StatusCode::BAD_REQUEST,
+                                code: "policy_request_rejected",
+                                message: last,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        if attempt < attempts.max(1) {
+            let backoff = std::time::Duration::from_millis(500 * (1 << (attempt - 1).min(5)));
+            tokio::time::sleep(backoff).await;
+        }
+    }
+    Err(ApiError {
+        status: StatusCode::BAD_GATEWAY,
+        code: "policy_lm_unavailable",
+        message: format!("policy LM failed after {attempts} attempts; last: {last}"),
+    })
+}
+
 async fn optimizer_or_scenario_rollout(
     State(app): State<AppState>,
     Json(body): Json<Value>,
@@ -632,6 +713,14 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
     // transcript costs ~1M tokens per episode and eventually exceeds the
     // request timeout. Only the most recent frames carry usable information;
     // older ones become a placeholder.
+    // Retries for transient upstream failures. A lost seed is not neutral: the
+    // rollouts that fail are the long ones, so silent drops bias a comparison
+    // toward early deaths.
+    let policy_lm_attempts = policy_cfg
+        .get("policy_lm_attempts")
+        .and_then(Value::as_u64)
+        .unwrap_or(3)
+        .clamp(1, 8) as usize;
     let keep_recent_frames = policy_cfg
         .get("keep_recent_frames")
         .and_then(Value::as_u64)
@@ -788,31 +877,13 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                     request_body.as_object_mut().unwrap()
                         .insert("reasoning_effort".into(), json!(effort));
                 }
-                let response = client
-                    .post(&inference_url)
-                    .header("Authorization", format!("Bearer {api_key}"))
-                    .header("Content-Type", "application/json")
-                    .json(&request_body)
-                    .send()
-                    .await
-                    .map_err(|err| ApiError {
-                        status: StatusCode::BAD_GATEWAY,
-                        code: "policy_http",
-                        message: format!("policy LM request failed: {err}"),
-                    })?;
-                let status = response.status();
-                let payload: Value = response.json().await.map_err(|err| ApiError {
-                    status: StatusCode::BAD_GATEWAY,
-                    code: "policy_http",
-                    message: format!("policy LM response decode failed: {err}"),
-                })?;
-                if !status.is_success() {
-                    return Err(ApiError {
-                        status: StatusCode::BAD_GATEWAY,
-                        code: "policy_http",
-                        message: format!("policy LM HTTP {}: {}", status.as_u16(), payload),
-                    });
-                }
+                let payload = call_policy_lm(
+                    &client,
+                    &inference_url,
+                    &api_key,
+                    &request_body,
+                    policy_lm_attempts,
+                ).await?;
                 accumulate_usage(&mut usage_total, payload.get("usage"));
                 last_prompt_tokens = payload
                     .pointer("/usage/prompt_tokens")
@@ -1185,35 +1256,13 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                     obj.insert("max_tokens".into(), json!(1024));
                 }
             }
-            let response = client
-                .post(&inference_url)
-                .header("Authorization", format!("Bearer {api_key}"))
-                .header("Content-Type", "application/json")
-                .json(&request_body)
-                .send()
-                .await
-                .map_err(|err| ApiError {
-                    status: StatusCode::BAD_GATEWAY,
-                    code: "policy_http",
-                    message: format!("policy LM request failed: {err}"),
-                })?;
-            let status = response.status();
-            let payload: Value = response.json().await.map_err(|err| ApiError {
-                status: StatusCode::BAD_GATEWAY,
-                code: "policy_http",
-                message: format!("policy LM response decode failed: {err}"),
-            })?;
-            if !status.is_success() {
-                return Err(ApiError {
-                    status: StatusCode::BAD_GATEWAY,
-                    code: "policy_http",
-                    message: format!(
-                        "policy LM HTTP {}: {}",
-                        status.as_u16(),
-                        payload
-                    ),
-                });
-            }
+            let payload = call_policy_lm(
+                &client,
+                &inference_url,
+                &api_key,
+                &request_body,
+                policy_lm_attempts,
+            ).await?;
             let assistant = extract_assistant_text(&payload);
             accumulate_usage(&mut usage_total, payload.get("usage"));
             let planned = parse_actions_batch(&assistant, &valid, batch_cap);
@@ -1324,6 +1373,7 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
                     "observation_mode": observation_mode,
                     "render_tile_size": render_tile_size,
                     "keep_recent_frames": keep_recent_frames,
+                    "policy_lm_attempts": policy_lm_attempts,
                     "view_radius": view_radius,
                     "scratchpad_enabled": scratchpad_enabled,
                     "scratchpad_writes": scratchpad_writes,

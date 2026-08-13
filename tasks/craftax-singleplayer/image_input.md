@@ -130,3 +130,44 @@ visibility model in the engine, not a renderer change.
 Achievements have no representation on the reference screen either, so in
 `observation_mode: image` they arrive as a single `achievements:` text line rather
 than an invented icon row.
+
+## Fixes so this class of failure cannot recur
+
+The frame-accumulation bug was not really about frames. It was two general
+defects that happened to meet: a transient failure that was neither retried nor
+distinguished from a permanent one, and a summary that averaged whatever seeds
+happened to survive.
+
+**Loud, classified, retried failures** — `call_policy_lm` in `craftax_gold.rs`.
+Every failure used to collapse onto one opaque `policy_http` 502, which is why a
+local timeout on an oversized request read as provider flakiness. Now:
+
+- timeouts, transport errors, decode failures, 429 and 5xx are named separately,
+  and the message carries elapsed time, attempt number and **request size in
+  bytes** — the fact that would have identified the real cause immediately;
+- transient classes retry with exponential backoff (`policy_lm_attempts`,
+  default 3);
+- a 4xx that is not 429 fails immediately as `policy_request_rejected`, because
+  that is our bug and retrying a malformed request only wastes money.
+
+**A driver that refuses to average a biased sample** —
+`scripts/run_craftax_eval.py`. Losing a seed is not neutral: long rollouts fail
+preferentially, so dropping them biases an arm toward early deaths, and biases
+each arm *differently* depending on how expensive its turns are. The driver
+retries per seed, then **exits non-zero and refuses to print a comparison** when
+any arm is short, unless `--allow-missing` is passed explicitly. It also refuses
+when any seed reports `is_reference_world: false`, so a toy-board score can never
+again be presented as a Craftax result.
+
+It reports survival count and achievement union as the headline, with the mean
+carrying a percentile bootstrap interval — bootstrap rather than a normal
+approximation, because Craftax rewards are bimodal (early deaths vs deep
+survivors) and not remotely bell-shaped. The footer states the n-dependent floor
+in the output itself rather than leaving it to whoever reads the table.
+
+```
+       arm   scored  survivors  achv    mean           95% CI  median
+      text    2/2        0/2       4    3.50       [3.0, 4.0]    3.50
+      both    2/2        0/2       3    2.00       [1.0, 3.0]    2.00
+```
+
