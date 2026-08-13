@@ -117,6 +117,40 @@ gamebench/
 
 ---
 
+## Hillclimb envs with existing reference candidates
+
+Envs that already have reference / example candidates for at least one hillclimb task type.
+✓ = reference candidates present; — = none (or contested / not a hillclimb family).
+
+| Env | code policy | cybernetic | react |
+|-----|:-----------:|:----------:|:-----:|
+| craftax-singleplayer | ✓ | — | — |
+| craftax-multiplayer | ✓ | — | — |
+| sokoban-singleplayer | ✓ | — | — |
+| rogue-singleplayer | ✓ | ✓ | — |
+| overcooked-v2-multiplayer | ✓ | ✓ | — |
+| minihack-singleplayer | ✓ | — | — |
+| dungeongrid-singleplayer | ✓ | — | — |
+| dungeongrid-multiplayer | ✓ | — | — |
+| pokemon-emerald-littleroot-singleplayer | ✓ | — | — |
+| towermind-singleplayer | ✓ | — | — |
+| fogwar-duel-multiplayer | ✓ | — | — |
+| settlers-multiplayer | ✓ | — | — |
+| frogs-singleplayer | — | ✓ | — |
+| tictactoe-multiplayer | — | ✓ | — |
+
+Notes:
+
+- **code policy** refs live under Harbor `adapters/harbor/bundles/code_policy_deo_hillclimb/solution/references/`, Dock `candidates/`, and/or task `examples/code_policy_deo/candidates/` / `candidates/`.
+- **emerald:** Rust-gold-only port (`gold_rust/` + `emerald_gold` HTTP). Code-policy lane under `tasks/pokemon-emerald-littleroot-singleplayer/{policies,candidates,scripts/run_policy_sweep.py,shared/opening_tape.py}`; no Harbor/Dock package yet.
+  - **Finished opening:** baseline plays the committed May replay (`fixtures/gold/replays/title_to_met_rival_may.json`) and clears `policy_dev_v1` **14/14** (~2.4s): bedroom→`clock_visit`/`tv_broadcast`/`meet_rival`/`met_rival`, title→truck + title→`met_rival` (May/`A`), truck exit, rival tile + `has_pokedex`, Birch `starter_chosen`, Route101 bag, shoes→Brendan 1F, Route103 `selecting_move` + `rival_defeated`.
+  - Weak explorer ~0.21 on that suite. Continuous story past `met_rival` / post–Route103 lab return is not yet input-complete in gold (checkpoint branches cover later beats).
+- **cybernetic** refs live under `tasks/<env>/exotic_cybernetics/reference/{pure_code_bridge,sparse_governor}/`. Only registered `cybernetic_opt` row today is craftax-singleplayer (bundle/refs missing in-tree).
+- **react:** no react hillclimb family / reference-candidate set; ReAct containers only on a few envs.
+- **crafter-singleplayer:** Harbor has a `references/` heuristic, but Dock packages say they ship no reference candidates — omit from the table.
+
+---
+
 ## Links
 
 - Engine-Bench Harbor wrapper: https://github.com/JoshuaPurtell/engine-bench

@@ -1,0 +1,19 @@
+{
+  "scenario_id": "sp_heldout_blackwater_bell_breach_mirror_h",
+  "quest_id": "sp:heldout:blackwater_bell_breach:mirror_h",
+  "title": "Heldout Blackwater Bell Breach (mirror_h)",
+  "seed": 203,
+  "max_steps": 100,
+  "map_ascii": "#########\n#.IRDT.E#\n#....C..#\n#########",
+  "hero_roles": [
+    "wizard"
+  ],
+  "objective_item": "bell_silencer",
+  "task_id": "dg_sp_sp_heldout_blackwater_bell_breach_mirror_h",
+  "metadata": {
+    "split": "heldout",
+    "source_scenario": "blackwater_bell_breach",
+    "transform": "mirror_h",
+    "role": "wizard"
+  }
+}

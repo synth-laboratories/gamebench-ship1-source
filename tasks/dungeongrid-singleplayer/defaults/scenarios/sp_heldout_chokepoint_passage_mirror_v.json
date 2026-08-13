@@ -1,0 +1,19 @@
+{
+  "scenario_id": "sp_heldout_chokepoint_passage_mirror_v",
+  "quest_id": "sp:heldout:chokepoint_passage:mirror_v",
+  "title": "Heldout Black Standard Chokepoint (mirror_v)",
+  "seed": 204,
+  "max_steps": 100,
+  "map_ascii": "#########\n#...C...#\n#...#R..#\n#E.D.I..#\n#########",
+  "hero_roles": [
+    "barbarian"
+  ],
+  "objective_item": "passage_ward",
+  "task_id": "dg_sp_sp_heldout_chokepoint_passage_mirror_v",
+  "metadata": {
+    "split": "heldout",
+    "source_scenario": "chokepoint_passage",
+    "transform": "mirror_v",
+    "role": "barbarian"
+  }
+}

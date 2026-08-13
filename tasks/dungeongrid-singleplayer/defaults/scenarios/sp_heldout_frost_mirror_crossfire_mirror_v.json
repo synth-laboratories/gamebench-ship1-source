@@ -1,0 +1,19 @@
+{
+  "scenario_id": "sp_heldout_frost_mirror_crossfire_mirror_v",
+  "quest_id": "sp:heldout:frost_mirror_crossfire:mirror_v",
+  "title": "Heldout Frost Mirror Crossfire (mirror_v)",
+  "seed": 207,
+  "max_steps": 100,
+  "map_ascii": "##########\n#..T.C...#\n#E.D.RDI.#\n##########",
+  "hero_roles": [
+    "wizard"
+  ],
+  "objective_item": "mirror_ice_lens",
+  "task_id": "dg_sp_sp_heldout_frost_mirror_crossfire_mirror_v",
+  "metadata": {
+    "split": "heldout",
+    "source_scenario": "frost_mirror_crossfire",
+    "transform": "mirror_v",
+    "role": "wizard"
+  }
+}

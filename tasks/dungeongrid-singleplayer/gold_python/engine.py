@@ -51,6 +51,9 @@ class DungeonGridSession:
         self.terminal_reason: str | None = None
         self.achievements: set[str] = set()
         self.event_log: list[dict[str, Any]] = []
+        self.gold_collected = 0
+        self.spells_cast = 0
+        self.armor_bonus = 0
         self._reset_from_scenario()
 
     @classmethod
@@ -137,11 +140,13 @@ class DungeonGridSession:
                     self.terrain[pos] = "floor"
                     counts["chest"] += 1
                     chest_id = f"chest_{counts['chest']}"
+                    seed = int(self.scenario.get("seed", 0))
+                    armor = "iron_armor" if (seed + counts["chest"]) % 2 else "leather_armor"
                     self.chests[chest_id] = {
                         "id": chest_id,
                         "pos": {"x": x, "y": y},
                         "opened": False,
-                        "contents": ["coin_cache", "healing_draught"],
+                        "contents": ["coin_cache", armor, "healing_draught"],
                     }
                 elif glyph == "R":
                     self.terrain[pos] = "floor"
@@ -178,6 +183,7 @@ class DungeonGridSession:
                 "inventory": _starting_inventory(role),
                 "guarded": False,
                 "messages_sent": 0,
+                "armor": 0,
             }
             self.message_inboxes[agent_id] = []
         self.active_agent = self.turn_order[0]
@@ -232,6 +238,9 @@ class DungeonGridSession:
             "terminal_reason": self.terminal_reason,
             "reward_last": self.reward_last,
             "total_reward": self.total_reward,
+            "gold_collected": self.gold_collected,
+            "spells_cast": self.spells_cast,
+            "armor_bonus": self.armor_bonus,
             "achievements": sorted(self.achievements),
             "metadata": self.scenario.get("metadata", {}),
             "map": {
@@ -399,8 +408,10 @@ class DungeonGridSession:
                 return False
             self.heroes[target]["guarded"] = True
             self.reward_last += 0.35
+            self.spells_cast += 1
             self._event("spell_cast", "info", f"SpellCast({self.active_agent},ward_circle->{target})", action=action)
             self._unlock("coordination.guard_used")
+            self._unlock("caster.spell_cast")
             return True
         if spell == "reveal_glyph":
             target = action["target"]
@@ -411,6 +422,7 @@ class DungeonGridSession:
                         trap["revealed"] = True
                         revealed.append(trap["id"])
                 self.reward_last += 0.7
+                self.spells_cast += 1
                 self._event(
                     "counterplay_revealed",
                     "info",
@@ -419,6 +431,7 @@ class DungeonGridSession:
                     payload={"target": target, "revealed_traps": revealed},
                 )
                 self._unlock("support.counterplay_revealed")
+                self._unlock("caster.spell_cast")
                 return True
             monster = self.monsters.get(target)
             if monster is None:
@@ -427,6 +440,7 @@ class DungeonGridSession:
             monster["statuses"] = sorted(set(monster["statuses"]) | {"counterplay_revealed"})
             monster["guard"] = 0
             self.reward_last += 0.8
+            self.spells_cast += 1
             self._event(
                 "counterplay_revealed",
                 "info",
@@ -435,6 +449,7 @@ class DungeonGridSession:
                 payload={"target": target, "effect": "monster_guard_removed"},
             )
             self._unlock("support.counterplay_revealed")
+            self._unlock("caster.spell_cast")
             return True
         if spell == "spark_lance":
             return self._spark_lance(action)
@@ -536,9 +551,19 @@ class DungeonGridSession:
         chest["opened"] = True
         contents = list(chest["contents"])
         self.heroes[agent_id]["inventory"].extend(contents)
-        self.reward_last += 0.8
-        self._event("chest_opened", "info", f"ChestOpened({target})", action=action, payload={"target": target, "contents": contents, "agent_id": agent_id})
+        gold_gain = contents.count("coin_cache")
+        self.gold_collected += gold_gain
+        self.reward_last += 0.8 + (1.0 * gold_gain)
+        self._event(
+            "chest_opened",
+            "info",
+            f"ChestOpened({target})",
+            action=action,
+            payload={"target": target, "contents": contents, "agent_id": agent_id, "gold_gain": gold_gain},
+        )
         self._unlock("optional.opened_chest")
+        if gold_gain:
+            self._unlock("loot.gold_collected")
         return True
 
     def _attack_melee(self, action: dict[str, Any]) -> bool:
@@ -581,6 +606,7 @@ class DungeonGridSession:
         monster["awake"] = True
         monster["hp"] = max(0, monster["hp"] - damage)
         defeated = monster["hp"] == 0
+        self.spells_cast += 1
         self.reward_last += 2.0 if defeated else 0.6
         self._event("spell_cast", "info", f"SpellCast({agent_id},spark_lance->{target},damage={damage})", action=action, payload={"spell": "spark_lance", "target": target, "damage": damage, "defeated": defeated})
         self._unlock("caster.spell_cast")
@@ -602,6 +628,15 @@ class DungeonGridSession:
             hero["hp"] = min(hero["max_hp"], hero["hp"] + amount)
             effect = "healed"
             self.reward_last += 0.25
+        elif item in {"leather_armor", "iron_armor"}:
+            bonus = 2 if item == "iron_armor" else 1
+            hero["max_hp"] += bonus
+            hero["hp"] += bonus
+            hero["armor"] = int(hero.get("armor", 0)) + bonus
+            self.armor_bonus += bonus
+            effect = "armored"
+            self.reward_last += 0.5 * bonus
+            self._unlock("inventory.armor_equipped")
         else:
             self.reward_last += 0.05
         self._event("item_used", "info", f"ItemUsed({self.active_agent},{item})", action=action, payload={"agent_id": self.active_agent, "item": item, "effect": effect})

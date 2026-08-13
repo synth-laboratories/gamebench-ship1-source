@@ -1,0 +1,18 @@
+{
+  "scenario_id": "sp_train_blackwater_bell_breach",
+  "quest_id": "sp:train:blackwater_bell_breach",
+  "title": "Train Blackwater Bell Breach",
+  "seed": 101,
+  "max_steps": 100,
+  "map_ascii": "#########\n#E.TDRI.#\n#..C....#\n#########",
+  "hero_roles": [
+    "barbarian"
+  ],
+  "objective_item": "bell_silencer",
+  "task_id": "dg_sp_sp_train_blackwater_bell_breach",
+  "metadata": {
+    "split": "train",
+    "source_scenario": "blackwater_bell_breach",
+    "role": "barbarian"
+  }
+}

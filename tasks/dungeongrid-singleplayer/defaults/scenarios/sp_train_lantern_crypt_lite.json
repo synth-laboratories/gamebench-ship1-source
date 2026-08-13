@@ -1,0 +1,18 @@
+{
+  "scenario_id": "sp_train_lantern_crypt_lite",
+  "quest_id": "sp:train:lantern_crypt_lite",
+  "title": "Train Lantern Crypt Lite",
+  "seed": 107,
+  "max_steps": 100,
+  "map_ascii": "###########\n#E..D.....#\n#...#..I..#\n#...#..R..#\n###D#######\n#..T.C....#\n###########",
+  "hero_roles": [
+    "barbarian"
+  ],
+  "objective_item": "little_ember_idol",
+  "task_id": "dg_sp_sp_train_lantern_crypt_lite",
+  "metadata": {
+    "split": "train",
+    "source_scenario": "lantern_crypt_lite",
+    "role": "barbarian"
+  }
+}

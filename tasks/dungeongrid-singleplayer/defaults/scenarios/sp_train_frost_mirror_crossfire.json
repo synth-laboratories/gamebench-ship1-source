@@ -1,0 +1,18 @@
+{
+  "scenario_id": "sp_train_frost_mirror_crossfire",
+  "quest_id": "sp:train:frost_mirror_crossfire",
+  "title": "Train Frost Mirror Crossfire",
+  "seed": 105,
+  "max_steps": 100,
+  "map_ascii": "##########\n#E.D.RDI.#\n#..T.C...#\n##########",
+  "hero_roles": [
+    "barbarian"
+  ],
+  "objective_item": "mirror_ice_lens",
+  "task_id": "dg_sp_sp_train_frost_mirror_crossfire",
+  "metadata": {
+    "split": "train",
+    "source_scenario": "frost_mirror_crossfire",
+    "role": "barbarian"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "scenario_id": "sp_train_chokepoint_passage",
+  "quest_id": "sp:train:chokepoint_passage",
+  "title": "Train Black Standard Chokepoint",
+  "seed": 102,
+  "max_steps": 100,
+  "map_ascii": "#########\n#E.D.I..#\n#...#R..#\n#...C...#\n#########",
+  "hero_roles": [
+    "wizard"
+  ],
+  "objective_item": "passage_ward",
+  "task_id": "dg_sp_sp_train_chokepoint_passage",
+  "metadata": {
+    "split": "train",
+    "source_scenario": "chokepoint_passage",
+    "role": "wizard"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "scenario_id": "sp_train_double_breach_nemesis",
+  "quest_id": "sp:train:double_breach_nemesis",
+  "title": "Train Low Shrine Double Breach",
+  "seed": 104,
+  "max_steps": 100,
+  "map_ascii": "##########\n#E.D.RDI.#\n#..T.C...#\n##########",
+  "hero_roles": [
+    "wizard"
+  ],
+  "objective_item": "inner_gate_relic",
+  "task_id": "dg_sp_sp_train_double_breach_nemesis",
+  "metadata": {
+    "split": "train",
+    "source_scenario": "double_breach_nemesis",
+    "role": "wizard"
+  }
+}

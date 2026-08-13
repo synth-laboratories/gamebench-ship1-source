@@ -1,0 +1,19 @@
+{
+  "scenario_id": "sp_heldout_lantern_crypt_lite_mirror_h",
+  "quest_id": "sp:heldout:lantern_crypt_lite:mirror_h",
+  "title": "Heldout Lantern Crypt Lite (mirror_h)",
+  "seed": 209,
+  "max_steps": 100,
+  "map_ascii": "###########\n#.....D..E#\n#..I..#...#\n#..R..#...#\n#######D###\n#....C.T..#\n###########",
+  "hero_roles": [
+    "wizard"
+  ],
+  "objective_item": "little_ember_idol",
+  "task_id": "dg_sp_sp_heldout_lantern_crypt_lite_mirror_h",
+  "metadata": {
+    "split": "heldout",
+    "source_scenario": "lantern_crypt_lite",
+    "transform": "mirror_h",
+    "role": "wizard"
+  }
+}

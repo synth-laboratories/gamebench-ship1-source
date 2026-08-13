@@ -1,0 +1,18 @@
+{
+  "scenario_id": "sp_heldout_synchronized_extract",
+  "quest_id": "sp:heldout:synchronized_extract",
+  "title": "Heldout Synchronized Extract",
+  "seed": 201,
+  "max_steps": 100,
+  "map_ascii": "###########\n#E...D..I.#\n#....R....#\n#..C......#\n###########",
+  "hero_roles": [
+    "wizard"
+  ],
+  "objective_item": "ember_idol_fragment",
+  "task_id": "dg_sp_sp_heldout_synchronized_extract",
+  "metadata": {
+    "split": "heldout",
+    "source_scenario": "synchronized_extract",
+    "role": "wizard"
+  }
+}

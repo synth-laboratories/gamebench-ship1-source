@@ -1,0 +1,18 @@
+{
+  "scenario_id": "sp_heldout_trap_breach_rescue",
+  "quest_id": "sp:heldout:trap_breach_rescue",
+  "title": "Heldout Iron Captive Trap Breach",
+  "seed": 202,
+  "max_steps": 100,
+  "map_ascii": "#########\n#E.TDRI.#\n#..C....#\n#########",
+  "hero_roles": [
+    "barbarian"
+  ],
+  "objective_item": "rescue_glyph",
+  "task_id": "dg_sp_sp_heldout_trap_breach_rescue",
+  "metadata": {
+    "split": "heldout",
+    "source_scenario": "trap_breach_rescue",
+    "role": "barbarian"
+  }
+}

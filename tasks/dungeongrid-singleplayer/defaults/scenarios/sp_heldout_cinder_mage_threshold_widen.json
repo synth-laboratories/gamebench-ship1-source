@@ -1,0 +1,19 @@
+{
+  "scenario_id": "sp_heldout_cinder_mage_threshold_widen",
+  "quest_id": "sp:heldout:cinder_mage_threshold:widen",
+  "title": "Heldout Cinder Mage Threshold (widen)",
+  "seed": 205,
+  "max_steps": 100,
+  "map_ascii": "##########\n#E.D.RI..#\n#..T.C...#\n##########",
+  "hero_roles": [
+    "wizard"
+  ],
+  "objective_item": "cinder_focus",
+  "task_id": "dg_sp_sp_heldout_cinder_mage_threshold_widen",
+  "metadata": {
+    "split": "heldout",
+    "source_scenario": "cinder_mage_threshold",
+    "transform": "widen",
+    "role": "wizard"
+  }
+}

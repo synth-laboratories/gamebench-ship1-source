@@ -1,0 +1,19 @@
+{
+  "scenario_id": "sp_heldout_double_breach_nemesis_mirror_h",
+  "quest_id": "sp:heldout:double_breach_nemesis:mirror_h",
+  "title": "Heldout Low Shrine Double Breach (mirror_h)",
+  "seed": 206,
+  "max_steps": 100,
+  "map_ascii": "##########\n#.IDR.D.E#\n#...C.T..#\n##########",
+  "hero_roles": [
+    "barbarian"
+  ],
+  "objective_item": "inner_gate_relic",
+  "task_id": "dg_sp_sp_heldout_double_breach_nemesis_mirror_h",
+  "metadata": {
+    "split": "heldout",
+    "source_scenario": "double_breach_nemesis",
+    "transform": "mirror_h",
+    "role": "barbarian"
+  }
+}

@@ -25,6 +25,17 @@ from gold_python import DungeonGridSession, load_scenario
 from mechanics_probe_common import mechanics_probe_scenario
 
 
+DEFAULT_COMPOSITE_WEIGHTS = {
+    "gold": 2.0,
+    "achievements": 1.5,
+    "armor": 1.0,
+    "spells": 2.0,
+    "engine_reward": 1.0,
+    "step_bonus": 0.05,
+    "invalid_penalty": 5.0,
+}
+
+
 def policy_sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -42,6 +53,16 @@ def load_policy_module(path: Path) -> Any:
 
 def load_suite(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def resolve_heldout_suite_path(suite: dict[str, Any], suite_path: Path) -> Path | None:
+    raw = suite.get("heldout_suite")
+    if not raw:
+        return None
+    candidate = Path(str(raw))
+    if not candidate.is_absolute():
+        candidate = TASK_DIR / candidate
+    return candidate.expanduser().resolve()
 
 
 def _scenario_from_source(source: str) -> dict[str, Any]:
@@ -102,20 +123,71 @@ def _failure_modes(session: DungeonGridSession, invalid_actions: int, targets: s
         modes.append("combat_incomplete")
     if any(target.startswith("coordination.") for target in missing):
         modes.append("coordination_incomplete")
+    if not session.success:
+        modes.append("extraction_failed")
     return modes or ["unsolved"]
 
 
-def run_episode(module: Any, item: dict[str, Any], include_trace: bool) -> dict[str, Any]:
+def _composite_terms(session: DungeonGridSession, *, max_actions: int, invalid_actions: int) -> dict[str, float]:
+    inventory = [item for hero in session.heroes.values() for item in hero.get("inventory", [])]
+    armor_items = sum(1 for item in inventory if item in {"leather_armor", "iron_armor"})
+    remaining_hp = sum(int(hero.get("hp", 0)) for hero in session.heroes.values())
+    equipped_armor = sum(int(hero.get("armor", 0)) for hero in session.heroes.values())
+    armor = float(remaining_hp + (3 * armor_items) + (2 * equipped_armor) + int(getattr(session, "armor_bonus", 0)))
+    gold = float(getattr(session, "gold_collected", 0))
+    if gold <= 0:
+        gold = float(inventory.count("coin_cache"))
+    spells = float(getattr(session, "spells_cast", 0))
+    if spells <= 0:
+        spells = float(sum(1 for event in session.event_log if event.get("kind") == "spell_cast"))
+    achievements = float(len(session.achievements))
+    steps = int(session.step_index)
+    step_bonus = float(max(0, max_actions - steps))
+    return {
+        "gold": gold,
+        "achievements": achievements,
+        "armor": armor,
+        "spells": spells,
+        "engine_reward": float(session.total_reward),
+        "step_bonus": step_bonus,
+        "invalid_actions": float(invalid_actions),
+        "steps": float(steps),
+    }
+
+
+def _composite_score(terms: dict[str, float], weights: dict[str, float]) -> float:
+    score = (
+        float(weights.get("gold", 0.0)) * terms["gold"]
+        + float(weights.get("achievements", 0.0)) * terms["achievements"]
+        + float(weights.get("armor", 0.0)) * terms["armor"]
+        + float(weights.get("spells", 0.0)) * terms["spells"]
+        + float(weights.get("engine_reward", 0.0)) * terms["engine_reward"]
+        + float(weights.get("step_bonus", 0.0)) * terms["step_bonus"]
+        - float(weights.get("invalid_penalty", 0.0)) * terms["invalid_actions"]
+    )
+    return round(score, 6)
+
+
+def run_episode(
+    module: Any,
+    item: dict[str, Any],
+    include_trace: bool,
+    *,
+    composite_weights: dict[str, float] | None = None,
+) -> dict[str, Any]:
     scenario = _scenario_from_source(str(item["source"]))
     session = DungeonGridSession.reset(scenario)
     targets = set(str(target) for target in item.get("target_achievements", []))
     max_actions = int(item.get("max_actions", item.get("suite_max_actions", 80)))
-    min_reward = float(item.get("min_reward", 0.0))
+    weights = dict(DEFAULT_COMPOSITE_WEIGHTS)
+    if composite_weights:
+        weights.update({str(k): float(v) for k, v in composite_weights.items()})
     objective = {
         "target_achievements": sorted(targets),
-        "min_reward": min_reward,
         "max_actions": max_actions,
         "scenario_id": scenario["scenario_id"],
+        "score_metric": "mean_composite_score",
+        "composite_weights": weights,
     }
     actions = _planned_actions(module, scenario, objective)[:max_actions]
     protocol = _protocol_check(actions, item)
@@ -140,18 +212,30 @@ def run_episode(module: Any, item: dict[str, Any], include_trace: bool) -> dict[
             break
     achievements = set(session.achievements)
     achievement_rate = len(targets & achievements) / len(targets) if targets else 1.0
-    reward_rate = min(session.total_reward / min_reward, 1.0) if min_reward > 0 else 1.0
-    solved = achievement_rate >= 1.0 and reward_rate >= 1.0 and invalid_actions == 0 and bool(protocol["ok"])
-    score = 1.0 if solved else round((0.75 * achievement_rate) + (0.25 * reward_rate), 6)
+    terms = _composite_terms(session, max_actions=max_actions, invalid_actions=invalid_actions)
+    score = _composite_score(terms, weights)
     if protocol["required"] and not protocol["ok"]:
-        score = min(score, 0.85)
+        score = round(score * 0.85, 6)
+    solved = (
+        bool(session.success)
+        and achievement_rate >= 1.0
+        and invalid_actions == 0
+        and bool(protocol["ok"])
+    )
     report = {
         "scenario_id": scenario["scenario_id"],
         "score": score,
+        "composite_score": score,
         "solved": solved,
         "achievement_rate": round(achievement_rate, 6),
-        "reward_rate": round(reward_rate, 6),
         "total_reward": round(session.total_reward, 4),
+        "gold": terms["gold"],
+        "achievements_count": terms["achievements"],
+        "armor": terms["armor"],
+        "spells": terms["spells"],
+        "step_bonus": terms["step_bonus"],
+        "steps": int(terms["steps"]),
+        "composite_terms": terms,
         "invalid_action_count": invalid_actions,
         "steps_executed": len(actions),
         "target_achievements": sorted(targets),
@@ -160,6 +244,7 @@ def run_episode(module: Any, item: dict[str, Any], include_trace: bool) -> dict[
         "protocol": protocol,
         "failure_modes": [] if solved else _failure_modes(session, invalid_actions, targets),
         "state_digest": session.state_digest(),
+        "success": bool(session.success),
     }
     if protocol["required"] and not protocol["ok"]:
         report["failure_modes"] = sorted(set(report["failure_modes"]) | set(protocol["failures"]))
@@ -179,11 +264,15 @@ def run_policy_sweep(
     module = load_policy_module(policy_path)
     suite = load_suite(suite_path)
     suite_max_actions = int(suite.get("max_actions", 80))
+    weights = dict(DEFAULT_COMPOSITE_WEIGHTS)
+    raw_weights = suite.get("composite_weights") or {}
+    if isinstance(raw_weights, dict):
+        weights.update({str(k): float(v) for k, v in raw_weights.items()})
     episodes = []
     for raw_item in suite["scenarios"]:
         item = dict(raw_item)
         item["suite_max_actions"] = suite_max_actions
-        episodes.append(run_episode(module, item, include_trace))
+        episodes.append(run_episode(module, item, include_trace, composite_weights=weights))
     scores = [float(item["score"]) for item in episodes]
     rewards = [float(item["total_reward"]) for item in episodes]
     successes = sum(1 for item in episodes if item["solved"])
@@ -197,15 +286,21 @@ def run_policy_sweep(
         "suite_path": str(suite_path),
         "policy_path": str(policy_path),
         "policy_sha256": policy_sha256(policy_path),
-        "score_metric": str(suite.get("score_metric", "mean_objective_score")),
+        "score_metric": str(suite.get("score_metric", "mean_composite_score")),
         "n_scenarios": len(episodes),
         "successes": successes,
         "success_rate": round(successes / len(episodes), 4) if episodes else 0.0,
         "score": score,
+        "mean_composite_score": score,
         "mean_objective_score": score,
         "mean_reward": round(statistics.mean(rewards), 4) if rewards else 0.0,
+        "mean_gold": round(statistics.mean([float(e["gold"]) for e in episodes]), 4) if episodes else 0.0,
+        "mean_armor": round(statistics.mean([float(e["armor"]) for e in episodes]), 4) if episodes else 0.0,
+        "mean_spells": round(statistics.mean([float(e["spells"]) for e in episodes]), 4) if episodes else 0.0,
+        "mean_achievements": round(statistics.mean([float(e["achievements_count"]) for e in episodes]), 4) if episodes else 0.0,
         "invalid_action_count": invalid_actions,
         "failure_mode_counts": dict(sorted(failure_counts.items())),
+        "composite_weights": weights,
         "elapsed_s": round(time.time() - started, 3),
         "episodes": episodes,
     }
@@ -221,18 +316,34 @@ def main() -> None:
     parser.add_argument("--output", required=True)
     parser.add_argument("--include-trace", action="store_true")
     args = parser.parse_args()
-
     report = run_policy_sweep(
         policy_path=Path(args.policy).expanduser().resolve(),
         suite_path=Path(args.suite).expanduser().resolve(),
         output_path=Path(args.output).expanduser().resolve(),
         include_trace=bool(args.include_trace),
     )
-    printable = {
-        key: report[key]
-        for key in ("suite_id", "score", "success_rate", "mean_reward", "failure_mode_counts", "elapsed_s")
-    }
-    print(json.dumps(printable, indent=2, sort_keys=True))
+    print(
+        json.dumps(
+            {
+                key: report[key]
+                for key in (
+                    "suite_id",
+                    "score",
+                    "success_rate",
+                    "mean_reward",
+                    "mean_gold",
+                    "mean_armor",
+                    "mean_spells",
+                    "mean_achievements",
+                    "failure_mode_counts",
+                    "elapsed_s",
+                )
+                if key in report
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
 
 
 if __name__ == "__main__":

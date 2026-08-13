@@ -1,0 +1,19 @@
+{
+  "scenario_id": "sp_heldout_hourglass_escape_breach_widen",
+  "quest_id": "sp:heldout:hourglass_escape_breach:widen",
+  "title": "Heldout Hourglass Escape Breach (widen)",
+  "seed": 208,
+  "max_steps": 100,
+  "map_ascii": "##########\n#E.DRI...#\n#..C.....#\n##########",
+  "hero_roles": [
+    "barbarian"
+  ],
+  "objective_item": "hourglass_core",
+  "task_id": "dg_sp_sp_heldout_hourglass_escape_breach_widen",
+  "metadata": {
+    "split": "heldout",
+    "source_scenario": "hourglass_escape_breach",
+    "transform": "widen",
+    "role": "barbarian"
+  }
+}

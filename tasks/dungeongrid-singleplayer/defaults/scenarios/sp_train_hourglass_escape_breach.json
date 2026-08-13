@@ -1,0 +1,18 @@
+{
+  "scenario_id": "sp_train_hourglass_escape_breach",
+  "quest_id": "sp:train:hourglass_escape_breach",
+  "title": "Train Hourglass Escape Breach",
+  "seed": 106,
+  "max_steps": 100,
+  "map_ascii": "#########\n#E.DRI..#\n#..C....#\n#########",
+  "hero_roles": [
+    "wizard"
+  ],
+  "objective_item": "hourglass_core",
+  "task_id": "dg_sp_sp_train_hourglass_escape_breach",
+  "metadata": {
+    "split": "train",
+    "source_scenario": "hourglass_escape_breach",
+    "role": "wizard"
+  }
+}

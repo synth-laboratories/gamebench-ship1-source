@@ -1,0 +1,18 @@
+{
+  "scenario_id": "sp_train_nemesis_breach_gate",
+  "quest_id": "sp:train:nemesis_breach_gate",
+  "title": "Train Tusk Warlord Breach Gate",
+  "seed": 109,
+  "max_steps": 100,
+  "map_ascii": "#########\n#E.D.RI.#\n#..T.C..#\n#########",
+  "hero_roles": [
+    "barbarian"
+  ],
+  "objective_item": "breach_ward",
+  "task_id": "dg_sp_sp_train_nemesis_breach_gate",
+  "metadata": {
+    "split": "train",
+    "source_scenario": "nemesis_breach_gate",
+    "role": "barbarian"
+  }
+}

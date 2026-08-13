@@ -1,0 +1,18 @@
+{
+  "scenario_id": "sp_train_moonblade_vault_breach",
+  "quest_id": "sp:train:moonblade_vault_breach",
+  "title": "Train Moonblade Vault Breach",
+  "seed": 108,
+  "max_steps": 100,
+  "map_ascii": "#########\n#E.D.RI.#\n#...C...#\n#########",
+  "hero_roles": [
+    "wizard"
+  ],
+  "objective_item": "moonblade_shard",
+  "task_id": "dg_sp_sp_train_moonblade_vault_breach",
+  "metadata": {
+    "split": "train",
+    "source_scenario": "moonblade_vault_breach",
+    "role": "wizard"
+  }
+}

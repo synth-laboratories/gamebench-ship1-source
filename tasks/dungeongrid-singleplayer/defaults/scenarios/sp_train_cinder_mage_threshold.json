@@ -1,0 +1,18 @@
+{
+  "scenario_id": "sp_train_cinder_mage_threshold",
+  "quest_id": "sp:train:cinder_mage_threshold",
+  "title": "Train Cinder Mage Threshold",
+  "seed": 103,
+  "max_steps": 100,
+  "map_ascii": "#########\n#E.D.RI.#\n#..T.C..#\n#########",
+  "hero_roles": [
+    "barbarian"
+  ],
+  "objective_item": "cinder_focus",
+  "task_id": "dg_sp_sp_train_cinder_mage_threshold",
+  "metadata": {
+    "split": "train",
+    "source_scenario": "cinder_mage_threshold",
+    "role": "barbarian"
+  }
+}

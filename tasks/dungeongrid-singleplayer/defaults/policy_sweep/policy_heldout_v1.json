@@ -1,9 +1,8 @@
 {
   "schema": "gamebench.dungeongrid.policy_sweep.v1",
-  "suite_id": "dungeongrid_singleplayer_policy_dev_v1",
-  "score_metric": "mean_composite_heldout",
+  "suite_id": "dungeongrid_singleplayer_policy_heldout_v1",
+  "score_metric": "mean_composite_score",
   "max_actions": 100,
-  "heldout_suite": "defaults/policy_sweep/policy_heldout_v1.json",
   "player_assignment": {
     "agent_id": "hero_0",
     "role": "exclusive",
@@ -20,8 +19,8 @@
   },
   "scenarios": [
     {
-      "scenario_id": "sp_train_blackwater_bell_breach",
-      "source": "defaults/scenarios/sp_train_blackwater_bell_breach.json",
+      "scenario_id": "sp_heldout_synchronized_extract",
+      "source": "defaults/scenarios/sp_heldout_synchronized_extract.json",
       "require_code_protocol": false,
       "target_achievements": [
         "movement.first_step",
@@ -31,8 +30,8 @@
       ]
     },
     {
-      "scenario_id": "sp_train_chokepoint_passage",
-      "source": "defaults/scenarios/sp_train_chokepoint_passage.json",
+      "scenario_id": "sp_heldout_trap_breach_rescue",
+      "source": "defaults/scenarios/sp_heldout_trap_breach_rescue.json",
       "require_code_protocol": false,
       "target_achievements": [
         "movement.first_step",
@@ -42,8 +41,8 @@
       ]
     },
     {
-      "scenario_id": "sp_train_cinder_mage_threshold",
-      "source": "defaults/scenarios/sp_train_cinder_mage_threshold.json",
+      "scenario_id": "sp_heldout_blackwater_bell_breach_mirror_h",
+      "source": "defaults/scenarios/sp_heldout_blackwater_bell_breach_mirror_h.json",
       "require_code_protocol": false,
       "target_achievements": [
         "movement.first_step",
@@ -53,8 +52,8 @@
       ]
     },
     {
-      "scenario_id": "sp_train_double_breach_nemesis",
-      "source": "defaults/scenarios/sp_train_double_breach_nemesis.json",
+      "scenario_id": "sp_heldout_chokepoint_passage_mirror_v",
+      "source": "defaults/scenarios/sp_heldout_chokepoint_passage_mirror_v.json",
       "require_code_protocol": false,
       "target_achievements": [
         "movement.first_step",
@@ -64,8 +63,8 @@
       ]
     },
     {
-      "scenario_id": "sp_train_frost_mirror_crossfire",
-      "source": "defaults/scenarios/sp_train_frost_mirror_crossfire.json",
+      "scenario_id": "sp_heldout_cinder_mage_threshold_widen",
+      "source": "defaults/scenarios/sp_heldout_cinder_mage_threshold_widen.json",
       "require_code_protocol": false,
       "target_achievements": [
         "movement.first_step",
@@ -75,8 +74,8 @@
       ]
     },
     {
-      "scenario_id": "sp_train_hourglass_escape_breach",
-      "source": "defaults/scenarios/sp_train_hourglass_escape_breach.json",
+      "scenario_id": "sp_heldout_double_breach_nemesis_mirror_h",
+      "source": "defaults/scenarios/sp_heldout_double_breach_nemesis_mirror_h.json",
       "require_code_protocol": false,
       "target_achievements": [
         "movement.first_step",
@@ -86,8 +85,8 @@
       ]
     },
     {
-      "scenario_id": "sp_train_lantern_crypt_lite",
-      "source": "defaults/scenarios/sp_train_lantern_crypt_lite.json",
+      "scenario_id": "sp_heldout_frost_mirror_crossfire_mirror_v",
+      "source": "defaults/scenarios/sp_heldout_frost_mirror_crossfire_mirror_v.json",
       "require_code_protocol": false,
       "target_achievements": [
         "movement.first_step",
@@ -97,8 +96,8 @@
       ]
     },
     {
-      "scenario_id": "sp_train_moonblade_vault_breach",
-      "source": "defaults/scenarios/sp_train_moonblade_vault_breach.json",
+      "scenario_id": "sp_heldout_hourglass_escape_breach_widen",
+      "source": "defaults/scenarios/sp_heldout_hourglass_escape_breach_widen.json",
       "require_code_protocol": false,
       "target_achievements": [
         "movement.first_step",
@@ -108,8 +107,8 @@
       ]
     },
     {
-      "scenario_id": "sp_train_nemesis_breach_gate",
-      "source": "defaults/scenarios/sp_train_nemesis_breach_gate.json",
+      "scenario_id": "sp_heldout_lantern_crypt_lite_mirror_h",
+      "source": "defaults/scenarios/sp_heldout_lantern_crypt_lite_mirror_h.json",
       "require_code_protocol": false,
       "target_achievements": [
         "movement.first_step",
@@ -119,8 +118,8 @@
       ]
     },
     {
-      "scenario_id": "sp_train_relay_handoff",
-      "source": "defaults/scenarios/sp_train_relay_handoff.json",
+      "scenario_id": "sp_heldout_moonblade_vault_breach_mirror_v",
+      "source": "defaults/scenarios/sp_heldout_moonblade_vault_breach_mirror_v.json",
       "require_code_protocol": false,
       "target_achievements": [
         "movement.first_step",

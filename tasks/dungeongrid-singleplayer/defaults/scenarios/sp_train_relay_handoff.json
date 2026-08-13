@@ -1,0 +1,18 @@
+{
+  "scenario_id": "sp_train_relay_handoff",
+  "quest_id": "sp:train:relay_handoff",
+  "title": "Train Relay Handoff",
+  "seed": 110,
+  "max_steps": 100,
+  "map_ascii": "#########\n#E..D.I.#\n#..C....#\n#...R...#\n#########",
+  "hero_roles": [
+    "wizard"
+  ],
+  "objective_item": "relay_sigils",
+  "task_id": "dg_sp_sp_train_relay_handoff",
+  "metadata": {
+    "split": "train",
+    "source_scenario": "relay_handoff",
+    "role": "wizard"
+  }
+}
