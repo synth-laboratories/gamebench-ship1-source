@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import random
 import statistics
 import sys
@@ -42,6 +43,48 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
+
+
+# ── Terminal style ────────────────────────────────────────────────────────
+# Synth palette: orange #f05f22 is identity, semantic tones carry state. A
+# warning that scrolls past unread is the same as no warning, so refusals get a
+# full-width block rather than a line of prose. Honours NO_COLOR and non-TTYs.
+
+_TTY = sys.stdout.isatty() and not os.environ.get("NO_COLOR")
+
+
+def _sgr(code: str) -> str:
+    return code if _TTY else ""
+
+
+ACCENT = _sgr("\033[38;2;240;95;34m")   # Synth orange
+OK = _sgr("\033[38;2;46;160;103m")
+WARN = _sgr("\033[38;2;214;158;46m")
+BAD = _sgr("\033[38;2;206;73;66m")
+MUTED = _sgr("\033[38;2;122;130;140m")
+BOLD = _sgr("\033[1m")
+DIM = _sgr("\033[2m")
+RESET = _sgr("\033[0m")
+ON_BAD = _sgr("\033[48;2;206;73;66m\033[38;2;255;255;255m")
+ON_ACCENT = _sgr("\033[48;2;240;95;34m\033[38;2;24;18;12m")
+
+
+def rule(char: str = "─", width: int = 78) -> str:
+    return f"{MUTED}{char * width}{RESET}"
+
+
+def cell(text: str, width: int, tone: str = "") -> str:
+    """Right-align on *visible* width. Padding a coloured string directly makes
+    the escape bytes count toward the field and breaks every column."""
+    return f"{tone}{text.rjust(width)}{RESET}" if tone else text.rjust(width)
+
+
+def banner(text: str, tone: str = "bad") -> str:
+    """A block nobody can skim past."""
+    paint = ON_BAD if tone == "bad" else ON_ACCENT
+    pad = f"{paint}{BOLD}  {text.ljust(74)}{RESET}"
+    return f"\n{paint}{' ' * 78}{RESET}\n{pad}\n{paint}{' ' * 78}{RESET}"
+
 
 BASE_POLICY: dict[str, Any] = {
     "use_lm": True,
@@ -186,13 +229,28 @@ def main() -> int:
         json.dumps({"seeds": seeds, "arms": summaries, "rows": results}, indent=2) + "\n"
     )
 
-    print(f"\n{'arm':>10} {'scored':>8} {'survivors':>10} {'achv':>5} {'mean':>7} {'95% CI':>16} {'median':>7}")
+    print(f"\n{ACCENT}{BOLD}CRAFTAX EVAL{RESET}  {MUTED}{len(seeds)} seeds · {args.world} · "
+          f"{args.max_steps} steps{RESET}")
+    print(rule())
+    # Survivors and achievements first: they are the metrics that survived
+    # replication. The mean is last, dimmed, because it did not.
+    print(f"{BOLD}{'arm':>10} {'scored':>9} {'survivors':>11} {'achv':>6}"
+          f"{DIM}{'mean':>9} {'95% CI':>16}{RESET}")
     for arm, s in summaries.items():
         ci = f"[{s['mean_ci95'][0]:.1f}, {s['mean_ci95'][1]:.1f}]" if s["mean_ci95"] else "—"
         mean = f"{s['mean']:.2f}" if s["mean"] is not None else "—"
-        med = f"{s['median']:.2f}" if s["median"] is not None else "—"
-        print(f"{arm:>10} {s['scored']:>4}/{s['attempted']:<3} {s['survivors']:>6}/{s['scored']:<3} "
-              f"{s['achievement_count']:>5} {mean:>7} {ci:>16} {med:>7}")
+        short = s["scored"] < s["attempted"]
+        scored_tone = BAD if short else OK
+        rate = s["survival_rate"]
+        surv_tone = OK if (rate or 0) >= 0.5 else WARN if (rate or 0) > 0 else MUTED
+        print(
+            cell(arm, 10, ACCENT)
+            + " " + cell(f"{s['scored']}/{s['attempted']}", 9, scored_tone)
+            + " " + cell(f"{s['survivors']}/{s['scored']}", 11, surv_tone)
+            + " " + cell(str(s["achievement_count"]), 6, BOLD)
+            + DIM + mean.rjust(9) + " " + ci.rjust(16) + RESET
+        )
+    print(rule())
 
     names = list(summaries)
     if len(names) > 1:
@@ -213,17 +271,28 @@ def main() -> int:
             problems.append(f"{arm}: seeds {s['non_reference_world']} did not run the reference "
                             f"world; those scores are not Craftax results")
     if problems:
-        print("\n" + "\n".join(f"WARNING  {p}" for p in problems))
+        for problem in problems:
+            print(f"\n{BAD}{BOLD}  ✖ {problem}{RESET}")
         if not args.allow_missing:
-            print("\nRefusing to present this as a comparison. Re-run the missing seeds, "
-                  "or pass --allow-missing if you accept the bias.")
+            print(banner("REFUSING TO REPORT — THIS SAMPLE IS BIASED"))
+            print(f"\n{BAD}Long rollouts fail preferentially, so the seeds that are missing are"
+                  f"\nthe deep survivors. Averaging what is left understates every arm, and"
+                  f"\nunderstates the expensive arms most.{RESET}")
+            print(f"\n{MUTED}Re-run the missing seeds, or pass {RESET}{BOLD}--allow-missing{RESET}"
+                  f"{MUTED} if you accept the bias.{RESET}")
             return 1
+        print(banner("REPORTING A BIASED SAMPLE — --allow-missing WAS SET", tone="accent"))
 
     if len(names) > 1:
-        print(f"\nNote: with {len(seeds)} seeds the mean is dominated by the survival count. "
-              f"Treat a difference smaller than the CI width as unresolved, and prefer the "
-              f"achievement and survivor columns.")
-    print(f"\nreceipts: {args.out}/results.json")
+        widths = [s["mean_ci95"][1] - s["mean_ci95"][0] for s in summaries.values() if s["mean_ci95"]]
+        floor = max(widths) if widths else 0.0
+        print(f"\n{WARN}{BOLD}  ! statistical floor{RESET}  {MUTED}with {len(seeds)} seeds the mean "
+              f"tracks the survival count, which is a coin flip.{RESET}")
+        print(f"{MUTED}     Widest CI here is {RESET}{BOLD}{floor:.1f}{RESET}{MUTED} points — treat any "
+              f"smaller gap as unresolved and read the{RESET}")
+        print(f"{MUTED}     survivors and achv columns instead. Three runs of one config gave "
+              f"9.61 / 9.51 / 7.09.{RESET}")
+    print(f"\n{MUTED}receipts{RESET} {args.out}/results.json")
     return 0
 
 
