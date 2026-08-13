@@ -1861,16 +1861,13 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
         policy_label = "craftax_heuristic_noop_smoke".into();
     }
 
-    let reward = engine
+    let reward = engine.private.get("total_reward").cloned().unwrap_or(Value::Null);
+    let steps = engine.private.get("step_index").cloned().unwrap_or(Value::Null);
+    let invalid_actions = engine
         .private
-        .get("total_reward")
-        .and_then(Value::as_f64)
-        .unwrap_or(0.0);
-    let steps = engine
-        .private
-        .get("step_index")
-        .and_then(Value::as_u64)
-        .unwrap_or(0);
+        .get("invalid_action_count")
+        .cloned()
+        .unwrap_or(Value::Null);
     let nev_ref = spool_nev(&rollout_id, &engine.events);
     let trace_ref = trace_capture.seal().await?;
     let mut record = json!({
@@ -1935,6 +1932,11 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
         },
         "usage": usage_total,
         "turns": turns,
+        // Paid SFT curation consumes these authoritative counters directly.
+        // Missing engine evidence remains null; it is never inferred from the
+        // number of turns or coerced to zero.
+        "steps": steps,
+        "invalid_actions": invalid_actions,
         // Spooled to disk, not inlined: a 1000-step rollout produces thousands
         // of events and nobody wants them in every response body. Retrieve via
         // GET /rollouts/{id}/events.
@@ -1965,8 +1967,11 @@ async fn run_optimizer_rollout(app: AppState, body: Value) -> Result<Json<Value>
     // entirely so the default response contract remains byte-for-byte shaped as it
     // was before tracing support.
     if trace_ref.get("capture").and_then(Value::as_str) != Some("off") {
-        record["summary"]["trace"] = trace_ref;
+        record["summary"]["trace"] = trace_ref.clone();
     }
+    let trace_v5_digest = trace_ref.get("trace_v5_digest").cloned().unwrap_or(Value::Null);
+    record["sealed"] = json!(trace_v5_digest.is_string());
+    record["trace_v5_digest"] = trace_v5_digest;
     let session = RolloutSession {
         engine,
         started_at: Instant::now(),
