@@ -131,6 +131,7 @@ if [[ "$AGENT" == "codex" ]]; then
   ROLLOUT_JSON="$OUT_DIR/rollout.json"
   python3 - "$ROLLOUT_JSON" "$WORKSPACE" "$MODEL" "$DEPLOYMENT" "$TASK_ID" "${CANDIDATE_SUBDIR:-}" "$EFFORT" "$TIMEOUT_SEC" <<'PY'
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -166,6 +167,16 @@ payload = {
         "CANDIDATE_SUBDIR": candidate_subdir,
     },
 }
+append = str(os.environ.get("GAMEBENCH_HARBOR_CODEX_CONFIG_TOML_APPEND") or "").strip()
+if append:
+    payload["codex_config_toml_append"] = append
+expected_model = str(os.environ.get("GAMEBENCH_HARBOR_EXPECTED_MODEL_ID") or "").strip() or model
+payload["expected_model_id"] = expected_model
+expected_version = str(
+    os.environ.get("GAMEBENCH_HARBOR_EXPECTED_MULTI_AGENT_VERSION") or ""
+).strip()
+if expected_version:
+    payload["expected_multi_agent_version"] = expected_version
 Path(sys.argv[1]).write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 PY
 
