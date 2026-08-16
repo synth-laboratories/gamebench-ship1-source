@@ -6,7 +6,7 @@ import importlib.util
 import json
 import sys
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Mapping
 
 
 TASK_ROOT = Path(__file__).resolve().parents[2]
@@ -22,6 +22,21 @@ from task_resolve import resolve_task  # noqa: E402
 
 PolicyFn = Callable[..., dict[str, Any]]
 _POLICY_CACHE: dict[tuple[str, str], PolicyFn] = {}
+
+
+def policy_stop_reason(decision: Mapping[str, Any]) -> str | None:
+    """Return a bounded reason only for an explicit policy stop request.
+
+    Policies may end an episode when continuing would no longer execute the
+    candidate being evaluated (for example, after an LLM budget is exhausted).
+    Requiring the literal boolean keeps unrelated truthy metadata from stopping
+    a benchmark accidentally.
+    """
+
+    if decision.get("stop_episode") is not True:
+        return None
+    reason = decision.get("stop_reason") or decision.get("rationale") or "policy requested stop"
+    return str(reason).strip()[:240] or "policy requested stop"
 
 
 def load_policy_module(policy_path: Path, *, entry: str = "choose_actions") -> PolicyFn:
@@ -91,6 +106,7 @@ def rollout_code_policy(
     turns: list[dict[str, Any]] = []
     session: dict[str, Any] = {"rollout_id": engine.private.episode_id, "ply": 0}
     ply = 0
+    requested_stop: str | None = None
     while (
         not engine.private.terminated
         and not engine.private.truncated
@@ -108,6 +124,9 @@ def rollout_code_policy(
             ply=ply,
             readout=readout,
         )
+        requested_stop = policy_stop_reason(decision)
+        if requested_stop is not None:
+            break
         raw_actions = decision.get("actions") or ["noop"]
         action = str(raw_actions[0])
         engine.step(action)
@@ -128,7 +147,7 @@ def rollout_code_policy(
         "success"
         if engine.private.achievements
         else "truncated"
-        if engine.private.truncated
+        if engine.private.truncated or requested_stop is not None
         else "failure"
     )
     result: dict[str, Any] = {
@@ -147,6 +166,8 @@ def rollout_code_policy(
                 "achievement_count": len(engine.private.achievements),
                 "achievements": sorted(engine.private.achievements),
                 "policy_path": str(policy_path.expanduser().resolve()),
+                "policy_requested_stop": requested_stop is not None,
+                "policy_stop_reason": requested_stop,
             },
         },
         "state": {

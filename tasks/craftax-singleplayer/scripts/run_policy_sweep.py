@@ -29,7 +29,12 @@ for path in (TASK_DIR, TASK_DIR / "gold_python", TASK_DIR / "shared"):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from containers.codepolicy.rollout_code_policy import compile_check_policy, load_policy_module, rollout_code_policy
+from containers.codepolicy.rollout_code_policy import (
+    compile_check_policy,
+    load_policy_module,
+    policy_stop_reason,
+    rollout_code_policy,
+)
 from containers.codepolicy.policy_subprocess import (
     CandidatePolicyFailure,
     IsolatedPolicyProcess,
@@ -680,6 +685,7 @@ def rollout_code_policy_rust_repl(
     turns: list[dict[str, Any]] = []
     session: dict[str, Any] = {"rollout_id": f"rust-repl-{seed}", "ply": 0, "lane": "rust"}
     ply = 0
+    requested_stop: str | None = None
     while not latest.get("terminated", False) and not latest.get("truncated", False) and ply < max_steps:
         session["ply"] = ply
         decision = candidate_fn(
@@ -691,6 +697,9 @@ def rollout_code_policy_rust_repl(
             ply=ply,
             readout=readout,
         )
+        requested_stop = policy_stop_reason(decision)
+        if requested_stop is not None:
+            break
         raw_actions = decision.get("actions") or ["noop"]
         actions = [str(action) for action in raw_actions]
         if not actions:
@@ -721,7 +730,7 @@ def rollout_code_policy_rust_repl(
     final_readout = readout if include_trace else repl.readout(readout_mode="full")["readout"]
     private = final_readout["private"]
     achievements = sorted(private.get("achievements", []))
-    outcome = "success" if achievements else "truncated" if latest.get("truncated", False) or ply >= max_steps else "failure"
+    outcome = "success" if achievements else "truncated" if latest.get("truncated", False) or ply >= max_steps or requested_stop is not None else "failure"
     replay = repl.save_replay(replay_path) if replay_path is not None else None
     return {
         "trace_correlation_id": f"craftax-codepolicy-rust-repl-{seed}",
@@ -742,6 +751,8 @@ def rollout_code_policy_rust_repl(
                 "lane": "rust",
                 "engine_mode": "rust_repl",
                 "engine_clone": False,
+                "policy_requested_stop": requested_stop is not None,
+                "policy_stop_reason": requested_stop,
             },
         },
         "state": {"public": final_readout["public"], "private": private},
@@ -769,6 +780,7 @@ def rollout_code_policy_http(
     latest = root
     session: dict[str, Any] = {"rollout_id": rollout_id, "ply": 0, "lane": "rust"}
     ply = 0
+    requested_stop: str | None = None
     while not latest.get("terminated", False) and not latest.get("truncated", False) and ply < max_steps:
         session["ply"] = ply
         decision = candidate_fn(
@@ -780,6 +792,9 @@ def rollout_code_policy_http(
             ply=ply,
             readout=readout,
         )
+        requested_stop = policy_stop_reason(decision)
+        if requested_stop is not None:
+            break
         raw_actions = decision.get("actions") or ["noop"]
         action = str(raw_actions[0])
         latest = http.request_json("POST", f"/rollouts/{rollout_id}/step", {"action": action})
@@ -802,7 +817,7 @@ def rollout_code_policy_http(
     final_readout = latest["readout"]
     private = final_readout["private"]
     achievements = sorted(private.get("achievements", []))
-    outcome = "success" if achievements else "truncated" if latest.get("truncated", False) or ply >= max_steps else "failure"
+    outcome = "success" if achievements else "truncated" if latest.get("truncated", False) or ply >= max_steps or requested_stop is not None else "failure"
     try:
         http.request_json("DELETE", f"/rollouts/{rollout_id}")
     except RuntimeError:
@@ -825,6 +840,8 @@ def rollout_code_policy_http(
                 "policy_path": str(policy_path.expanduser().resolve()),
                 "lane": "rust_http",
                 "engine_clone": False,
+                "policy_requested_stop": requested_stop is not None,
+                "policy_stop_reason": requested_stop,
             },
         },
         "state": {"public": final_readout["public"], "private": private},
