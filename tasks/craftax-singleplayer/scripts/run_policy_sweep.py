@@ -472,8 +472,17 @@ def run_policy_sweep(
     if lane == "rust" or supervised_python:
         policy_fn = None
     else:
-        compile_check_policy(policy_path)
-        policy_fn = load_policy_module(policy_path)
+        try:
+            compile_check_policy(policy_path)
+            policy_fn = load_policy_module(policy_path)
+        except CandidatePolicyFailure:
+            raise
+        except Exception as error:
+            # Loading and contract-checking execute candidate-owned code. A
+            # signature/type failure here is invalid candidate evidence, not a
+            # trusted evaluator outage. Preserve that attribution all the way
+            # to the sealed failure receipt.
+            raise CandidatePolicyFailure() from error
     seeds = [int(seed) for seed in suite["seeds"]]
     task_path = str(suite.get("task_template", "tasks/policy_dev_template.json"))
     max_steps = int(
