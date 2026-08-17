@@ -555,22 +555,46 @@ def _usage_completion_tokens(usage: Mapping[str, Any]) -> int:
 
 
 def _turn_usage_totals(turns: list[dict[str, Any]]) -> dict[str, Any]:
+    """Tokens where they were reported, and nothing where they were not.
+
+    This counted a call only when its usage payload was non-empty, so a provider
+    that returns no usage produced `llm_calls: 0` beside an outer record showing
+    three real calls, and every token field read `0` — a number, indistinguishable
+    from a call that genuinely used none. Every derived rate was then wrong in a
+    way nothing flagged.
+
+    Executed calls come from the call records. Usage-bearing calls are a separate
+    coverage figure. Absent tokens are `None`.
+    """
     prompt_tokens = 0
     completion_tokens = 0
-    llm_calls = 0
+    executed_calls = 0
+    usage_bearing_calls = 0
     for turn in turns:
+        # One call can span several plies; the first ply of a batch carries it.
+        if turn.get("batch_index") in (0, None):
+            executed_calls += 1
         usage = turn.get("usage")
         if not isinstance(usage, Mapping) or not usage:
             continue
-        llm_calls += 1
+        usage_bearing_calls += 1
         prompt_tokens += _usage_prompt_tokens(usage)
         completion_tokens += _usage_completion_tokens(usage)
+    reported = usage_bearing_calls > 0
     return {
-        "input_tokens": prompt_tokens,
-        "prompt_tokens": prompt_tokens,
-        "completion_tokens": completion_tokens,
-        "total_tokens": prompt_tokens + completion_tokens,
-        "llm_calls": llm_calls,
+        "input_tokens": prompt_tokens if reported else None,
+        "prompt_tokens": prompt_tokens if reported else None,
+        "completion_tokens": completion_tokens if reported else None,
+        "total_tokens": prompt_tokens + completion_tokens if reported else None,
+        # The count of calls that actually happened, which is what "how many
+        # model calls did this rollout make" means.
+        "llm_calls": executed_calls,
+        "usage_bearing_calls": usage_bearing_calls,
+        "usage_coverage": {
+            "reported_by": usage_bearing_calls,
+            "of": executed_calls,
+            "complete": reported and usage_bearing_calls == executed_calls,
+        },
     }
 
 
@@ -785,6 +809,25 @@ async def _execute_goex_rollout(
             if not planned_actions:
                 planned_actions = ["noop"]
             batch_size = min(len(planned_actions), max_steps - step)
+            if batch_size < len(planned_actions):
+                # A second place actions disappear: the step budget, after the
+                # parser already applied its own cap. Both are decisions about
+                # the model's plan and both are now on the record.
+                trace.event(
+                    "agent.actions_dropped",
+                    {
+                        "llm_call": llm_calls,
+                        "declared_count": len(planned_actions),
+                        "accepted_count": batch_size,
+                        "dropped_actions": planned_actions[batch_size:],
+                        "reason": "steps_remaining",
+                        "steps_remaining": max_steps - step,
+                    },
+                    caused_by=tuple(
+                        item for item in (turn.proposal_event_id,) if item
+                    ),
+                    structural={"llm_call": llm_calls},
+                )
             for batch_index, action in enumerate(planned_actions[:batch_size]):
                 action_event = trace.event(
                     "environment.action_executed",
@@ -830,6 +873,13 @@ async def _execute_goex_rollout(
                 )
                 if observation_event:
                     trace_refs["observations"].append(observation_event)
+                # The engine's own account of what this action did, carried
+                # through verbatim. Without it a reader can only diff
+                # observations and call everything that did not visibly change
+                # a "no-op", which is how 45 of 100 actions were classified with
+                # no way to tell a refused craft from a blocked move.
+                action_outcome = step_payload.get("outcome")
+                action_outcome = action_outcome if isinstance(action_outcome, dict) else {}
                 transition_event = trace.event(
                     "environment.transition",
                     {
@@ -839,6 +889,13 @@ async def _execute_goex_rollout(
                         "truncated": bool(private.get("truncated")),
                         "done_reason": private.get("done_reason"),
                         "total_reward": float(private.get("total_reward") or 0.0),
+                        "effect": action_outcome.get("effect"),
+                        "effect_reason": action_outcome.get("reason"),
+                        "changed_state": action_outcome.get("changed"),
+                        "effect_detail": action_outcome.get("detail"),
+                        "resource_deltas": action_outcome.get("resource_deltas") or [],
+                        "achievements_unlocked": action_outcome.get("achievements_unlocked") or [],
+                        "rule_violations": action_outcome.get("rule_violations") or [],
                     },
                     caused_by=tuple(item for item in (action_event, observation_event) if item),
                     structural={"step": step},
@@ -881,6 +938,23 @@ async def _execute_goex_rollout(
                         "batch_index": batch_index,
                         "reward_total": float(private.get("total_reward") or 0.0),
                         "achievements": _achievement_names(readout),
+                        "effect": action_outcome.get("effect"),
+                        "effect_reason": action_outcome.get("reason"),
+                        "changed_state": action_outcome.get("changed"),
+                        # Declared vs executed, on the record that summarises the
+                        # turn. Seed 202 declared eleven actions and ran ten.
+                        "declared_actions": list(turn.declared_actions)
+                        if batch_index == 0
+                        else [],
+                        "dropped_actions": list(turn.dropped_actions)
+                        if batch_index == 0
+                        else [],
+                        "rejected_actions": list(turn.rejected_actions)
+                        if batch_index == 0
+                        else [],
+                        "truncation_reason": turn.truncation_reason
+                        if batch_index == 0
+                        else None,
                     }
                 )
                 if progress_rollout_id:
@@ -926,12 +1000,33 @@ async def _execute_goex_rollout(
         reward = float(_private(readout).get("total_reward") or 0.0)
         private = _private(readout)
         usage_totals = _turn_usage_totals(turns)
+        # Four different things were one word. `terminated` is true when the
+        # engine ended the episode — which includes the agent *dying* — so a
+        # rollout that died at step 12 reported outcome "success", and every
+        # budget-truncated run sat beside `success_status: success` too. The
+        # rig completing is not the task succeeding, and neither is the step
+        # budget running out.
+        done_reason = str(private.get("done_reason") or "")
         outcome = (
-            "success"
+            "boss_defeated"
+            if done_reason == "boss_defeated"
+            else "died"
+            if done_reason == "death"
+            else "budget_exhausted"
+            if final_state["truncated"] or done_reason == "max_steps"
+            else "terminated"
             if final_state["terminated"]
-            else "truncated"
-            if final_state["truncated"]
             else "unfinished"
+        )
+        task_success = (
+            True
+            if outcome == "boss_defeated"
+            else False
+            if outcome == "died"
+            # A budget-truncated episode neither achieved the task nor failed at
+            # it; it ran out of room. Calling that False would be as wrong as
+            # calling it True.
+            else None
         )
         terminal_checkpoint_id = f"{rollout_id}_terminal"
         terminal_blob = await GOLD.checkpoint_with_blob(gold_rollout_id)
@@ -976,8 +1071,14 @@ async def _execute_goex_rollout(
             "trace_correlation_id": trace_correlation_id,
             "trial_id": request.get("trial_id") or f"craftax-goex-{seed}",
             "status": "completed",
+            # Infrastructure, not task: every sibling container uses this field
+            # to mean "the rollout ran to a terminal state without rig failure".
+            # Task success is `task_success`, which is separate on purpose.
             "success_status": "success",
             "status_detail": outcome,
+            "task_success": task_success,
+            "episode_end": outcome,
+            "termination_reason": private.get("done_reason"),
             "parent_rollout_id": parent_rollout_id,
             "parent_checkpoint_id": checkpoint_id,
             "terminal_checkpoint_id": terminal_checkpoint_id,
@@ -1002,9 +1103,18 @@ async def _execute_goex_rollout(
                     "gold_rollout_id": gold_rollout_id,
                     "achievements": _achievement_names(readout),
                     "done_reason": private.get("done_reason"),
+                    "task_success": task_success,
+                    "episode_end": outcome,
                 },
             },
-            "summary": {"outcome": outcome, "reward": reward, "steps": step},
+            "summary": {
+                "outcome": outcome,
+                "task_success": task_success,
+                "reward": reward,
+                "steps": step,
+                "max_steps": max_steps,
+                "achievements": _achievement_names(readout),
+            },
             "metadata": {
                 **(
                     request.get("metadata")
