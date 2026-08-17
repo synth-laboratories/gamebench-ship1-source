@@ -2384,12 +2384,20 @@ async fn step(
 ) -> Result<Json<Value>, ApiError> {
     let mut guard = app.sessions.lock().unwrap();
     let session = guard.get_mut(&rollout_id).ok_or_else(rollout_not_found)?;
+    // The engine already knows why an action did what it did — it labels every
+    // step `move`, `blocked`, `harvest`, `place`, or `noop` with a reason. Those
+    // records stayed in the event log, so callers had to infer effect by
+    // diffing observations, and reported roughly 45 of 100 actions as
+    // "no observable core-state effect" with no idea which were refusals,
+    // which were blocked, and which genuinely did nothing.
+    let before_cursor = session.engine.events.len();
     if !session.engine.is_done() {
         session.engine.step(&body.action).map_err(bad_request)?;
         let telemetry_enabled = app.telemetry.lock().unwrap().contains_key(&rollout_id);
         capture_frame_if_enabled(session, app.replay, telemetry_enabled);
     }
-    let payload = rollout_payload(&rollout_id, session);
+    let mut payload = rollout_payload(&rollout_id, session);
+    payload["outcome"] = step_outcome(&body.action, &session.engine.events[before_cursor..]);
     if let Some(sender) = app.telemetry.lock().unwrap().get(&rollout_id) {
         let event = rollout_event(&rollout_id, &payload);
         let mut histories = app.telemetry_history.lock().unwrap();
@@ -2399,6 +2407,94 @@ async fn step(
         let _ = sender.send(event);
     }
     Ok(Json(payload))
+}
+
+/// What one action actually did, in the engine's own words.
+///
+/// `effect` is the engine's transition label for the action itself: `move`,
+/// `blocked`, `blocked_by_mob`, `harvest`, `place`, `noop`, and so on. `reason`
+/// is the engine's own explanation when it refused — `needs_pickaxe:stone`,
+/// `missing_resources`, `needs_crafting_table`, `nothing_to_do:grass`. A caller
+/// no longer has to guess from an observation diff whether an action was
+/// refused, obstructed, or simply pointless.
+///
+/// `changed` is the honest summary: false means the engine itself recorded no
+/// state change, not that an observer failed to notice one.
+fn step_outcome(action: &Value, events: &[EventRecord]) -> Value {
+    let applied = events
+        .iter()
+        .find(|event| event.kind == "action_applied")
+        .or_else(|| events.iter().find(|event| event.kind == "floor_transition"));
+    let effect = applied
+        .and_then(|event| event.transition.clone())
+        .unwrap_or_else(|| "unrecorded".to_string());
+    let reason = applied
+        .and_then(|event| event.payload.get("reason"))
+        .and_then(Value::as_str)
+        .map(str::to_owned);
+    let resource_deltas: Vec<Value> = events
+        .iter()
+        .filter(|event| event.kind == "resource_delta")
+        .map(|event| {
+            json!({
+                "resource": event.transition,
+                "before": event.payload.get("before"),
+                "after": event.payload.get("after"),
+                "delta": event.payload.get("delta"),
+            })
+        })
+        .collect();
+    let achievements: Vec<Value> = events
+        .iter()
+        .filter(|event| event.kind == "achievement_unlocked")
+        .filter_map(|event| event.payload.get("achievement").cloned())
+        .collect();
+    let violations: Vec<Value> = events
+        .iter()
+        .filter(|event| event.kind == "rule_violation")
+        .map(|event| event.payload.clone())
+        .collect();
+    // `changed` follows the evidence, not the vocabulary. A transition the
+    // engine calls `blocked` moved nothing, and a label this function has never
+    // seen is reported as unknown rather than guessed either way — guessing is
+    // how "no observable core-state effect" became a category that swallowed
+    // refusals, obstructions, and genuine no-ops alike.
+    const NO_EFFECT: [&str; 4] = ["noop", "blocked", "blocked_by_mob", "boss_not_vulnerable"];
+    const EFFECT: [&str; 11] = [
+        "move",
+        "harvest",
+        "collect_sapling",
+        "drink",
+        "eat_plant",
+        "open_chest",
+        "mine_block",
+        "place",
+        "recover",
+        "boss_damage",
+        "intrinsic_mode_request",
+    ];
+    let changed = if !resource_deltas.is_empty() || !achievements.is_empty() {
+        json!(true)
+    } else if NO_EFFECT.contains(&effect.as_str()) {
+        json!(false)
+    } else if EFFECT.contains(&effect.as_str()) {
+        json!(true)
+    } else if effect == "unrecorded" {
+        json!(false)
+    } else {
+        Value::Null
+    };
+    json!({
+        "action": action.clone(),
+        "effect": effect,
+        "reason": reason,
+        "changed": changed,
+        "detail": applied.map(|event| event.payload.clone()),
+        "resource_deltas": resource_deltas,
+        "achievements_unlocked": achievements,
+        "rule_violations": violations,
+        "event_count": events.len(),
+    })
 }
 
 fn rollout_event(rollout_id: &str, payload: &Value) -> Value {
@@ -2872,6 +2968,101 @@ fn svg_for_ascii(ascii: &str) -> String {
         lines * 18 + 24,
         escaped.replace('\n', r#"</tspan><tspan x="12" dy="18">"#)
     )
+}
+
+#[cfg(test)]
+mod outcome_tests {
+    use super::*;
+
+    fn event(kind: &str, transition: &str, payload: Value) -> EventRecord {
+        EventRecord {
+            step_index: 1,
+            tick: 1,
+            episode_id: "episode".into(),
+            kind: kind.into(),
+            action: Some(json!("do")),
+            transition: Some(transition.into()),
+            severity: "info".into(),
+            message: String::new(),
+            payload,
+        }
+    }
+
+    /// The engine knows a refused craft from a blocked move. Callers were left
+    /// diffing observations and calling both "no observable effect".
+    #[test]
+    fn a_refusal_carries_the_engines_own_reason() {
+        let outcome = step_outcome(
+            &json!("make_stone_pickaxe"),
+            &[event(
+                "action_applied",
+                "noop",
+                json!({"reason": "missing_resources", "costs": {"stone": 1}}),
+            )],
+        );
+        assert_eq!(outcome["effect"], "noop");
+        assert_eq!(outcome["reason"], "missing_resources");
+        assert_eq!(outcome["changed"], false);
+        assert_eq!(outcome["detail"]["costs"]["stone"], 1);
+    }
+
+    #[test]
+    fn a_blocked_move_is_not_the_same_as_a_pointless_one() {
+        let blocked = step_outcome(
+            &json!("left"),
+            &[event(
+                "action_applied",
+                "blocked",
+                json!({"reason": "blocked:stone", "target": [3, 4]}),
+            )],
+        );
+        assert_eq!(blocked["effect"], "blocked");
+        assert_eq!(blocked["reason"], "blocked:stone");
+        assert_eq!(blocked["changed"], false);
+
+        let moved = step_outcome(
+            &json!("left"),
+            &[event("action_applied", "move", json!({"to": [3, 4]}))],
+        );
+        assert_eq!(moved["effect"], "move");
+        assert_eq!(moved["changed"], true);
+        assert!(moved["reason"].is_null());
+    }
+
+    #[test]
+    fn a_harvest_reports_the_resource_it_moved() {
+        let outcome = step_outcome(
+            &json!("do"),
+            &[
+                event("action_applied", "harvest", json!({"resource": "wood"})),
+                event(
+                    "resource_delta",
+                    "wood",
+                    json!({"resource": "wood", "before": 0, "after": 1, "delta": 1}),
+                ),
+                event(
+                    "achievement_unlocked",
+                    "collect_wood",
+                    json!({"achievement": "collect_wood"}),
+                ),
+            ],
+        );
+        assert_eq!(outcome["effect"], "harvest");
+        assert_eq!(outcome["changed"], true);
+        assert_eq!(outcome["resource_deltas"][0]["resource"], "wood");
+        assert_eq!(outcome["resource_deltas"][0]["delta"], 1);
+        assert_eq!(outcome["achievements_unlocked"][0], "collect_wood");
+    }
+
+    /// A step the engine recorded nothing for says so, rather than borrowing
+    /// the label of an action that did something.
+    #[test]
+    fn an_unrecorded_step_is_named_unrecorded() {
+        let outcome = step_outcome(&json!("noop"), &[]);
+        assert_eq!(outcome["effect"], "unrecorded");
+        assert_eq!(outcome["changed"], false);
+        assert_eq!(outcome["event_count"], 0);
+    }
 }
 
 #[cfg(test)]

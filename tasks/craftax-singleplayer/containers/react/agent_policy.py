@@ -14,37 +14,23 @@ import httpx
 
 from containers.react.trace_emitter import CraftaxTrace
 
-try:
-    from parity import CRAFTAX_ACTIONS
-except ImportError:
-    CRAFTAX_ACTIONS = [
-        "noop",
-        "left",
-        "right",
-        "up",
-        "down",
-        "do",
-        "sleep",
-        "place_stone",
-        "place_table",
-        "place_furnace",
-        "place_plant",
-        "make_wood_pickaxe",
-        "make_stone_pickaxe",
-        "make_iron_pickaxe",
-        "make_wood_sword",
-        "make_stone_sword",
-        "make_iron_sword",
-        "rest",
-        "descend",
-        "ascend",
-    ]
 
-
-ACTION_WORDS = tuple(str(action) for action in CRAFTAX_ACTIONS)
-ACTION_RE = re.compile(
-    r"\b(?:action|move|command)\s*[:=]\s*([A-Za-z0-9_\\-]+)", re.IGNORECASE
+# Parsing lives in `action_parsing`, which depends on nothing but the action
+# set. Re-exported here so existing callers keep one import.
+from containers.react.action_parsing import (  # noqa: F401
+    ACTION_RE,
+    ACTION_WORDS,
+    CRAFTAX_ACTIONS,
+    DEFAULT_MAX_ACTIONS_PER_CALL,
+    DEFAULT_MIN_ACTIONS_PER_CALL,
+    ParsedAction,
+    ParsedActions,
+    _clean_action_token,
+    _resolve_action,
+    parse_action_text,
+    parse_actions_text,
 )
+
 DEFAULT_MODEL = "openai/gpt-oss-120b"
 DEFAULT_URL = "https://api.groq.com/openai/v1/chat/completions"
 DEFAULT_SYSTEM_PROMPT = (
@@ -53,8 +39,6 @@ DEFAULT_SYSTEM_PROMPT = (
     "wood and stone, craft basic tools, recover coal and iron, and make durable achievement progress. "
     'Reply with JSON only, for example {"actions":["do","right","do","left","do"]}.'
 )
-DEFAULT_MIN_ACTIONS_PER_CALL = 5
-DEFAULT_MAX_ACTIONS_PER_CALL = 15
 
 
 @dataclass
@@ -140,6 +124,12 @@ class AgentTurnResult:
     assistant_text: str
     invalid_parse: bool
     repaired: bool
+    # What the model asked for, beside what will run. Seed 202 declared eleven
+    # actions and executed ten, and no record anywhere said so.
+    declared_actions: list[str] = field(default_factory=list)
+    dropped_actions: list[str] = field(default_factory=list)
+    rejected_actions: list[dict[str, str]] = field(default_factory=list)
+    truncation_reason: str | None = None
     usage: dict[str, Any] = field(default_factory=dict)
     request_id: str | None = None
     model: str | None = None
@@ -157,136 +147,6 @@ class AgentTurnResult:
         """The provider stopped at the token budget, so no action batch was emitted."""
         return self.finish_reason == "length"
 
-
-@dataclass(frozen=True)
-class ParsedActions:
-    actions: list[str]
-    invalid_parse: bool
-    repaired: bool
-    error: str | None = None
-
-
-def _clean_action_token(raw: Any) -> str:
-    return str(raw or "").strip().strip("\"'`.,;")
-
-
-def _resolve_action(candidate: str, valid: list[str]) -> tuple[str, bool, bool]:
-    cleaned = _clean_action_token(candidate)
-    if cleaned in valid:
-        return cleaned, False, False
-    if cleaned in ACTION_WORDS:
-        return valid[0], True, True
-    return "", False, False
-
-
-def parse_actions_text(
-    raw_text: Any,
-    valid_actions: list[str] | None = None,
-    *,
-    min_actions: int = DEFAULT_MIN_ACTIONS_PER_CALL,
-    max_actions: int = DEFAULT_MAX_ACTIONS_PER_CALL,
-    steps_remaining: int = DEFAULT_MAX_ACTIONS_PER_CALL,
-) -> ParsedActions:
-    """Parse a batched action plan from LLM JSON (code-policy shape: {"actions": [...]})."""
-    valid = [
-        action
-        for action in ACTION_WORDS
-        if not valid_actions or action in valid_actions
-    ]
-    if not valid:
-        return ParsedActions([], True, False, "no_valid_actions")
-    batch_cap = max(1, min(max_actions, steps_remaining))
-    batch_floor = max(1, min(min_actions, batch_cap))
-    text = str(raw_text or "").strip()
-    parsed_actions: list[str] = []
-    invalid_parse = False
-    repaired = False
-    try:
-        parsed = json.loads(text)
-        if isinstance(parsed, dict):
-            raw_list = parsed.get("actions")
-            if isinstance(raw_list, list):
-                for item in raw_list:
-                    action, bad, fixed = _resolve_action(item, valid)
-                    if not action:
-                        continue
-                    invalid_parse = invalid_parse or bad
-                    repaired = repaired or fixed
-                    parsed_actions.append(action)
-            if not parsed_actions:
-                single = parsed.get("action", parsed.get("move", parsed.get("command")))
-                if single is not None:
-                    action, bad, fixed = _resolve_action(str(single), valid)
-                    if action:
-                        parsed_actions.append(action)
-                        invalid_parse = bad
-                        repaired = fixed
-        elif isinstance(parsed, list):
-            for item in parsed:
-                action, bad, fixed = _resolve_action(item, valid)
-                if action:
-                    parsed_actions.append(action)
-                    invalid_parse = invalid_parse or bad
-                    repaired = repaired or fixed
-    except json.JSONDecodeError:
-        pass
-    if not parsed_actions:
-        single = parse_action_text(raw_text, valid_actions)
-        parsed_actions = [single.action] if single.action else [valid[0]]
-        invalid_parse = single.invalid_parse
-        repaired = single.repaired
-    if len(parsed_actions) > batch_cap:
-        parsed_actions = parsed_actions[:batch_cap]
-    if len(parsed_actions) < batch_floor and parsed_actions:
-        # Keep the plan the model gave; do not pad with synthetic repeats.
-        pass
-    if not parsed_actions:
-        return ParsedActions([valid[0]], True, True, "no_action_found")
-    return ParsedActions(parsed_actions, invalid_parse, repaired)
-
-
-@dataclass(frozen=True)
-class ParsedAction:
-    action: str
-    invalid_parse: bool
-    repaired: bool
-    error: str | None = None
-
-
-def parse_action_text(
-    raw_text: Any, valid_actions: list[str] | None = None
-) -> ParsedAction:
-    valid = [
-        action
-        for action in ACTION_WORDS
-        if not valid_actions or action in valid_actions
-    ]
-    if not valid:
-        return ParsedAction("", True, False, "no_valid_actions")
-    text = str(raw_text or "").strip()
-    candidates: list[str] = []
-    try:
-        parsed = json.loads(text)
-        if isinstance(parsed, dict):
-            value = parsed.get("action", parsed.get("move", parsed.get("command")))
-            if value is not None:
-                candidates.append(str(value).strip())
-        elif isinstance(parsed, str):
-            candidates.append(parsed.strip())
-    except json.JSONDecodeError:
-        pass
-    match = ACTION_RE.search(text)
-    if match:
-        candidates.append(match.group(1).strip())
-    if text in ACTION_WORDS:
-        candidates.append(text)
-    for candidate in candidates:
-        cleaned = candidate.strip().strip("\"'`.,;")
-        if cleaned in valid:
-            return ParsedAction(cleaned, False, False)
-        if cleaned in ACTION_WORDS:
-            return ParsedAction(valid[0], True, True, f"invalid_action:{cleaned}")
-    return ParsedAction(valid[0], True, True, "no_action_found")
 
 
 async def chat_completion(
@@ -449,6 +309,20 @@ class AgentPolicy:
                     "invalid_parse": parsed.invalid_parse,
                     "repaired": parsed.repaired,
                     "parse_error": parsed.error,
+                    # Declared vs accepted, always both. A reader comparing the
+                    # raw response with the executed trace must not have to
+                    # infer that the difference was a cap rather than a bug.
+                    "declared_actions": list(parsed.declared),
+                    "declared_count": parsed.declared_count,
+                    "accepted_count": parsed.accepted_count,
+                    "dropped_actions": list(parsed.dropped),
+                    "dropped_count": len(parsed.dropped),
+                    "truncation_reason": parsed.truncation_reason,
+                    "rejected_actions": [
+                        {"action": action, "reason": reason}
+                        for action, reason in parsed.rejected
+                    ],
+                    "batch_cap": batch_cap,
                 },
                 caused_by=tuple(
                     item for item in (inference.get("response_event_id"),) if item
@@ -459,6 +333,12 @@ class AgentPolicy:
         )
         return AgentTurnResult(
             actions=list(parsed.actions),
+            declared_actions=list(parsed.declared),
+            dropped_actions=list(parsed.dropped),
+            rejected_actions=[
+                {"action": action, "reason": reason} for action, reason in parsed.rejected
+            ],
+            truncation_reason=parsed.truncation_reason,
             assistant_text=inference["assistant_text"],
             invalid_parse=parsed.invalid_parse,
             repaired=parsed.repaired,
