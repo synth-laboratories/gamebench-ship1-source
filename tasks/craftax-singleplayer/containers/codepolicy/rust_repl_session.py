@@ -350,6 +350,12 @@ class PrebuiltRustReplManifest:
 
 
 def ensure_rust_repl_binary() -> Path:
+    # Source-built evaluator images deliberately compile the REPL during their
+    # trusted builder stage and copy it to the canonical release path. Prefer
+    # that current binary on every platform. The tracked Linux/AArch64 fixture
+    # remains the fallback for source checkouts that have not built the REPL.
+    if _binary_is_current(REPL_BINARY):
+        return REPL_BINARY
     if _host_uses_linux_aarch64_fixture():
         with _BUILD_LOCK:
             manifest = PrebuiltRustReplManifest.load(PREBUILT_MANIFEST)
